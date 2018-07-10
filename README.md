@@ -1,8 +1,8 @@
 # Mujoco Environments
-`mj_envs` is a collection of continuous control environments simulated with the [Mujoco Physics Engine](http://www.mujoco.org/) and wrapped in the OpenAI `gym` API.
+`mj_envs` is a collection of environments/tasks simulated with the [Mujoco](http://www.mujoco.org/) physics engine and wrapped in the OpenAI `gym` API.
 
 ## Getting Started
-`mj_envs` uses git submodules to resolve dependencies. The main dependencies for this package are: `gym==0.9.3` and `mujoco-py`.
+`mj_envs` uses git submodules to resolve dependencies.
 1. Clone this repo with pre-populated submodule dependencies
 ```
 $ git clone --recursive https://github.com/vikashplus/mj_envs.git
@@ -12,7 +12,12 @@ $ git clone --recursive https://github.com/vikashplus/mj_envs.git
 $ cd mj_envs  
 $ git submodule update --remote
 ```
-3. Add repo to pythonpath by updating `~/.bashrc` or `~/.bash_profile`
+3. Install package using `pip`
+```
+$ pip install -e .
+```
+**OR**
+Add repo to pythonpath by updating `~/.bashrc` or `~/.bash_profile`
 ```
 export PYTHONPATH="<path/to/mj_envs>:$PYTHONPATH"
 ```
