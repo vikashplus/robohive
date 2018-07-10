@@ -2,7 +2,7 @@
 `mj_envs` is a collection of continuous control environments simulated with the [Mujoco Physics Engine](http://www.mujoco.org/) and wrapped in the OpenAI `gym` API.
 
 ## Getting Started
-`mj_envs` uses git submodules to resolve dependencies. 
+`mj_envs` uses git submodules to resolve dependencies. The main dependencies for this package are: `gym==0.9.3` and `mujoco-py`.
 1. Clone this repo with pre-populated submodule dependencies
 ```
 $ git clone --recursive https://github.com/vikashplus/mj_envs.git
@@ -20,6 +20,7 @@ export PYTHONPATH="<path/to/mj_envs>:$PYTHONPATH"
 ```
 $ python utils/visualize_env.py --env_name hammer-v0
 ```
+**NOTE:** If the visualization results in a GLFW error, this is because `mujoco-py` does not see some graphics drivers correctly. This can usually be fixed by explicitly loading the correct drivers before running the python script. See [this page](https://github.com/aravindr93/mjrl/tree/master/setup#known-issues) for details.
 
 # modules
 *mj_envs* contains a variety of environements, which are organized as modules. Each module is a collection of loosely related environements. Following modules are provided at the moment with plans to improve the diversity of the collection.
