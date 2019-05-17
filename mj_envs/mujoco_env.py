@@ -82,6 +82,8 @@ class MujocoEnv(gym.Env):
         pass
 
     # -----------------------------
+    def get_body_com(self, body_name):
+        return self.sim.data.get_body_xpos(body_name)
 
     def _reset(self):
         self.sim.reset()
@@ -129,6 +131,12 @@ class MujocoEnv(gym.Env):
             state.qpos.flat, state.qvel.flat])
 
     # -----------------------------
+    def get_pixels(self, frame_size=(128, 128), camera_name=None, device_id=0):
+        pixels = self.sim.render(width=frame_size[0], height=frame_size[1],
+                                 mode='offscreen', camera_name=camera_name, device_id=device_id)
+
+        pixels = pixels[::-1, :, :]
+        return pixels
 
     def visualize_policy(self, policy, horizon=1000, num_episodes=1, mode='exploration'):
         self.mujoco_render_frames = True

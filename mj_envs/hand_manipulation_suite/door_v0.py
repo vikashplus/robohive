@@ -57,6 +57,19 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
 
         return ob, reward, False, {}
 
+    def get_proprioception(self, use_tactile):
+        # return self._get_obs()
+        robot_jnt = self.data.qpos.ravel()[:-2]
+        robot_vel = self.data.qvel.ravel()[:-2]
+        palm_pos = self.data.site_xpos[self.grasp_sid].ravel()
+        sensordata = []
+        if use_tactile:
+            sensordata = self.data.sensordata.ravel().copy()[:41]
+            sensordata = np.clip(sensordata, -5.0, 5.0)
+
+        res = np.concatenate([robot_jnt, robot_vel, palm_pos, sensordata])
+        return res
+
     def _get_obs(self):
         # qpos for hand
         # xpos for obj

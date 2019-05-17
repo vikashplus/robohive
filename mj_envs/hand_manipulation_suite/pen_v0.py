@@ -85,6 +85,18 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         return np.concatenate([qp[:-6], obj_pos, obj_vel, obj_orien, desired_orien,
                                obj_pos-desired_pos, obj_orien-desired_orien])
 
+    def get_proprioception(self, use_tactile):
+        # return self._get_obs()
+        robot_jnt = self.data.qpos.ravel()[:-6]
+        robot_vel = self.data.qvel.ravel()[:-6]
+        palm_pos = self.data.site_xpos[self.S_grasp_sid].ravel()
+        sensordata = []
+        if use_tactile:
+            sensordata = self.data.sensordata.ravel().copy()[20:41]
+
+        res = np.concatenate([robot_jnt, robot_vel, palm_pos, sensordata])
+        return res
+
     def reset_model(self):
         qp = self.init_qpos.copy()
         qv = self.init_qvel.copy()
