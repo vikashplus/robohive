@@ -81,6 +81,12 @@ class MujocoEnv(gym.Env):
         """
         pass
 
+    def get_proprioception(self, use_tactile):
+        """
+        For the VIL paper
+        """
+        pass
+
     # -----------------------------
     def get_body_com(self, body_name):
         return self.sim.data.get_body_xpos(body_name)
