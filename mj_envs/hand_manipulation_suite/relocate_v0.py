@@ -67,7 +67,6 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         if use_tactile:
             sensordata = self.data.sensordata.ravel().copy()[20:41]
         res = np.concatenate([robot_pos, palm_pos, sensordata])
-        self.robot_info_dim = len(res)
         return res
 
     def reset_model(self):
