@@ -88,9 +88,6 @@ class MujocoEnv(gym.Env):
         pass
 
     # -----------------------------
-    def get_body_com(self, body_name):
-        return self.sim.data.get_body_xpos(body_name)
-
     def _reset(self):
         self.sim.reset()
         self.sim.forward()
