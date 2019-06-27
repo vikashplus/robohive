@@ -58,7 +58,17 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         palm_pos = self.data.site_xpos[self.S_grasp_sid].ravel()
         target_pos = self.data.site_xpos[self.target_obj_sid].ravel()
         return np.concatenate([qp[:-6], palm_pos-obj_pos, palm_pos-target_pos, obj_pos-target_pos])
-       
+
+    def get_proprioception(self, use_tactile):
+        # return self._get_obs()
+        robot_pos = self.data.qpos.ravel()[:-6]
+        palm_pos = self.data.site_xpos[self.S_grasp_sid].ravel()
+        sensordata = []
+        if use_tactile:
+            sensordata = self.data.sensordata.ravel().copy()[20:41]
+        res = np.concatenate([robot_pos, palm_pos, sensordata])
+        return res
+
     def reset_model(self):
         qp = self.init_qpos.copy()
         qv = self.init_qvel.copy()
