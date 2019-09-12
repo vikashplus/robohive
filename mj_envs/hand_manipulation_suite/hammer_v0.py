@@ -92,7 +92,7 @@ class HammerEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         qpos = self.data.qpos.ravel().copy()
         qvel = self.data.qvel.ravel().copy()
         board_pos = self.model.body_pos[self.model.body_name2id('nail_board')].copy()
-        target_pos = self.data.site_xpos[self.target_obj_sid].ravel().copy()
+        target_pos = self.model.site_pos[self.target_obj_sid].ravel().copy()
         return dict(qpos=qpos, qvel=qvel, board_pos=board_pos, target_pos=target_pos)
 
     def ss(self, state_dict):
@@ -102,8 +102,10 @@ class HammerEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         qp = state_dict['qpos']
         qv = state_dict['qvel']
         board_pos = state_dict['board_pos']
+        target_pos = state_dict['target_pos']
         self.set_state(qp, qv)
         self.model.body_pos[self.model.body_name2id('nail_board')] = board_pos
+        self.model.site_pos[self.target_obj_sid] = target_pos
         self.sim.forward()
 
     def mj_viewer_setup(self):

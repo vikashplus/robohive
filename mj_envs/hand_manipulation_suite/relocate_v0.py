@@ -78,8 +78,8 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         qp = self.data.qpos.ravel().copy()
         qv = self.data.qvel.ravel().copy()
         hand_qpos = qp[:30]
-        obj_pos  = self.data.body_xpos[self.obj_bid].ravel()
-        palm_pos = self.data.site_xpos[self.S_grasp_sid].ravel()
+        obj_pos  = self.model.body_pos[self.obj_bid].ravel()
+        palm_pos = self.model.site_pos[self.S_grasp_sid].ravel()
         target_pos = self.data.site_xpos[self.target_obj_sid].ravel()
         return dict(hand_qpos=hand_qpos, obj_pos=obj_pos, target_pos=target_pos, palm_pos=palm_pos,
             qpos=qp, qvel=qv)
