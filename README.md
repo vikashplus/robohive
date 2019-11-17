@@ -2,7 +2,8 @@
 `mj_envs` is a collection of environments/tasks simulated with the [Mujoco](http://www.mujoco.org/) physics engine and wrapped in the OpenAI `gym` API.
 
 ## Getting Started
-`mj_envs` uses git submodules to resolve dependencies.
+`mj_envs` uses git submodules to resolve dependencies. Please follow steps exactly as below to install correctly.
+
 1. Clone this repo with pre-populated submodule dependencies
 ```
 $ git clone --recursive https://github.com/vikashplus/mj_envs.git

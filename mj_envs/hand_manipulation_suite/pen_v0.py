@@ -5,7 +5,7 @@ from mj_envs.utils.quatmath import quat2euler, euler2quat
 from mujoco_py import MjViewer
 import os
 
-ADD_BONUS_REWARDS = False
+ADD_BONUS_REWARDS = True
 
 class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
     def __init__(self):

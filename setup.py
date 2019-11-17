@@ -11,13 +11,13 @@ def read(fname):
 
 setup(
     name='mj_envs',
-    version='0.1.1',
+    version='1.0.0',
     packages=find_packages(),
     description='environments simulated in MuJoCo',
     long_description=read('README.md'),
-    url='https://github.com/MovementControl/mj_envs.git',
+    url='https://github.com/vikashplus/mj_envs.git',
     author='Movement Control Lab, UW',
     install_requires=[
-        'click', 'gym==0.9.3', 'mujoco_py==1.50.1.35', 'termcolor',
+        'click', 'gym==0.13', 'mujoco-py<2.1,>=2.0', 'termcolor',
     ],
 )
