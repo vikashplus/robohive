@@ -116,8 +116,9 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
     def evaluate_success(self, paths):
         num_success = 0
         num_paths = len(paths)
+        # success if door open for 25 steps
         for path in paths:
-            if np.sum(path['env_infos']['goal_achieved']) > 25:  # door open for 25 steps
+            if np.sum(path['env_infos']['goal_achieved']) > 25:
                 num_success += 1
         success_percentage = num_success*100.0/num_paths
         return success_percentage

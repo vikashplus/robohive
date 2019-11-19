@@ -134,6 +134,7 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
     def evaluate_success(self, paths):
         num_success = 0
         num_paths = len(paths)
+        # success if pen within 15 degrees of target for 20 steps
         for path in paths:
             if np.sum(path['env_infos']['goal_achieved']) > 20:
                 num_success += 1
