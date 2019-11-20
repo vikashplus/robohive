@@ -65,7 +65,7 @@
             <joint name="OBJRx" pos="0 0 0" axis="1 0 0" limited="false" damping="0" />
             <joint name="OBJRy" pos="0 0 0" axis="0 1 0" limited="false" damping="0" />
             <joint name="OBJRz" pos="0 0 0" axis="0 0 1" limited="false" damping="0" />
-            <geom name="pen" type="cylinder" size="0.015 0.065" condim="4" rgba=".6 .6 .6 .6" />
+            <geom name="pen" type="cylinder" size="0.015 0.065" condim="4" rgba=".6 .6 .6 .6" density="1500" />
             
             <geom name="top" type="cylinder" size="0.017 0.020" condim="4" pos="0 0 -.0455" rgba="0 .5 1 1" contype="0" conaffinity="0"/>
             <geom name="bot" type="cylinder" size="0.013 0.002" pos="0 0 0.067" rgba="0 .5 1 1" contype="0" conaffinity="0"/>

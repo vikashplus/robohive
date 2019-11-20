@@ -1,45 +1,38 @@
-from os import environ 
-environ["MKL_THREADING_LAYER"] = "GNU"
-
-import mj_envs  
+import gym
+import mj_envs
 import click 
 import os
 import gym
 import numpy as np
+import pickle
+from mjrl.utils.gym_env import GymEnv
+from mjrl.policies.gaussian_mlp import MLP
 
 DESC = '''
-Helper script to visualize a NPG policy.\n
+Helper script to visualize policy (in mjrl format).\n
 USAGE:\n
-    Visualizes an env\n
-    python examine_env.py --env_name <name>\n
+    Visualizes policy on the env\n
+    $ python visualize_policy.py --env_name door-v0 \n
+    $ python visualize_policy.py --env_name door-v0 --policy my_policy.pickle --mode evaluation --episodes 10 \n
 '''
 
 # MAIN =========================================================
 @click.command(help=DESC)
 @click.option('--env_name', type=str, help='environment to load', required= True)
-def main(env_name):
-    if env_name is "":
-        print("Unknown env. Use 'python examine_policy --help' for instructions")
-        return
+@click.option('--policy', type=str, help='absolute path of the policy file', default=None)
+@click.option('--mode', type=str, help='exploration or evaluation mode for policy', default='evaluation')
+@click.option('--seed', type=int, help='seed for generating environment instances', default=123)
+@click.option('--episodes', type=int, help='number of episodes to visualize', default=10)
 
-    # load envs
-    env = gym.make(env_name)
-    # render with random command
-    visualize_random_act(env)
-
-
-def visualize_random_act(env, num_episodes=5):
-    act_dim = env.env.action_space.shape[0]
-    for ep in range(num_episodes):
-        o = env.reset()
-        d = False
-        t = 0
-        while t < env.spec.timestep_limit and d is False:
-            env.env.mj_render()
-            a = np.random.uniform(low=-.1, high=0.1, size=act_dim)
-            o, r, d, _ = env.step(a)
-            t = t+1
-
+def main(env_name, policy, mode, seed, episodes):
+    e = GymEnv(env_name)
+    e.set_seed(seed)
+    if policy is not None:
+        pi = pickle.load(open(policy, 'rb'))
+    else:
+        pi = MLP(e.spec, hidden_sizes=(32,32), seed=seed, init_log_std=-1.0)
+    # render policy
+    e.visualize_policy(pi, num_episodes=episodes, horizon=e.horizon, mode=mode)
 
 if __name__ == '__main__':
     main()

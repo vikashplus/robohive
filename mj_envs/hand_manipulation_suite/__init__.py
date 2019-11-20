@@ -1,5 +1,5 @@
 from gym.envs.registration import register
-from mj_envs.mujoco_env import MujocoEnv
+from mjrl.envs.mujoco_env import MujocoEnv
 
 # Swing the door open
 register(
@@ -21,7 +21,7 @@ from mj_envs.hand_manipulation_suite.hammer_v0 import HammerEnvV0
 register(
     id='pen-v0',
     entry_point='mj_envs.hand_manipulation_suite:PenEnvV0',
-    max_episode_steps=200,
+    max_episode_steps=100,
 )
 from mj_envs.hand_manipulation_suite.pen_v0 import PenEnvV0
 

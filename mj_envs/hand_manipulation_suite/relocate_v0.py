@@ -1,8 +1,10 @@
 import numpy as np
 from gym import utils
-from mj_envs import mujoco_env
+from mjrl.envs import mujoco_env
 from mujoco_py import MjViewer
 import os
+
+ADD_BONUS_REWARDS = True
 
 class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
     def __init__(self):
@@ -13,10 +15,10 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         mujoco_env.MujocoEnv.__init__(self, curr_dir+'/assets/DAPG_relocate.xml', 5)
         
         # change actuator sensitivity
-        self.sim.model.actuator_gainprm[self.sim.model.actuator_name2id('A_WRJ1'):self.sim.model.actuator_name2id('A_WRJ0')+1,:] = np.array([10, 0, 0])
-        self.sim.model.actuator_gainprm[self.sim.model.actuator_name2id('A_FFJ3'):self.sim.model.actuator_name2id('A_THJ0')+1,:] = np.array([1, 0, 0])
-        self.sim.model.actuator_biasprm[self.sim.model.actuator_name2id('A_WRJ1'):self.sim.model.actuator_name2id('A_WRJ0')+1,:] = np.array([0, -10, 0])
-        self.sim.model.actuator_biasprm[self.sim.model.actuator_name2id('A_FFJ3'):self.sim.model.actuator_name2id('A_THJ0')+1,:] = np.array([0, -1, 0])
+        self.sim.model.actuator_gainprm[self.sim.model.actuator_name2id('A_WRJ1'):self.sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([10, 0, 0])
+        self.sim.model.actuator_gainprm[self.sim.model.actuator_name2id('A_FFJ3'):self.sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([1, 0, 0])
+        self.sim.model.actuator_biasprm[self.sim.model.actuator_name2id('A_WRJ1'):self.sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([0, -10, 0])
+        self.sim.model.actuator_biasprm[self.sim.model.actuator_name2id('A_FFJ3'):self.sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([0, -1, 0])
 
         self.target_obj_sid = self.sim.model.site_name2id("target")
         self.S_grasp_sid = self.sim.model.site_name2id('S_grasp')
@@ -25,14 +27,14 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         self.act_mid = np.mean(self.model.actuator_ctrlrange, axis=1)
         self.act_rng = 0.5*(self.model.actuator_ctrlrange[:,1]-self.model.actuator_ctrlrange[:,0])
 
-    def _step(self, a):
+    def step(self, a):
         a = np.clip(a, -1.0, 1.0)
         try:
             a = self.act_mid + a*self.act_rng # mean center and scale
         except:
             a = a                             # only for the initialization phase
         self.do_simulation(a, self.frame_skip)
-        ob = self._get_obs()
+        ob = self.get_obs()
         obj_pos  = self.data.body_xpos[self.obj_bid].ravel()
         palm_pos = self.data.site_xpos[self.S_grasp_sid].ravel()
         target_pos = self.data.site_xpos[self.target_obj_sid].ravel()
@@ -42,14 +44,18 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
             reward += 1.0                                           # bonus for lifting the object
             reward += -0.5*np.linalg.norm(palm_pos-target_pos)      # make hand go to target
             reward += -0.5*np.linalg.norm(obj_pos-target_pos)       # make object go to target
-        if np.linalg.norm(obj_pos-target_pos) < 0.1:
-            reward += 10.0                                          # bonus for object close to target
-        if np.linalg.norm(obj_pos-target_pos) < 0.05:
-            reward += 20.0                                          # bonus for object "very" close to target
 
-        return ob, reward, False, {}
+        if ADD_BONUS_REWARDS:
+            if np.linalg.norm(obj_pos-target_pos) < 0.1:
+                reward += 10.0                                          # bonus for object close to target
+            if np.linalg.norm(obj_pos-target_pos) < 0.05:
+                reward += 20.0                                          # bonus for object "very" close to target
 
-    def _get_obs(self):
+        goal_achieved = True if np.linalg.norm(obj_pos-target_pos) < 0.1 else False
+
+        return ob, reward, False, dict(goal_achieved=goal_achieved)
+
+    def get_obs(self):
         # qpos for hand
         # xpos for obj
         # xpos for target
@@ -69,9 +75,9 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         self.model.site_pos[self.target_obj_sid,1] = self.np_random.uniform(low=-0.2, high=0.2)
         self.model.site_pos[self.target_obj_sid,2] = self.np_random.uniform(low=0.15, high=0.35)
         self.sim.forward()
-        return self._get_obs()
+        return self.get_obs()
 
-    def gs(self):
+    def get_env_state(self):
         """
         Get state of hand as well as objects and targets in the scene
         """
@@ -84,7 +90,7 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         return dict(hand_qpos=hand_qpos, obj_pos=obj_pos, target_pos=target_pos, palm_pos=palm_pos,
             qpos=qp, qvel=qv)
 
-    def ss(self, state_dict):
+    def set_env_state(self, state_dict):
         """
         Set the state which includes hand as well as objects and targets in the scene
         """
@@ -99,15 +105,16 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
 
     def mj_viewer_setup(self):
         self.viewer = MjViewer(self.sim)
-        self.viewer.cam.azimuth = 0
+        self.viewer.cam.azimuth = 90
         self.sim.forward()
         self.viewer.cam.distance = 1.5
 
     def evaluate_success(self, paths):
         num_success = 0
         num_paths = len(paths)
+        # success if object close to target for 25 steps
         for path in paths:
-            if np.sum(path['rewards']) > 500:  # ball close to target for at least 1/4th the trajectory
+            if np.sum(path['env_infos']['goal_achieved']) > 25:
                 num_success += 1
         success_percentage = num_success*100.0/num_paths
         return success_percentage
