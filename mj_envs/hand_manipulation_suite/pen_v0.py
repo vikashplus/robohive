@@ -9,6 +9,8 @@ ADD_BONUS_REWARDS = True
 
 class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
     def __init__(self):
+        self.starting_up = True
+
         self.target_obj_bid = 0
         self.S_grasp_sid = 0
         self.eps_ball_sid = 0
@@ -44,24 +46,30 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
 
         self.act_mid = np.mean(self.model.actuator_ctrlrange, axis=1)
         self.act_rng = 0.5*(self.model.actuator_ctrlrange[:,1]-self.model.actuator_ctrlrange[:,0])
+        self.starting_up = False
+
 
     def step(self, a):
         a = np.clip(a, -1.0, 1.0)
         try:
-            starting_up = False
             a = self.act_mid + a*self.act_rng # mean center and scale
         except:
-            starting_up = True
             a = a                             # only for the initialization phase
         self.do_simulation(a, self.frame_skip)
 
-        obj_pos  = self.data.body_xpos[self.obj_bid].ravel()
-        desired_loc = self.data.site_xpos[self.eps_ball_sid].ravel()
-        obj_orien = (self.data.site_xpos[self.obj_t_sid] - self.data.site_xpos[self.obj_b_sid])/self.pen_length
-        desired_orien = (self.data.site_xpos[self.tar_t_sid] - self.data.site_xpos[self.tar_b_sid])/self.tar_length
+        obs = self.get_obs()
+        reward, done, goal_achieved = self.get_reward(self.obs_dict)
+
+        return obs, reward, done, dict(goal_achieved=goal_achieved, obs_dict=self.obs_dict)
+
+    def get_reward(self, obs_dict):
+        obj_pos  = obs_dict['obj_pos'] #self.data.body_xpos[self.obj_bid].ravel()
+        desired_pos = obs_dict['desired_pos'] #self.data.site_xpos[self.eps_ball_sid].ravel()
+        obj_orien = obs_dict['obj_orien'] #(self.data.site_xpos[self.obj_t_sid] - self.data.site_xpos[self.obj_b_sid])/self.pen_length
+        desired_orien = obs_dict['desired_orien'] #(self.data.site_xpos[self.tar_t_sid] - self.data.site_xpos[self.tar_b_sid])/self.tar_length
 
         # pos cost
-        dist = np.linalg.norm(obj_pos-desired_loc)
+        dist = np.linalg.norm(obj_pos-desired_pos)
         reward = -dist
         # orien cost
         orien_similarity = np.dot(obj_orien, desired_orien)
@@ -78,21 +86,25 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         done = False
         if obj_pos[2] < 0.075:
             reward -= 5
-            done = True if not starting_up else False
+            done = True if not self.starting_up else False
 
-        goal_achieved = True if (dist < 0.075 and orien_similarity > 0.95) else False
+        success = True if (dist < 0.075 and orien_similarity > 0.95) else False
 
-        return self.get_obs(), reward, done, dict(goal_achieved=goal_achieved)
+        return reward, done, success
 
     def get_obs(self):
-        qp = self.data.qpos.ravel()
-        obj_vel = self.data.qvel[-6:].ravel()
-        obj_pos = self.data.body_xpos[self.obj_bid].ravel()
-        desired_pos = self.data.site_xpos[self.eps_ball_sid].ravel()
-        obj_orien = (self.data.site_xpos[self.obj_t_sid] - self.data.site_xpos[self.obj_b_sid])/self.pen_length
-        desired_orien = (self.data.site_xpos[self.tar_t_sid] - self.data.site_xpos[self.tar_b_sid])/self.tar_length
-        return np.concatenate([qp[:-6], obj_pos, obj_vel, obj_orien, desired_orien,
-                               obj_pos-desired_pos, obj_orien-desired_orien])
+        obs_dict = self.obs_dict = {}
+        obs_dict['qp'] = self.data.qpos.ravel()
+        obs_dict['obj_vel'] = self.data.qvel[-6:].ravel()
+        obs_dict['obj_pos'] = self.data.body_xpos[self.obj_bid].ravel()
+        obs_dict['desired_pos'] = self.data.site_xpos[self.eps_ball_sid].ravel()
+        obs_dict['obj_orien'] = (self.data.site_xpos[self.obj_t_sid] - self.data.site_xpos[self.obj_b_sid])/self.pen_length
+        obs_dict['desired_orien'] = (self.data.site_xpos[self.tar_t_sid] - self.data.site_xpos[self.tar_b_sid])/self.tar_length
+
+        
+        return np.concatenate([obs_dict['qp'][:-6], obs_dict['obj_pos'], obs_dict['obj_vel'], obs_dict['obj_orien']
+                , obs_dict['desired_orien'], obs_dict['obj_pos']-obs_dict['desired_pos'], obs_dict['obj_orien']-
+                obs_dict['desired_orien']])
 
     def reset_model(self):
         qp = self.init_qpos.copy()
@@ -140,3 +152,13 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
                 num_success += 1
         success_percentage = num_success*100.0/num_paths
         return success_percentage
+
+    def compute_path_rewards(self, paths):
+        # path has two keys: observations and actions
+        # path["observations"] : (num_traj, horizon, obs_dim)
+        # path["rewards"] should have shape (num_traj, horizon)
+        obs = paths["observations"]
+        import ipdb; ipdb.set_trace()
+
+        rewards = self.get_reward(obs)
+        paths["rewards"] = rewards if rewards.shape[0] > 1 else rewards.ravel()
