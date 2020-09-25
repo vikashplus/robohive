@@ -37,7 +37,32 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         except:
             a = a                             # only for the initialization phase
         self.do_simulation(a, self.frame_skip)
-        ob = self.get_obs()
+        obs = self.get_obs()
+        # reward = self.get_reward(obs, a)
+        reward = self.get_reward_old()
+        # print(reward-reward_old)
+        
+        done = False
+        return obs, reward, done, self.get_env_infos()
+        # goal_achieved = True if door_pos >= 1.35 else False
+        # return ob, reward, False, dict(goal_achieved=goal_achieved)
+
+    def get_obs(self):
+        # qpos for hand
+        # xpos for obj
+        # xpos for target
+        qp = self.data.qpos.ravel()
+        handle_pos = self.data.site_xpos[self.handle_sid].ravel()
+        palm_pos = self.data.site_xpos[self.grasp_sid].ravel()
+        door_pos = np.array([self.data.qpos[self.door_hinge_did]])
+        if door_pos > 1.0:
+            door_open = 1.0
+        else:
+            door_open = -1.0
+        latch_pos = qp[-1]
+        return np.concatenate([qp[1:-2], [latch_pos], door_pos, palm_pos, handle_pos, palm_pos-handle_pos, [door_open]])
+
+    def get_reward_old(self):
         handle_pos = self.data.site_xpos[self.handle_sid].ravel()
         palm_pos = self.data.site_xpos[self.grasp_sid].ravel()
         door_pos = self.data.qpos[self.door_hinge_did]
@@ -57,25 +82,46 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
                 reward += 8
             if door_pos > 1.35:
                 reward += 10
-
-        goal_achieved = True if door_pos >= 1.35 else False
-
-        return ob, reward, False, dict(goal_achieved=goal_achieved)
-
-    def get_obs(self):
-        # qpos for hand
-        # xpos for obj
-        # xpos for target
-        qp = self.data.qpos.ravel()
-        handle_pos = self.data.site_xpos[self.handle_sid].ravel()
-        palm_pos = self.data.site_xpos[self.grasp_sid].ravel()
-        door_pos = np.array([self.data.qpos[self.door_hinge_did]])
-        if door_pos > 1.0:
-            door_open = 1.0
+        return reward
+        
+    def get_reward(self, obs, act):
+        obs = np.clip(obs, -10.0, 10.0)
+        act = np.clip(act, -1.0, 1.0)
+        
+        if len(obs.shape) == 1:
+            door_pos = obs[28]
+            palm_pos = obs[29:32]
+            handle_pos = obs[32:35]
+            # get to handle
+            reward = -0.1*np.linalg.norm(palm_pos-handle_pos)
+            # open door
+            reward += -0.1*(door_pos - 1.57)*(door_pos - 1.57)
+            reward += -1e-5*np.sum(self.data.qvel**2)
         else:
-            door_open = -1.0
-        latch_pos = qp[-1]
-        return np.concatenate([qp[1:-2], [latch_pos], door_pos, palm_pos, handle_pos, palm_pos-handle_pos, [door_open]])
+            door_pos = obs[:, :, 28]
+            palm_pos = obs[:, :, 29:32]
+            handle_pos = obs[:, :, 32:35]
+            # get to handle
+            reward = -0.1*np.linalg.norm(palm_pos-handle_pos, axis=-1)
+            # open door
+            reward += -0.1*(door_pos - 1.57)*(door_pos - 1.57)
+        
+        # Bonus
+        if ADD_BONUS_REWARDS:
+            reward += 2*(door_pos > 0.2) + 8*(door_pos > 1.0) + 10*(door_pos > 1.35)
+
+        return reward
+
+    def compute_path_rewards(self, paths):
+        # path has two keys: observations and actions
+        # path["observations"] : (num_traj, horizon, obs_dim)
+        # path["rewards"] should have shape (num_traj, horizon)
+        obs = paths["observations"]
+        act = paths["actions"]
+        rewards = self.get_reward(obs, act)
+        paths["rewards"] = rewards if rewards.shape[0] > 1 else rewards.ravel()
+        return paths
+
 
     def reset_model(self):
         qp = self.init_qpos.copy()
@@ -107,18 +153,24 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         self.model.body_pos[self.door_bid] = state_dict['door_body_pos']
         self.sim.forward()
 
+    def get_env_infos(self):
+        state = self.get_env_state()
+        door_pos = self.data.qpos[self.door_hinge_did]
+        goal_achieved = True if door_pos >= 1.35 else False
+        return dict(state=state, goal_achieved=goal_achieved)
+
     def mj_viewer_setup(self):
         self.viewer = MjViewer(self.sim)
         self.viewer.cam.azimuth = 90
         self.sim.forward()
         self.viewer.cam.distance = 1.5
 
-    def evaluate_success(self, paths):
+    def evaluate_success(self, paths, logger=None):
         num_success = 0
         num_paths = len(paths)
         # success if door open for 25 steps
         for path in paths:
-            if np.sum(path['env_infos']['goal_achieved']) > 25:
+            if np.sum(path['env_infos']['goal_achieved']) > 5:
                 num_success += 1
         success_percentage = num_success*100.0/num_paths
         return success_percentage
