@@ -5,7 +5,7 @@ from mjrl.envs.mujoco_env import MujocoEnv
 register(
     id='door-v0',
     entry_point='mj_envs.hand_manipulation_suite:DoorEnvV0',
-    max_episode_steps=200,
+    max_episode_steps=75,
 )
 from mj_envs.hand_manipulation_suite.door_v0 import DoorEnvV0
 
