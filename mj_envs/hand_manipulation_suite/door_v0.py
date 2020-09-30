@@ -18,40 +18,38 @@ ADD_BONUS_REWARD = True
 
 class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
     def __init__(self):
-        self.door_hinge_did = 0
-        self.door_bid = 0
-        self.grasp_sid = 0
-        self.handle_sid = 0
+
+        # get sim
         curr_dir = os.path.dirname(os.path.abspath(__file__))
+        sim = mujoco_env.get_sim(model_path=curr_dir+'/assets/DAPG_door.xml')
+        # ids
+        self.door_hinge_did = sim.model.jnt_dofadr[sim.model.joint_name2id('door_hinge')]
+        self.grasp_sid = sim.model.site_name2id('S_grasp')
+        self.handle_sid = sim.model.site_name2id('S_handle')
+        self.door_bid = sim.model.body_name2id('frame')
+        # change actuator sensitivity
+        sim.model.actuator_gainprm[sim.model.actuator_name2id('A_WRJ1'):sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([10, 0, 0])
+        sim.model.actuator_gainprm[sim.model.actuator_name2id('A_FFJ3'):sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([1, 0, 0])
+        sim.model.actuator_biasprm[sim.model.actuator_name2id('A_WRJ1'):sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([0, -10, 0])
+        sim.model.actuator_biasprm[sim.model.actuator_name2id('A_FFJ3'):sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([0, -1, 0])
+        # scales
+        self.act_mid = np.mean(sim.model.actuator_ctrlrange, axis=1)
+        self.act_rng = 0.5*(sim.model.actuator_ctrlrange[:,1]-sim.model.actuator_ctrlrange[:,0])
+
+        # get env
         utils.EzPickle.__init__(self)
         ObsVecDict.__init__(self)
         self.obs_dict = {}
         self.rwd_dict = {}
-        mujoco_env.MujocoEnv.__init__(self, curr_dir+'/assets/DAPG_door.xml', 5)
-        
-        # change actuator sensitivity
-        self.sim.model.actuator_gainprm[self.sim.model.actuator_name2id('A_WRJ1'):self.sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([10, 0, 0])
-        self.sim.model.actuator_gainprm[self.sim.model.actuator_name2id('A_FFJ3'):self.sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([1, 0, 0])
-        self.sim.model.actuator_biasprm[self.sim.model.actuator_name2id('A_WRJ1'):self.sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([0, -10, 0])
-        self.sim.model.actuator_biasprm[self.sim.model.actuator_name2id('A_FFJ3'):self.sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([0, -1, 0])
-
-        # ob = self.reset_model()
-        self.act_mid = np.mean(self.model.actuator_ctrlrange, axis=1)
-        self.act_rng = 0.5*(self.model.actuator_ctrlrange[:,1]-self.model.actuator_ctrlrange[:,0])
-        self.door_hinge_did = self.model.jnt_dofadr[self.model.joint_name2id('door_hinge')]
-        self.grasp_sid = self.model.site_name2id('S_grasp')
-        self.handle_sid = self.model.site_name2id('S_handle')
-        self.door_bid = self.model.body_name2id('frame')
+        mujoco_env.MujocoEnv.__init__(self, sim=sim, frame_skip=5)
 
     # step the simulation forward
     def step(self, a):
+        # apply action and step
         a = np.clip(a, -1.0, 1.0)
-        try:
-            a = self.act_mid + a*self.act_rng # mean center and scale
-        except:
-            a = a                             # only for the initialization phase
+        a = self.act_mid + a*self.act_rng
         self.do_simulation(a, self.frame_skip)
-        
+
         # observation and rewards
         obs = self.get_obs()
         self.expand_dims(self.obs_dict) # required for vectorized rewards calculations
