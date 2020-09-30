@@ -7,10 +7,10 @@ from darwin.darwin_utils.obs_vec_dict import ObsVecDict
 import collections
 
 # NOTES:
-#     1. why is qpos[0] not a part of the obs?
+#     1. why is qpos[0] not a part of the obs? ==> Hand translation isn't consistent due to randomization. Palm pos is a good substitute 
 
-OBS_KEYS = ['hand_jnt', 'latch_pos', 'door_pos', 'palm_pos', 'handle_pos', 'reach_err', 'door_open']
-# OBS_KEYS = ['hand_jnt', 'latch_pos', 'door_pos', 'palm_pos', 'handle_pos', 'reach_err']
+# OBS_KEYS = ['hand_jnt', 'latch_pos', 'door_pos', 'palm_pos', 'handle_pos', 'reach_err', 'door_open']
+OBS_KEYS = ['hand_jnt', 'latch_pos', 'door_pos', 'palm_pos', 'handle_pos', 'reach_err']
 # RWD_KEYS = ['reach', 'open', 'smooth', 'bonus']
 RWD_KEYS = ['reach', 'open', 'bonus']
 
@@ -43,6 +43,7 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.handle_sid = self.model.site_name2id('S_handle')
         self.door_bid = self.model.body_name2id('frame')
 
+    # step the simulation forward
     def step(self, a):
         a = np.clip(a, -1.0, 1.0)
         try:
@@ -51,45 +52,20 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
             a = a                             # only for the initialization phase
         self.do_simulation(a, self.frame_skip)
         
+        # observation and rewards
         obs = self.get_obs()
         self.expand_dims(self.obs_dict) # required for vectorized rewards calculations
         self.rwd_dict = self.get_reward_dict(self.obs_dict)
         self.squeeze_dims(self.rwd_dict)
         self.squeeze_dims(self.obs_dict)
 
-        # reward = self.get_reward(obs, a)
-        # reward = self.get_reward_old()
-        
-        # reward_dict = self.get_reward_dict(self.obs_dict)
-
-        # print(reward-reward_dict['total'][0][0])
-
         # finalize step
         env_info = self.get_env_infos()
-        env_info['done'] = False
-        # print(env_info['done'])
-        # import ipdb; ipdb.set_trace()
-
-        return obs, env_info['reward'], env_info['done'], env_info
-        # return obs, env_info['reward'], env_info['done'], env_info
-
-
-
-        # return obs, reward, env_info['done'], env_info
-        # return obs, env_info['rewards'], False, env_info
-        # print(env_info['done'])
-
-        # done = False
-        # return obs, reward, done, env_info
-        # goal_achieved = True if door_pos >= 1.35 else False
-        # return ob, reward, False, dict(goal_achieved=goal_achieved)
+        return obs, env_info['rwd_dense'], bool(env_info['done']), env_info
 
     def get_obs(self):
-        # qpos for hand
-        # xpos for obj
-        # xpos for target
+        # qpos for hand, xpos for obj, xpos for target
         self.obs_dict['t'] = np.array([self.sim.data.time])
-
         self.obs_dict['hand_jnt'] = self.data.qpos[1:-2].copy()
         self.obs_dict['hand_vel'] = self.data.qvel[:-2].copy()
         self.obs_dict['handle_pos'] = self.data.site_xpos[self.handle_sid].copy()
@@ -98,88 +74,32 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.obs_dict['door_pos'] = np.array([self.data.qpos[self.door_hinge_did]])
         self.obs_dict['latch_pos'] = np.array([self.data.qpos[-1]])
         self.obs_dict['door_open'] = 2.0*(self.obs_dict['door_pos'] > 1.0) -1.0
-        
         obs = self.obsdict2obsvec(self.obs_dict, OBS_KEYS)
         return obs
-
-    def get_reward_old(self):
-        handle_pos = self.data.site_xpos[self.handle_sid].ravel()
-        palm_pos = self.data.site_xpos[self.grasp_sid].ravel()
-        door_pos = self.data.qpos[self.door_hinge_did]
-
-        # get to handle
-        reward = -0.1*np.linalg.norm(palm_pos-handle_pos)
-        # open door
-        reward += -0.1*(door_pos - 1.57)*(door_pos - 1.57)
-        # velocity cost
-        reward += -1e-5*np.sum(self.data.qvel**2)
-
-        if ADD_BONUS_REWARD:
-            # Bonus
-            if door_pos > 0.2:
-                reward += 2
-            if door_pos > 1.0:
-                reward += 8
-            if door_pos > 1.35:
-                reward += 10
-        return reward
-        
-    def get_reward(self, obs, act):
-        obs = np.clip(obs, -10.0, 10.0)
-        act = np.clip(act, -1.0, 1.0)
-        
-        if len(obs.shape) == 1:
-            door_pos = obs[28]
-            palm_pos = obs[29:32]
-            handle_pos = obs[32:35]
-            # get to handle
-            reward = -0.1*np.linalg.norm(palm_pos-handle_pos)
-            # open door
-            reward += -0.1*(door_pos - 1.57)*(door_pos - 1.57)
-            reward += -1e-5*np.sum(self.data.qvel**2)
-        else:
-            door_pos = obs[:, :, 28]
-            palm_pos = obs[:, :, 29:32]
-            handle_pos = obs[:, :, 32:35]
-            # get to handle
-            reward = -0.1*np.linalg.norm(palm_pos-handle_pos, axis=-1)
-            # open door
-            reward += -0.1*(door_pos - 1.57)*(door_pos - 1.57)
-        
-        # Bonus
-        if ADD_BONUS_REWARD:
-            reward += 2*(door_pos > 0.2) + 8*(door_pos > 1.0) + 10*(door_pos > 1.35)
-
-        return reward
 
     def get_reward_dict(self, obs_dict):
         reach_dist = np.linalg.norm(obs_dict['palm_pos']-obs_dict['handle_pos'], axis=-1)
         door_pos = obs_dict['door_pos'][:,:,0]
         self.rwd_dict = collections.OrderedDict((
+            # Optional Keys
             ('reach', -0.1* reach_dist),
             ('open', -0.1*(door_pos - 1.57)*(door_pos - 1.57)),
-            # ('smooth', 0*-1e-5*np.sum(obs_dict['hand_vel']**2)), # hand_vel is not in obs. We can't compute this term for mbrl
-            ('score', door_pos),
-            ('bonus', 2*(door_pos > 0.2) + 8*(door_pos > 1.0) + 10*(door_pos > 1.35))
+            ('bonus', 2*(door_pos > 0.2) + 8*(door_pos > 1.0) + 10*(door_pos > 1.35)),
+            # Must keys
+            ('sparse',  door_pos),
+            ('solved',  door_pos > 1.35),
+            ('done',    reach_dist > 1.0),
         ))
-        # rwd_dict1 = rwd_dict.copy()
-        # np.set_printoptions(precision=6)
-        # print(self.squeeze_dims(rwd_dict1))
-
-        self.rwd_dict["total"] = np.sum([self.rwd_dict[key] for key in RWD_KEYS], axis=0)
-        self.rwd_dict["score"] = door_pos
-        self.rwd_dict["solved"] = door_pos > 1.35
-        self.rwd_dict["done"] = reach_dist > 50.0
-
+        self.rwd_dict['dense'] = np.sum([self.rwd_dict[key] for key in RWD_KEYS], axis=0)
         return self.rwd_dict
-    
+
     # use latest obs, rwds to get all info (be careful, information belongs to different timestamps)
     # Its getting called twice. Once in step and sampler calls it as well
     def get_env_infos(self):
         env_info = {
             'time': self.obs_dict['t'][()],
-            'reward': self.rwd_dict['total'][()],
-            'score': self.rwd_dict['score'][()],
+            'rwd_dense': self.rwd_dict['dense'][()],
+            'rwd_sparse': self.rwd_dict['sparse'][()],
             'solved': self.rwd_dict['solved'][()],
             'done': self.rwd_dict['done'][()],
             'obs_dict': self.obs_dict,
@@ -191,10 +111,39 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         # path has two keys: observations and actions
         # path["observations"] : (num_traj, horizon, obs_dim)
         # path["rewards"] should have shape (num_traj, horizon)
-        obs = paths["observations"]
-        act = paths["actions"]
-        rewards = self.get_reward(obs, act)
+        obs_dict = self.obsvec2obsdict(paths["observations"])
+        rwd_dict = self.get_reward_dict(obs_dict)
+        paths["rewards"] = rwd_dict['total'] if rwd_dict['total'].shape[0] > 1 else rwd_dict['total'].ravel()
+        return paths
+
+    # compute vectorized rewards for paths
+    def compute_path_rewards(self, paths):
+        # path has two keys: observations and actions
+        # path["observations"] : (num_traj, horizon, obs_dim)
+        # path["rewards"] should have shape (num_traj, horizon)
+        obs_dict = self.obsvec2obsdict(paths["observations"])
+        rwd_dict = self.get_reward_dict(obs_dict)
+
+        rewards = reward_dict['dense']
+        done = reward_dict['done']
+        # time align rewards. last step is redundant
+        done[...,:-1] = done[...,1:]
+        rewards[...,:-1] = rewards[...,1:] 
+        paths["done"] = done if done.shape[0] > 1 else done.ravel()
         paths["rewards"] = rewards if rewards.shape[0] > 1 else rewards.ravel()
+        return paths
+
+    def truncate_paths(self, paths):
+        hor = paths[0]['rewards'].shape[0]
+        for path in paths:
+            if path['done'][-1] == False:
+                path['terminated'] = False
+                terminated_idx = hor
+            elif path['done'][0] == False:
+                terminated_idx = sum(~path['done'])+1
+                for key in path.keys():
+                    path[key] = path[key][:terminated_idx+1, ...]
+                path['terminated'] = True
         return paths
 
     def reset_model(self):
@@ -239,9 +188,12 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.sim.forward()
         self.viewer.cam.distance = 1.5
 
+    # evaluate paths and log metrics to logger
     def evaluate_success(self, paths, logger=None):
         num_success = 0
         num_paths = len(paths)
+        horizon = self.spec.max_episode_steps # paths could have early termination
+
         # success if door open for 25 steps
         for path in paths:
             if np.sum(path['env_infos']['solved']) > 5:
@@ -250,7 +202,10 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
 
         # log stats
         if logger:
-            score = np.mean([np.mean(p['env_infos']['score']) for p in paths]) # return score/step
+            rwd_sparse = np.mean([np.mean(p['env_infos']['rwd_sparse']) for p in paths]) # return rwd/step
+            rwd_dense = np.mean([np.sum(p['env_infos']['rwd_sparse'])/horizon for p in paths]) # return rwd/step
+            logger.log_kv('rwd_sparse', rwd_sparse)
+            logger.log_kv('rwd_dense', rwd_dense)
             logger.log_kv('score', score)
             logger.log_kv('success_rate', success_percentage)
 
