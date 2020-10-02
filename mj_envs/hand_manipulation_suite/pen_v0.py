@@ -1,179 +1,178 @@
+import os
 import numpy as np
+import collections
 from gym import utils
 from mjrl.envs import mujoco_env
-from mj_envs.utils.quatmath import quat2euler, euler2quat
+from mj_envs.utils.quatmath import euler2quat
+from darwin.darwin_utils.obs_vec_dict import ObsVecDict
 from mujoco_py import MjViewer
-import os
 
-ADD_BONUS_REWARDS = True
+OBS_KEYS = ['hand_jnt', 'obj_pos', 'obj_vel', 'obj_rot', 'obj_des_rot', 'obj_err_pos', 'obj_err_rot']
+RWD_KEYS = ['pos_align', 'rot_align', 'drop', 'bonus']
+RWD_MODE = 'dense' # dense/ sparse
 
-class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
+class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
     def __init__(self):
-        self.target_obj_bid = 0
-        self.S_grasp_sid = 0
-        self.eps_ball_sid = 0
-        self.obj_bid = 0
-        self.obj_t_sid = 0
-        self.obj_b_sid = 0
-        self.tar_t_sid = 0
-        self.tar_b_sid = 0
-        self.pen_length = 1.0
-        self.tar_length = 1.0
 
+        # get sim
         curr_dir = os.path.dirname(os.path.abspath(__file__))
-        mujoco_env.MujocoEnv.__init__(self, curr_dir+'/assets/DAPG_pen.xml', 10)
-
+        sim = mujoco_env.get_sim(model_path=curr_dir+'/assets/DAPG_pen.xml')
+        # ids
+        self.target_obj_bid = sim.model.body_name2id("target")
+        self.S_grasp_sid = sim.model.site_name2id('S_grasp')
+        self.obj_bid = sim.model.body_name2id('Object')
+        self.eps_ball_sid = sim.model.site_name2id('eps_ball')
+        self.obj_t_sid = sim.model.site_name2id('object_top')
+        self.obj_b_sid = sim.model.site_name2id('object_bottom')
+        self.tar_t_sid = sim.model.site_name2id('target_top')
+        self.tar_b_sid = sim.model.site_name2id('target_bottom')
+        self.pen_length = np.linalg.norm(sim.model.site_pos[self.obj_t_sid] - sim.model.site_pos[self.obj_b_sid])
+        self.tar_length = np.linalg.norm(sim.model.site_pos[self.tar_t_sid] - sim.model.site_pos[self.tar_b_sid])
         # change actuator sensitivity
-        self.sim.model.actuator_gainprm[self.sim.model.actuator_name2id('A_WRJ1'):self.sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([10, 0, 0])
-        self.sim.model.actuator_gainprm[self.sim.model.actuator_name2id('A_FFJ3'):self.sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([1, 0, 0])
-        self.sim.model.actuator_biasprm[self.sim.model.actuator_name2id('A_WRJ1'):self.sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([0, -10, 0])
-        self.sim.model.actuator_biasprm[self.sim.model.actuator_name2id('A_FFJ3'):self.sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([0, -1, 0])
+        sim.model.actuator_gainprm[sim.model.actuator_name2id('A_WRJ1'):sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([10, 0, 0])
+        sim.model.actuator_gainprm[sim.model.actuator_name2id('A_FFJ3'):sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([1, 0, 0])
+        sim.model.actuator_biasprm[sim.model.actuator_name2id('A_WRJ1'):sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([0, -10, 0])
+        sim.model.actuator_biasprm[sim.model.actuator_name2id('A_FFJ3'):sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([0, -1, 0])
+        # scales
+        self.act_mid = np.mean(sim.model.actuator_ctrlrange, axis=1)
+        self.act_rng = 0.5*(sim.model.actuator_ctrlrange[:,1]-sim.model.actuator_ctrlrange[:,0])
 
+        # get env
         utils.EzPickle.__init__(self)
-        self.target_obj_bid = self.sim.model.body_name2id("target")
-        self.S_grasp_sid = self.sim.model.site_name2id('S_grasp')
-        self.obj_bid = self.sim.model.body_name2id('Object')
-        self.eps_ball_sid = self.sim.model.site_name2id('eps_ball')
-        self.obj_t_sid = self.sim.model.site_name2id('object_top')
-        self.obj_b_sid = self.sim.model.site_name2id('object_bottom')
-        self.tar_t_sid = self.sim.model.site_name2id('target_top')
-        self.tar_b_sid = self.sim.model.site_name2id('target_bottom')
+        ObsVecDict.__init__(self)
+        self.obs_dict = {}
+        self.rwd_dict = {}
+        mujoco_env.MujocoEnv.__init__(self, sim=sim, frame_skip=5)
 
-        self.pen_length = np.linalg.norm(self.data.site_xpos[self.obj_t_sid] - self.data.site_xpos[self.obj_b_sid])
-        self.tar_length = np.linalg.norm(self.data.site_xpos[self.tar_t_sid] - self.data.site_xpos[self.tar_b_sid])
 
-        self.act_mid = np.mean(self.model.actuator_ctrlrange, axis=1)
-        self.act_rng = 0.5*(self.model.actuator_ctrlrange[:,1]-self.model.actuator_ctrlrange[:,0])
-
+    # step the simulation forward
     def step(self, a):
+        # apply action and step
         a = np.clip(a, -1.0, 1.0)
-        try:
-            a = self.act_mid + a*self.act_rng # mean center and scale
-            starting_up = False
-        except:
-            a = a                             # only for the initialization phase
-            starting_up = True
+        a = self.act_mid + a*self.act_rng
         self.do_simulation(a, self.frame_skip)
+
+        # observation and rewards
         obs = self.get_obs()
-        reward = self.get_reward(obs, a)
-        done = False if starting_up else self.get_done(obs)
-        return obs, reward, done, self.get_env_infos()
+        self.expand_dims(self.obs_dict) # required for vectorized rewards calculations
+        self.rwd_dict = self.get_reward_dict(self.obs_dict)
+        self.squeeze_dims(self.rwd_dict)
+        self.squeeze_dims(self.obs_dict)
+
+        # finalize step
+        env_info = self.get_env_infos()
+        return obs, env_info['rwd_'+RWD_MODE], bool(env_info['done']), env_info
+
 
     def get_obs(self):
-        qp = self.data.qpos.ravel()
-        obj_vel = self.data.qvel[-6:].ravel()
-        obj_pos = self.data.body_xpos[self.obj_bid].ravel()
-        desired_pos = self.data.site_xpos[self.eps_ball_sid].ravel()
-        obj_orien = (self.data.site_xpos[self.obj_t_sid] - self.data.site_xpos[self.obj_b_sid])/self.pen_length
-        desired_orien = (self.data.site_xpos[self.tar_t_sid] - self.data.site_xpos[self.tar_b_sid])/self.tar_length
-        return np.concatenate([qp[:-6], self.data.qvel.ravel() * self.dt, obj_orien, desired_orien, obj_pos, obj_pos-desired_pos])
-        
-        # return np.concatenate([obs_dict['qp'][:-6], obs_dict['obj_pos'], obs_dict['obj_vel'], obs_dict['obj_orien']
-        #         , obs_dict['desired_orien'], obs_dict['obj_pos']-obs_dict['desired_pos'], obs_dict['obj_orien']-
-        #         obs_dict['desired_orien']])
+        # qpos for hand, xpos for obj, xpos for target
+        self.obs_dict['t'] = np.array([self.sim.data.time])
+        self.obs_dict['hand_jnt'] = self.data.qpos[:-6].copy()
+        self.obs_dict['obj_pos'] = self.data.body_xpos[self.obj_bid].copy()
+        self.obs_dict['obj_des_pos'] = self.data.site_xpos[self.eps_ball_sid].ravel()
+        self.obs_dict['obj_vel'] = self.data.qvel[-6:].copy()
+        self.obs_dict['obj_rot'] = (self.data.site_xpos[self.obj_t_sid] - self.data.site_xpos[self.obj_b_sid])/self.pen_length
+        self.obs_dict['obj_des_rot'] = (self.data.site_xpos[self.tar_t_sid] - self.data.site_xpos[self.tar_b_sid])/self.tar_length
+        self.obs_dict['obj_err_pos'] = self.obs_dict['obj_pos']-self.obs_dict['obj_des_pos']
+        self.obs_dict['obj_err_rot'] = self.obs_dict['obj_rot']-self.obs_dict['obj_des_rot']
+
+        obs = self.obsdict2obsvec(self.obs_dict, OBS_KEYS)
+        return obs
+
+    def calculate_cosine(self, vec1: np.ndarray, vec2: np.ndarray) -> np.ndarray:
+        """Calculates the cosine angle between two vectors.
+
+        This computes cos(theta) = dot(v1, v2) / (norm(v1) * norm(v2))
+
+        Args:
+            vec1: The first vector. This can have a batch dimension.
+            vec2: The second vector. This can have a batch dimension.
+
+        Returns:
+            The cosine angle between the two vectors, with the same batch dimension
+            as the given vectors.
+        """
+        if np.shape(vec1) != np.shape(vec2):
+            raise ValueError('{} must have the same shape as {}'.format(vec1, vec2))
+        ndim = np.ndim(vec1)
+        norm_product = (np.linalg.norm(vec1, axis=-1) * np.linalg.norm(vec2, axis=-1))
+        zero_norms = norm_product == 0
+        if np.any(zero_norms):
+            if ndim>1:
+                norm_product[zero_norms] = 1
+            else:
+                norm_product = 1
+        # Return the batched dot product.
+        return np.einsum('...i,...i', vec1, vec2) / norm_product
+
+    def get_reward_dict(self, obs_dict, nn = False):
+        pos_err = obs_dict['obj_err_pos']
+        pos_align = np.linalg.norm(pos_err, axis=-1)
+        rot_align = self.calculate_cosine(obs_dict['obj_rot'], obs_dict['obj_des_rot'])
+        dropped = obs_dict['obj_pos'][:,:,2] < 0.075
+
+        rwd_dict = collections.OrderedDict((
+            # Optional Keys
+            ('pos_align',   -1.0*pos_align),
+            ('rot_align',   1.0*rot_align),
+            ('drop',        -5.0*dropped),
+            ('bonus',       10.0*(rot_align > 0.9)*(pos_align<0.075) + 50.0*(rot_align > 0.95)*(pos_align<0.075) ),
+            # Must keys
+            ('sparse',      -1.0*pos_align+rot_align),
+            ('solved',      (rot_align > 0.95)*(~dropped)),
+            ('done',        dropped),
+        ))
+        rwd_dict['dense'] = np.sum([rwd_dict[key] for key in RWD_KEYS], axis=0)
+        return rwd_dict
 
 
-    def get_reward(self, obs, act):
-        obs = np.clip(obs, -10.0, 10.0)
-        act = np.clip(act, -1.0, 1.0)
-        if len(obs.shape) == 1:
-            obj_pos = obs[-6:-3]
-            obj_pos_delta = obs[-3:]
-            obj_orien = obs[-12:-9]
-            des_orien = obs[-9:-6]
-            # pos cost
-            obj_dist = np.linalg.norm(obj_pos_delta)
-            # orientation cost
-            orien_similarity = np.sum(obj_orien * des_orien)
-            # pen dropped
-            pen_dropped = 5.0 if obj_pos[2] < 0.075 else 0.0
-        else:
-            obj_pos = obs[:, :, -6:-3]
-            obj_pos_delta = obs[:, :, -3:]
-            obj_orien = obs[:, :, -12:-9]
-            des_orien = obs[:, :, -9:-6]
-            # pos cost
-            obj_dist = np.linalg.norm(obj_pos_delta, axis=-1)
-            # orientation cost
-            orien_similarity = np.sum(obj_orien * des_orien, axis=-1)
-            orien_similarity = np.clip(orien_similarity, -1.0, 1.0)
-            # pen dropped
-            pen_dropped = 5.0 * (obj_pos[:, :, 2] < 0.075)
-        reward = orien_similarity - obj_dist - pen_dropped
-        if ADD_BONUS_REWARDS:
-            reward = reward + 10.0 * (obj_dist < 0.075) * (orien_similarity > 0.9) + \
-                              50.0 * (obj_dist < 0.075) * (orien_similarity > 0.95)
-        return reward
+    # use latest obs, rwds to get all info (be careful, information belongs to different timestamps)
+    # Its getting called twice. Once in step and sampler calls it as well
+    def get_env_infos(self):
+        env_info = {
+            'time': self.obs_dict['t'][()],
+            'rwd_dense': self.rwd_dict['dense'][()],
+            'rwd_sparse': self.rwd_dict['sparse'][()],
+            'solved': self.rwd_dict['solved'][()],
+            'done': self.rwd_dict['done'][()],
+            'obs_dict': self.obs_dict,
+            'rwd_dict': self.rwd_dict,
+        }
+        return env_info
 
+
+    # compute vectorized rewards for paths
     def compute_path_rewards(self, paths):
         # path has two keys: observations and actions
         # path["observations"] : (num_traj, horizon, obs_dim)
         # path["rewards"] should have shape (num_traj, horizon)
-        obs = paths["observations"]
-        act = paths["actions"]
-        rewards = self.get_reward(obs, act)
+        obs_dict = self.obsvec2obsdict(paths["observations"])
+
+        rwd_dict = self.get_reward_dict(obs_dict)
+
+        rewards = rwd_dict[RWD_MODE]
+        done = rwd_dict['done']
+        # time align rewards. last step is redundant
+        done[...,:-1] = done[...,1:]
+        rewards[...,:-1] = rewards[...,1:] 
+        paths["done"] = done if done.shape[0] > 1 else done.ravel()
         paths["rewards"] = rewards if rewards.shape[0] > 1 else rewards.ravel()
-
-    def get_done(self, obs):
-        obj_pos = obs[-6:-3]
-        done = True if obj_pos[2] < 0.075 else False
-        return done
-
-    def truncate_paths(self, paths):
-        for path in paths:
-            obs = path["observations"]
-            obj_height = obs[:, -4]
-            T = obs.shape[0]
-            t = 0
-            done = False
-            while t < T and done is False:
-                done = True if obj_height[t] < 0.075 else False
-                t = t + 1
-                T = t if done else T
-            path["observations"] = path["observations"][:T]
-            path["actions"] = path["actions"][:T]
-            path["rewards"] = path["rewards"][:T]
-            path["terminated"] = done
         return paths
 
-    # def step(self, a):
-    #     a = np.clip(a, -1.0, 1.0)
-    #     try:
-    #         starting_up = False
-    #         a = self.act_mid + a*self.act_rng # mean center and scale
-    #     except:
-    #         starting_up = True
-    #         a = a                             # only for the initialization phase
-    #     self.do_simulation(a, self.frame_skip)
 
-    #     obj_pos  = self.data.body_xpos[self.obj_bid].ravel()
-    #     desired_loc = self.data.site_xpos[self.eps_ball_sid].ravel()
-    #     obj_orien = (self.data.site_xpos[self.obj_t_sid] - self.data.site_xpos[self.obj_b_sid])/self.pen_length
-    #     desired_orien = (self.data.site_xpos[self.tar_t_sid] - self.data.site_xpos[self.tar_b_sid])/self.tar_length
+    def truncate_paths(self, paths):
+        hor = paths[0]['rewards'].shape[0]
+        for path in paths:
+            if path['done'][-1] == False:
+                path['terminated'] = False
+                terminated_idx = hor
+            elif path['done'][0] == False:
+                terminated_idx = sum(~path['done'])+1
+                for key in path.keys():
+                    path[key] = path[key][:terminated_idx+1, ...]
+                path['terminated'] = True
+        return paths
 
-    #     # pos cost
-    #     dist = np.linalg.norm(obj_pos-desired_loc)
-    #     reward = -dist
-    #     # orien cost
-    #     orien_similarity = np.dot(obj_orien, desired_orien)
-    #     reward += orien_similarity
-
-    #     if ADD_BONUS_REWARDS:
-    #         # bonus for being close to desired orientation
-    #         if dist < 0.075 and orien_similarity > 0.9:
-    #             reward += 10
-    #         if dist < 0.075 and orien_similarity > 0.95:
-    #             reward += 50
-
-    #     # penalty for dropping the pen
-    #     done = False
-    #     if obj_pos[2] < 0.075:
-    #         reward -= 5
-    #         done = True if not starting_up else False
-
-    #     goal_achieved = True if (dist < 0.075 and orien_similarity > 0.95) else False
-
-    #     return self.get_obs(), reward, done, dict(goal_achieved=goal_achieved)
 
     def reset_model(self):
         qp = self.init_qpos.copy()
@@ -186,6 +185,7 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         self.sim.forward()
         return self.get_obs()
 
+
     def get_env_state(self):
         """
         Get state of hand as well as objects and targets in the scene
@@ -194,6 +194,7 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         qv = self.data.qvel.ravel().copy()
         desired_orien = self.model.body_quat[self.target_obj_bid].ravel().copy()
         return dict(qpos=qp, qvel=qv, desired_orien=desired_orien)
+
 
     def set_env_state(self, state_dict):
         """
@@ -206,16 +207,6 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         self.model.body_quat[self.target_obj_bid] = desired_orien
         self.sim.forward()
 
-    def get_env_infos(self):
-        state = self.get_env_state()
-        obj_pos  = self.data.body_xpos[self.obj_bid].ravel()
-        desired_loc = self.data.site_xpos[self.eps_ball_sid].ravel()
-        obj_orien = (self.data.site_xpos[self.obj_t_sid] - self.data.site_xpos[self.obj_b_sid])/self.pen_length
-        desired_orien = (self.data.site_xpos[self.tar_t_sid] - self.data.site_xpos[self.tar_b_sid])/self.tar_length
-        dist = np.linalg.norm(obj_pos-desired_loc)
-        orien_similarity = np.dot(obj_orien, desired_orien)
-        goal_achieved = True if (dist < 0.075 and orien_similarity > 0.95) else False
-        return dict(state=state, goal_achieved=goal_achieved)
 
     def mj_viewer_setup(self):
         self.viewer = MjViewer(self.sim)
@@ -223,12 +214,36 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         self.sim.forward()
         self.viewer.cam.distance = 1.0
 
+
     def evaluate_success(self, paths):
         num_success = 0
         num_paths = len(paths)
-        # success if pen within 15 degrees of target for 5 steps
+        # success if pen within 15 degrees of target for 20 steps
         for path in paths:
-            if np.sum(path['env_infos']['goal_achieved']) > 5:
+            if np.sum(path['env_infos']['goal_achieved']) > 20:
                 num_success += 1
         success_percentage = num_success*100.0/num_paths
+        return success_percentage
+
+
+    # evaluate paths and log metrics to logger
+    def evaluate_success(self, paths, logger=None):
+        num_success = 0
+        num_paths = len(paths)
+        horizon = self.spec.max_episode_steps # paths could have early termination
+
+        # success if pen within 15 degrees of target for 5 steps
+        for path in paths:
+            if np.sum(path['env_infos']['solved']) > 5:
+                num_success += 1
+        success_percentage = num_success*100.0/num_paths
+
+        # log stats
+        if logger:
+            rwd_sparse = np.mean([np.mean(p['env_infos']['rwd_sparse']) for p in paths]) # return rwd/step
+            rwd_dense = np.mean([np.sum(p['env_infos']['rwd_sparse'])/horizon for p in paths]) # return rwd/step
+            logger.log_kv('rwd_sparse', rwd_sparse)
+            logger.log_kv('rwd_dense', rwd_dense)
+            logger.log_kv('success_rate', success_percentage)
+
         return success_percentage
