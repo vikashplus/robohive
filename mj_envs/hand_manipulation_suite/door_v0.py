@@ -9,12 +9,13 @@ import collections
 # NOTES:
 #     1. why is qpos[0] not a part of the obs? ==> Hand translation isn't consistent due to randomization. Palm pos is a good substitute 
 
-# OBS_KEYS = ['hand_jnt', 'latch_pos', 'door_pos', 'palm_pos', 'handle_pos', 'reach_err', 'door_open']
+# OBS_KEYS = ['hand_jnt', 'latch_pos', 'door_pos', 'palm_pos', 'handle_pos', 'reach_err', 'door_open'] # DAPG
+# RWD_KEYS = ['reach', 'open', 'smooth', 'bonus'] # DAPG
+
 OBS_KEYS = ['hand_jnt', 'latch_pos', 'door_pos', 'palm_pos', 'handle_pos', 'reach_err']
-# RWD_KEYS = ['reach', 'open', 'smooth', 'bonus']
 RWD_KEYS = ['reach', 'open', 'bonus']
 
-ADD_BONUS_REWARD = True
+RWD_MODE = 'dense' # dense/ sparse
 
 class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
     def __init__(self):
@@ -59,7 +60,7 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
 
         # finalize step
         env_info = self.get_env_infos()
-        return obs, env_info['rwd_dense'], bool(env_info['done']), env_info
+        return obs, env_info['rwd_'+RWD_MODE], bool(env_info['done']), env_info
 
     def get_obs(self):
         # qpos for hand, xpos for obj, xpos for target
@@ -76,20 +77,20 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         return obs
 
     def get_reward_dict(self, obs_dict):
-        reach_dist = np.linalg.norm(obs_dict['palm_pos']-obs_dict['handle_pos'], axis=-1)
+        reach_dist = np.linalg.norm(self.obs_dict['reach_err'], axis=-1)
         door_pos = obs_dict['door_pos'][:,:,0]
-        self.rwd_dict = collections.OrderedDict((
+        rwd_dict = collections.OrderedDict((
             # Optional Keys
-            ('reach', -0.1* reach_dist),
-            ('open', -0.1*(door_pos - 1.57)*(door_pos - 1.57)),
-            ('bonus', 2*(door_pos > 0.2) + 8*(door_pos > 1.0) + 10*(door_pos > 1.35)),
+            ('reach',   -0.1* reach_dist),
+            ('open',    -0.1*(door_pos - 1.57)*(door_pos - 1.57)),
+            ('bonus',   2*(door_pos > 0.2) + 8*(door_pos > 1.0) + 10*(door_pos > 1.35)),
             # Must keys
             ('sparse',  door_pos),
             ('solved',  door_pos > 1.35),
             ('done',    reach_dist > 1.0),
         ))
-        self.rwd_dict['dense'] = np.sum([self.rwd_dict[key] for key in RWD_KEYS], axis=0)
-        return self.rwd_dict
+        rwd_dict['dense'] = np.sum([rwd_dict[key] for key in RWD_KEYS], axis=0)
+        return rwd_dict
 
     # use latest obs, rwds to get all info (be careful, information belongs to different timestamps)
     # Its getting called twice. Once in step and sampler calls it as well
@@ -105,15 +106,6 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         }
         return env_info
 
-    def compute_path_rewards(self, paths):
-        # path has two keys: observations and actions
-        # path["observations"] : (num_traj, horizon, obs_dim)
-        # path["rewards"] should have shape (num_traj, horizon)
-        obs_dict = self.obsvec2obsdict(paths["observations"])
-        rwd_dict = self.get_reward_dict(obs_dict)
-        paths["rewards"] = rwd_dict['total'] if rwd_dict['total'].shape[0] > 1 else rwd_dict['total'].ravel()
-        return paths
-
     # compute vectorized rewards for paths
     def compute_path_rewards(self, paths):
         # path has two keys: observations and actions
@@ -122,8 +114,8 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         obs_dict = self.obsvec2obsdict(paths["observations"])
         rwd_dict = self.get_reward_dict(obs_dict)
 
-        rewards = reward_dict['dense']
-        done = reward_dict['done']
+        rewards = rwd_dict[RWD_MODE]
+        done = rwd_dict['done']
         # time align rewards. last step is redundant
         done[...,:-1] = done[...,1:]
         rewards[...,:-1] = rewards[...,1:] 
@@ -192,7 +184,7 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         num_paths = len(paths)
         horizon = self.spec.max_episode_steps # paths could have early termination
 
-        # success if door open for 25 steps
+        # success if door open for 5 steps
         for path in paths:
             if np.sum(path['env_infos']['solved']) > 5:
                 num_success += 1
@@ -201,10 +193,9 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         # log stats
         if logger:
             rwd_sparse = np.mean([np.mean(p['env_infos']['rwd_sparse']) for p in paths]) # return rwd/step
-            rwd_dense = np.mean([np.sum(p['env_infos']['rwd_sparse'])/horizon for p in paths]) # return rwd/step
+            rwd_dense = np.mean([np.sum(p['env_infos']['rwd_dense'])/horizon for p in paths]) # return rwd/step
             logger.log_kv('rwd_sparse', rwd_sparse)
             logger.log_kv('rwd_dense', rwd_dense)
-            logger.log_kv('score', score)
             logger.log_kv('success_rate', success_percentage)
 
         return success_percentage
