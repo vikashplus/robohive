@@ -4,35 +4,69 @@ from mjrl.envs import mujoco_env
 from mujoco_py import MjViewer
 from mj_envs.utils.quatmath import *
 import os
+from darwin.darwin_utils.obs_vec_dict import ObsVecDict
+import collections
 
 ADD_BONUS_REWARDS = True
+# OBS_KEYS = ['hand_jnt', 'obj_vel', 'palm_pos', 'obj_pos', 'obj_rot', 'target_pos', 'nail_impact'] # DAPG
+RWD_KEYS = ['palm_obj', 'tool_target', 'target_goal', 'smooth', 'bonus'] # DAPG
 
-class HammerEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
+OBS_KEYS = ['hand_jnt', 'obj_vel', 'palm_pos', 'obj_pos', 'obj_rot', 'target_pos', 'nail_impact', 'tool_pos', 'goal_pos', 'hand_vel']
+
+RWD_MODE = 'dense' # dense/ sparse
+
+class HammerEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
     def __init__(self):
-        self.target_obj_sid = -1
-        self.S_grasp_sid = -1
-        self.obj_bid = -1
-        self.tool_sid = -1
-        self.goal_sid = -1
+
+        # get sim
         curr_dir = os.path.dirname(os.path.abspath(__file__))
-        mujoco_env.MujocoEnv.__init__(self, curr_dir+'/assets/DAPG_hammer.xml', 5)
-        utils.EzPickle.__init__(self)
-
+        sim = mujoco_env.get_sim(model_path=curr_dir+'/assets/DAPG_hammer.xml')
+        # ids
+        self.target_obj_sid = sim.model.site_name2id('S_target')
+        self.S_grasp_sid = sim.model.site_name2id('S_grasp')
+        self.obj_bid = sim.model.body_name2id('object')
+        self.tool_sid = sim.model.site_name2id('tool')
+        self.goal_sid = sim.model.site_name2id('nail_goal')
+        self.target_bid = sim.model.body_name2id('nail_board')
+        self.nail_rid = sim.model.sensor_name2id('S_nail')
         # change actuator sensitivity
-        self.sim.model.actuator_gainprm[self.sim.model.actuator_name2id('A_WRJ1'):self.sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([10, 0, 0])
-        self.sim.model.actuator_gainprm[self.sim.model.actuator_name2id('A_FFJ3'):self.sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([1, 0, 0])
-        self.sim.model.actuator_biasprm[self.sim.model.actuator_name2id('A_WRJ1'):self.sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([0, -10, 0])
-        self.sim.model.actuator_biasprm[self.sim.model.actuator_name2id('A_FFJ3'):self.sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([0, -1, 0])
-        
-        self.target_obj_sid = self.sim.model.site_name2id('S_target')
-        self.S_grasp_sid = self.sim.model.site_name2id('S_grasp')
-        self.obj_bid = self.sim.model.body_name2id('Object')
-        self.tool_sid = self.sim.model.site_name2id('tool')
-        self.goal_sid = self.sim.model.site_name2id('nail_goal')
-        self.act_mid = np.mean(self.model.actuator_ctrlrange, axis=1)
-        self.act_rng = 0.5 * (self.model.actuator_ctrlrange[:, 1] - self.model.actuator_ctrlrange[:, 0])
+        sim.model.actuator_gainprm[sim.model.actuator_name2id('A_WRJ1'):sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([10, 0, 0])
+        sim.model.actuator_gainprm[sim.model.actuator_name2id('A_FFJ3'):sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([1, 0, 0])
+        sim.model.actuator_biasprm[sim.model.actuator_name2id('A_WRJ1'):sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([0, -10, 0])
+        sim.model.actuator_biasprm[sim.model.actuator_name2id('A_FFJ3'):sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([0, -1, 0])
+        # scales
+        self.act_mid = np.mean(sim.model.actuator_ctrlrange, axis=1)
+        self.act_rng = 0.5*(sim.model.actuator_ctrlrange[:,1]-sim.model.actuator_ctrlrange[:,0])
 
+        # get env
+        utils.EzPickle.__init__(self)
+        ObsVecDict.__init__(self)
+        self.obs_dict = {}
+        self.rwd_dict = {}
+        mujoco_env.MujocoEnv.__init__(self, sim=sim, frame_skip=5)
+
+    # step the simulation forward
     def step(self, a):
+        # apply action and step
+        a = np.clip(a, -1.0, 1.0)
+        a = self.act_mid + a*self.act_rng
+        self.do_simulation(a, self.frame_skip)
+
+        # observation and rewards
+        obs = self.get_obs()
+        self.expand_dims(self.obs_dict) # required for vectorized rewards calculations
+        self.rwd_dict = self.get_reward_dict(self.obs_dict)
+        self.squeeze_dims(self.rwd_dict)
+        self.squeeze_dims(self.obs_dict)
+
+        # finalize step
+        env_info = self.get_env_infos()
+        # reward, goal_achieved = self.get_rewards_old()
+        # print(reward-env_info['rwd_'+RWD_MODE])
+        return obs, env_info['rwd_'+RWD_MODE], bool(env_info['done']), env_info
+
+
+    def step_old(self, a):
         a = np.clip(a, -1.0, 1.0)
         try:
             a = self.act_mid + a * self.act_rng  # mean center and scale
@@ -40,6 +74,11 @@ class HammerEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
             a = a  # only for the initialization phase
         self.do_simulation(a, self.frame_skip)
         ob = self.get_obs()
+        reward, goal_achieved = self.get_rewards_old()
+
+        return ob, reward, False, dict(goal_achieved=goal_achieved)
+
+    def get_rewards_old(self):
         obj_pos = self.data.body_xpos[self.obj_bid].ravel()
         palm_pos = self.data.site_xpos[self.S_grasp_sid].ravel()
         tool_pos = self.data.site_xpos[self.tool_sid].ravel()
@@ -67,26 +106,102 @@ class HammerEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
                 reward += 75
 
         goal_achieved = True if np.linalg.norm(target_pos - goal_pos) < 0.010 else False
+        return reward, goal_achieved
 
-        return ob, reward, False, dict(goal_achieved=goal_achieved)
+    def get_reward_dict(self, obs_dict):
+        # get to hammer
+        palm_obj_dist = np.linalg.norm(obs_dict['palm_pos'] - obs_dict['obj_pos'], axis=-1)
+        # take hammer head to nail
+        tool_target_dist = np.linalg.norm(obs_dict['tool_pos'] - obs_dict['target_pos'], axis=-1)
+        # make nail go inside
+        target_goal_dist = np.linalg.norm(obs_dict['target_pos'] - obs_dict['goal_pos'], axis=-1)
+        # vel magnitude (handled differently in DAPG)
+        hand_vel_mag = np.linalg.norm(obs_dict['hand_vel'], axis=-1)
+        obj_vel_mag = np.linalg.norm(obs_dict['obj_vel'], axis=-1)
+        # lifting tool 
+        lifted = (obs_dict['obj_pos'][:,:,2] > 0.04) * (obs_dict['tool_pos'][:,:,2] > 0.04)
+
+        rwd_dict = collections.OrderedDict((
+            # Optional Keys
+            ('palm_obj', - 0.1 * palm_obj_dist),
+            ('tool_target', -1.0 * tool_target_dist),
+            ('target_goal', -10.0 * target_goal_dist),
+            ('smooth', -1e-2 * (hand_vel_mag + obj_vel_mag)),
+            ('bonus', 2.0*lifted + 25.0*(target_goal_dist<0.020) + 75.0*(target_goal_dist<0.010)),
+            # Must keys
+            ('sparse',  -1.0*target_goal_dist),
+            ('solved',  target_goal_dist<0.010),
+            ('done',    palm_obj_dist > 1.0),
+        ))
+        rwd_dict['dense'] = np.sum([rwd_dict[key] for key in RWD_KEYS], axis=0)
+        return rwd_dict
 
     def get_obs(self):
-        # qpos for hand
-        # xpos for obj
-        # xpos for target
-        qp = self.data.qpos.ravel()
-        qv = np.clip(self.data.qvel.ravel(), -1.0, 1.0)
-        obj_pos = self.data.body_xpos[self.obj_bid].ravel()
-        obj_rot = quat2euler(self.data.body_xquat[self.obj_bid].ravel()).ravel()
-        palm_pos = self.data.site_xpos[self.S_grasp_sid].ravel()
-        target_pos = self.data.site_xpos[self.target_obj_sid].ravel()
-        nail_impact = np.clip(self.sim.data.sensordata[self.sim.model.sensor_name2id('S_nail')], -1.0, 1.0)
-        return np.concatenate([qp[:-6], qv[-6:], palm_pos, obj_pos, obj_rot, target_pos, np.array([nail_impact])])
+        # qpos for hand, xpos for obj, xpos for target
+        self.obs_dict['t'] = np.array([self.sim.data.time])
+        self.obs_dict['hand_jnt'] = self.data.qpos[:-6].copy()
+        self.obs_dict['obj_vel'] = np.clip(self.data.qvel[-6:].copy(), -1.0, 1.0)
+        self.obs_dict['palm_pos'] = self.data.site_xpos[self.S_grasp_sid].copy()
+        self.obs_dict['obj_pos'] = self.data.body_xpos[self.obj_bid].copy()
+        self.obs_dict['obj_rot'] = quat2euler(self.data.body_xquat[self.obj_bid].copy())
+        self.obs_dict['target_pos'] = self.data.site_xpos[self.target_obj_sid].copy()
+        self.obs_dict['nail_impact'] = np.clip(self.sim.data.sensordata[self.nail_rid], [-1.0], [1.0])
+
+        # keys missing from DAPG-env but needed for rewards calculations
+        self.obs_dict['tool_pos'] = self.data.site_xpos[self.tool_sid].copy()
+        self.obs_dict['goal_pos'] = self.data.site_xpos[self.goal_sid].copy()
+        self.obs_dict['hand_vel'] = np.clip(self.data.qvel[:-6].copy(), -1.0, 1.0)
+
+        obs = self.obsdict2obsvec(self.obs_dict, OBS_KEYS)
+        return obs
+
+    # use latest obs, rwds to get all info (be careful, information belongs to different timestamps)
+    # Its getting called twice. Once in step and sampler calls it as well
+    def get_env_infos(self):
+        env_info = {
+            'time': self.obs_dict['t'][()],
+            'rwd_dense': self.rwd_dict['dense'][()],
+            'rwd_sparse': self.rwd_dict['sparse'][()],
+            'solved': self.rwd_dict['solved'][()],
+            'done': self.rwd_dict['done'][()],
+            'obs_dict': self.obs_dict,
+            'rwd_dict': self.rwd_dict,
+        }
+        return env_info
+
+    # compute vectorized rewards for paths
+    def compute_path_rewards(self, paths):
+        # path has two keys: observations and actions
+        # path["observations"] : (num_traj, horizon, obs_dim)
+        # path["rewards"] should have shape (num_traj, horizon)
+        obs_dict = self.obsvec2obsdict(paths["observations"])
+        rwd_dict = self.get_reward_dict(obs_dict)
+
+        rewards = rwd_dict[RWD_MODE]
+        done = rwd_dict['done']
+        # time align rewards. last step is redundant
+        done[...,:-1] = done[...,1:]
+        rewards[...,:-1] = rewards[...,1:] 
+        paths["done"] = done if done.shape[0] > 1 else done.ravel()
+        paths["rewards"] = rewards if rewards.shape[0] > 1 else rewards.ravel()
+        return paths
+
+    def truncate_paths(self, paths):
+        hor = paths[0]['rewards'].shape[0]
+        for path in paths:
+            if path['done'][-1] == False:
+                path['terminated'] = False
+                terminated_idx = hor
+            elif path['done'][0] == False:
+                terminated_idx = sum(~path['done'])+1
+                for key in path.keys():
+                    path[key] = path[key][:terminated_idx+1, ...]
+                path['terminated'] = True
+        return paths
 
     def reset_model(self):
         self.sim.reset()
-        target_bid = self.model.body_name2id('nail_board')
-        self.model.body_pos[target_bid,2] = self.np_random.uniform(low=0.1, high=0.25)
+        self.model.body_pos[self.target_bid,2] = self.np_random.uniform(low=0.1, high=0.25)
         self.sim.forward()
         return self.get_obs()
 
@@ -117,12 +232,24 @@ class HammerEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         self.viewer.cam.distance = 2.0
         self.sim.forward()
 
-    def evaluate_success(self, paths):
+    # evaluate paths and log metrics to logger
+    def evaluate_success(self, paths, logger=None):
         num_success = 0
         num_paths = len(paths)
-        # success if nail insude board for 25 steps
+        horizon = self.spec.max_episode_steps # paths could have early termination
+
+        # success if door open for 5 steps
         for path in paths:
-            if np.sum(path['env_infos']['goal_achieved']) > 25:
+            if np.sum(path['env_infos']['solved']) > 5:
                 num_success += 1
         success_percentage = num_success*100.0/num_paths
+
+        # log stats
+        if logger:
+            rwd_sparse = np.mean([np.mean(p['env_infos']['rwd_sparse']) for p in paths]) # return rwd/step
+            rwd_dense = np.mean([np.sum(p['env_infos']['rwd_dense'])/horizon for p in paths]) # return rwd/step
+            logger.log_kv('rwd_sparse', rwd_sparse)
+            logger.log_kv('rwd_dense', rwd_dense)
+            logger.log_kv('success_rate', success_percentage)
+
         return success_percentage

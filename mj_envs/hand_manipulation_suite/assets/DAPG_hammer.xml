@@ -86,7 +86,7 @@
         </body>
 
         <!-- ======= Hammer ======= -->
-        <body name="Object" pos="0 -0.2 0.035" quat="0.707388 0.706825 0 0">
+        <body name="object" pos="0 -0.2 0.035" quat="0.707388 0.706825 0 0">
             <inertial pos="-0.11025 0 0" quat="0.50001 0.49999 0.49999 0.50001" mass="0.253442" diaginertia="0.00349644 0.00345287 8.947e-05" />
             <joint name="OBJTx" pos="0 0 0" axis="1 0 0" type="slide" limited="false" damping="0" />
             <joint name="OBJTy" pos="0 0 0" axis="0 1 0" type="slide" limited="false" damping="0" />
