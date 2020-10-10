@@ -12,7 +12,7 @@ RWD_KEYS = ['pos_align', 'rot_align', 'drop', 'bonus']
 RWD_MODE = 'dense' # dense/ sparse
 
 class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
 
         # get sim
         curr_dir = os.path.dirname(os.path.abspath(__file__))
@@ -105,7 +105,7 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         # Return the batched dot product.
         return np.einsum('...i,...i', vec1, vec2) / norm_product
 
-    def get_reward_dict(self, obs_dict, nn = False):
+    def get_reward_dict(self, obs_dict):
         pos_err = obs_dict['obj_err_pos']
         pos_align = np.linalg.norm(pos_err, axis=-1)
         rot_align = self.calculate_cosine(obs_dict['obj_rot'], obs_dict['obj_des_rot'])
@@ -213,17 +213,6 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.viewer.cam.azimuth = -45
         self.sim.forward()
         self.viewer.cam.distance = 1.0
-
-
-    def evaluate_success(self, paths):
-        num_success = 0
-        num_paths = len(paths)
-        # success if pen within 15 degrees of target for 20 steps
-        for path in paths:
-            if np.sum(path['env_infos']['goal_achieved']) > 20:
-                num_success += 1
-        success_percentage = num_success*100.0/num_paths
-        return success_percentage
 
 
     # evaluate paths and log metrics to logger

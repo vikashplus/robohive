@@ -18,7 +18,7 @@ RWD_KEYS = ['reach', 'open', 'bonus']
 RWD_MODE = 'dense' # dense/ sparse
 
 class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
 
         # get sim
         curr_dir = os.path.dirname(os.path.abspath(__file__))
@@ -165,12 +165,6 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.set_state(qp, qv)
         self.model.body_pos[self.door_bid] = state_dict['door_body_pos']
         self.sim.forward()
-
-    # def get_env_infos(self):
-    #     state = self.get_env_state()
-    #     door_pos = self.data.qpos[self.door_hinge_did]
-    #     goal_achieved = True if door_pos >= 1.35 else False
-    #     return dict(state=state, goal_achieved=goal_achieved)
 
     def mj_viewer_setup(self):
         self.viewer = MjViewer(self.sim)

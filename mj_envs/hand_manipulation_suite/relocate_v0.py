@@ -14,7 +14,7 @@ RWD_MODE = 'dense' # dense/ sparse
 
 
 class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
 
         # get sim
         curr_dir = os.path.dirname(os.path.abspath(__file__))
@@ -38,26 +38,6 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.obs_dict = {}
         self.rwd_dict = {}
         mujoco_env.MujocoEnv.__init__(self, sim=sim, frame_skip=5)
-
-    # def __init__(self):
-    #     self.target_obj_sid = 0
-    #     self.S_grasp_sid = 0
-    #     self.obj_bid = 0
-    #     curr_dir = os.path.dirname(os.path.abspath(__file__))
-    #     mujoco_env.MujocoEnv.__init__(self, curr_dir+'/assets/DAPG_relocate.xml', 5)
-        
-    #     # change actuator sensitivity
-    #     self.sim.model.actuator_gainprm[self.sim.model.actuator_name2id('A_WRJ1'):self.sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([10, 0, 0])
-    #     self.sim.model.actuator_gainprm[self.sim.model.actuator_name2id('A_FFJ3'):self.sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([1, 0, 0])
-    #     self.sim.model.actuator_biasprm[self.sim.model.actuator_name2id('A_WRJ1'):self.sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([0, -10, 0])
-    #     self.sim.model.actuator_biasprm[self.sim.model.actuator_name2id('A_FFJ3'):self.sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([0, -1, 0])
-
-    #     self.target_obj_sid = self.sim.model.site_name2id("target")
-    #     self.S_grasp_sid = self.sim.model.site_name2id('S_grasp')
-    #     self.obj_bid = self.sim.model.body_name2id('Object')
-    #     utils.EzPickle.__init__(self)
-    #     self.act_mid = np.mean(self.model.actuator_ctrlrange, axis=1)
-    #     self.act_rng = 0.5*(self.model.actuator_ctrlrange[:,1]-self.model.actuator_ctrlrange[:,0])
 
     # step the simulation forward
     def step(self, a):
@@ -85,16 +65,6 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
 
         return obs, env_info['rwd_'+RWD_MODE], bool(env_info['done']), env_info
 
-    # def step(self, a):
-    #     a = np.clip(a, -1.0, 1.0)
-    #     try:
-    #         a = self.act_mid + a*self.act_rng # mean center and scale
-    #     except:
-    #         a = a                             # only for the initialization phase
-    #     self.do_simulation(a, self.frame_skip)
-    #     ob = self.get_obs()
-    #     rewards, goal_achieved = self.get_rewards()
-    #     return ob, reward, False, dict(goal_achieved=goal_achieved)
 
     def get_rewards_old(self):
         obj_pos  = self.data.body_xpos[self.obj_bid].ravel()
