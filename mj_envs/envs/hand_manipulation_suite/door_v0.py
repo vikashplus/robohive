@@ -3,11 +3,11 @@ from gym import utils
 from mjrl.envs import mujoco_env
 from mujoco_py import MjViewer
 import os
-from darwin.darwin_utils.obs_vec_dict import ObsVecDict
+from mj_envs.utils.obj_vec_dict import ObsVecDict
 import collections
 
 # NOTES:
-#     1. why is qpos[0] not a part of the obs? ==> Hand translation isn't consistent due to randomization. Palm pos is a good substitute 
+#     1. why is qpos[0] not a part of the obs? ==> Hand translation isn't consistent due to randomization. Palm pos is a good substitute
 
 # OBS_KEYS = ['hand_jnt', 'latch_pos', 'door_pos', 'palm_pos', 'handle_pos', 'reach_err', 'door_open'] # DAPG
 # RWD_KEYS = ['reach', 'open', 'smooth', 'bonus'] # DAPG
@@ -73,7 +73,7 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.obs_dict['door_pos'] = np.array([self.data.qpos[self.door_hinge_did]])
         self.obs_dict['latch_pos'] = np.array([self.data.qpos[-1]])
         self.obs_dict['door_open'] = 2.0*(self.obs_dict['door_pos'] > 1.0) -1.0
-        obs = self.obsdict2obsvec(self.obs_dict, OBS_KEYS)
+        t, obs = self.obsdict2obsvec(self.obs_dict, OBS_KEYS)
         return obs
 
     def get_reward_dict(self, obs_dict):
@@ -118,7 +118,7 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         done = rwd_dict['done']
         # time align rewards. last step is redundant
         done[...,:-1] = done[...,1:]
-        rewards[...,:-1] = rewards[...,1:] 
+        rewards[...,:-1] = rewards[...,1:]
         paths["done"] = done if done.shape[0] > 1 else done.ravel()
         paths["rewards"] = rewards if rewards.shape[0] > 1 else rewards.ravel()
         return paths

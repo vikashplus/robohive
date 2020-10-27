@@ -3,7 +3,7 @@ from gym import utils
 from mjrl.envs import mujoco_env
 from mujoco_py import MjViewer
 import os
-from darwin.darwin_utils.obs_vec_dict import ObsVecDict
+from mj_envs.utils.obj_vec_dict import ObsVecDict
 import collections
 
 ADD_BONUS_REWARDS = True
@@ -127,7 +127,7 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         # keys missing from DAPG-env but needed for rewards calculations
         self.obs_dict['obj_pos']  = self.data.body_xpos[self.obj_bid].copy()
 
-        obs = self.obsdict2obsvec(self.obs_dict, OBS_KEYS)
+        t, obs = self.obsdict2obsvec(self.obs_dict, OBS_KEYS)
         return obs
 
     # use latest obs, rwds to get all info (be careful, information belongs to different timestamps)
@@ -156,7 +156,7 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         done = rwd_dict['done']
         # time align rewards. last step is redundant
         done[...,:-1] = done[...,1:]
-        rewards[...,:-1] = rewards[...,1:] 
+        rewards[...,:-1] = rewards[...,1:]
         paths["done"] = done if done.shape[0] > 1 else done.ravel()
         paths["rewards"] = rewards if rewards.shape[0] > 1 else rewards.ravel()
         return paths

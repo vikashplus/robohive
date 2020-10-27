@@ -4,7 +4,7 @@ from mjrl.envs import mujoco_env
 from mujoco_py import MjViewer
 from mj_envs.utils.quatmath import *
 import os
-from darwin.darwin_utils.obs_vec_dict import ObsVecDict
+from mj_envs.utils.obj_vec_dict import ObsVecDict
 import collections
 
 ADD_BONUS_REWARDS = True
@@ -73,7 +73,7 @@ class HammerEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         # vel magnitude (handled differently in DAPG)
         hand_vel_mag = np.linalg.norm(obs_dict['hand_vel'], axis=-1)
         obj_vel_mag = np.linalg.norm(obs_dict['obj_vel'], axis=-1)
-        # lifting tool 
+        # lifting tool
         lifted = (obs_dict['obj_pos'][:,:,2] > 0.04) * (obs_dict['tool_pos'][:,:,2] > 0.04)
 
         rwd_dict = collections.OrderedDict((
@@ -107,7 +107,7 @@ class HammerEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.obs_dict['goal_pos'] = self.data.site_xpos[self.goal_sid].copy()
         self.obs_dict['hand_vel'] = np.clip(self.data.qvel[:-6].copy(), -1.0, 1.0)
 
-        obs = self.obsdict2obsvec(self.obs_dict, OBS_KEYS)
+        t, obs = self.obsdict2obsvec(self.obs_dict, OBS_KEYS)
         return obs
 
     # use latest obs, rwds to get all info (be careful, information belongs to different timestamps)
@@ -136,7 +136,7 @@ class HammerEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         done = rwd_dict['done']
         # time align rewards. last step is redundant
         done[...,:-1] = done[...,1:]
-        rewards[...,:-1] = rewards[...,1:] 
+        rewards[...,:-1] = rewards[...,1:]
         paths["done"] = done if done.shape[0] > 1 else done.ravel()
         paths["rewards"] = rewards if rewards.shape[0] > 1 else rewards.ravel()
         return paths

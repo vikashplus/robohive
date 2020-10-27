@@ -4,7 +4,7 @@ import collections
 from gym import utils
 from mjrl.envs import mujoco_env
 from mj_envs.utils.quatmath import euler2quat
-from darwin.darwin_utils.obs_vec_dict import ObsVecDict
+from mj_envs.utils.obj_vec_dict import ObsVecDict
 from mujoco_py import MjViewer
 
 OBS_KEYS = ['hand_jnt', 'obj_pos', 'obj_vel', 'obj_rot', 'obj_des_rot', 'obj_err_pos', 'obj_err_rot']
@@ -76,7 +76,7 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.obs_dict['obj_err_pos'] = self.obs_dict['obj_pos']-self.obs_dict['obj_des_pos']
         self.obs_dict['obj_err_rot'] = self.obs_dict['obj_rot']-self.obs_dict['obj_des_rot']
 
-        obs = self.obsdict2obsvec(self.obs_dict, OBS_KEYS)
+        t, obs = self.obsdict2obsvec(self.obs_dict, OBS_KEYS)
         return obs
 
     def calculate_cosine(self, vec1: np.ndarray, vec2: np.ndarray) -> np.ndarray:
@@ -154,7 +154,7 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         done = rwd_dict['done']
         # time align rewards. last step is redundant
         done[...,:-1] = done[...,1:]
-        rewards[...,:-1] = rewards[...,1:] 
+        rewards[...,:-1] = rewards[...,1:]
         paths["done"] = done if done.shape[0] > 1 else done.ravel()
         paths["rewards"] = rewards if rewards.shape[0] > 1 else rewards.ravel()
         return paths

@@ -1,6 +1,6 @@
 import gym
 import mj_envs
-import click 
+import click
 import os
 import gym
 import numpy as np
