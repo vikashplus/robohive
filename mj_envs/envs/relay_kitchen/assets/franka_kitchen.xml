@@ -1,0 +1,85 @@
+<mujoco model="Franka_in_Kitchen">
+<!-- =================================================
+    Copyright 2019 Vikash Kumar
+    Model   :: Franka_in_kitchen (MuJoCoV2.0)
+    Author  :: Vikash Kumar (vikashplus@gmail.com)
+    Details :: https://github.com/vikashplus/furniture_sim
+    License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+====================================================== -©vk©-->
+    <size njmax='1000' nconmax='1000'/>
+
+    <include file="../../../sims/scene_sim/basic_scene.xml"/>
+    <include file="../../../sims/franka_sim/assets/assets.xml"/>
+    <include file="../../../sims/franka_sim/assets/actuator0.xml"/>
+    <include file="../../../sims/furniture_sim/oven/oven_asset.xml"/>
+    <include file="../../../sims/furniture_sim/counters/counters_asset.xml"/>
+    <include file="../../../sims/furniture_sim/backwall/backwall_asset.xml"/>
+    <include file="../../../sims/furniture_sim/slidecabinet/slidecabinet_asset.xml"/>
+    <include file="../../../sims/furniture_sim/hingecabinet/hingecabinet_asset.xml"/>
+    <include file="../../../sims/furniture_sim/microwave/microwave_asset.xml"/>
+    <include file="../../../sims/furniture_sim/kettle/kettle_asset.xml"/>
+
+    <visual>
+    <global offwidth="2560" offheight="1920" />
+    <quality shadowsize="4096" offsamples="4" />
+    <map force="0.1" fogend="5" />
+    </visual>
+
+    <compiler inertiafromgeom='auto' inertiagrouprange='3 5' angle="radian"
+              meshdir="../../../sims/franka_sim"
+              texturedir="../../../sims/franka_sim"/>
+
+    <equality>
+        <weld body1="vive_controller" body2="world" solref="0.02 1" solimp=".7 .95 0.050"/>
+    </equality>
+
+    <worldbody>
+
+        <!-- Mocap -->
+        <body name="vive_controller" mocap="true" pos="-0.440 -0.092 2.026" euler="-1.57 0 -.785">
+            <geom type="box" group="2" pos='0 0 .142' size="0.02 0.10 0.03" contype="0" conaffinity="0" rgba=".9 .7 .95 0" euler="0 0 -.785"/>
+        </body>
+
+        <site name='target' pos='0 0 0' size='0.1' rgba='0 2 0 .2'/>
+        <camera name='left_cap' pos='-1.2 -0.5 1.8' quat='0.78 0.49 -0.22 -0.32' />
+        <camera name='right_cap' pos='1.2 -0.5 1.8' quat='0.76 0.5 0.21 0.35'/>
+
+        <!-- Robot -->
+        <body pos='0. 0 1.8' euler='0 0 1.57'>
+            <geom type='cylinder' size='.120 .90' pos='-.04 0 -0.90' class='panda_viz'/>
+            <include file="../../../sims/franka_sim/assets/chain0.xml"/>
+        </body>
+
+        <body name='desk' pos='-0.1 0.75 0'>
+
+            <body name="counters1" pos="0 0 0" >
+                <include file="../../../sims/furniture_sim/counters/counters_body.xml"/>
+            </body>
+            <body name="oven" pos="0 0 0" >
+                <include file="../../../sims/furniture_sim/oven/oven_body.xml"/>
+            </body>
+            <body name="backwall" pos="0 0 0" >
+                <include file="../../../sims/furniture_sim/backwall/backwall_body.xml"/>
+            </body>
+            <body name="slidecabinet" pos="0.4 0.3 2.6" >
+                <include file="../../../sims/furniture_sim/slidecabinet/slidecabinet_body.xml"/>
+            </body>
+            <body name="hingecabinet" pos="-0.504 0.28 2.6" >
+                <include file="../../../sims/furniture_sim/hingecabinet/hingecabinet_body.xml"/>
+            </body>
+            <body name="microwave" pos="-0.750 -0.025 1.6" euler="0 0 0.3">
+                <include file="../../../sims/furniture_sim/microwave/microwave_body.xml"/>
+            </body>
+        </body>
+        <body name="kettle" pos="-0.269 0.35 1.626">
+            <freejoint/>
+            <include file="../../../sims/furniture_sim/kettle/kettle_body.xml"/>
+        </body>
+
+    </worldbody>
+
+    <keyframe>
+        <key qpos='0.16 -1.76 1.84 -2.51 0.36 0.79 1.55 0.00 0.0 1.25561e-05 1.57437e-07 1.25561e-05 1.57437e-07 1.25561e-05 1.57437e-07 1.25561e-05 1.57437e-07 8.24417e-05 9.48283e-05 0 0 0 0 -0.269 0.35 1.61523 1 1.34939e-19 -3.51612e-05 -7.50168e-19'/>
+    </keyframe>
+
+</mujoco>
