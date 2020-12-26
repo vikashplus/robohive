@@ -26,6 +26,8 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         utils.EzPickle.__init__(self)
         self.act_mid = np.mean(self.model.actuator_ctrlrange, axis=1)
         self.act_rng = 0.5*(self.model.actuator_ctrlrange[:,1]-self.model.actuator_ctrlrange[:,0])
+        self.action_space.high = np.ones_like(self.model.actuator_ctrlrange[:,1])
+        self.action_space.low  = -1.0 * np.ones_like(self.model.actuator_ctrlrange[:,0])
 
     def step(self, a):
         a = np.clip(a, -1.0, 1.0)
