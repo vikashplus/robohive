@@ -1,0 +1,234 @@
+<mujoco>
+   <compiler angle='radian' meshdir='.' texturedir='.' />
+
+
+
+    <worldbody>
+        <light directional='false' diffuse='.7 .7 .7' specular='0.03 0.03 0.03' pos='-.1 -.1 1.0' dir='.1 .1 -1'/>
+        <geom name='grond' type='plane' size='2 2 .1'/>
+
+        <body name='plate' pos='0 0 .1'>
+            <site name='target' pos='0 0 0.025' rgba='0 1 0 .2' size='0.016'/>
+            <geom type='box' size='0.1 0.1 0.01' rgba='.8 .9 .9 1'/>
+            <joint name='xPlate' damping='.1' type='hinge' axis='1 0 0' limited='true' range='-.5 .5'/>
+            <joint name='yPlate' damping='.1' type='hinge' axis='0 1 0' limited='true' range='-.5 .5'/>
+
+            <site name='t00'  type='box' size='0.008 0.008 0.001'  pos='-0.090 -0.090 0.01'/>
+            <site name='t01'  type='box' size='0.008 0.008 0.001'  pos='-0.090 -0.070 0.01'/>
+            <site name='t02'  type='box' size='0.008 0.008 0.001'  pos='-0.090 -0.050 0.01'/>
+            <site name='t03'  type='box' size='0.008 0.008 0.001'  pos='-0.090 -0.030 0.01'/>
+            <site name='t04'  type='box' size='0.008 0.008 0.001'  pos='-0.090 -0.010 0.01'/>
+            <site name='t05'  type='box' size='0.008 0.008 0.001'  pos='-0.090 0.010 0.01'/>
+            <site name='t06'  type='box' size='0.008 0.008 0.001'  pos='-0.090 0.030 0.01'/>
+            <site name='t07'  type='box' size='0.008 0.008 0.001'  pos='-0.090 0.050 0.01'/>
+            <site name='t08'  type='box' size='0.008 0.008 0.001'  pos='-0.090 0.070 0.01'/>
+            <site name='t09'  type='box' size='0.008 0.008 0.001'  pos='-0.090 0.090 0.01'/>
+            <site name='t10'  type='box' size='0.008 0.008 0.001'  pos='-0.070 -0.090 0.01'/>
+            <site name='t11'  type='box' size='0.008 0.008 0.001'  pos='-0.070 -0.070 0.01'/>
+            <site name='t12'  type='box' size='0.008 0.008 0.001'  pos='-0.070 -0.050 0.01'/>
+            <site name='t13'  type='box' size='0.008 0.008 0.001'  pos='-0.070 -0.030 0.01'/>
+            <site name='t14'  type='box' size='0.008 0.008 0.001'  pos='-0.070 -0.010 0.01'/>
+            <site name='t15'  type='box' size='0.008 0.008 0.001'  pos='-0.070 0.010 0.01'/>
+            <site name='t16'  type='box' size='0.008 0.008 0.001'  pos='-0.070 0.030 0.01'/>
+            <site name='t17'  type='box' size='0.008 0.008 0.001'  pos='-0.070 0.050 0.01'/>
+            <site name='t18'  type='box' size='0.008 0.008 0.001'  pos='-0.070 0.070 0.01'/>
+            <site name='t19'  type='box' size='0.008 0.008 0.001'  pos='-0.070 0.090 0.01'/>
+            <site name='t20'  type='box' size='0.008 0.008 0.001'  pos='-0.050 -0.090 0.01'/>
+            <site name='t21'  type='box' size='0.008 0.008 0.001'  pos='-0.050 -0.070 0.01'/>
+            <site name='t22'  type='box' size='0.008 0.008 0.001'  pos='-0.050 -0.050 0.01'/>
+            <site name='t23'  type='box' size='0.008 0.008 0.001'  pos='-0.050 -0.030 0.01'/>
+            <site name='t24'  type='box' size='0.008 0.008 0.001'  pos='-0.050 -0.010 0.01'/>
+            <site name='t25'  type='box' size='0.008 0.008 0.001'  pos='-0.050 0.010 0.01'/>
+            <site name='t26'  type='box' size='0.008 0.008 0.001'  pos='-0.050 0.030 0.01'/>
+            <site name='t27'  type='box' size='0.008 0.008 0.001'  pos='-0.050 0.050 0.01'/>
+            <site name='t28'  type='box' size='0.008 0.008 0.001'  pos='-0.050 0.070 0.01'/>
+            <site name='t29'  type='box' size='0.008 0.008 0.001'  pos='-0.050 0.090 0.01'/>
+            <site name='t30'  type='box' size='0.008 0.008 0.001'  pos='-0.030 -0.090 0.01'/>
+            <site name='t31'  type='box' size='0.008 0.008 0.001'  pos='-0.030 -0.070 0.01'/>
+            <site name='t32'  type='box' size='0.008 0.008 0.001'  pos='-0.030 -0.050 0.01'/>
+            <site name='t33'  type='box' size='0.008 0.008 0.001'  pos='-0.030 -0.030 0.01'/>
+            <site name='t34'  type='box' size='0.008 0.008 0.001'  pos='-0.030 -0.010 0.01'/>
+            <site name='t35'  type='box' size='0.008 0.008 0.001'  pos='-0.030 0.010 0.01'/>
+            <site name='t36'  type='box' size='0.008 0.008 0.001'  pos='-0.030 0.030 0.01'/>
+            <site name='t37'  type='box' size='0.008 0.008 0.001'  pos='-0.030 0.050 0.01'/>
+            <site name='t38'  type='box' size='0.008 0.008 0.001'  pos='-0.030 0.070 0.01'/>
+            <site name='t39'  type='box' size='0.008 0.008 0.001'  pos='-0.030 0.090 0.01'/>
+            <site name='t40'  type='box' size='0.008 0.008 0.001'  pos='-0.010 -0.090 0.01'/>
+            <site name='t41'  type='box' size='0.008 0.008 0.001'  pos='-0.010 -0.070 0.01'/>
+            <site name='t42'  type='box' size='0.008 0.008 0.001'  pos='-0.010 -0.050 0.01'/>
+            <site name='t43'  type='box' size='0.008 0.008 0.001'  pos='-0.010 -0.030 0.01'/>
+            <site name='t44'  type='box' size='0.008 0.008 0.001'  pos='-0.010 -0.010 0.01'/>
+            <site name='t45'  type='box' size='0.008 0.008 0.001'  pos='-0.010 0.010 0.01'/>
+            <site name='t46'  type='box' size='0.008 0.008 0.001'  pos='-0.010 0.030 0.01'/>
+            <site name='t47'  type='box' size='0.008 0.008 0.001'  pos='-0.010 0.050 0.01'/>
+            <site name='t48'  type='box' size='0.008 0.008 0.001'  pos='-0.010 0.070 0.01'/>
+            <site name='t49'  type='box' size='0.008 0.008 0.001'  pos='-0.010 0.090 0.01'/>
+            <site name='t50'  type='box' size='0.008 0.008 0.001'  pos='0.010 -0.090 0.01'/>
+            <site name='t51'  type='box' size='0.008 0.008 0.001'  pos='0.010 -0.070 0.01'/>
+            <site name='t52'  type='box' size='0.008 0.008 0.001'  pos='0.010 -0.050 0.01'/>
+            <site name='t53'  type='box' size='0.008 0.008 0.001'  pos='0.010 -0.030 0.01'/>
+            <site name='t54'  type='box' size='0.008 0.008 0.001'  pos='0.010 -0.010 0.01'/>
+            <site name='t55'  type='box' size='0.008 0.008 0.001'  pos='0.010 0.010 0.01'/>
+            <site name='t56'  type='box' size='0.008 0.008 0.001'  pos='0.010 0.030 0.01'/>
+            <site name='t57'  type='box' size='0.008 0.008 0.001'  pos='0.010 0.050 0.01'/>
+            <site name='t58'  type='box' size='0.008 0.008 0.001'  pos='0.010 0.070 0.01'/>
+            <site name='t59'  type='box' size='0.008 0.008 0.001'  pos='0.010 0.090 0.01'/>
+            <site name='t60'  type='box' size='0.008 0.008 0.001'  pos='0.030 -0.090 0.01'/>
+            <site name='t61'  type='box' size='0.008 0.008 0.001'  pos='0.030 -0.070 0.01'/>
+            <site name='t62'  type='box' size='0.008 0.008 0.001'  pos='0.030 -0.050 0.01'/>
+            <site name='t63'  type='box' size='0.008 0.008 0.001'  pos='0.030 -0.030 0.01'/>
+            <site name='t64'  type='box' size='0.008 0.008 0.001'  pos='0.030 -0.010 0.01'/>
+            <site name='t65'  type='box' size='0.008 0.008 0.001'  pos='0.030 0.010 0.01'/>
+            <site name='t66'  type='box' size='0.008 0.008 0.001'  pos='0.030 0.030 0.01'/>
+            <site name='t67'  type='box' size='0.008 0.008 0.001'  pos='0.030 0.050 0.01'/>
+            <site name='t68'  type='box' size='0.008 0.008 0.001'  pos='0.030 0.070 0.01'/>
+            <site name='t69'  type='box' size='0.008 0.008 0.001'  pos='0.030 0.090 0.01'/>
+            <site name='t70'  type='box' size='0.008 0.008 0.001'  pos='0.050 -0.090 0.01'/>
+            <site name='t71'  type='box' size='0.008 0.008 0.001'  pos='0.050 -0.070 0.01'/>
+            <site name='t72'  type='box' size='0.008 0.008 0.001'  pos='0.050 -0.050 0.01'/>
+            <site name='t73'  type='box' size='0.008 0.008 0.001'  pos='0.050 -0.030 0.01'/>
+            <site name='t74'  type='box' size='0.008 0.008 0.001'  pos='0.050 -0.010 0.01'/>
+            <site name='t75'  type='box' size='0.008 0.008 0.001'  pos='0.050 0.010 0.01'/>
+            <site name='t76'  type='box' size='0.008 0.008 0.001'  pos='0.050 0.030 0.01'/>
+            <site name='t77'  type='box' size='0.008 0.008 0.001'  pos='0.050 0.050 0.01'/>
+            <site name='t78'  type='box' size='0.008 0.008 0.001'  pos='0.050 0.070 0.01'/>
+            <site name='t79'  type='box' size='0.008 0.008 0.001'  pos='0.050 0.090 0.01'/>
+            <site name='t80'  type='box' size='0.008 0.008 0.001'  pos='0.070 -0.090 0.01'/>
+            <site name='t81'  type='box' size='0.008 0.008 0.001'  pos='0.070 -0.070 0.01'/>
+            <site name='t82'  type='box' size='0.008 0.008 0.001'  pos='0.070 -0.050 0.01'/>
+            <site name='t83'  type='box' size='0.008 0.008 0.001'  pos='0.070 -0.030 0.01'/>
+            <site name='t84'  type='box' size='0.008 0.008 0.001'  pos='0.070 -0.010 0.01'/>
+            <site name='t85'  type='box' size='0.008 0.008 0.001'  pos='0.070 0.010 0.01'/>
+            <site name='t86'  type='box' size='0.008 0.008 0.001'  pos='0.070 0.030 0.01'/>
+            <site name='t87'  type='box' size='0.008 0.008 0.001'  pos='0.070 0.050 0.01'/>
+            <site name='t88'  type='box' size='0.008 0.008 0.001'  pos='0.070 0.070 0.01'/>
+            <site name='t89'  type='box' size='0.008 0.008 0.001'  pos='0.070 0.090 0.01'/>
+            <site name='t90'  type='box' size='0.008 0.008 0.001'  pos='0.090 -0.090 0.01'/>
+            <site name='t91'  type='box' size='0.008 0.008 0.001'  pos='0.090 -0.070 0.01'/>
+            <site name='t92'  type='box' size='0.008 0.008 0.001'  pos='0.090 -0.050 0.01'/>
+            <site name='t93'  type='box' size='0.008 0.008 0.001'  pos='0.090 -0.030 0.01'/>
+            <site name='t94'  type='box' size='0.008 0.008 0.001'  pos='0.090 -0.010 0.01'/>
+            <site name='t95'  type='box' size='0.008 0.008 0.001'  pos='0.090 0.010 0.01'/>
+            <site name='t96'  type='box' size='0.008 0.008 0.001'  pos='0.090 0.030 0.01'/>
+            <site name='t97'  type='box' size='0.008 0.008 0.001'  pos='0.090 0.050 0.01'/>
+            <site name='t98'  type='box' size='0.008 0.008 0.001'  pos='0.090 0.070 0.01'/>
+            <site name='t99'  type='box' size='0.008 0.008 0.001'  pos='0.090 0.090 0.01'/>
+
+        </body>
+
+        <body name='ball' pos='0 0 .125'>
+            <geom type='sphere' size='0.015' rgba='.95 .95 .8 1'/>
+            <freejoint/>>
+        </body>
+    </worldbody>
+
+    <sensor>
+        <!-- <touch name='s00' site='t00'/> -->
+        <touch name='s0.0' site='t00'/>
+<touch name='s0.1' site='t01'/>
+<touch name='s0.2' site='t02'/>
+<touch name='s0.3' site='t03'/>
+<touch name='s0.4' site='t04'/>
+<touch name='s0.5' site='t05'/>
+<touch name='s0.6' site='t06'/>
+<touch name='s0.7' site='t07'/>
+<touch name='s0.8' site='t08'/>
+<touch name='s0.9' site='t09'/>
+<touch name='s1.0' site='t10'/>
+<touch name='s1.1' site='t11'/>
+<touch name='s1.2' site='t12'/>
+<touch name='s1.3' site='t13'/>
+<touch name='s1.4' site='t14'/>
+<touch name='s1.5' site='t15'/>
+<touch name='s1.6' site='t16'/>
+<touch name='s1.7' site='t17'/>
+<touch name='s1.8' site='t18'/>
+<touch name='s1.9' site='t19'/>
+<touch name='s2.0' site='t20'/>
+<touch name='s2.1' site='t21'/>
+<touch name='s2.2' site='t22'/>
+<touch name='s2.3' site='t23'/>
+<touch name='s2.4' site='t24'/>
+<touch name='s2.5' site='t25'/>
+<touch name='s2.6' site='t26'/>
+<touch name='s2.7' site='t27'/>
+<touch name='s2.8' site='t28'/>
+<touch name='s2.9' site='t29'/>
+<touch name='s3.0' site='t30'/>
+<touch name='s3.1' site='t31'/>
+<touch name='s3.2' site='t32'/>
+<touch name='s3.3' site='t33'/>
+<touch name='s3.4' site='t34'/>
+<touch name='s3.5' site='t35'/>
+<touch name='s3.6' site='t36'/>
+<touch name='s3.7' site='t37'/>
+<touch name='s3.8' site='t38'/>
+<touch name='s3.9' site='t39'/>
+<touch name='s4.0' site='t40'/>
+<touch name='s4.1' site='t41'/>
+<touch name='s4.2' site='t42'/>
+<touch name='s4.3' site='t43'/>
+<touch name='s4.4' site='t44'/>
+<touch name='s4.5' site='t45'/>
+<touch name='s4.6' site='t46'/>
+<touch name='s4.7' site='t47'/>
+<touch name='s4.8' site='t48'/>
+<touch name='s4.9' site='t49'/>
+<touch name='s5.0' site='t50'/>
+<touch name='s5.1' site='t51'/>
+<touch name='s5.2' site='t52'/>
+<touch name='s5.3' site='t53'/>
+<touch name='s5.4' site='t54'/>
+<touch name='s5.5' site='t55'/>
+<touch name='s5.6' site='t56'/>
+<touch name='s5.7' site='t57'/>
+<touch name='s5.8' site='t58'/>
+<touch name='s5.9' site='t59'/>
+<touch name='s6.0' site='t60'/>
+<touch name='s6.1' site='t61'/>
+<touch name='s6.2' site='t62'/>
+<touch name='s6.3' site='t63'/>
+<touch name='s6.4' site='t64'/>
+<touch name='s6.5' site='t65'/>
+<touch name='s6.6' site='t66'/>
+<touch name='s6.7' site='t67'/>
+<touch name='s6.8' site='t68'/>
+<touch name='s6.9' site='t69'/>
+<touch name='s7.0' site='t70'/>
+<touch name='s7.1' site='t71'/>
+<touch name='s7.2' site='t72'/>
+<touch name='s7.3' site='t73'/>
+<touch name='s7.4' site='t74'/>
+<touch name='s7.5' site='t75'/>
+<touch name='s7.6' site='t76'/>
+<touch name='s7.7' site='t77'/>
+<touch name='s7.8' site='t78'/>
+<touch name='s7.9' site='t79'/>
+<touch name='s8.0' site='t80'/>
+<touch name='s8.1' site='t81'/>
+<touch name='s8.2' site='t82'/>
+<touch name='s8.3' site='t83'/>
+<touch name='s8.4' site='t84'/>
+<touch name='s8.5' site='t85'/>
+<touch name='s8.6' site='t86'/>
+<touch name='s8.7' site='t87'/>
+<touch name='s8.8' site='t88'/>
+<touch name='s8.9' site='t89'/>
+<touch name='s9.0' site='t90'/>
+<touch name='s9.1' site='t91'/>
+<touch name='s9.2' site='t92'/>
+<touch name='s9.3' site='t93'/>
+<touch name='s9.4' site='t94'/>
+<touch name='s9.5' site='t95'/>
+<touch name='s9.6' site='t96'/>
+<touch name='s9.7' site='t97'/>
+<touch name='s9.8' site='t98'/>
+<touch name='s9.9' site='t99'/>
+
+    </sensor>
+    <actuator>
+        <position name='xPlane' joint='xPlate' ctrlrange='-.5 .5' ctrllimited='true'/>
+        <position name='yPlane' joint='yPlate' ctrlrange='-.5 .5' ctrllimited='true'/>
+    </actuator>
+
+</mujoco>
