@@ -1,11 +1,11 @@
 import numpy as np
 from gym import utils
 from mjrl.envs import mujoco_env
-from mujoco_py import MjViewer
+from mujoco_py import MjViewer, MjSim, load_model_from_xml
 import os
 from mj_envs.utils.obj_vec_dict import ObsVecDict
 import collections
-
+from mj_envs.utils.xml_utils import merge_xmls
 
 RWD_MODE = 'dense' # dense/ sparse
 
@@ -14,6 +14,7 @@ class FingerBaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
     def __init__(self,
                 obs_keys:list,
                 rwd_keys:list,
+                act_mode:str, # motor/ muscle
                 **kwargs):
 
         self.obs_keys = obs_keys
@@ -21,7 +22,14 @@ class FingerBaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
 
         # get sim
         curr_dir = os.path.dirname(os.path.abspath(__file__))
-        sim = mujoco_env.get_sim(model_path=curr_dir+'/tendon_finger_v0.xml')
+        if act_mode == "muscle":
+            model_xml = merge_xmls(receiver_xml=curr_dir+'/assets/tendon_finger_v0.xml',
+                                    donor_xml=curr_dir+'/assets/tendon_finger_muscleAct_v0.xml')
+        else:
+            model_xml = merge_xmls(receiver_xml=curr_dir+'/assets/tendon_finger_v0.xml',
+                                    donor_xml=curr_dir+'/assets/tendon_finger_motorAct_v0.xml')
+        sim = MjSim(load_model_from_xml(model_xml))
+
         # ids
         self.tip_sid = sim.model.site_name2id('S_tip')
         self.target_sid = sim.model.site_name2id('S_target')
@@ -91,9 +99,9 @@ class FingerBaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         num_paths = len(paths)
         horizon = self.spec.max_episode_steps # paths could have early termination
 
-        # success if door open for 5 steps
+        # success if any last 5 steps is solved
         for path in paths:
-            if np.sum(path['env_infos']['solved'], dtype=np.int) > 5:
+            if np.sum(path['env_infos']['solved'], dtype=np.int)[-5:] > 0:
                 num_success += 1
         success_percentage = num_success*100.0/num_paths
 

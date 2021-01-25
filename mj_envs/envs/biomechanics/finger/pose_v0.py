@@ -5,13 +5,13 @@ import collections
 class PoseEnvV0(FingerBaseV0):
 
     def __init__(self,
-                obs_keys:list = ['qpos', 'qvel', 'pose_err'],
+                obs_keys:list = ['qpos', 'qvel', 'pose_err', 'act'],
                 rwd_keys:list = ['pose', 'bonus', 'penalty'],
                 pose_target_jnt_range = np.array(([-.1, -.1, .7, .7], [.1, .1, .8, .8])),
                 **kwargs):
         self.pose_target_jnt_range = pose_target_jnt_range
         self.pose_target_jnt = np.mean(self.pose_target_jnt_range, axis=0)
-        super().__init__(obs_keys=obs_keys, rwd_keys=rwd_keys)
+        super().__init__(obs_keys=obs_keys, rwd_keys=rwd_keys, **kwargs)
 
     def get_target_pose(self):
 

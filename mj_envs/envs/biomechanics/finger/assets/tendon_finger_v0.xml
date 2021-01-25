@@ -126,17 +126,4 @@
 			<site site="ps2"/>
 		</spatial>
 	</tendon>
-
-	<actuator>
-		<!-- <motor name="extn" tendon="extn" gear="20" ctrllimited="true" ctrlrange="-1 0"/>
-		<motor name="adabR" tendon="adabR" gear="5" ctrllimited="true" ctrlrange="-1 0"/>
-		<motor name="adabL" tendon="adabL" gear="5" ctrllimited="true" ctrlrange="-1 0"/>
-		<motor name="mflx" tendon="mflx" gear="10" ctrllimited="true" ctrlrange="-1 0"/>
-		<motor name="dflx" tendon="dflx" gear="10" ctrllimited="true" ctrlrange="-1 0"/> -->
-		<muscle name="extn" tendon="extn" class="muscle" lmin="0.5" fvmax="1" fpmax="50" ctrlrange="0 1"/>
-		<muscle name="adabR" tendon="adabR" class="muscle" lmin="0.5" fvmax="1" fpmax="50" ctrlrange="0 1"/>
-		<muscle name="adabL" tendon="adabL" class="muscle" lmin="0.5" fvmax="1" fpmax="50" ctrlrange="0 1"/>
-		<muscle name="mflx" tendon="mflx" class="muscle" lmin="0.5" fvmax="1" fpmax="50" ctrlrange="0 1"/>
-		<muscle name="dflx" tendon="dflx" class="muscle" lmin="0.5" fvmax="1" fpmax="50" ctrlrange="0 1"/>
-	</actuator>
 </mujoco>

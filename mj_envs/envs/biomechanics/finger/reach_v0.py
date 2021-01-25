@@ -10,7 +10,7 @@ class ReachEnvV0(FingerBaseV0):
                 reach_target_xyz_range = np.array(([0.2, 0.05, 0.20], [0.2, 0.05, 0.20])),
                 **kwargs):
         self.reach_target_xyz_range = reach_target_xyz_range
-        super().__init__(obs_keys=obs_keys, rwd_keys=rwd_keys)
+        super().__init__(obs_keys=obs_keys, rwd_keys=rwd_keys, **kwargs)
 
     def get_obs(self):
         # qpos for hand, xpos for obj, xpos for target

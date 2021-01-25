@@ -17,17 +17,20 @@ try:
 except ImportError as e:
     raise error.DependencyNotInstalled("{}. (HINT: you need to install mujoco_py, and also perform the setup instructions here: https://github.com/openai/mujoco-py/.)".format(e))
 
-def get_sim(model_path):
+def get_sim(model_path=None, model_str=None):
     """
-    Get sim using model path.
+    Get sim using model path or model XML string.
     """
-    if model_path.startswith("/"):
-        fullpath = model_path
+    if model_str:
+        model = load_model_from_xml(model_str)
     else:
-        fullpath = os.path.join(os.path.dirname(__file__), "assets", model_path)
-    if not path.exists(fullpath):
-        raise IOError("File %s does not exist" % fullpath)
-    model = load_model_from_path(fullpath)
+        if model_path.startswith("/"):
+            fullpath = model_path
+        else:
+            fullpath = os.path.join(os.path.dirname(__file__), "assets", model_path)
+        if not path.exists(fullpath):
+            raise IOError("File %s does not exist" % fullpath)
+        model = load_model_from_path(fullpath)
     return MjSim(model)
 
 class MujocoEnv(gym.Env, utils.EzPickle, ObsVecDict):
