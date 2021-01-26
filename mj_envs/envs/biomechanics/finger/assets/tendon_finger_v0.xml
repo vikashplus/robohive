@@ -126,4 +126,8 @@
 			<site site="ps2"/>
 		</spatial>
 	</tendon>
+
+	<!-- <include file="tendon_finger_muscleAct_v0.xml"/> -->
+	<!-- <include file="tendon_finger_motorAct_v0.xml"/> -->
+
 </mujoco>
