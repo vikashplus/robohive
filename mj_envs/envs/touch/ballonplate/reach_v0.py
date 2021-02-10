@@ -12,7 +12,7 @@ class BallOnPlateReachEnvV0(BallOnPlateBaseV0):
                 **kwargs):
         self.target_xy_range = target_xy_range
         self.ball_xy_range = ball_xy_range
-        super().__init__(obs_keys=obs_keys, rwd_keys=rwd_keys)
+        super().__init__(obs_keys=obs_keys, rwd_keys=rwd_keys, **kwargs)
 
     def get_obs(self):
         self.obs_dict['t'] = np.array([self.sim.data.time])

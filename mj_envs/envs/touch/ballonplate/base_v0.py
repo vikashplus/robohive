@@ -1,11 +1,12 @@
 import numpy as np
 from gym import utils
 from mjrl.envs import mujoco_env
-from mujoco_py import MjViewer
+from mujoco_py import MjViewer, MjSim, load_model_from_xml
 import os
 from mj_envs.utils.obj_vec_dict import ObsVecDict
 import collections
 
+from mj_envs.envs.touch.ballonplate.assets.ballonplate_xml_generator import generate_ballonplate_xml
 
 RWD_MODE = 'dense' # dense/ sparse
 
@@ -14,6 +15,8 @@ class BallOnPlateBaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
     def __init__(self,
                 obs_keys:list,
                 rwd_keys:list,
+                tac_n:int=10,
+                tac_r:int=0.008,
                 **kwargs):
 
         self.obs_keys = obs_keys
@@ -21,7 +24,11 @@ class BallOnPlateBaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
 
         # get sim
         curr_dir = os.path.dirname(os.path.abspath(__file__))
-        sim = mujoco_env.get_sim(model_path=curr_dir+'/ballonplate-v0.xml')
+        xml_str = generate_ballonplate_xml(
+            ballonplate_tempelate_xml=curr_dir+'/assets/ballonplate-tempelate-v0.xml',
+            x_tac_n=tac_n, y_tac_n=tac_n, x_tac_r=tac_r, y_tac_r=tac_r)
+        sim = MjSim(load_model_from_xml(xml_str))
+
         # ids
         self.target_sid = sim.model.site_name2id('target')
 

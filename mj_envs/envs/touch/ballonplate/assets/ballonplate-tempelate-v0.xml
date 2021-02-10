@@ -1,0 +1,41 @@
+<mujoco model="Ball On Plate">
+<!-- =================================================
+    Copyright 2020 Vikash Kumar
+    Model   :: Ball On Plate (MuJoCoV2.0)
+    Author  :: Vikash Kumar (vikashplus@gmail.com)
+    source  :: https://github.com/vikashplus/mj_envs
+    License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+====================================================== -->
+   <compiler angle='radian' meshdir='.' texturedir='.' />
+
+    <worldbody>
+        <light directional='false' diffuse='.7 .7 .7' specular='0.03 0.03 0.03' pos='-.1 -.1 1.0' dir='.1 .1 -1'/>
+        <geom name='grond' type='plane' size='2 2 .1'/>
+
+        <!-- Plate -->
+        <body name='plate' pos='0 0 .1'>
+            <site name='target' pos='0 0 0.025' rgba='0 1 0 .2' size='0.016'/>
+            <geom type='box' size='0.1 0.1 0.01' rgba='.8 .9 .9 1'/>
+            <joint name='xPlate' damping='.1' type='hinge' axis='1 0 0' limited='true' range='-.5 .5'/>
+            <joint name='yPlate' damping='.1' type='hinge' axis='0 1 0' limited='true' range='-.5 .5'/>
+
+            <!-- Plate touch site goes here-->
+        </body>
+
+        <!-- Ball -->
+        <body name='ball' pos='0 0 .125'>
+            <geom type='sphere' size='0.015' rgba='.95 .95 .8 1'/>
+            <freejoint/>>
+        </body>
+    </worldbody>
+
+    <sensor>
+        <!-- Plate touch sensors goes here-->
+    </sensor>
+
+    <actuator>
+        <position name='xPlane' joint='xPlate' ctrlrange='-.5 .5' ctrllimited='true'/>
+        <position name='yPlane' joint='yPlate' ctrlrange='-.5 .5' ctrllimited='true'/>
+    </actuator>
+
+</mujoco>
