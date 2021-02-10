@@ -4,6 +4,7 @@
 ## Getting Started
 `mj_envs` uses git submodules to resolve dependencies. Please follow steps exactly as below to install correctly.
 
+0. Install [mujoco_py](https://github.com/openai/mujoco-py) and [OpenAI-Gym](https://github.com/openai/gym#installation) using [following instructions](https://github.com/aravindr93/mjrl/tree/master/setup#installation).
 1. Clone this repo with pre-populated submodule dependencies
 ```
 $ git clone --recursive https://github.com/vikashplus/mj_envs.git
