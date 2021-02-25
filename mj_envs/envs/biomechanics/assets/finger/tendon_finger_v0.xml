@@ -24,7 +24,7 @@
 
 	<worldbody>
 		<geom type="plane" size="1 1 1" rgba=".2 .3 .2 1"/>
-		<site name="S_target" pos="0.25 0.01 0.25" rgba="0 1 0 .3" size="0.02"/>
+		<site name="IFtip_target" pos="0.25 0.01 0.25" rgba="0 1 0 .3" size="0.02"/>
 
 		<!-- BASE -->
 		<site name="bs3" pos="-0.02 0.00 0.33"/>
@@ -36,8 +36,8 @@
 		<body name="proximal">
 			<geom type="capsule" fromto="0 0 0.3 0.1 0 0.3" size=".018"/>
 			<geom name="pg1" type="sphere" pos="0.0 0.0 0.3" size="0.024" rgba=".5 .5 .9 .4"/>
-			<joint pos="0 0 0.3" axis="0 1 0" range="-25 60"/>
-			<joint pos="0 0 0.3" axis="0 0 1" range="-25 25"/>
+			<joint name="IFadb" pos="0 0 0.3" axis="0 0 1" range="-25 25"/>
+			<joint name="IFmcp" pos="0 0 0.3" axis="0 1 0" range="-25 60"/>
 			<site name="ps3" pos="0.035 0.00 0.32"/>
 			<site name="ps2" pos="0.02 0.02 0.30"/>
 			<site name="ps1" pos="0.02 -.02 0.30"/>
@@ -49,7 +49,7 @@
 				<geom type="capsule" fromto="0.1 0 0.3 0.2 0 0.3" size=".015"/>
 				<geom name="mg2" type="cylinder" fromto="0.1 0.005 0.3 0.1 -0.005 0.3"
 					size="0.020" rgba=".5 .5 .9 .4"/>
-				<joint pos="0.1 0 0.3"/>
+				<joint name="IFpip" pos="0.1 0 0.3"/>
 				<site name="ms4" pos="0.12 0 0.315"/>
 				<site name="ms5" pos="0.13 0 0.32"/>
 				<site name="ms6" pos="0.13 0 0.28"/>
@@ -63,11 +63,11 @@
 					<geom name="dg3" type="cylinder" fromto="0.2 0.005 0.3 0.2 -0.005 0.3"
 						size="0.018" rgba=".5 .5 .9 .4"/>
 					<geom type="ellipsoid" pos=".27 0 .310" size=".012 .009 .0025" rgba="1 .9 .9 1"/>
-					<joint pos="0.2 0 0.3"/>
+					<joint name="IFdip" pos="0.2 0 0.3"/>
 					<site name="ds6" pos="0.22 0 0.31"/>
 					<site name="ds7" pos="0.24 0 0.29"/>
 					<site name="side3" pos="0.2 0 0.33"/>
-					<site name="S_tip" pos="0.27 0 0.3"/>
+					<site name="IFtip" pos="0.27 0 0.3"/>
 				</body>
 			</body>
 		</body>

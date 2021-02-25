@@ -1,0 +1,482 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mujoco model="Index + Thumb Model">
+<!-- =================================================
+	Copyright 2020 Vikash Kumar, Vittorio Caggiano
+	Model	:: tendon-finger (MuJoCoV2.0)
+	Author	:: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano
+	source	:: https://github.com/vikashplus
+	License	:: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+====================================================== -->
+	<compiler inertiafromgeom="auto" angle="radian" balanceinertia="true" boundmass="0.001" boundinertia="0.001">
+		<lengthrange inttotal="50"></lengthrange>
+	</compiler>
+	<default>
+		<joint limited="true" damping="0.5" armature="0.01" stiffness="0"></joint>
+		<geom contype="1" conaffinity="0" condim="3" rgba="0.8 0.8 .8 1" margin="0.001" solref=".02 1" solimp=".8 .8 .01" material="geom"></geom>
+		<site size="0.0012" rgba=".2 .6 .2 1"></site>
+		<tendon width="0.001" rgba=".95 .3 .3 1" limited="false"></tendon>
+		<default class="muscle">
+			<muscle ctrllimited="true" ctrlrange="0 1" scale="400"></muscle>
+		</default>
+		<default class="motor">
+			<motor gear="20"></motor>
+		</default>
+	</default>
+
+	<statistic extent=".75"/>
+
+	<option timestep="0.002">
+		<flag energy="enable"></flag>
+	</option>
+	<size njmax="1000" nconmax="400" nuser_jnt="1"></size>
+	<visual>
+		<map fogstart="3" fogend="5" force="0.1" actuatortendon="1.1"></map>
+		<quality shadowsize="2048"></quality>
+	</visual>
+	<worldbody>
+		<geom name="floor" pos="0 0 0" size=".5 1 0.125" type="plane" material="MatPlane" condim="3"></geom>
+		<site name="IFtip_target" pos="0 0 0.02" rgba="0 1 0 .3" size="0.02"/>
+		<site name="THtip_target" pos="0 0 0.02" rgba="0 1 0 .3" size="0.02"/>
+
+		<light mode="trackcom" directional="false" diffuse=".8 .8 .8" specular="0.3 0.3 0.3" pos="0 0 4.0" dir="0 0 -1"></light>
+
+		<!-- <body name="humerus" pos="0 6.12323e-17 1" quat="0.7071067811865475 0.7071067811865475 0.0 0.0"> -->
+		<body name="humerus" pos="0 .6 .2" euler="-.0 -2.2 0">
+			<geom name="humerus" type="mesh" mesh="humerus"></geom>
+			<site name="EDCI-P1" pos="0.00065 -0.28898 0.01869"></site>
+			<!-- <joint name="r_z" type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-6.28319 6.28319" ref="0" armature="0" damping="0" stiffness="0"></joint> -->
+			<body name="ulna" pos="0.0061 -0.2904 -0.0123" quat="1.0 0.0 0.0 0.0">
+				<geom name="ulna" type="mesh" mesh="ulna"></geom>
+				<site name="FDSI-P1" pos="-0.00676 -0.02819 -0.00137"></site>
+				<site name="FDPI-P1" pos="-0.0113 -0.03157 0.00208"></site>
+				<site name="EPL-P1" pos="-0.02127 -0.0916 0.03268"></site>
+				<site name="EIP-P1" pos="-0.01974 -0.14668 0.04449"></site>
+				<!-- <joint name="elbow_flexion" type="hinge" pos="0 0 0" axis="0.226047 0.19104 0.9552" limited="false" range="0 2.26893" ref="0"></joint> -->
+				<body name="radius" pos="0.0004 -0.011503 0.019999" quat="1.0 0.0 0.0 0.0">
+					<geom name="radius" type="mesh" mesh="radius"></geom>
+					<site name="FDSI-P2" pos="0.01091 -0.21436 0.04048"></site>
+					<site name="FDSI-P3" pos="0.00183 -0.21671 0.04253"></site>
+					<site name="FDPI-P2" pos="0.00797 -0.21647 0.04395"></site>
+					<site name="FDPI-P3" pos="0.0013 -0.21659 0.04619"></site>
+					<site name="EDCI-P2" pos="-0.0082 -0.04004 0.01668"></site>
+					<site name="EDCI-P3" pos="-0.02209 -0.18446 0.04898"></site>
+					<site name="EDCI-P4" pos="-0.02376 -0.21054 0.0533"></site>
+					<site name="FPL-P1" pos="-0.00284 -0.09605 0.02992"></site>
+					<site name="FPL-P2" pos="-0.00166 -0.13532 0.04257"></site>
+					<site name="FPL-P3" pos="-0.00037 -0.16882 0.04439"></site>
+ 					<site name="FPL-P4" pos="0.00345 -0.21433 0.04621"></site>
+					<site name="APL-P1" pos="-0.00494 -0.09677 0.03004"></site>
+					<site name="APL-P2" pos="-0.00892 -0.13772 0.05255"></site>
+					<site name="APL-P3" pos="-0.0066 -0.15947 0.06132"></site>
+					<site name="APL-P4" pos="-0.00682 -0.17731 0.06462"></site>
+					<site name="APL-P5" pos="-0.00282 -0.20831 0.07607"></site>
+ 					<site name="APL-P6" pos="0.00117 -0.21506 0.07845"></site>
+					<site name="EPB-P1" pos="-0.00294 -0.13573 0.04196"></site>
+					<site name="EPB-P2" pos="-0.00701 -0.14896 0.04387"></site>
+					<site name="EPB-P3" pos="-0.01283 -0.17881 0.05817"></site>
+					<site name="EPB-P4" pos="-0.00547 -0.19041 0.06961"></site>
+					<site name="EPB-P5" pos="0.00469 -0.21769 0.0756"></site>
+					<site name="EPL-P2" pos="-0.01652 -0.16952 0.03814"></site>
+					<site name="EPL-P3" pos="-0.01762 -0.20537 0.0523"></site>
+					<site name="EIP-P2" pos="-0.01612 -0.20811 0.05228"></site>
+					<!-- <joint name="pro_sup" type="hinge" pos="0 0 0" axis="0.056398 0.983577 -0.171449" limited="false" range=" -1.5708 1.5708" ref="0"></joint> -->
+					<body name="rotaxis" pos="-0.0085 -0.2313 0.0561" quat="0.9723945590906407 -0.12801798052982447 0.19342126248248717 -0.02546435413798835">
+						<body name="auxprfem" pos="-0.001 0.009 0" quat="1.0 0.0 0.0 0.0">
+							<!-- <joint name="rotaxis_auxprfem_r3" type="hinge" pos="0 0 0" axis="0 0 1" limited="false" range="-99999.9 99999.9" ref="0"></joint> -->
+							<body name="auxprrud" pos="0 0 0" quat="1.0 0.0 0.0 0.0">
+								<!-- <joint name="deviation" type="hinge" pos="0 0 0" axis="1 0 0" limited="false" range="-0.163625 0.305433" ref="0"></joint> -->
+								<body name="auxdrfem" pos="0.001 -0.02 0" quat="1.0 0.0 0.0 0.0">
+									<!-- <joint name="auxprrud_auxdrfem_r3" type="hinge" pos="0 0 0" axis="0 0 1" limited="false" range="-99999.9 99999.9" ref="0"></joint> -->
+									<body name="auxdrrud" pos="0 0 0" quat="1.0 0.0 0.0 0.0">
+										<!-- <joint name="auxdrfem_auxdrrud_r1" type="hinge" pos="0 0 0" axis="1 0 0" limited="false" range="-99999.9 99999.9" ref="0"></joint> -->
+										<body name="trapezium" pos=".0035 -0.0035 0.02" quat="0.9914448866827649 -0.13052599997931214 0.0 0.0">
+											<geom name="r_trpzm" type="mesh" mesh="r_trpzm"></geom>
+											<site name="APL-P7" pos="0.00722 0.00906 0.01082"></site>
+											<site name="EPB-P6" pos="-0.00078 0.00458 0.01475"></site>
+											<site name="OP-P1" pos="0.006 0.006 -0.007"></site>
+											<geom name="r_trpzm_wrap" type="cylinder" size=".008 .015" rgba=".5 .5 .9 .4" euler="-1. .8 .5" pos="-.004 -.001 -.002"/>
+											<site name="r_trpzm_wrapside" pos="-.015 0.01 0.01"/>
+										</body>
+										<body name="trapezoid" pos="-0.0015 -0.0044 0.0134" quat="0.9810602460407203 0.17298746674292034 -0.08583168673729807 -0.015134448791375068">
+											<geom name="r_trpzd" type="mesh" mesh="r_trpzd"></geom>
+										</body>
+										<body name="capitate" pos="-0.0155 -0.0018 -0.0055" quat="0.9961946948320952 0.08715578000562224 0.0 0.0">
+											<geom name="r_cap" type="mesh" mesh="r_cap"></geom>
+											<site name="FDSI-P6" pos="0.02944 -0.01143 0.00869"></site>
+											<site name="FDSI-P4" pos="0.02244 0.01397 0.00139"></site>
+											<site name="FDSI-P5" pos="0.02703 0.00411 0.00444"></site>
+											<site name="FDPI-P4" pos="0.02269 0.01117 0.00347"></site>
+											<site name="FDPI-P5" pos="0.02499 0.00065 0.00589"></site>
+											<site name="EDCI-P6" pos="-0.00196 -0.00655 0.00232"></site>
+ 											<site name="FPL-P5" pos="0.03 0.009 0.011"></site>
+										</body>
+
+										<body name="hamate" pos="-0.006 -0.005 -0.0175" quat="0.994521869771278 -0.10452870680651043 0.0 0.0">
+											<geom name="r_ham" type="mesh" mesh="r_ham"></geom>
+										</body>
+										<body name="carp_metacarp" pos="0 0 0" quat="1.0 0.0 0.0 0.0">
+											<body name="metacarpal2" pos="-0.0047 -0.0095 -0.005" quat="0.9876721363317784 0.08641015243142217 0.13002930871704496 0.011376095339210785">
+												<geom name="fingers1" type="mesh" mesh="fingers1"></geom>
+												<site name="FDSI-P7" pos="0.01297 -0.01437 0.02183"></site>
+												<site name="FDSI-P8" pos="0.00543 -0.06688 0.04728"></site>
+												<site name="FDPI-P6" pos="0.013 -0.0048 0.01072"></site>
+												<site name="FDPI-P7" pos="0.00363 -0.06662 0.0449"></site>
+												<site name="EDCI-P8" pos="-0.01225 -0.06926 0.04042"></site>
+												<site name="EIP-P4" pos="-0.01312 0.00595 0.0075"></site>
+												<site name="EIP-P5" pos="-0.01022 -0.07179 0.04293"></site>
+												<site name="RI2-P1" pos="-0.00029938974285999899 -0.027579979995545987 0.023283629436197585"></site>
+												<site name="RI2-P2" pos="-0.0019580824026228781 -0.050804354022434529 0.04655934847612786"></site>
+												<site name="LU_RB2-P1" pos="-0.00061408556557331279 -0.031380923472541761 0.028001001483704529"></site>
+												<site name="LU_RB2-P2" pos="-0.0029408099407565559 -0.067104473953269711 0.053641255203798387"></site>
+												<site name="UI_UB2-P1" pos="0.00074812838446916335 -0.031505427257808555 0.025176696412445063"></site>
+												<site name="UI_UB2-P2" pos="-0.0010955626136719006 -0.065798487610560147 0.029918353888111458"></site>
+
+												<geom name='Secondmd' type='sphere' pos="-0.002402 -0.0685 0.045" size='0.008' rgba=".5 .5 .9 .4"/>
+
+												<body name="Iphalanx1" pos="-0.002402 -0.0685 0.045" quat="1.0 0.0 0.0 0.0">
+													<geom name="fingers2" type="mesh" mesh="fingers2"></geom>
+													<site name="FDSI-P9" pos="0.00596 -0.04624 0.00883"></site>
+													<site name="FDPI-P8" pos="0.00494 -0.0506 0.00914"></site>
+													<site name="EDCI-P9" pos="-0.00658 -0.04852 0.0044"></site>
+													<site name="EIP-P6" pos="-0.00658 -0.04852 0.0044"></site>
+													<site name="RI2-P3" pos="-0.0038841207322374981 -0.0050284579392038242 0.00950132247713956"></site>
+													<site name="LU_RB2-P3" pos="0.00050241843863299551 -0.0099695136894972589 0.012017626578041701"></site>
+													<site name="LU_RB2-P4" pos="-0.00074461002677412137 -0.031754923233017048 0.014716898929103791"></site>
+													<site name="UI_UB2-P3" pos="0.0007685941410321464 -0.014117173046016687 -0.010985063385484906"></site>
+													<site name="UI_UB2-P4" pos="-0.0031439293319124382 -0.045967676388443991 -0.0020633706701108042"></site>
+													<joint name="MCP2_lateral" type="hinge" pos="0 0 0" axis="1 0 0" limited="true" range="-0.349066 0.349066" ref="0"></joint>
+													<joint name="MCP2_flex" type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-0.174533 1.5708" ref="0"></joint>
+
+													<geom name='Secondpm' type="cylinder" size="0.006 0.010" pos="0.0005 -0.04826 0.00799" rgba=".5 .5 .9 .4"/>
+
+													<body name="Iphalanx2" pos="0.0005 -0.04826 0.00799" quat="1.0 0.0 0.0 0.0">
+														<geom name="fingers3" type="mesh" mesh="fingers3"></geom>
+														<site name="FDPI-P9" pos="0.0095 -0.03028 0.00343"></site>
+														<site name="EDCI-P10" pos="-0.00245 -0.0336 0.00140"></site>
+														<site name="EIP-P7" pos="-0.00576 -0.03200 -6e-05"></site>
+														<site name="LU_RB2-P5" pos="-0.0020800889316894373 -0.0064539940274136159 0.007452613479868646"></site>
+														<site name="LU_RB2-P6" pos="-0.0033548825766310185 -0.02715060399807534 0.0061542722695103521"></site>
+														<site name="UI_UB2-P5" pos="-0.0051333703049100858 -0.013975407278245785 -0.0037745860587147955"></site>
+														<site name="UI_UB2-P6" pos="-0.0049530705817471448 -0.027418026590590092 0.00297649254235181"></site>
+														<joint name="PIP_flex" type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-0.0872665 1.5708" ref="0"></joint>
+
+														<geom name='Seconddm' type="cylinder" size="0.004 0.010" pos="0.00193 -0.03277 0.00472" rgba=".5 .5 .9 .4"/>
+
+														<body name="Iphalanx3" pos="0.00193 -0.03277 0.00472" quat="1.0 0.0 0.0 0.0">
+															<geom name="fingers4" type="mesh" mesh="fingers4"></geom>
+															<site name="FDSI-P10" pos="0.00581 -0.0059 0.00263"></site>
+															<site name="EDCI-P11" pos="-0.00291 -0.01043 7e-005"></site>
+															<site name="EIP-P8" pos="-0.00291 -0.01043 7e-005"></site>
+															<joint name="DIP_flex" type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-0.0872665 1.5708" ref="0"></joint>
+															<site name="IFtip" type="sphere" size=".005" pos="0 -.02 0.003" rgba=".4 .7 .8 1"/>
+														</body>
+													</body>
+												</body>
+											</body>
+											<body name="metacarpal3" pos="-0.0047 -0.0085 -0.005" quat="0.9941334552518194 0.047210127826971246 0.08509454042534627 0.047210127826971246">
+												<geom name="fingers8" type="mesh" mesh="fingers8"></geom>
+												<site name="EDCI-P7" pos="-0.01421 -0.01886 0.0078"></site>
+												<body name="Mphalanx1" pos="-0.005 -0.0785 0.0109" quat="1.0 0.0 0.0 0.0">
+													<geom name="movaxesfin76" type="mesh" mesh="movaxesfin76"></geom>
+													<!-- <joint name="MCP2M_lateral" type="hinge" pos="0 0 0" axis="1 0 0" limited="true" range="-0.349066 0.349066" ref="0"></joint> -->
+													<!-- <joint name="MCP2M_flex" type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-0.174533 1.5708" ref="0"></joint> -->
+													<body name="Mphalanx2" pos="-0.0002 -0.0559 0.007" quat="1.0 0.0 0.0 0.0">
+														<geom name="movaxesfin623" type="mesh" mesh="movaxesfin623"></geom>
+														<!-- <joint name="MPIP_flex" type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-0.0872665 1.5708" ref="0"></joint> -->
+														<body name="Mphalanx3" pos="0.00243 -0.03397 0.0018" quat="1.0 0.0 0.0 0.0">
+															<geom name="movaxesfin515" type="mesh" mesh="movaxesfin515"></geom>
+															<!-- <joint name="MDIP_flex" type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-0.0872665 1.5708" ref="0"></joint> -->
+														</body>
+													</body>
+												</body>
+											</body>
+											<body name="metacarpal4" pos="-0.0047 -0.008 -0.0033" quat="0.9941334552518194 0.047210127826971246 0.08509454042534627 0.047210127826971246">
+												<geom name="fingers12" type="mesh" mesh="fingers12"></geom>
+												<body name="Rphalanx1" pos="0 -0.077 -0.0109" quat="1.0 0.0 0.0 0.0">
+													<geom name="movaxesfin117" type="mesh" mesh="movaxesfin117"></geom>
+													<!-- <joint name="RCP2M_lateral" type="hinge" pos="0 0 0" axis="1 0 0" limited="true" range="-0.349066 0.349066" ref="0"></joint> -->
+													<!-- <joint name="RCP2M_flex" type="hinge" pos="0 0 0" axis="0 0 1" limited="false" range="-0.174533 1.5708" ref="0"></joint> -->
+													<body name="Rphalanx2" pos="0.003 -0.0559 0.01" quat="1.0 0.0 0.0 0.0">
+														<geom name="movaxesfin104" type="mesh" mesh="movaxesfin104"></geom>
+														<!-- <joint name="RPIP_flex" type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-0.0872665 1.5708" ref="0"></joint> -->
+														<body name="Rphalanx3" pos="0.00593 -0.03357 -0.00092" quat="1.0 0.0 0.0 0.0">
+															<geom name="movaxesfin91" type="mesh" mesh="movaxesfin91"></geom>
+															<!-- <joint name="RDIP_flex" type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-0.0872665 1.5708" ref="0"></joint> -->
+														</body>
+													</body>
+												</body>
+											</body>
+											<body name="metacarpal5" pos="-0.002 -0.01 0.0035" quat="0.9941334552518194 0.047210127826971246 0.08509454042534627 0.047210127826971246">
+												<geom name="fingers16" type="mesh" mesh="fingers16"></geom>
+												<body name="Lphalanx1" pos="0.0015 -0.064 -0.0397" quat="1.0 0.0 0.0 0.0">
+													<geom name="movaxesfin158" type="mesh" mesh="movaxesfin158"></geom>
+													<!-- <joint name="LCP2M_lateral" type="hinge" pos="0 0 0" axis="1 0 0" limited="true" range="-0.349066 0.349066" ref="0"></joint> -->
+													<!-- <joint name="LCP2M_flex" type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-0.174533 1.5708" ref="0"></joint> -->
+													<body name="Lphalanx2" pos="0.001 -0.043 -0.008" quat="1.0 0.0 0.0 0.0">
+														<geom name="movaxesfin143" type="mesh" mesh="movaxesfin143"></geom>
+														<!-- <joint name="LPIP_flex" type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-0.0872665 1.5708" ref="0"></joint> -->
+														<body name="Lphalanx3" pos="0.002 -0.028 0.004" quat="1.0 0.0 0.0 0.0">
+															<geom name="movaxesfin133" type="mesh" mesh="movaxesfin133"></geom>
+															<!-- <joint name="LDIP_flex" type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-0.0872665 1.5708" ref="0"></joint> -->
+														</body>
+													</body>
+												</body>
+											</body>
+
+											<body name="thumb" pos="0.008 -0.0045 0.0219" quat="1.0 0.0 0.0 0.0">
+												<geom name="fingers17" type="mesh" mesh="fingers17"></geom>
+												<!-- <geom name="thumb_mcp_wrap" type="sphere" size="0.009" rgba="1 1 0 .4" pos="-.0055 -.002 0.006"/> -->
+												<site name="FPL-P6" pos="0.007 -0.013 0.003"></site>
+												<site name="FPL-P7" pos="0.0016345258395361001 -0.023261387813105772 0.013882323624607429"></site>
+												<site name="APL-P8" pos="0.00384 0.00196 0.01452"></site>
+												<site name="APL-P9" pos="0.00816 -0.02324 0.03082"></site>
+												<site name="EPB-P7" pos="-0.00387 0.00011 0.01647"></site>
+												<site name="EPB-P8" pos="-0.0020130166613701083 -0.020957970655462208 0.033566755620592408"></site>
+												<site name="EPB-P9" pos="-0.00076730231868465655 -0.030434173167436868 0.044408897669097495"></site>
+												<site name="OP-P2" pos="0.009 -0.032 0.032"></site>
+												<site name="EPL-P6" pos="-0.0133 -0.00263 0.01214"></site>
+												<site name="EPL-P7" pos="-0.0056996392249200386 -0.029995967407411953 0.043755372512306705"></site>
+												<joint name="thumb_abd" type="hinge" pos="0 0 0" axis="1 0 0" limited="true" range="-0.52 0.78" ref="0"></joint>
+												<joint name="thumb_flex" type="hinge" pos="0 0 0" axis="0.056398 0.983577 -0.171449" limited="true" range="-0.785398 1.5708" ref="0"></joint>
+
+												<geom name="Tphalax1_wrap" type="cylinder" size="0.008 0.008" pos="0.0 -0.035 0.037" euler="-1.2 1.2 0" rgba=".5 .5 .9 .4"></geom>
+
+												<body name="Tphalanx1" pos="0.00267 -0.0305 0.04" euler="0 0.95 0">>
+													<geom name="fingers18mod61" type="mesh" mesh="fingers18mod61"></geom>
+													<site name="FPL-P8" pos="0.0023756615504988586 -0.027520171907761588 0.011794007956854273"></site>
+													<site name="FPL-P9" pos="-0.002 -0.035 0.015"></site>
+													<site name="EPB-P10" pos="-0.0099925065076847275 -0.014753577596735602 0.0051966639892957354"></site>
+													<site name="EPL-P8" pos="-0.01 -0.00907 0.0031"></site>
+													<site name="EPL-P9" pos="-0.016693071766219935 -0.038723489494787849 0.020444780569850603"></site>
+													<!-- <joint name="TCP2M_lateral" type="hinge" pos="0 0 0" axis="1 0 0" limited="true" range="-0.17 0.95" ref="0"></joint> -->
+													<!-- <joint name="TCP2M_rotation2" type="hinge" pos="0 0 0" axis="0 1 0" limited="true" range="0.94 0.95" ref="0"></joint> -->
+													<joint name="TCP2M_flex" type="hinge" pos="0 0 0" axis="0 0.5 0.5" limited="true" range="-0.17 0.95" ref="0"></joint>
+													<body name="Tphalanx2" pos="-0.015 -0.033 0.024" quat="1.0 0.0 0.0 0.0">
+														<geom name="Tphalax2_wrap" type="cylinder" size="0.005 0.005" pos="0.00 -0.011 -0.00" euler="-0.5 0.15 0" rgba=".5 .5 .9 .4"></geom>
+														<geom name="fingers19mod13-24" type="mesh" mesh="fingers19mod13-24"></geom>
+														<site name="FPL-P10" pos="0.002 -0.019 0.004"></site>
+														<site name="EPL-P10" pos="-0.0053217215572622335 -0.01404335919031147 0.00016147749355066975"></site>
+ 														<joint name="TCP2M2_flex" type="hinge" pos="0 0 0" axis="0 0.5 0.5" limited="true" range="-0.0872665 1.5708" ref="0"></joint>
+														<site name="THtip" type="sphere" size=".005" pos="-.006 -.032 .011" rgba=".4 .7 .8 1"/>
+													</body>
+												</body>
+											</body>
+										</body>
+									</body>
+								</body>
+								<body name="scaphoid" pos="-0.0035 -0.0025 0.009" quat="0.9799246775026643 0.19936806770719273 0.0 0.0">
+									<geom name="r_scaph" type="mesh" mesh="r_scaph"></geom>
+									<site name="EDCI-P5" pos="-0.01359 -0.00761 -0.01108"></site>
+									<site name="EPL-P4" pos="-0.008 0.00038 -0.00774"></site>
+									<site name="EPL-P5" pos="-0.0084 -0.00663 0.00319"></site>
+									<site name="EIP-P3" pos="-0.01119 -0.00448 -0.00483"></site>
+								</body>
+								<body name="lunate" pos="-0.004 -0.0015 -0.007" quat="1.0 0.0 0.0 0.0">
+									<geom name="r_lun" type="mesh" mesh="r_lun"></geom>
+								</body>
+								<body name="pisiform" pos="0.005 -0.015 -0.0201" quat="1.0 0.0 0.0 0.0">
+									<geom name="r_pis" type="mesh" mesh="r_pis"></geom>
+								</body>
+								<body name="triquetrum" pos="-0.0055 -0.01 -0.021" quat="1.0 0.0 0.0 0.0">
+									<geom name="r_triq" type="mesh" mesh="r_triq"></geom>
+								</body>
+							</body>
+						</body>
+					</body>
+				</body>
+			</body>
+		</body>
+		<camera name="for_testing" pos="0 0 0" euler="0 0 0"></camera>
+	</worldbody>
+	<asset>
+		<mesh name="humerus" file="Geometry/humerus.stl" scale="1 1 1"></mesh>
+		<mesh name="ulna" file="Geometry/ulna.stl" scale="1 1 1"></mesh>
+		<mesh name="radius" file="Geometry/radius.stl" scale="1 1 1"></mesh>
+		<mesh name="r_trpzm" file="Geometry/r_trpzm.stl" scale="1 1 1"></mesh>
+		<mesh name="r_trpzd" file="Geometry/r_trpzd.stl" scale="1 1 1"></mesh>
+		<mesh name="r_cap" file="Geometry/r_cap.stl" scale="1 1 1"></mesh>
+		<mesh name="r_ham" file="Geometry/r_ham.stl" scale="1 1 1"></mesh>
+		<mesh name="fingers1" file="Geometry/fingers1.stl" scale="1 1 1"></mesh>
+		<mesh name="fingers2" file="Geometry/fingers2.stl" scale="1 1 1"></mesh>
+		<mesh name="fingers3" file="Geometry/fingers3.stl" scale="1 1 1"></mesh>
+		<mesh name="fingers4" file="Geometry/fingers4.stl" scale="1 1 1"></mesh>
+		<mesh name="fingers8" file="Geometry/fingers8.stl" scale="1 1 1"></mesh>
+		<mesh name="movaxesfin76" file="Geometry/movaxesfin76.stl" scale="1 1 1"></mesh>
+		<mesh name="movaxesfin623" file="Geometry/movaxesfin623.stl" scale="1 1 1"></mesh>
+		<mesh name="movaxesfin515" file="Geometry/movaxesfin515.stl" scale="1 1 1"></mesh>
+		<mesh name="fingers12" file="Geometry/fingers12.stl" scale="1 1 1"></mesh>
+		<mesh name="movaxesfin117" file="Geometry/movaxesfin117.stl" scale="1 1 1"></mesh>
+		<mesh name="movaxesfin104" file="Geometry/movaxesfin104.stl" scale="1 1 1"></mesh>
+		<mesh name="movaxesfin91" file="Geometry/movaxesfin91.stl" scale="1 1 1"></mesh>
+		<mesh name="fingers16" file="Geometry/fingers16.stl" scale="1 1 1"></mesh>
+		<mesh name="movaxesfin158" file="Geometry/movaxesfin158.stl" scale="1 1 1"></mesh>
+		<mesh name="movaxesfin143" file="Geometry/movaxesfin143.stl" scale="1 1 1"></mesh>
+		<mesh name="movaxesfin133" file="Geometry/movaxesfin133.stl" scale="1 1 1"></mesh>
+		<mesh name="fingers17" file="Geometry/fingers17.stl" scale="1 1 1"></mesh>
+		<mesh name="fingers18mod61" file="Geometry/fingers18mod61.stl" scale="1 1 1"></mesh>
+		<mesh name="fingers19mod13-24" file="Geometry/fingers19mod13-24.stl" scale="1 1 1"></mesh>
+		<mesh name="r_scaph" file="Geometry/r_scaph.stl" scale="1 1 1"></mesh>
+		<mesh name="r_lun" file="Geometry/r_lun.stl" scale="1 1 1"></mesh>
+		<mesh name="r_pis" file="Geometry/r_pis.stl" scale="1 1 1"></mesh>
+		<mesh name="r_triq" file="Geometry/r_triq.stl" scale="1 1 1"></mesh>
+		<texture name="texplane" type="2d" builtin="checker" rgb1=".2 .3 .4" rgb2=".1 0.15 0.2" width="100" height="100"></texture>
+		<texture name="texgeom" type="cube" builtin="flat" mark="cross" width="127" height="1278" rgb1="0.7 0.7 0.7" rgb2="0.9 0.9 0.9" markrgb="1 1 1" random="0.01"></texture>
+		<material name="MatPlane" reflectance="0.5" texture="texplane" texrepeat="1 1" texuniform="true"></material>
+		<material name="geom" texture="texgeom" texuniform="true"></material>
+	</asset>
+	<tendon>
+		<!-- Index Finger Tendons -->
+		<spatial name="FDSI_tendon" springlength="0.338" damping="0.1">
+			<site site="FDSI-P1"></site>
+			<site site="FDSI-P2"></site>
+			<site site="FDSI-P3"></site>
+			<site site="FDSI-P4"></site>
+			<site site="FDSI-P5"></site>
+			<site site="FDSI-P6"></site>
+			<site site="FDSI-P7"></site>
+			<site site="FDSI-P8"></site>
+			<site site="FDSI-P9"></site>
+			<site site="FDSI-P10"></site>
+		</spatial>
+		<spatial name="FDPI_tendon" springlength="0.322" damping="0.1">
+			<site site="FDPI-P1"></site>
+			<site site="FDPI-P2"></site>
+			<site site="FDPI-P3"></site>
+			<site site="FDPI-P4"></site>
+			<site site="FDPI-P5"></site>
+			<site site="FDPI-P6"></site>
+			<site site="FDPI-P7"></site>
+			<site site="FDPI-P8"></site>
+			<site site="FDPI-P9"></site>
+		</spatial>
+		<spatial name="EDCI_tendon" springlength="0.385" damping="0.1">
+			<site site="EDCI-P1"></site>
+			<site site="EDCI-P2"></site>
+			<site site="EDCI-P3"></site>
+			<site site="EDCI-P4"></site>
+			<site site="EDCI-P5"></site>
+			<site site="EDCI-P6"></site>
+			<site site="EDCI-P7"></site>
+			<site site="EDCI-P8"></site>
+			<geom geom="Secondmd"/>
+			<site site="EDCI-P9"></site>
+			<geom geom="Secondpm"/>
+			<site site="EDCI-P10"></site>
+			<geom geom="Seconddm"/>
+			<site site="EDCI-P11"></site>
+		</spatial>
+		<spatial name="EIP_tendon" springlength="0.24804" damping="0.1">
+			<site site="EIP-P1"></site>
+			<site site="EIP-P2"></site>
+			<site site="EIP-P3"></site>
+			<site site="EIP-P4"></site>
+			<site site="EIP-P5"></site>
+			<geom geom="Secondmd"/>
+			<site site="EIP-P6"></site>
+			<geom geom="Secondpm"/>
+			<site site="EIP-P7"></site>
+			<geom geom="Seconddm"/>
+			<site site="EIP-P8"></site>
+		</spatial>
+		<spatial name="RI2_tendon" springlength="0.275" damping="0.1">
+			<site site="RI2-P1"></site>
+			<site site="RI2-P2"></site>
+			<geom geom="Secondmd"/>
+			<site site="RI2-P3"></site>
+		</spatial>
+		<spatial name="LU_RB2_tendon" springlength="0.27500" damping="0.1">
+			<site site="LU_RB2-P1"></site>
+			<site site="LU_RB2-P2"></site>
+			<site site="LU_RB2-P3"></site>
+			<site site="LU_RB2-P4"></site>
+			<site site="LU_RB2-P5"></site>
+			<site site="LU_RB2-P6"></site>
+		</spatial>
+		<spatial name="UI_UB2_tendon" springlength="0.27500" damping="0.1">
+			<site site="UI_UB2-P1"></site>
+			<site site="UI_UB2-P2"></site>
+			<site site="UI_UB2-P3"></site>
+			<site site="UI_UB2-P4"></site>
+			<site site="UI_UB2-P5"></site>
+			<site site="UI_UB2-P6"></site>
+		</spatial>
+
+		<!-- Thumb Tendons -->
+		<spatial name="FPL_tendon" springlength="0.1988" damping="0.1">
+			<site site="FPL-P1"></site>
+			<site site="FPL-P2"></site>
+			<site site="FPL-P3"></site>
+			<site site="FPL-P4"></site>
+			<site site="FPL-P5"></site>
+			<site site="FPL-P6"></site>
+			<site site="FPL-P7"></site>
+			<site site="FPL-P8"></site>
+			<site site="FPL-P9"></site>
+			<site site="FPL-P10"></site>
+		</spatial>
+		<spatial name="APL_tendon" springlength="0.125" damping="0.1">
+			<site site="APL-P1"></site>
+			<site site="APL-P2"></site>
+			<site site="APL-P3"></site>
+			<site site="APL-P4"></site>
+			<site site="APL-P5"></site>
+			<site site="APL-P6"></site>
+			<site site="APL-P7"></site>
+			<site site="APL-P8"></site>
+			<site site="APL-P9"></site>
+		</spatial>
+		<spatial name="EPB_tendon" springlength="0.11" damping="0.1">
+			<site site="EPB-P1"></site>
+			<site site="EPB-P2"></site>
+			<site site="EPB-P3"></site>
+			<site site="EPB-P4"></site>
+			<site site="EPB-P5"></site>
+			<site site="EPB-P6"></site>
+			<site site="EPB-P7"></site>
+			<site site="EPB-P8"></site>
+			<site site="EPB-P9"></site>
+			<geom geom="Tphalax1_wrap"/>
+			<site site="EPB-P10"></site>
+		</spatial>
+		<spatial name="OP_tendon" springlength="0.22" damping="0.1">
+			<site site="OP-P1"></site>
+			<geom geom="r_trpzm_wrap"/>
+			<!-- <geom geom="thumb_mcp_wrap"/> -->
+			<site site="OP-P2"></site>
+		</spatial>
+		<spatial name="EPL_tendon" springlength="0.22" damping="0.1">
+			<site site="EPL-P1"></site>
+			<site site="EPL-P2"></site>
+			<site site="EPL-P3"></site>
+			<site site="EPL-P4"></site>
+			<site site="EPL-P5"></site>
+			<geom geom="r_trpzm_wrap" sidesite="r_trpzm_wrapside"/>
+			<!-- <geom geom="thumb_mcp_wrap"/> -->
+			<site site="EPL-P6"></site>
+			<site site="EPL-P7"></site>
+			<geom geom="Tphalax1_wrap"/>
+			<site site="EPL-P8"></site>
+			<site site="EPL-P9"></site>
+			<geom geom="Tphalax2_wrap"/>
+			<site site="EPL-P10"></site>
+		</spatial>
+	</tendon>
+
+	<actuator>
+		<!-- Index Actuators -->
+		<muscle name="FDSI" tendon="FDSI_tendon" class="muscle" lmin="0.5670780383250256" fvmax="0.9331675193912158" fpmax="50.486117581831095" ctrllimited="true" ctrlrange="0 1"></muscle>
+		<muscle name="FDPI" tendon="FDPI_tendon" class="muscle" lmin="0.6624310585069084" lmax="1.0476564896420248" fvmax="1.0476564896420248" fpmax="52.94270042751604" ctrllimited="true" ctrlrange="0 1"></muscle>
+		<muscle name="EDCI" tendon="EDCI_tendon" class="muscle" lmin="0.49415640338582884" fvmax="0.8708550787681711" fpmax="21.803988176437343" ctrllimited="true" ctrlrange="0 1"></muscle>
+		<muscle name="EIP" tendon="EIP_tendon" class="muscle" ctrllimited="true" ctrlrange="0 1" lmin="0.4979299202508566" fvmax="0.8778643073013048" fpmax="23.633036837420974"></muscle>
+		<muscle name="RI2" tendon="RI2_tendon" class="muscle" ctrllimited="true" ctrlrange="0 1"></muscle>
+		<muscle name="LU_RB2" tendon="LU_RB2_tendon" class="muscle" timeconst="0.7667 0.145985" ctrllimited="true" ctrlrange="0 1"></muscle>
+		<muscle name="UI_UB2" tendon="UI_UB2_tendon" class="muscle" timeconst="0.7667 0.145985" ctrllimited="true" ctrlrange="0 1"></muscle>
+
+		<!-- Thumb Actuators -->
+		<muscle name="FPL" tendon="FPL_tendon" class="muscle" lmin="0.5539737083984284" lmax="1.4179007705152675" fvmax="1.4179007705152675" fpmax="32.36067552135146" ctrllimited="true" ctrlrange="0 1"></muscle>
+		<muscle name="APL" tendon="APL_tendon" class="muscle" lmin="0.7172721166980348" lmax="1.0499211225840837" fvmax="1.0499211225840837" fpmax="57.6951787299685" ctrllimited="true" ctrlrange="0 1"></muscle>
+		<muscle name="EPB" tendon="EPB_tendon" class="muscle" lmin="0.7140860224291254" lmax="1.1376138112175826" fvmax="1.1376138112175826" fpmax="12.81890319343661" ctrllimited="true" ctrlrange="0 1"></muscle>
+		<muscle name="OP" tendon="OP_tendon" class="muscle" ctrllimited="true" ctrlrange="0 1"></muscle>
+		<muscle name="EPL" tendon="EPL_tendon" class="muscle" lmax="1.4751027258438545" fvmax="1.4751027258438545" fpmax="19.328830127916085" ctrllimited="true" ctrlrange="0 1"></muscle>
+	</actuator>
+</mujoco>

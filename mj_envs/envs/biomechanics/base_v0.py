@@ -1,11 +1,10 @@
 import numpy as np
 from gym import utils
 from mjrl.envs import mujoco_env
-from mujoco_py import MjViewer, MjSim, load_model_from_xml
+from mujoco_py import MjViewer, MjSim, load_model_from_path
 import os
 from mj_envs.utils.obj_vec_dict import ObsVecDict
 import collections
-from mj_envs.utils.xml_utils import merge_xmls
 
 RWD_MODE = 'dense' # dense/ sparse
 
@@ -14,29 +13,33 @@ class FingerBaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
     def __init__(self,
                 obs_keys:list,
                 rwd_keys:list,
-                act_mode:str, # motor/ muscle
+                sites:tuple,    # fingertip sites of interests
+                sim = None,
+                model_path:str = None, # only if sim is not provided
+                normalize_act = True,
                 **kwargs):
 
-        self.obs_keys = obs_keys
-        self.rwd_keys = rwd_keys
-
         # get sim
-        curr_dir = os.path.dirname(os.path.abspath(__file__))
-        if act_mode == "muscle":
-            model_xml = merge_xmls(receiver_xml=curr_dir+'/assets/tendon_finger_v0.xml',
-                                    donor_xml=curr_dir+'/assets/tendon_finger_muscleAct_v0.xml')
-        else:
-            model_xml = merge_xmls(receiver_xml=curr_dir+'/assets/tendon_finger_v0.xml',
-                                    donor_xml=curr_dir+'/assets/tendon_finger_motorAct_v0.xml')
-        sim = MjSim(load_model_from_xml(model_xml))
+        if sim is None:
+            sim = MjSim(load_model_from_path(model_path))
+
+        # establish keys
+        self.obs_keys = obs_keys.copy()
+        self.rwd_keys = rwd_keys
+        if sim.model.na>0 and 'act' not in self.obs_keys:
+            self.obs_keys.append('act')
 
         # ids
-        self.tip_sid = sim.model.site_name2id('S_tip')
-        self.target_sid = sim.model.site_name2id('S_target')
+        self.tip_sids = []
+        self.target_sids = []
+        for site in sites:
+            self.tip_sids.append(sim.model.site_name2id(site))
+            self.target_sids.append(sim.model.site_name2id(site+'_target'))
 
-        # scales
+        # configure action space
         self.act_mid = np.mean(sim.model.actuator_ctrlrange, axis=1)
         self.act_rng = 0.5*(sim.model.actuator_ctrlrange[:,1]-sim.model.actuator_ctrlrange[:,0])
+        self.normalize_act = normalize_act
 
         # get env
         utils.EzPickle.__init__(self)
@@ -44,14 +47,16 @@ class FingerBaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.obs_dict = {}
         self.rwd_dict = {}
         mujoco_env.MujocoEnv.__init__(self, sim=sim, frame_skip=5)
-        self.action_space.high = np.ones_like(self.model.actuator_ctrlrange[:,1])
-        self.action_space.low  = -1.0 * np.ones_like(self.model.actuator_ctrlrange[:,0])
+        if self.normalize_act:
+            self.action_space.high = np.ones_like(sim.model.actuator_ctrlrange[:,1])
+            self.action_space.low  = -1.0 * np.ones_like(sim.model.actuator_ctrlrange[:,0])
 
     # step the simulation forward
     def step(self, a):
         # apply action and step
-        a = np.clip(a, -1.0, 1.0)
-        a = self.act_mid + a*self.act_rng
+        a = np.clip(a, a_min=self.action_space.low, a_max=self.action_space.high)
+        if self.normalize_act:
+            a = self.act_mid + a*self.act_rng
         self.do_simulation(a, self.frame_skip)
 
         # observation and rewards
@@ -75,7 +80,7 @@ class FingerBaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
             'rwd_sparse': self.rwd_dict['sparse'][()],
             'solved': self.rwd_dict['solved'][()],
             'done': self.rwd_dict['done'][()],
-            'obs_dict': self.obs_dict,
+            'obs_dict': self.obs_dict.copy(),
             'rwd_dict': self.rwd_dict,
         }
         return env_info
@@ -92,6 +97,8 @@ class FingerBaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.viewer.cam.azimuth = 90
         self.sim.forward()
         self.viewer.cam.distance = 1.5
+        self.viewer.vopt.flags[3] = 1 # render actuators
+
 
     # evaluate paths and log metrics to logger
     def evaluate_success(self, paths, logger=None):
@@ -101,7 +108,7 @@ class FingerBaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
 
         # success if any last 5 steps is solved
         for path in paths:
-            if np.sum(path['env_infos']['solved'], dtype=np.int)[-5:] > 0:
+            if np.sum(path['env_infos']['solved'][-5:], dtype=np.int) > 0:
                 num_success += 1
         success_percentage = num_success*100.0/num_paths
 

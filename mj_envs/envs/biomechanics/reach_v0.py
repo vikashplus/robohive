@@ -1,4 +1,4 @@
-from mj_envs.envs.biomechanics.finger.base_v0 import FingerBaseV0
+from mj_envs.envs.biomechanics.base_v0 import FingerBaseV0
 import numpy as np
 import collections
 
@@ -7,25 +7,32 @@ class ReachEnvV0(FingerBaseV0):
     def __init__(self,
                 obs_keys:list = ['qpos', 'qvel', 'tip_pos', 'reach_err'],
                 rwd_keys:list = ['reach', 'bonus', 'penalty'],
-                reach_target_xyz_range = np.array(([0.2, 0.05, 0.20], [0.2, 0.05, 0.20])),
+                target_reach_range:dict = {'IFtip': ((0.2, 0.05, 0.20), (0.2, 0.05, 0.20)),},
                 **kwargs):
-        self.reach_target_xyz_range = reach_target_xyz_range
-        super().__init__(obs_keys=obs_keys, rwd_keys=rwd_keys, **kwargs)
+        self.target_reach_range = target_reach_range
+        super().__init__(obs_keys=obs_keys, rwd_keys=rwd_keys, sites=self.target_reach_range.keys(),  **kwargs)
 
     def get_obs(self):
-        # qpos for hand, xpos for obj, xpos for target
         self.obs_dict['t'] = np.array([self.sim.data.time])
         self.obs_dict['qpos'] = self.data.qpos[:].copy()
         self.obs_dict['qvel'] = self.data.qvel[:].copy()
-        self.obs_dict['tip_pos'] = self.data.site_xpos[self.tip_sid].copy()
-        self.obs_dict['target_pos'] = self.data.site_xpos[self.target_sid].copy()
-        self.obs_dict['reach_err'] = self.obs_dict['target_pos']-self.obs_dict['tip_pos']
+        if self.sim.model.na>0:
+            self.obs_dict['act'] = self.data.act[:].copy()
+
+        # reach error
+        self.obs_dict['tip_pos'] = np.array([])
+        self.obs_dict['target_pos'] = np.array([])
+        for isite in range(len(self.tip_sids)):
+            self.obs_dict['tip_pos'] = np.append(self.obs_dict['tip_pos'], self.data.site_xpos[self.tip_sids[isite]].copy())
+            self.obs_dict['target_pos'] = np.append(self.obs_dict['target_pos'], self.data.site_xpos[self.target_sids[isite]].copy())
+        self.obs_dict['reach_err'] = np.array(self.obs_dict['target_pos'])-np.array(self.obs_dict['tip_pos'])
+
         t, obs = self.obsdict2obsvec(self.obs_dict, self.obs_keys)
         return obs
 
     def get_reward_dict(self, obs_dict):
         reach_dist = np.linalg.norm(obs_dict['reach_err'], axis=-1)
-        far_th = .35
+        far_th = .35*len(self.tip_sids)
 
         rwd_dict = collections.OrderedDict((
             # Optional Keys
@@ -42,6 +49,8 @@ class ReachEnvV0(FingerBaseV0):
         return rwd_dict
 
     def reset(self):
-        self.sim.model.site_pos[self.target_sid] = self.np_random.uniform(high=self.reach_target_xyz_range[0], low=self.reach_target_xyz_range[1])
+        for site, span in self.target_reach_range.items():
+            sid =  self.sim.model.site_name2id(site+'_target')
+            self.sim.model.site_pos[sid] = self.np_random.uniform(high=span[0], low=span[1])
         obs = super().reset()
         return obs

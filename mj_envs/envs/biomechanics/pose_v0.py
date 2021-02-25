@@ -1,30 +1,43 @@
-from mj_envs.envs.biomechanics.finger.base_v0 import FingerBaseV0
+from mj_envs.envs.biomechanics.base_v0 import FingerBaseV0
 import numpy as np
 import collections
+from mjrl.envs.mujoco_env import get_sim
 
 class PoseEnvV0(FingerBaseV0):
 
     def __init__(self,
-                obs_keys:list = ['qpos', 'qvel', 'pose_err', 'act'],
+                model_path:str,
+                target_jnt_range:dict,
+                viz_site_targets:tuple,
+                obs_keys:list = ['qpos', 'qvel', 'pose_err'],
                 rwd_keys:list = ['pose', 'bonus', 'penalty'],
-                pose_target_jnt_range = np.array(([-.1, -.1, .7, .7], [.1, .1, .8, .8])),
                 **kwargs):
-        self.pose_target_jnt_range = pose_target_jnt_range
-        self.pose_target_jnt = np.mean(self.pose_target_jnt_range, axis=0)
-        super().__init__(obs_keys=obs_keys, rwd_keys=rwd_keys, **kwargs)
+
+        # pre-fetch sim
+        sim = get_sim(model_path=model_path)
+
+        # resolve joint demands
+        self.target_jnt_ids = []
+        self.target_jnt_range = []
+        for jnt_name, jnt_range in target_jnt_range.items():
+            self.target_jnt_ids.append(sim.model.joint_name2id(jnt_name))
+            self.target_jnt_range.append(jnt_range)
+        self.target_jnt_range = np.array(self.target_jnt_range)
+        self.target_jnt_value = np.mean(self.target_jnt_range, axis=1)
+
+        super().__init__(obs_keys=obs_keys, rwd_keys=rwd_keys, sites=viz_site_targets, sim=sim, **kwargs)
 
     def get_target_pose(self):
-
-        return self.np_random.uniform(high=self.pose_target_jnt_range[0], low=self.pose_target_jnt_range[1])
+        return self.np_random.uniform(high=self.target_jnt_range[:,0], low=self.target_jnt_range[:,1])
 
     def get_obs(self):
-        # import ipdb; ipdb.set_trace()
         self.obs_dict['t'] = np.array([self.sim.data.time])
         self.obs_dict['qpos'] = self.data.qpos[:].copy()
         self.obs_dict['qvel'] = self.data.qvel[:].copy()
         if self.sim.model.na>0:
             self.obs_dict['act'] = self.data.act[:].copy()
-        self.obs_dict['pose_err'] = self.pose_target_jnt - self.obs_dict['qpos']
+
+        self.obs_dict['pose_err'] = self.target_jnt_value - self.obs_dict['qpos']
         t, obs = self.obsdict2obsvec(self.obs_dict, self.obs_keys)
         return obs
 
@@ -32,10 +45,9 @@ class PoseEnvV0(FingerBaseV0):
         pose_dist = np.linalg.norm(obs_dict['pose_err'], axis=-1)
         far_th = 4*np.pi/2
 
-        # print(pose_dist)
         rwd_dict = collections.OrderedDict((
             # Optional Keys
-            ('pose',   -1.*pose_dist),
+            ('pose',    -1.*pose_dist),
             ('bonus',   4.0*(pose_dist<.35) + 4.0*(pose_dist<.5)),
             ('penalty', -50.*(pose_dist>far_th)),
             # Must keys
@@ -43,18 +55,17 @@ class PoseEnvV0(FingerBaseV0):
             ('solved',  pose_dist<.35),
             ('done',    pose_dist>far_th),
         ))
-        # print(pose_dist, rwd_dict['solved'])
-
         rwd_dict['dense'] = np.sum([rwd_dict[key] for key in self.rwd_keys], axis=0)
         return rwd_dict
 
     def reset(self):
         # generate targets
-        self.pose_target_jnt = self.get_target_pose()
+        self.target_jnt_value = self.get_target_pose()
         # update finger-tip target viz
-        self.sim.data.qpos[:] = self.pose_target_jnt.copy()
+        self.sim.data.qpos[:] = self.target_jnt_value.copy()
         self.sim.forward()
-        self.sim.model.site_pos[self.target_sid] = self.sim.data.site_xpos[self.tip_sid].copy()
+        for isite in range(len(self.tip_sids)):
+            self.sim.model.site_pos[self.target_sids[isite]] = self.sim.data.site_xpos[self.tip_sids[isite]].copy()
         self.sim.forward()
 
         # initialize
