@@ -5,7 +5,7 @@ class FetchReachFixed(ReachEnvFixed):
 
     def __init__(self):
         curr_dir = os.path.dirname(os.path.abspath(__file__))+'/'
-        ReachEnvRandom.__init__(self,
+        ReachEnvFixed.__init__(self,
             model_path = '/fetch/assets/fetch_reach_v0.xml',
             config_path = curr_dir + '/assets/fetch_reach_v0.config',
             robot_site_name="grip",
