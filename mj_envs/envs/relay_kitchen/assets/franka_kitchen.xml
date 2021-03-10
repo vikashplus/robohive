@@ -20,9 +20,9 @@
     <include file="../../../sims/furniture_sim/kettle/kettle_asset.xml"/>
 
     <visual>
-    <global offwidth="2560" offheight="1920" />
-    <quality shadowsize="4096" offsamples="4" />
-    <map force="0.1" fogend="5" />
+        <global offwidth="2560" offheight="1920" />
+        <quality shadowsize="4096" offsamples="4" />
+        <map force="0.1" fogend="5" />
     </visual>
 
     <compiler inertiafromgeom='auto' inertiagrouprange='3 5' angle="radian"

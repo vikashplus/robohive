@@ -11,6 +11,11 @@ import gym
 import six
 import time as timer
 
+
+# TODO
+# remove rwd_mode
+# convet obs_keys to obs_keys_wt
+
 try:
     import mujoco_py
     from mujoco_py import load_model_from_path, MjSim, MjViewer
@@ -36,12 +41,12 @@ class MujocoEnv(gym.Env, utils.EzPickle, ObsVecDict):
     """
 
     def __init__(self,
-                sim = None,             # true dynamics
-                sim_obsd = None,        # observed dynamics
+                sim = None,             # true dynamics (used for simulation)
+                sim_obsd = None,        # observed dynamics (used to reconstruct (partially observed) sim from (noisy)sensor data)
                 model_path = None,      # xml to use to generate sim + sim_obsd
                 frame_skip = 1,         # frame_skip
                 obs_keys = None,        # keys from obs_dict to use
-                rwd_keys = None,        # keys from rwd_dict to use
+                rwd_keys_wt = None,     # {keys, wt} from rwd_dict to use
                 rwd_mode = "dense",     # dense / sparse
                 act_normalized = True,  # use normalized actions
                 seed = None,            # seed the random number generator
@@ -77,7 +82,7 @@ class MujocoEnv(gym.Env, utils.EzPickle, ObsVecDict):
         # resolve rewards
         self.rwd_dict = {}
         self.rwd_mode = rwd_mode
-        self.rwd_keys = rwd_keys
+        self.rwd_keys_wt = rwd_keys_wt
 
         # resolve obs
         self.obs_dict = {}
@@ -130,7 +135,7 @@ class MujocoEnv(gym.Env, utils.EzPickle, ObsVecDict):
         # get sensor data from robot
         sen = self.robot.get_sensors()
 
-        # reconstruct (partially) observed sim using (noisy) sensor data
+        # reconstruct (partially) observed-sim using (noisy) sensor data
         self.robot.sensor2sim(sen, self.sim_obsd)
 
         # get obs_dict using the observed information
@@ -294,8 +299,8 @@ class MujocoEnv(gym.Env, utils.EzPickle, ObsVecDict):
         qp = state_dict['qpos']
         qv = state_dict['qvel']
         self.set_state(qp, qv)
-        self.sim.model.site_xpos[:] = state_dict['site_pos']
-        self.sim.model.body_xpos[:] = state_dict['body_pos']
+        self.sim.model.site_pos[:] = state_dict['site_pos']
+        self.sim.model.body_pos[:] = state_dict['body_pos']
         self.sim.forward()
 
     # def state_vector(self):
@@ -313,7 +318,7 @@ class MujocoEnv(gym.Env, utils.EzPickle, ObsVecDict):
             self.viewer = MjViewer(self.sim)
             self.viewer._run_speed = 0.5
             self.viewer.cam.elevation = -30
-            self.viewer.cam.azimuth = -90
+            self.viewer.cam.azimuth = 90
             self.viewer.cam.distance = 2.5
             # self.viewer.lookat = np.array([-0.15602934,  0.32243594,  0.70929817])
             #self.viewer._run_speed /= self.frame_skip
