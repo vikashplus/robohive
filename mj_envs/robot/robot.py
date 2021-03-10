@@ -33,14 +33,14 @@ class Robot():
 
     def __init__(self,
                 robot_name:str = 'default_robot',
-                model_path: str = None, # model file to create sim
-                mj_sim = None,          # pass sim directly
-                config_path: str = None,# config defining sensors and actuator groups
-                act_mode: str = "pos",   # pos / vel
-                is_hardware = None,
-                sensor_cache_maxsize = 5,
-                noise_scale = 0,        # scale for sensor noise
-                random_generator = None,
+                model_path: str = None,     # model file to create sim
+                mj_sim = None,              # pass sim directly
+                config_path: str = None,    # config defining sensors and actuator groups
+                act_mode: str = "pos",      # pos / vel
+                is_hardware = None,         # use hardware
+                sensor_cache_maxsize = 5,   # cache size for sensors
+                noise_scale = 0,            # scale for sensor noise
+                random_generator = None,    # random number generator
                 *args, **kwargs):
 
         self.name = robot_name+'(sim)' if is_hardware is None else robot_name+'(hdr)'
