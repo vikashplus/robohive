@@ -28,7 +28,7 @@
 		<body name="load" pos="0 0 .100">
 			<geom type="sphere" size="0.01" mass="1" pos="0 0 0"/>
 			<site name="load"/>
-			<freejoint/>
+			<joint type="slide" axis="0 0 1" damping="0.01"/>
 		</body>
 	</worldbody>
 
