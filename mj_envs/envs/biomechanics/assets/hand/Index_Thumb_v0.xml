@@ -11,16 +11,20 @@
 		<lengthrange inttotal="50"></lengthrange>
 	</compiler>
 	<default>
-		<joint limited="true" damping="0.5" armature="0.01" stiffness="0"></joint>
-		<geom contype="1" conaffinity="0" condim="3" rgba="0.8 0.8 .8 1" margin="0.001" solref=".02 1" solimp=".8 .8 .01" material="geom"></geom>
-		<site size="0.0012" rgba=".2 .6 .2 1"></site>
 		<tendon width="0.001" rgba=".95 .3 .3 1" limited="false"></tendon>
-		<default class="muscle">
+		<default  class="biomimetichand">
+			<joint limited="true" damping="0.5" armature="0.01" stiffness="0"></joint>
+			<geom contype="0" conaffinity="0" condim="3" rgba="0.8 0.8 .8 1" margin="0.001" solref=".02 1" solimp=".8 .8 .01" material="geom"></geom>
+			<site size="0.0012" rgba=".2 .6 .2 1"></site>
 			<muscle ctrllimited="true" ctrlrange="0 1" scale="400"></muscle>
 		</default>
-		<default class="motor">
-			<motor gear="20"></motor>
+		<default class="skin">
+			<geom type="capsule" group="1" contype="1" conaffinity="1" condim="3" rgba="0.8 0.7 .5 .4" margin="0.001"/>
 		</default>
+		<default class="wrap">
+			<geom group="2" contype="0" conaffinity="0" rgba=".5 .5 .9 .4"/>
+		</default>
+
 	</default>
 
 	<statistic extent=".75"/>
@@ -41,7 +45,7 @@
 		<light mode="trackcom" directional="false" diffuse=".8 .8 .8" specular="0.3 0.3 0.3" pos="0 0 4.0" dir="0 0 -1"></light>
 
 		<!-- <body name="humerus" pos="0 6.12323e-17 1" quat="0.7071067811865475 0.7071067811865475 0.0 0.0"> -->
-		<body name="humerus" pos="0 .6 .2" euler="-.0 -2.2 0">
+		<body childclass="biomimetichand" name="humerus" pos="0 .6 .2" euler="-.0 -2.2 0">
 			<geom name="humerus" type="mesh" mesh="humerus"></geom>
 			<site name="EDCI-P1" pos="0.00065 -0.28898 0.01869"></site>
 			<!-- <joint name="r_z" type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-6.28319 6.28319" ref="0" armature="0" damping="0" stiffness="0"></joint> -->
@@ -131,7 +135,7 @@
 												<site name="UI_UB2-P1" pos="0.00074812838446916335 -0.031505427257808555 0.025176696412445063"></site>
 												<site name="UI_UB2-P2" pos="-0.0010955626136719006 -0.065798487610560147 0.029918353888111458"></site>
 
-												<geom name='Secondmd' type='sphere' pos="-0.002402 -0.0685 0.045" size='0.008' rgba=".5 .5 .9 .4"/>
+												<geom name='Secondmd' type='sphere' pos="-0.002402 -0.0685 0.045" size='0.008' class="wrap"/>
 
 												<body name="Iphalanx1" pos="-0.002402 -0.0685 0.045" quat="1.0 0.0 0.0 0.0">
 													<geom name="fingers2" type="mesh" mesh="fingers2"></geom>
@@ -146,8 +150,8 @@
 													<site name="UI_UB2-P4" pos="-0.0031439293319124382 -0.045967676388443991 -0.0020633706701108042"></site>
 													<joint name="MCP2_lateral" type="hinge" pos="0 0 0" axis="1 0 0" limited="true" range="-0.349066 0.349066" ref="0"></joint>
 													<joint name="MCP2_flex" type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-0.174533 1.5708" ref="0"></joint>
-
-													<geom name='Secondpm' type="cylinder" size="0.006 0.010" pos="0.0005 -0.04826 0.00799" rgba=".5 .5 .9 .4"/>
+													<geom class="skin" size=".009" fromto="0 0 0 0.0005 -0.04826 0.00799"/>
+													<geom name='Secondpm' type="cylinder" size="0.006 0.010" pos="0.0005 -0.04826 0.00799" class="wrap"/>
 
 													<body name="Iphalanx2" pos="0.0005 -0.04826 0.00799" quat="1.0 0.0 0.0 0.0">
 														<geom name="fingers3" type="mesh" mesh="fingers3"></geom>
@@ -159,8 +163,8 @@
 														<site name="UI_UB2-P5" pos="-0.0051333703049100858 -0.013975407278245785 -0.0037745860587147955"></site>
 														<site name="UI_UB2-P6" pos="-0.0049530705817471448 -0.027418026590590092 0.00297649254235181"></site>
 														<joint name="PIP_flex" type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-0.0872665 1.5708" ref="0"></joint>
-
-														<geom name='Seconddm' type="cylinder" size="0.004 0.010" pos="0.00193 -0.03277 0.00472" rgba=".5 .5 .9 .4"/>
+														<geom name='Seconddm' type="cylinder" size="0.004 0.010" pos="0.00193 -0.03277 0.00472" class="wrap"/>
+														<geom class="skin" size=".0085" fromto="0 0 0 0.00193 -0.03277 0.00472"/>
 
 														<body name="Iphalanx3" pos="0.00193 -0.03277 0.00472" quat="1.0 0.0 0.0 0.0">
 															<geom name="fingers4" type="mesh" mesh="fingers4"></geom>
@@ -168,6 +172,8 @@
 															<site name="EDCI-P11" pos="-0.00291 -0.01043 7e-005"></site>
 															<site name="EIP-P8" pos="-0.00291 -0.01043 7e-005"></site>
 															<joint name="DIP_flex" type="hinge" pos="0 0 0" axis="0 0 1" limited="true" range="-0.0872665 1.5708" ref="0"></joint>
+															<geom class="skin" size=".008" fromto="0 0 0 0 -.02 0.003"/>
+															<geom class="skin" type="ellipsoid" size=".006 .011 .002" pos="-.007 -.018 0.003" euler="-.1 1.57 0" rgba="1 1 1 .8"/>
 															<site name="IFtip" type="sphere" size=".005" pos="0 -.02 0.003" rgba=".4 .7 .8 1"/>
 														</body>
 													</body>
@@ -238,8 +244,8 @@
 												<site name="EPL-P7" pos="-0.0056996392249200386 -0.029995967407411953 0.043755372512306705"></site>
 												<joint name="thumb_abd" type="hinge" pos="0 0 0" axis="1 0 0" limited="true" range="-0.52 0.78" ref="0"></joint>
 												<joint name="thumb_flex" type="hinge" pos="0 0 0" axis="0.056398 0.983577 -0.171449" limited="true" range="-0.785398 1.5708" ref="0"></joint>
-
 												<geom name="Tphalax1_wrap" type="cylinder" size="0.008 0.008" pos="0.0 -0.035 0.037" euler="-1.2 1.2 0" rgba=".5 .5 .9 .4"></geom>
+												<geom class="skin" size=".013" fromto="-.005 0 .003 0 -0.030 0.036"/>
 
 												<body name="Tphalanx1" pos="0.00267 -0.0305 0.04" euler="0 0.95 0">>
 													<geom name="fingers18mod61" type="mesh" mesh="fingers18mod61"></geom>
@@ -251,12 +257,16 @@
 													<!-- <joint name="TCP2M_lateral" type="hinge" pos="0 0 0" axis="1 0 0" limited="true" range="-0.17 0.95" ref="0"></joint> -->
 													<!-- <joint name="TCP2M_rotation2" type="hinge" pos="0 0 0" axis="0 1 0" limited="true" range="0.94 0.95" ref="0"></joint> -->
 													<joint name="TCP2M_flex" type="hinge" pos="0 0 0" axis="0 0.5 0.5" limited="true" range="-0.17 0.95" ref="0"></joint>
+													<geom class="skin" size=".011" fromto="0 -.002 -.002 -0.015 -0.037 0.018"/>
+
 													<body name="Tphalanx2" pos="-0.015 -0.033 0.024" quat="1.0 0.0 0.0 0.0">
-														<geom name="Tphalax2_wrap" type="cylinder" size="0.005 0.005" pos="0.00 -0.011 -0.00" euler="-0.5 0.15 0" rgba=".5 .5 .9 .4"></geom>
+														<geom name="Tphalax2_wrap" type="cylinder" size="0.005 0.005" pos="0.00 -0.011 -0.00" euler="-0.5 0.15 0" rgba=".5 .5 .9 0"></geom>
 														<geom name="fingers19mod13-24" type="mesh" mesh="fingers19mod13-24"></geom>
 														<site name="FPL-P10" pos="0.002 -0.019 0.004"></site>
 														<site name="EPL-P10" pos="-0.0053217215572622335 -0.01404335919031147 0.00016147749355066975"></site>
  														<joint name="TCP2M2_flex" type="hinge" pos="0 0 0" axis="0 0.5 0.5" limited="true" range="-0.0872665 1.5708" ref="0"></joint>
+														<geom class="skin" size=".010" fromto="0 -.005 -.005 -.006 -.031 .012"/>
+														<geom class="skin" type="ellipsoid" size=".008 .011 .002" pos="-.014 -.031 .010" euler="0.2 1.4 -.8" rgba="1 1 1 .8"/>
 														<site name="THtip" type="sphere" size=".005" pos="-.006 -.032 .011" rgba=".4 .7 .8 1"/>
 													</body>
 												</body>
@@ -324,6 +334,7 @@
 		<material name="MatPlane" reflectance="0.5" texture="texplane" texrepeat="1 1" texuniform="true"></material>
 		<material name="geom" texture="texgeom" texuniform="true"></material>
 	</asset>
+
 	<tendon>
 		<!-- Index Finger Tendons -->
 		<spatial name="FDSI_tendon" springlength="0.338" damping="0.1">
@@ -464,19 +475,19 @@
 
 	<actuator>
 		<!-- Index Actuators -->
-		<muscle name="FDSI" tendon="FDSI_tendon" class="muscle" lmin="0.5670780383250256" fvmax="0.9331675193912158" fpmax="50.486117581831095" ctrllimited="true" ctrlrange="0 1"></muscle>
-		<muscle name="FDPI" tendon="FDPI_tendon" class="muscle" lmin="0.6624310585069084" lmax="1.0476564896420248" fvmax="1.0476564896420248" fpmax="52.94270042751604" ctrllimited="true" ctrlrange="0 1"></muscle>
-		<muscle name="EDCI" tendon="EDCI_tendon" class="muscle" lmin="0.49415640338582884" fvmax="0.8708550787681711" fpmax="21.803988176437343" ctrllimited="true" ctrlrange="0 1"></muscle>
-		<muscle name="EIP" tendon="EIP_tendon" class="muscle" ctrllimited="true" ctrlrange="0 1" lmin="0.4979299202508566" fvmax="0.8778643073013048" fpmax="23.633036837420974"></muscle>
-		<muscle name="RI2" tendon="RI2_tendon" class="muscle" ctrllimited="true" ctrlrange="0 1"></muscle>
-		<muscle name="LU_RB2" tendon="LU_RB2_tendon" class="muscle" timeconst="0.7667 0.145985" ctrllimited="true" ctrlrange="0 1"></muscle>
-		<muscle name="UI_UB2" tendon="UI_UB2_tendon" class="muscle" timeconst="0.7667 0.145985" ctrllimited="true" ctrlrange="0 1"></muscle>
+		<muscle name="FDSI" tendon="FDSI_tendon"  class="biomimetichand" lmin="0.5670780383250256" fvmax="0.9331675193912158" fpmax="50.486117581831095" ctrllimited="true" ctrlrange="0 1"></muscle>
+		<muscle name="FDPI" tendon="FDPI_tendon"  class="biomimetichand" lmin="0.6624310585069084" lmax="1.0476564896420248" fvmax="1.0476564896420248" fpmax="52.94270042751604" ctrllimited="true" ctrlrange="0 1"></muscle>
+		<muscle name="EDCI" tendon="EDCI_tendon"  class="biomimetichand" lmin="0.49415640338582884" fvmax="0.8708550787681711" fpmax="21.803988176437343" ctrllimited="true" ctrlrange="0 1"></muscle>
+		<muscle name="EIP" tendon="EIP_tendon"  class="biomimetichand" ctrllimited="true" ctrlrange="0 1" lmin="0.4979299202508566" fvmax="0.8778643073013048" fpmax="23.633036837420974"></muscle>
+		<muscle name="RI2" tendon="RI2_tendon"  class="biomimetichand" ctrllimited="true" ctrlrange="0 1"></muscle>
+		<muscle name="LU_RB2" tendon="LU_RB2_tendon"  class="biomimetichand" timeconst="0.7667 0.145985" ctrllimited="true" ctrlrange="0 1"></muscle>
+		<muscle name="UI_UB2" tendon="UI_UB2_tendon"  class="biomimetichand" timeconst="0.7667 0.145985" ctrllimited="true" ctrlrange="0 1"></muscle>
 
 		<!-- Thumb Actuators -->
-		<muscle name="FPL" tendon="FPL_tendon" class="muscle" lmin="0.5539737083984284" lmax="1.4179007705152675" fvmax="1.4179007705152675" fpmax="32.36067552135146" ctrllimited="true" ctrlrange="0 1"></muscle>
-		<muscle name="APL" tendon="APL_tendon" class="muscle" lmin="0.7172721166980348" lmax="1.0499211225840837" fvmax="1.0499211225840837" fpmax="57.6951787299685" ctrllimited="true" ctrlrange="0 1"></muscle>
-		<muscle name="EPB" tendon="EPB_tendon" class="muscle" lmin="0.7140860224291254" lmax="1.1376138112175826" fvmax="1.1376138112175826" fpmax="12.81890319343661" ctrllimited="true" ctrlrange="0 1"></muscle>
-		<muscle name="OP" tendon="OP_tendon" class="muscle" ctrllimited="true" ctrlrange="0 1"></muscle>
-		<muscle name="EPL" tendon="EPL_tendon" class="muscle" lmax="1.4751027258438545" fvmax="1.4751027258438545" fpmax="19.328830127916085" ctrllimited="true" ctrlrange="0 1"></muscle>
+		<muscle name="FPL" tendon="FPL_tendon"  class="biomimetichand" lmin="0.5539737083984284" lmax="1.4179007705152675" fvmax="1.4179007705152675" fpmax="32.36067552135146" ctrllimited="true" ctrlrange="0 1"></muscle>
+		<muscle name="APL" tendon="APL_tendon"  class="biomimetichand" lmin="0.7172721166980348" lmax="1.0499211225840837" fvmax="1.0499211225840837" fpmax="57.6951787299685" ctrllimited="true" ctrlrange="0 1"></muscle>
+		<muscle name="EPB" tendon="EPB_tendon"  class="biomimetichand" lmin="0.7140860224291254" lmax="1.1376138112175826" fvmax="1.1376138112175826" fpmax="12.81890319343661" ctrllimited="true" ctrlrange="0 1"></muscle>
+		<muscle name="OP" tendon="OP_tendon"  class="biomimetichand" ctrllimited="true" ctrlrange="0 1"></muscle>
+		<muscle name="EPL" tendon="EPL_tendon"  class="biomimetichand" lmax="1.4751027258438545" fvmax="1.4751027258438545" fpmax="19.328830127916085" ctrllimited="true" ctrlrange="0 1"></muscle>
 	</actuator>
 </mujoco>

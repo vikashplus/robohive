@@ -111,6 +111,29 @@ register(id='IFTHPoseMuscleRandom-v0',
                                     'TCP2M2_flex': (-0.0872665, 1.5708)
                                     },
                 'viz_site_targets': ('IFtip','THtip'),
+                'normalize_act': False,
+                'reset_type': 'none',       # none, init, random
+                'target_type': 'generate',    # switch / generate
+            }
+    )
+
+# Hand-Joint key turn ==============================
+register(id='IFTHKeyTurnFixed-v0',
+            entry_point='mj_envs.envs.biomechanics.key_turn_v0:KeyTurnFixedEnvV0',
+            max_episode_steps=200,
+            kwargs={
+                'frame_skip': 10,
+                'model_path': curr_dir+'/assets/hand/Index_Thumb_keyturn_v0.xml',
+                'normalize_act': False
+            }
+    )
+
+register(id='IFTHKeyTurnRandom-v0',
+            entry_point='mj_envs.envs.biomechanics.key_turn_v0:KeyTurnRandomEnvV0',
+            max_episode_steps=200,
+            kwargs={
+                'frame_skip': 10,
+                'model_path': curr_dir+'/assets/hand/Index_Thumb_keyturn_v0.xml',
                 'normalize_act': False
             }
     )

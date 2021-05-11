@@ -13,10 +13,12 @@ class FingerBaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
     def __init__(self,
                 obs_keys:list,
                 rwd_keys:list,
-                sites:tuple,    # fingertip sites of interests
+                sites:tuple = None,    # fingertip sites of interests
                 sim = None,
                 model_path:str = None, # only if sim is not provided
                 normalize_act = True,
+                rwd_viz = False,
+                frame_skip:int = 10,
                 **kwargs):
 
         # get sim
@@ -32,9 +34,17 @@ class FingerBaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         # ids
         self.tip_sids = []
         self.target_sids = []
-        for site in sites:
-            self.tip_sids.append(sim.model.site_name2id(site))
-            self.target_sids.append(sim.model.site_name2id(site+'_target'))
+        if sites:
+            for site in sites:
+                self.tip_sids.append(sim.model.site_name2id(site))
+                self.target_sids.append(sim.model.site_name2id(site+'_target'))
+
+        # set vizualizer
+        if rwd_viz:
+            from vtils.plotting.srv_dict import srv_dict
+            self.srv = srv_dict()
+        else:
+            self.srv = None
 
         # configure action space
         self.act_mid = np.mean(sim.model.actuator_ctrlrange, axis=1)
@@ -46,10 +56,11 @@ class FingerBaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         ObsVecDict.__init__(self)
         self.obs_dict = {}
         self.rwd_dict = {}
-        mujoco_env.MujocoEnv.__init__(self, sim=sim, frame_skip=5)
+        mujoco_env.MujocoEnv.__init__(self, sim=sim, frame_skip=frame_skip)
         if self.normalize_act:
             self.action_space.high = np.ones_like(sim.model.actuator_ctrlrange[:,1])
             self.action_space.low  = -1.0 * np.ones_like(sim.model.actuator_ctrlrange[:,0])
+
 
     # step the simulation forward
     def step(self, a):
@@ -65,6 +76,9 @@ class FingerBaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.rwd_dict = self.get_reward_dict(self.obs_dict)
         self.squeeze_dims(self.rwd_dict)
         self.squeeze_dims(self.obs_dict)
+
+        if self.srv:
+            self.srv.append(self.rwd_dict)
 
         # finalize step
         env_info = self.get_env_infos()
@@ -86,6 +100,7 @@ class FingerBaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         return env_info
 
     def reset_model(self, qp=None, qv=None):
+        self.sim.reset()
         qp = self.init_qpos.copy() if qp is None else qp
         qv = self.init_qvel.copy() if qv is None else qv
         self.set_state(qp, qv)
