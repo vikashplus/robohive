@@ -8,7 +8,7 @@ import collections
 
 RWD_MODE = 'dense' # dense/ sparse
 
-class FingerBaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
+class BaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
 
     def __init__(self,
                 obs_keys:list,

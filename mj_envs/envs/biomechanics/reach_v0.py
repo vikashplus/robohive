@@ -1,8 +1,8 @@
-from mj_envs.envs.biomechanics.base_v0 import FingerBaseV0
+from mj_envs.envs.biomechanics.base_v0 import BaseV0
 import numpy as np
 import collections
 
-class ReachEnvV0(FingerBaseV0):
+class ReachEnvV0(BaseV0):
 
     def __init__(self,
                 obs_keys:list = ['qpos', 'qvel', 'tip_pos', 'reach_err'],

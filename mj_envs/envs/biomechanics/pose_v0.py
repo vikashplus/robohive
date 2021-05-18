@@ -1,9 +1,9 @@
-from mj_envs.envs.biomechanics.base_v0 import FingerBaseV0
+from mj_envs.envs.biomechanics.base_v0 import BaseV0
 import numpy as np
 import collections
 from mjrl.envs.mujoco_env import get_sim
 
-class PoseEnvV0(FingerBaseV0):
+class PoseEnvV0(BaseV0):
 
     def __init__(self,
                 model_path:str,
