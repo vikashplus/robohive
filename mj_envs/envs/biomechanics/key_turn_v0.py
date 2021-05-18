@@ -1,9 +1,9 @@
-from mj_envs.envs.biomechanics.base_v0 import FingerBaseV0
+from mj_envs.envs.biomechanics.base_v0 import BaseV0
 import numpy as np
 import collections
 from mjrl.envs.mujoco_env import get_sim
 
-class KeyTurnFixedEnvV0(FingerBaseV0):
+class KeyTurnFixedEnvV0(BaseV0):
 
     def __init__(self,
                 obs_keys:list = ['hand_qpos', 'hand_qvel', 'key_qpos', 'key_qvel', 'IFtip_approach', 'THtip_approach'],
@@ -35,18 +35,18 @@ class KeyTurnFixedEnvV0(FingerBaseV0):
     def get_reward_dict(self, obs_dict):
         IF_approach_dist = np.abs(np.linalg.norm(self.obs_dict['IFtip_approach'], axis=-1)-0.040)
         TH_approach_dist = np.abs(np.linalg.norm(self.obs_dict['THtip_approach'], axis=-1)-0.040)
-        key_qvel = obs_dict['key_qvel']
+        key_qvel = obs_dict['key_qvel'][:,:,0]
         far_th = .07
 
         rwd_dict = collections.OrderedDict((
             # Optional Keys
-            ('key_turn', obs_dict['key_qvel']),
+            ('key_turn', key_qvel),
             ('IFtip_approach', -100*IF_approach_dist),
             ('THtip_approach', -100*TH_approach_dist),
             ('bonus', 4.0*(key_qvel>np.pi*2) + 4.0*(key_qvel>np.pi*3)),
             ('penalty', -25.*(IF_approach_dist>far_th/2)-25.*(TH_approach_dist>far_th/2) ),
             # Must keys
-            ('sparse', obs_dict['key_qvel']),
+            ('sparse', key_qvel),
             ('solved', obs_dict['key_qpos']>2*np.pi),
             ('done', (IF_approach_dist>far_th) or (TH_approach_dist>far_th)),
         ))
