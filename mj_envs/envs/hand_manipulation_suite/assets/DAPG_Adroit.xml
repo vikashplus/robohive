@@ -10,7 +10,7 @@
             <geom name="V_palm" class="D_Vizual" mesh="palm" />
             <geom name="C_palm0" class="DC_Hand" size="0.032 0.0111 0.049" pos="0.011 0 0.038" type="box" rgba="0.4 0.5 0.6 0.1" />
             <geom name="C_palm1" class="DC_Hand" size="0.011 0.0111 0.025" pos="-0.032 0 0.014" type="box" rgba="0.4 0.5 0.6 0.1" />
-            <site name="S_grasp"  type="sphere" rgba="0 0 0 0" size="0.01" pos=".007 -.05 0.07" quat="0.0087 -0.6 -0.0034 -0.81  " />
+            <site name="S_grasp"  type="sphere" rgba="0 1 0 1" size="0.01" pos=".007 -.05 0.07" quat="0.0087 -0.6 -0.0034 -0.81" group="3"/>
             <site class="D_Touch" name="Tch_ffmetacarpal" size="0.009 0.004 0.006" pos="0.033 -.008 .078"/>
             <site class="D_Touch" name="Tch_mfmetacarpal" size="0.009 0.004 0.014" pos="0.011 -.008 .074"/>
             <site class="D_Touch" name="Tch_rfmetacarpal" size="0.009 0.004 0.016" pos="-0.011 -.008 .068"/>
