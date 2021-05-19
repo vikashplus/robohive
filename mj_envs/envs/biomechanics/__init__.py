@@ -137,3 +137,25 @@ register(id='IFTHKeyTurnRandom-v0',
                 'normalize_act': False
             }
     )
+
+
+# Hold objects ==============================
+register(id='HandObjHoldFixed-v0',
+            entry_point='mj_envs.envs.biomechanics.obj_hold_v0:ObjHoldFixedEnvV0',
+            max_episode_steps=75,
+            kwargs={
+                'frame_skip': 10,
+                'model_path': curr_dir+'/assets/hand/2nd_hand_hold.xml',
+                'normalize_act': False
+            }
+    )
+
+register(id='HandObjHoldRandom-v0',
+            entry_point='mj_envs.envs.biomechanics.obj_hold_v0:ObjHoldRandomEnvV0',
+            max_episode_steps=75,
+            kwargs={
+                'frame_skip': 10,
+                'model_path': curr_dir+'/assets/hand/2nd_hand_hold.xml',
+                'normalize_act': False
+            }
+    )
