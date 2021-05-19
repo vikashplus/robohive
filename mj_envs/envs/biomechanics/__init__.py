@@ -159,3 +159,25 @@ register(id='HandObjHoldRandom-v0',
                 'normalize_act': False
             }
     )
+
+
+# Pen twirl ==============================
+register(id='HandPenTwirlFixed-v0',
+            entry_point='mj_envs.envs.biomechanics.pen_v0:PenTwirlFixedEnvV0',
+            max_episode_steps=50,
+            kwargs={
+                'frame_skip': 5,
+                'model_path': curr_dir+'/assets/hand/2nd_hand_pen.xml',
+                'normalize_act': False
+            }
+    )
+
+register(id='HandPenTwirlRandom-v0',
+            entry_point='mj_envs.envs.biomechanics.pen_v0:PenTwirlRandomEnvV0',
+            max_episode_steps=50,
+            kwargs={
+                'frame_skip': 5,
+                'model_path': curr_dir+'/assets/hand/2nd_hand_pen.xml',
+                'normalize_act': False
+            }
+    )
