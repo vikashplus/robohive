@@ -9,7 +9,7 @@ class PenTwirlFixedEnvV0(BaseV0):
 
     def __init__(self,
                 obs_keys:list = ['hand_jnt', 'obj_pos', 'obj_vel', 'obj_rot', 'obj_des_rot', 'obj_err_pos', 'obj_err_rot'],
-                rwd_keys:list = ['pos_align', 'rot_align', 'drop', 'bonus'],
+                rwd_keys:list = ['pos_align', 'rot_align', 'act_reg', 'drop', 'bonus'],
                 **kwargs):
 
         self.sim = get_sim(model_path=kwargs['model_path'])
@@ -54,6 +54,7 @@ class PenTwirlFixedEnvV0(BaseV0):
             # Optional Keys
             ('pos_align',   -1.0*pos_align),
             ('rot_align',   1.0*rot_align),
+            ('act_reg',     -0.1*np.linalg.norm(self.obs_dict['act'], axis=-1)),
             ('drop',        -5.0*dropped),
             ('bonus',       10.0*(rot_align > 0.9)*(pos_align<0.075) + 50.0*(rot_align > 0.95)*(pos_align<0.075) ),
             # Must keys
