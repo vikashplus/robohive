@@ -67,7 +67,7 @@ class BaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         # apply action and step
         a = np.clip(a, a_min=self.action_space.low, a_max=self.action_space.high)
         if self.normalize_act:
-            a = self.act_mid + a*self.act_rng
+            a = 1.0/(1.0+np.exp(-5.0*(a-0.5)))
         self.do_simulation(a, self.frame_skip)
 
         # observation and rewards
