@@ -107,7 +107,7 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, 0, -1.57, 0, 0, 0, 0, 0, 0]),
+                'goal': np.array([0, -1.57, 0, 0, 0, 0, 0, 0, 0]),
                 'interact_site': "knob2_site"
             }
 )
@@ -119,7 +119,7 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, 0, -1.57, 0, 0, 0, 0, 0, 0]),
+                'goal': np.array([-1.57, 0, 0, 0, 0, 0, 0, 0, 0]),
                 'interact_site': "knob1_site"
             }
 )
