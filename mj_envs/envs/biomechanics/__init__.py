@@ -181,3 +181,38 @@ register(id='HandPenTwirlRandom-v0',
                 'normalize_act': True
             }
     )
+
+# Baoding ==============================
+register(id='BaodingFixed-v1',
+            entry_point='mj_envs.envs.biomechanics.baoding_v1:BaodingFixedEnvV1',
+            max_episode_steps=200,
+            kwargs={
+                'frame_skip': 10,
+                'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
+                'normalize_act': True,
+                'reward_option':0
+
+            }
+    )
+register(id='BaodingFixed4th-v1',
+            entry_point='mj_envs.envs.biomechanics.baoding_v1:BaodingFixedEnvV1',
+            max_episode_steps=200,
+            kwargs={
+                'frame_skip': 10,
+                'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
+                'normalize_act': True,
+                'reward_option':1
+
+            }
+    )
+register(id='BaodingFixed8th-v1',
+            entry_point='mj_envs.envs.biomechanics.baoding_v1:BaodingFixedEnvV1',
+            max_episode_steps=200,
+            kwargs={
+                'frame_skip': 10,
+                'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
+                'normalize_act': True,
+                'reward_option':2
+
+            }
+    )

@@ -61,7 +61,6 @@ class BaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
             self.action_space.high = np.ones_like(sim.model.actuator_ctrlrange[:,1])
             self.action_space.low  = -1.0 * np.ones_like(sim.model.actuator_ctrlrange[:,0])
 
-
     # step the simulation forward
     def step(self, a):
         # apply action and step
@@ -77,8 +76,11 @@ class BaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.squeeze_dims(self.rwd_dict)
         self.squeeze_dims(self.obs_dict)
 
+        # if self.srv and self.spec:
+            # self.srv.append(self.rwd_dict, buff_sz=self.spec.max_episode_steps)
+
         if self.srv:
-            self.srv.append(self.rwd_dict)
+            self.srv.append(self.rwd_dict, buff_sz=200)
 
         # finalize step
         env_info = self.get_env_infos()
