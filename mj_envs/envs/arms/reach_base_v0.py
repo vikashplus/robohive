@@ -5,11 +5,17 @@ from mj_envs.envs import env_base
 import os
 import collections
 
-OBS_KEYS = ['qp', 'qv', 'reach_err']
-RWD_KEYS = ['reach', 'bonus', 'penalty']
-
-
 class ReachBase(env_base.MujocoEnv):
+
+    DEFAULT_OBS_KEYS = [
+        'qp', 'qv', 'reach_err'
+    ]
+    DEFAULT_RWD_KEYS_AND_WEIGHTS = {
+        "reach": -1.0,
+        "bonus": 4.0,
+        "penalty": -50,
+    }
+
 
     def __init__(self, model_path, config_path, robot_site_name, target_site_name, **kwargs):
         # get sims
@@ -27,8 +33,8 @@ class ReachBase(env_base.MujocoEnv):
                                 sim_obsd = self.sim_obsd,
                                 frame_skip = 40,
                                 config_path = config_path,
-                                obs_keys = OBS_KEYS,
-                                rwd_keys = RWD_KEYS,
+                                obs_keys = self.DEFAULT_OBS_KEYS,
+                                rwd_keys_wt = self.DEFAULT_RWD_KEYS_AND_WEIGHTS,
                                 rwd_mode = "dense",
                                 act_mode = "pos",
                                 act_normalized = True,
@@ -51,15 +57,15 @@ class ReachBase(env_base.MujocoEnv):
 
         rwd_dict = collections.OrderedDict((
             # Optional Keys
-            ('reach',   -1.*reach_dist),
-            ('bonus',   4.0*(reach_dist<.1) + 4.0*(reach_dist<.05)),
-            ('penalty', -50.*(reach_dist>far_th)),
+            ('reach',   reach_dist),
+            ('bonus',   (reach_dist<.1) + (reach_dist<.05)),
+            ('penalty', (reach_dist>far_th)),
             # Must keys
             ('sparse',  -1.0*reach_dist),
             ('solved',  reach_dist<.050),
             ('done',    reach_dist > far_th),
         ))
-        rwd_dict['dense'] = np.sum([rwd_dict[key] for key in self.rwd_keys], axis=0)
+        rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
 
     # def mj_viewer_setup(self):
