@@ -17,3 +17,6 @@
 [submodule "mj_envs/sims/fetch_sim"]
 	path = mj_envs/sims/fetch_sim
 	url = https://github.com/vikashplus/fetch_sim.git
+[submodule "mj_envs/sims/YCB_sim"]
+	path = mj_envs/sims/YCB_sim
+	url = https://github.com/vikashplus/YCB_sim.git
