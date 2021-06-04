@@ -35,6 +35,10 @@ class KitchenBase(env_base.MujocoEnv):
         self.sim = env_base.get_sim(model_path=model_path)
         self.sim_obsd = env_base.get_sim(model_path=model_path)
 
+        # backward compatible TODO
+        self.act_mid = np.zeros(self.sim.model.nu)
+        self.act_amp = 2.0 * np.ones(self.sim.model.nu)
+
         # configure env-site
         self.grasp_sid = self.sim.model.site_name2id('end_effector')
         self.interact_sid = self.sim.model.site_name2id(interact_site)
@@ -84,6 +88,13 @@ class KitchenBase(env_base.MujocoEnv):
         # reposition viewer
         # self.update_camera(azimuth=90)
 
+    def _get_obs(self):
+        
+        OBS_KEYS = ['hand_jnt', 'objs_jnt', 'goal']
+        obs_dict = self.get_obs_dict(self.sim)
+        #t, obs = self.obsdict2obsvec(obs_dict, self.DEFAULT_OBS_KEYS_AND_WEIGHTS.keys())
+        t, obs = self.obsdict2obsvec(obs_dict, OBS_KEYS)
+        return obs 
 
     def get_obs_dict(self, sim):
         obs_dict = {}

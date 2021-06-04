@@ -94,6 +94,7 @@ def gather_training_data(env, data, filename='demo_playback.mp4', render=None):
     env.reset()
     init_qpos = data['qpos'][0].copy()
     init_qvel = data['qvel'][0].copy()
+    print(dir(env))
     act_mid = env.act_mid
     act_rng = env.act_amp
 
@@ -119,12 +120,15 @@ def gather_training_data(env, data, filename='demo_playback.mp4', render=None):
 
         # Construct the action
         # ctrl = (data['qpos'][i_frame + 1][:9] - obs[:9]) / (env.skip * env.model.opt.timestep)
-        ctrl = (data['ctrl'][i_frame] - obs[:9])/(env.frame_skip*env.model.opt.timestep)
+        #print(obs)
+        #print(data['ctrl'])
+        #print(env.model.opt.timestep)
+        ctrl = (data['ctrl'][i_frame] - obs[:9])/(env.frame_skip*0.002) #*env.model.opt.timestep)
         # ctrl = (data['ctrl'][i_frame] - obs[:9])/(env.model.opt.timestep)
         act = (ctrl - act_mid) / act_rng
         act = np.clip(act, -0.999, 0.999)
         next_obs, reward, done, env_info = env.step(act)
-        if reward != 0: print(reward)
+        #if reward != 0: print(reward)
         ret += reward
         if path_obs is None:
             path_obs = obs
@@ -205,12 +209,12 @@ def main(env, demo_dir, skip, graph, save_logs, view, render):
 
         # playback logs and gather data
         elif view == 'playback':
-            try:
-                obs, act,init_qpos, init_qvel = gather_training_data(gym_env, data,\
-                filename=data['logName'][:-4]+'_playback.mp4', render=render)
-            except Exception as e:
-                print(e)
-                continue
+            #try:
+            obs, act,init_qpos, init_qvel = gather_training_data(gym_env, data,\
+            filename=data['logName'][:-4]+'_playback.mp4', render=render)
+            #except Exception as e:
+            #    print(e)
+            #    continue
             path = {
                 'observations': obs,
                 'actions': act,
