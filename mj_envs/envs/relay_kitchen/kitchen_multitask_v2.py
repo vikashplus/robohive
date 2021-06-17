@@ -87,6 +87,8 @@ class KitchenBase(env_base.MujocoEnv):
         obs_dict['t'] = np.array([sim.data.time])
         obs_dict['hand_jnt'] = sim.data.qpos[self.robot_dofs].copy()
         obs_dict['objs_jnt'] = sim.data.qpos[self.obj_dofs].copy()
+        obs_dict['hand_vel'] = sim.data.qvel[self.robot_dofs].copy() * self.dt
+        obs_dict['objs_vel'] = sim.data.qvel[self.obj_dofs].copy() * self.dt
         obs_dict['goal'] = self.goal.copy()
         obs_dict['goal_err'] = obs_dict['goal']-obs_dict['objs_jnt'] #??? Kettle has quaternions
         obs_dict['approach_err'] = self.sim.data.site_xpos[self.interact_sid] - self.sim.data.site_xpos[self.grasp_sid]
@@ -129,7 +131,9 @@ class KitchenFetchFixed(KitchenBase):
 
     def __init__(self,
                 goal=None,
-                interact_site="end_effector"):
+                interact_site="end_effector",
+                **kwargs,
+                ):
 
         curr_dir = os.path.dirname(os.path.abspath(__file__))
         KitchenBase.__init__(self,
@@ -138,4 +142,5 @@ class KitchenFetchFixed(KitchenBase):
             robot_jnt_names = ('panda0_joint1', 'panda0_joint2', 'panda0_joint3', 'panda0_joint4', 'panda0_joint5', 'panda0_joint6', 'panda0_joint7', 'panda0_finger_joint1', 'panda0_finger_joint2'),
             obj_jnt_names = ('knob_Joint_1', 'knob_Joint_2', 'knob_Joint_3', 'knob_Joint_4', 'lightswitch_joint', 'slidedoor_joint', 'leftdoorhinge', 'rightdoorhinge', 'microjoint'),
             goal=goal,
-            interact_site=interact_site)
+            interact_site=interact_site,
+            **kwargs)
