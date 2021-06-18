@@ -23,7 +23,7 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, 0, 0, 0, 0, 0, 0, 0, -2.19]),
+                'goal': np.array([0, 0, 0, 0, 0, 0, 0, 0, -1.25]),
                 'interact_site': "microhandle_site"
             }
 )
@@ -45,7 +45,7 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, 0, 0, 0, 0, 0, -1.57, 0, 0]),
+                'goal': np.array([0, 0, 0, 0, 0, 0, -1.25, 0, 0]),
                 'interact_site': "hinge_site1"
             }
 )
@@ -139,7 +139,7 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, 0, 0, 0, 0, 0, 0, 0, -2.19]),
+                'goal': np.array([0, 0, 0, 0, 0, 0, 0, 0, -1.25]),
                 'obs_keys_wt': {"hand_jnt": 1.0, "objs_jnt": 1.0, "goal": 1.0},
                 'interact_site': "microhandle_site"
             }
@@ -163,7 +163,7 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, 0, 0, 0, 0, 0, -1.57, 0, 0]),
+                'goal': np.array([0, 0, 0, 0, 0, 0, -1.25, 0, 0]),
                 'obs_keys_wt': {"hand_jnt": 1.0, "objs_jnt": 1.0, "goal": 1.0},
                 'interact_site': "hinge_site1"
             }

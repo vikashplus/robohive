@@ -107,7 +107,7 @@ class KitchenBase(env_base.MujocoEnv):
             ('approach',-np.linalg.norm(obs_dict['approach_err'], axis=-1)),
             # Must keys
             ('sparse',  -np.sum(goal_dist, axis=-1)),
-            ('solved',  np.all(goal_dist < 0.1*self.obj_ranges)),
+            ('solved',  np.all(goal_dist < 0.15*self.obj_ranges)),
             ('done',    False),
         ))
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
