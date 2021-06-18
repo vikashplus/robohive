@@ -214,7 +214,8 @@ class MujocoEnv(gym.Env, utils.EzPickle, ObsVecDict):
 
         # Record success if solved for provided successful_steps
         for path in paths:
-            if np.sum(path['env_infos']['solved']) > successful_steps:
+            if np.sum(path['env_infos']['solved'] * 1.0) > successful_steps:
+                # sum of truth values may not work correctly if dtype=object, need to * 1.0
                 num_success += 1
         success_percentage = num_success*100.0/num_paths
 
