@@ -1,5 +1,6 @@
 from mj_envs.envs.relay_kitchen.kitchen_multitask_v1 import KitchenTasksV0
-from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import KitchenFetchFixed
+# from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import KitchenFrankaFixed as KitchenFranka
+from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import KitchenFrankaRandom as KitchenFranka
 from gym.envs.registration import register
 import numpy as np
 
@@ -13,14 +14,14 @@ register(
 # Kitchen
 register(
     id='kitchen-v2',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=280,
 )
 
 # Open Microwave door
 register(
     id='kitchen_micro_open-v2',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, 0, 0, 0, 0, 0, 0, -1.25]),
@@ -31,7 +32,7 @@ register(
 # Open right hinge cabinet
 register(
     id='kitchen_rdoor_open-v2',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, 0, 0, 0, 0, 0, 1.57, 0]),
@@ -42,7 +43,7 @@ register(
 # Open left hinge cabinet
 register(
     id='kitchen_ldoor_open-v2',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, 0, 0, 0, 0, -1.25, 0, 0]),
@@ -53,7 +54,7 @@ register(
 # Open slide cabinet
 register(
     id='kitchen_sdoor_open-v2',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, 0, 0, 0, 0.44, 0, 0, 0]),
@@ -64,7 +65,7 @@ register(
 # Lights on (left)
 register(
     id='kitchen_light_on-v2',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, 0, 0, -.7, 0, 0, 0, 0]),
@@ -75,7 +76,7 @@ register(
 # Knob4 on
 register(
     id='kitchen_knob4_on-v2',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, 0, -1.57, 0, 0, 0, 0, 0]),
@@ -86,7 +87,7 @@ register(
 # Knob3 on
 register(
     id='kitchen_knob3_on-v2',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, -1.57, 0, 0, 0, 0, 0, 0]),
@@ -97,7 +98,7 @@ register(
 # Knob2 on
 register(
     id='kitchen_knob2_on-v2',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, -1.57, 0, 0, 0, 0, 0, 0, 0]),
@@ -108,7 +109,7 @@ register(
 # Knob1 on
 register(
     id='kitchen_knob1_on-v2',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([-1.57, 0, 0, 0, 0, 0, 0, 0, 0]),
@@ -126,7 +127,7 @@ register(
 # Kitchen
 register(
     id='kitchen-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=280,
     kwargs={
                 'obs_keys_wt': {"hand_jnt": 1.0, "objs_jnt": 1.0, "goal": 1.0},
@@ -136,7 +137,7 @@ register(
 # Open Microwave door
 register(
     id='kitchen_micro_open-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, 0, 0, 0, 0, 0, 0, -1.25]),
@@ -148,7 +149,7 @@ register(
 # Open right hinge cabinet
 register(
     id='kitchen_rdoor_open-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, 0, 0, 0, 0, 0, 1.57, 0]),
@@ -160,7 +161,7 @@ register(
 # Open left hinge cabinet
 register(
     id='kitchen_ldoor_open-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, 0, 0, 0, 0, -1.25, 0, 0]),
@@ -172,7 +173,7 @@ register(
 # Open slide cabinet
 register(
     id='kitchen_sdoor_open-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, 0, 0, 0, 0.44, 0, 0, 0]),
@@ -184,7 +185,7 @@ register(
 # Lights on (left)
 register(
     id='kitchen_light_on-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, 0, 0, -.7, 0, 0, 0, 0]),
@@ -196,7 +197,7 @@ register(
 # Knob4 on
 register(
     id='kitchen_knob4_on-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, 0, -1.57, 0, 0, 0, 0, 0]),
@@ -208,7 +209,7 @@ register(
 # Knob3 on
 register(
     id='kitchen_knob3_on-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, -1.57, 0, 0, 0, 0, 0, 0]),
@@ -220,7 +221,7 @@ register(
 # Knob2 on
 register(
     id='kitchen_knob2_on-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, -1.57, 0, 0, 0, 0, 0, 0, 0]),
@@ -232,7 +233,7 @@ register(
 # Knob1 on
 register(
     id='kitchen_knob1_on-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFetchFixed',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([-1.57, 0, 0, 0, 0, 0, 0, 0, 0]),

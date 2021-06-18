@@ -47,7 +47,8 @@ class KitchenBase(env_base.MujocoEnv):
             self.robot_dofs.append(self.sim.model.jnt_dofadr[jnt_id])
             self.robot_ranges.append(self.sim.model.jnt_range[jnt_id])
         self.robot_dofs = np.array(self.robot_dofs)
-        self.robot_meanpos = np.mean(self.robot_ranges)
+        self.robot_ranges = np.array(self.robot_ranges)
+        self.robot_meanpos =  np.mean(self.robot_ranges,axis=1)
 
         # configure env-objs
         self.obj_dofs = []
@@ -127,7 +128,7 @@ class KitchenBase(env_base.MujocoEnv):
             self.goal = self.sim.data.qpos[self.obj_dofs].copy()
 
 
-class KitchenFetchFixed(KitchenBase):
+class KitchenFrankaFixed(KitchenBase):
 
     def __init__(self,
                 goal=None,
@@ -144,3 +145,10 @@ class KitchenFetchFixed(KitchenBase):
             goal=goal,
             interact_site=interact_site,
             **kwargs)
+
+
+class KitchenFrankaRandom(KitchenFrankaFixed):
+    def reset(self, reset_qpos=None, reset_qvel=None):
+        init_qpos_perturbed = self.init_qpos.copy()
+        init_qpos_perturbed[self.robot_dofs] += 0.05*(self.np_random.uniform(size=len(self.robot_dofs))-0.5)*(self.robot_ranges[:,1] - self.robot_ranges[:,0])
+        return super().reset(reset_qpos=init_qpos_perturbed)
