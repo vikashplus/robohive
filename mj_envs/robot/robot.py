@@ -108,19 +108,34 @@ class Robot():
         for name, device in robot_config.items():
             prompt("Initializing device: %s"%(name), 'white', 'on_grey')
             if device['interface']['type'] == 'dynamixel':
-                from hardware_dynamixel import Dynamixels
-                device['robot'] = Dynamixels()
+                # initialize dynamixels
+                from dynamixel_py import dxl
+                ids = np.unique([device['sensor_ids'] + device['actuator_ids']]).tolist()
+                device['robot'] = dxl(motor_id=ids, motor_type=\
+                    device['interface']['motor_type'], devicename= device['interface']['name'])
+
+                # from .hardware_dynamixel import Dynamixels
+                # motor_ids = np.unique([device['sensor_ids'] + device['actuator_ids']]).tolist()
+                # device['robot'] = Dynamixels(name=name, motor_ids=motor_ids, motor_type=device['interface']['motor_type'], devicename= device['interface']['name'])
 
             if device['interface']['type'] == 'optitrack':
-                from hardware_optitrack import OptiTrack
+                from .hardware_optitrack import OptiTrack
                 device['robot'] = OptiTrack(ip=device['interface']['client_name'], \
                     port=device['interface']['port'], packet_size=device['interface']['packet_size'])
 
         # start all hardware
         for name, device in robot_config.items():
+
             # Dynamixels
             if device['interface']['type'] == 'dynamixel':
-                device['robot'].connect()
+                device['robot'].open_port()
+
+                # set actuator mode
+                for actuator in device['actuator']:
+                    device['robot'].set_operation_mode(motor_id=[actuator['hdr_id']], mode=actuator['mode'])
+
+                # engage motors
+                device['robot'].engage_motor(motor_id=device['actuator_ids'], enable=True)
 
             # Optitrack
             elif device['interface']['type'] == 'optitrack':
@@ -197,12 +212,14 @@ class Robot():
         for name, device in self.robot_config.items():
             if device['interface']['type'] == 'dynamixel':
                 if device['robot']:
+                    print("Closing dynamixel connection")
                     ids = np.unique([device['sensor_ids'] + device['actuator_ids']]).tolist()
                     status = device['robot'].close(ids)
                     if status is True:
                         device['robot']= None
             elif device['interface']['type'] == 'optitrack':
                 if device['robot']:
+                    print("Closing optitrack connection")
                     status = device['robot'].close()
                     if status is True:
                         device['robot']= None

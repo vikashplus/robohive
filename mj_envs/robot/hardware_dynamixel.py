@@ -1,23 +1,24 @@
-from hardware_base import hardwareBase
+from .hardware_base import hardwareBase
 from dynamixel_py import dxl
+import numpy as np
 
 class Dynamixels(hardwareBase):
-    def __init__(self, name, *args, **kwargs):
+    def __init__(self, name, motor_ids, motor_type, devicename, **kwargs):
         self.name = name
         # initialize dynamixels
-        ids = np.unique([device['sensor_ids'] + device['actuator_ids']]).tolist()
-        device['robot'] = dxl(motor_id=ids, motor_type= device['interface']['motor_type'], devicename= device['interface']['name'])
+        self.dxls = dxl(motor_id=motor_ids, motor_type=motor_type, devicename=devicename)
+        self.motor_ids = motor_ids
 
     def connect(self):
         """Establish hardware connection"""
-        device['robot'].open_port()
+        self.dxls.open_port()
 
         # set actuator mode
         for actuator in device['actuator']:
-            device['robot'].set_operation_mode(motor_id=[actuator['hdr_id']], mode=actuator['mode'])
+            self.dxls.set_operation_mode(motor_id=[actuator['hdr_id']], mode=actuator['mode'])
 
         # engage motors
-        device['robot'].engage_motor(motor_id=device['actuator_ids'], enable=True)
+        self.dxls.engage_motor(motor_id=self.dxls, enable=True)
 
     def okay(self):
         """Return hardware health"""
