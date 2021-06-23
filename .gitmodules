@@ -1,4 +1,8 @@
 [submodule "dependencies/Adroit"]
+    path = dependencies/Adroit
+    url = https://github.com/vikashplus/Adroit.git
+        branch = mj_envs
+[submodule "dependencies/Adroit"]
 	path = mj_envs/sims/Adroit
 	url = https://github.com/vikashplus/Adroit.git
         branch = mj_envs
