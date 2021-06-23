@@ -121,8 +121,14 @@ register(
 # ========================================================
 
 # V3 environments
-# This version contains fewer observation keys
-# In particular, observations only consist of robot pose, object pose, and goals
+# In this version of the environment, the observations consist of the
+# distance between end effector and all relevent objects in the scene
+
+INTERACTION_SITES = ['microhandle_site', 'hinge_site1', 'hinge_site2', 'slide_site', 'light_site', \
+                    'knob1_site', 'knob2_site', 'knob3_site', 'knob4_site']
+obs_keys_wt = {"hand_jnt": 1.0, "objs_jnt": 1.0, "goal": 1.0, "end_effector": 1.0}
+for site in INTERACTION_SITES:
+    obs_keys_wt[site+'_err'] = 1.0
 
 # Kitchen
 register(
@@ -130,7 +136,7 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=280,
     kwargs={
-                'obs_keys_wt': {"hand_jnt": 1.0, "objs_jnt": 1.0, "goal": 1.0},
+                'obs_keys_wt': obs_keys_wt,
            }
 )
 
@@ -141,7 +147,7 @@ register(
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, 0, 0, 0, 0, 0, 0, -1.25]),
-                'obs_keys_wt': {"hand_jnt": 1.0, "objs_jnt": 1.0, "goal": 1.0},
+                'obs_keys_wt': obs_keys_wt,
                 'interact_site': "microhandle_site"
             }
 )
@@ -153,7 +159,7 @@ register(
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, 0, 0, 0, 0, 0, 1.57, 0]),
-                'obs_keys_wt': {"hand_jnt": 1.0, "objs_jnt": 1.0, "goal": 1.0},
+                'obs_keys_wt': obs_keys_wt,
                 'interact_site': "hinge_site2"
             }
 )
@@ -165,7 +171,7 @@ register(
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, 0, 0, 0, 0, -1.25, 0, 0]),
-                'obs_keys_wt': {"hand_jnt": 1.0, "objs_jnt": 1.0, "goal": 1.0},
+                'obs_keys_wt': obs_keys_wt,
                 'interact_site': "hinge_site1"
             }
 )
@@ -177,7 +183,7 @@ register(
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, 0, 0, 0, 0.44, 0, 0, 0]),
-                'obs_keys_wt': {"hand_jnt": 1.0, "objs_jnt": 1.0, "goal": 1.0},
+                'obs_keys_wt': obs_keys_wt,
                 'interact_site': "slide_site"
             }
 )
@@ -189,7 +195,7 @@ register(
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, 0, 0, -.7, 0, 0, 0, 0]),
-                'obs_keys_wt': {"hand_jnt": 1.0, "objs_jnt": 1.0, "goal": 1.0},
+                'obs_keys_wt': obs_keys_wt,
                 'interact_site': "light_site"
             }
 )
@@ -201,7 +207,7 @@ register(
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, 0, -1.57, 0, 0, 0, 0, 0]),
-                'obs_keys_wt': {"hand_jnt": 1.0, "objs_jnt": 1.0, "goal": 1.0},
+                'obs_keys_wt': obs_keys_wt,
                 'interact_site': "knob4_site"
             }
 )
@@ -213,7 +219,7 @@ register(
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, 0, -1.57, 0, 0, 0, 0, 0, 0]),
-                'obs_keys_wt': {"hand_jnt": 1.0, "objs_jnt": 1.0, "goal": 1.0},
+                'obs_keys_wt': obs_keys_wt,
                 'interact_site': "knob3_site"
             }
 )
@@ -225,7 +231,7 @@ register(
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([0, -1.57, 0, 0, 0, 0, 0, 0, 0]),
-                'obs_keys_wt': {"hand_jnt": 1.0, "objs_jnt": 1.0, "goal": 1.0},
+                'obs_keys_wt': obs_keys_wt,
                 'interact_site': "knob2_site"
             }
 )
@@ -237,7 +243,7 @@ register(
     max_episode_steps=50,
     kwargs={
                 'goal': np.array([-1.57, 0, 0, 0, 0, 0, 0, 0, 0]),
-                'obs_keys_wt': {"hand_jnt": 1.0, "objs_jnt": 1.0, "goal": 1.0},
+                'obs_keys_wt': obs_keys_wt,
                 'interact_site': "knob1_site"
             }
 )
