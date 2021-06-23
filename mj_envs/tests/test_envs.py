@@ -37,6 +37,12 @@ class TestEnvs(unittest.TestCase):
             'FetchReachFixed-v0']
         self.load_envs('Arms', env_names)
 
+    # Functional Manipulation
+    def test_fm(self):
+        env_names = [
+            'FMReachFixed-v0']
+        self.load_envs('Arms', env_names)
+
 
 if __name__ == '__main__':
     unittest.main()
