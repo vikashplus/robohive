@@ -5,6 +5,9 @@ import collections
 
 VIZ = False
 
+INTERACTION_SITES = ['microhandle_site', 'hinge_site1', 'hinge_site2', 'slide_site', 'light_site', \
+                    'knob1_site', 'knob2_site', 'knob3_site', 'knob4_site']
+
 class KitchenBase(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS_AND_WEIGHTS = {
@@ -94,6 +97,10 @@ class KitchenBase(env_base.MujocoEnv):
         obs_dict['goal_err'] = obs_dict['goal']-obs_dict['objs_jnt'] #??? Kettle has quaternions
         obs_dict['approach_err'] = self.sim.data.site_xpos[self.interact_sid] - self.sim.data.site_xpos[self.grasp_sid]
         obs_dict['pose_err'] = self.robot_meanpos-obs_dict['hand_jnt']
+        obs_dict['end_effector'] = self.sim.data.site_xpos[self.grasp_sid]
+        for site in INTERACTION_SITES:
+            site_id = self.sim.model.site_name2id(site)
+            obs_dict[site+'_err'] = self.sim.data.site_xpos[site_id] - self.sim.data.site_xpos[self.grasp_sid]
         return obs_dict
 
 
