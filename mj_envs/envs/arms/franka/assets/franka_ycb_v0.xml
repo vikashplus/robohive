@@ -40,10 +40,10 @@
         </body>
 
         <!-- tasks details added here via include-->
-        <site name='target' type='cylinder' size='.088 0.021' pos='0.4 0.5 0.78' group='1' rgba='.1 .8 .2 .4'/>
+        <site name='target' type='sphere' size='.05' pos='0 0.475 1.0' group='1' rgba='.1 .8 .2 .4'/>
 
         <!-- object -->
-        <body pos="0.0 0.5 .8">
+        <body pos="0.0 0.3 .8" name='object'>
             <include file="../../../../sims/YCB_sim/includes/body_004_sugar_box.xml"/>
             <site name="sugarbox" size="0.01" pos="0 0 .088"/>
             <joint name="Tx" axis="1 0 0" type="slide" damping="0" limited="true" range="-1.0 1.0"/>

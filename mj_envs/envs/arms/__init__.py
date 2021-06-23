@@ -68,6 +68,13 @@ register(
     }
 )
 
+# Reach to fixed target
+register(
+    id='FrankaRelocateBoxFixed-v0',
+    entry_point='mj_envs.envs.arms.franka.relocate_box_v0:FrankaRelocateBoxFixed',
+    max_episode_steps=50, #50steps*40Skip*2ms = 4s
+)
+from mj_envs.envs.arms.franka.relocate_box_v0 import FrankaRelocateBoxFixed
 
 # FETCH =======================================================================
 from mj_envs.envs.arms.reach_base_v0 import ReachBaseV0
