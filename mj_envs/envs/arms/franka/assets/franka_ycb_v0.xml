@@ -38,10 +38,10 @@
         </body>
 
         <!-- tasks details added here via include-->
-        <site name='target' type='sphere' size='.01' pos='0 0.475 1.0' group='1' rgba='.1 .8 .2 .4'/>
+        <site name='target' type='sphere' size='.05' pos='0 0.475 1.0' group='1' rgba='.1 .8 .2 .4'/>
 
         <!-- object -->
-        <body pos="0.0 0.3 .8">
+        <body pos="0.0 0.3 .8" name='object'>
             <include file="../../../../sims/YCB_sim/includes/body_004_sugar_box.xml"/>
             <freejoint/>
         </body>
