@@ -40,6 +40,7 @@ class ReachBase(env_base.MujocoEnv):
                                 act_normalized = True,
                                 is_hardware = False,
                                 **kwargs)
+        self.init_qpos = np.mean(self.sim.model.actuator_ctrlrange, axis=1)
 
 
     def get_obs_dict(self, sim):
