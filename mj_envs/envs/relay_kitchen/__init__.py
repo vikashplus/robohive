@@ -16,6 +16,9 @@ register(
     id='kitchen-v2',
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=280,
+        kwargs={
+                'goal': {},
+           }
 )
 
 # Open Microwave door
@@ -24,7 +27,8 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, 0, 0, 0, 0, 0, 0, 0, -1.25]),
+                # 'goal': np.array([0, 0, 0, 0, 0, 0, 0, 0, -1.25, -0.269, 0.35, 1.61523, 0, 0, 0]),
+                'goal': {'microjoint': -1.25},
                 'interact_site': "microhandle_site"
             }
 )
@@ -35,8 +39,9 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, 0, 0, 0, 0, 0, 0, 1.57, 0]),
-                'interact_site': "hinge_site2"
+                # 'goal': np.array([0, 0, 0, 0, 0, 0, 0, 1.57, 0, -0.269, 0.35, 1.61523, 0, 0, 0]),
+                'goal': {'rightdoorhinge':1.57},
+                'interact_site': "rightdoor_site"
             }
 )
 
@@ -46,8 +51,9 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, 0, 0, 0, 0, 0, -1.25, 0, 0]),
-                'interact_site': "hinge_site1"
+                # 'goal': np.array([0, 0, 0, 0, 0, 0, -1.25, 0, 0, -0.269, 0.35, 1.61523, 0, 0, 0]),
+                'goal': {'leftdoorhinge':-1.25},
+                'interact_site': "leftdoor_site"
             }
 )
 
@@ -57,7 +63,8 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, 0, 0, 0, 0, 0.44, 0, 0, 0]),
+                # 'goal': np.array([0, 0, 0, 0, 0, 0.44, 0, 0, 0, -0.269, 0.35, 1.61523, 0, 0, 0]),
+                'goal': {'slidedoor_joint':0.44},
                 'interact_site': "slide_site"
             }
 )
@@ -68,7 +75,8 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, 0, 0, 0, -.7, 0, 0, 0, 0]),
+                # 'goal': np.array([0, 0, 0, 0, -.7, 0, 0, 0, 0, -0.269, 0.35, 1.61523, 0, 0, 0]),
+                'goal': {'lightswitch_joint':-.7},
                 'interact_site': "light_site"
             }
 )
@@ -79,7 +87,8 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, 0, 0, -1.57, 0, 0, 0, 0, 0]),
+                # 'goal': np.array([0, 0, 0, -1.57, 0, 0, 0, 0, 0, -0.269, 0.35, 1.61523, 0, 0, 0]),
+                'goal': {'knob4_joint':-1.57},
                 'interact_site': "knob4_site"
             }
 )
@@ -90,7 +99,8 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, 0, -1.57, 0, 0, 0, 0, 0, 0]),
+                # 'goal': np.array([0, 0, -1.57, 0, 0, 0, 0, 0, 0, -0.269, 0.35, 1.61523, 0, 0, 0]),
+                'goal': {'knob3_joint':-1.57},
                 'interact_site': "knob3_site"
             }
 )
@@ -101,7 +111,8 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, -1.57, 0, 0, 0, 0, 0, 0, 0]),
+                # 'goal': np.array([0, -1.57, 0, 0, 0, 0, 0, 0, 0, -0.269, 0.35, 1.61523, 0, 0, 0]),
+                'goal': {'knob2_joint':-1.57},
                 'interact_site': "knob2_site"
             }
 )
@@ -112,7 +123,8 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([-1.57, 0, 0, 0, 0, 0, 0, 0, 0]),
+                # 'goal': np.array([-1.57, 0, 0, 0, 0, 0, 0, 0, 0, -0.269, 0.35, 1.61523, 0, 0, 0]),
+                'goal': {'knob1_joint':-1.57},
                 'interact_site': "knob1_site"
             }
 )
@@ -124,10 +136,9 @@ register(
 # In this version of the environment, the observations consist of the
 # distance between end effector and all relevent objects in the scene
 
-INTERACTION_SITES = ['microhandle_site', 'hinge_site1', 'hinge_site2', 'slide_site', 'light_site', \
-                    'knob1_site', 'knob2_site', 'knob3_site', 'knob4_site']
+# from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import INTERACTION_SITES
 obs_keys_wt = {"hand_jnt": 1.0, "objs_jnt": 1.0, "goal": 1.0, "end_effector": 1.0}
-for site in INTERACTION_SITES:
+for site in KitchenFranka.INTERACTION_SITES:
     obs_keys_wt[site+'_err'] = 1.0
 
 # Kitchen
@@ -136,6 +147,7 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=280,
     kwargs={
+                'goal': {},
                 'obs_keys_wt': obs_keys_wt,
            }
 )
@@ -146,7 +158,8 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, 0, 0, 0, 0, 0, 0, 0, -1.25]),
+                # 'goal': np.array([0, 0, 0, 0, 0, 0, 0, 0, -1.25, -0.269, 0.35, 1.61523, 0, 0, 0]),
+                'goal': {'microjoint': -1.25},
                 'obs_keys_wt': obs_keys_wt,
                 'interact_site': "microhandle_site"
             }
@@ -158,9 +171,10 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, 0, 0, 0, 0, 0, 0, 1.57, 0]),
+                # 'goal': np.array([0, 0, 0, 0, 0, 0, 0, 1.57, 0, -0.269, 0.35, 1.61523, 0, 0, 0]),
+                'goal': {'rightdoorhinge':1.57},
                 'obs_keys_wt': obs_keys_wt,
-                'interact_site': "hinge_site2"
+                'interact_site': "rightdoor_site"
             }
 )
 
@@ -170,9 +184,10 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, 0, 0, 0, 0, 0, -1.25, 0, 0]),
+                'goal': {'leftdoorhinge':-1.25},
+                # 'goal': np.array([0, 0, 0, 0, 0, 0, -1.25, 0, 0, -0.269, 0.35, 1.61523, 0, 0, 0]),
                 'obs_keys_wt': obs_keys_wt,
-                'interact_site': "hinge_site1"
+                'interact_site': "leftdoor_site"
             }
 )
 
@@ -182,7 +197,8 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, 0, 0, 0, 0, 0.44, 0, 0, 0]),
+                # 'goal': np.array([0, 0, 0, 0, 0, 0.44, 0, 0, 0, -0.269, 0.35, 1.61523, 0, 0, 0]),
+                'goal': {'slidedoor_joint':0.44},
                 'obs_keys_wt': obs_keys_wt,
                 'interact_site': "slide_site"
             }
@@ -194,7 +210,8 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, 0, 0, 0, -.7, 0, 0, 0, 0]),
+                'goal': {'lightswitch_joint':-.7},
+                # 'goal': np.array([0, 0, 0, 0, -.7, 0, 0, 0, 0, -0.269, 0.35, 1.61523, 0, 0, 0]),
                 'obs_keys_wt': obs_keys_wt,
                 'interact_site': "light_site"
             }
@@ -206,7 +223,8 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, 0, 0, -1.57, 0, 0, 0, 0, 0]),
+                'goal': {'knob4_joint':-1.57},
+                # 'goal': np.array([0, 0, 0, -1.57, 0, 0, 0, 0, 0, -0.269, 0.35, 1.61523, 0, 0, 0]),
                 'obs_keys_wt': obs_keys_wt,
                 'interact_site': "knob4_site"
             }
@@ -218,7 +236,8 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, 0, -1.57, 0, 0, 0, 0, 0, 0]),
+                'goal': {'knob3_joint':-1.57},
+                # 'goal': np.array([0, 0, -1.57, 0, 0, 0, 0, 0, 0, -0.269, 0.35, 1.61523, 0, 0, 0]),
                 'obs_keys_wt': obs_keys_wt,
                 'interact_site': "knob3_site"
             }
@@ -230,7 +249,8 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([0, -1.57, 0, 0, 0, 0, 0, 0, 0]),
+                'goal': {'knob2_joint':-1.57},
+                # 'goal': np.array([0, -1.57, 0, 0, 0, 0, 0, 0, 0, -0.269, 0.35, 1.61523, 0, 0, 0]),
                 'obs_keys_wt': obs_keys_wt,
                 'interact_site': "knob2_site"
             }
@@ -242,7 +262,8 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
-                'goal': np.array([-1.57, 0, 0, 0, 0, 0, 0, 0, 0]),
+                'goal': {'knob1_joint':-1.57, 'knob2_joint':-1.57, 'knob3_joint':-1.57, 'knob4_joint':-1.57},
+                # 'goal': np.array([-1.57, 0, 0, 0, 0, 0, 0, 0, 0, -0.269, 0.35, 1.61523, 0, 0, 0]),
                 'obs_keys_wt': obs_keys_wt,
                 'interact_site': "knob1_site"
             }
