@@ -39,19 +39,19 @@ class TestEnvs(unittest.TestCase):
         self.load_envs('Franka Kitchen', env_names)
 
     # Arms
-    # def test_arms(self):
-    #     env_names = [
-    #         'FrankaReachFixed-v0',
-    #         'FrankaReachRandom-v0',
-    #         'FetchReachFixed-v0',
-    #         'FetchReachFixed-v0']
-    #     self.load_envs('Arms', env_names)
+    def test_arms(self):
+        env_names = [
+            'FrankaReachFixed-v0',
+            'FrankaReachRandom-v0',
+            'FetchReachFixed-v0',
+            'FetchReachFixed-v0']
+        self.load_envs('Arms', env_names)
 
-    # # Functional Manipulation
-    # def test_fm(self):
-    #     env_names = [
-    #         'FMReachFixed-v0']
-    #     self.load_envs('Arms', env_names)
+    # Functional Manipulation
+    def test_fm(self):
+        env_names = [
+            'FMReachFixed-v0']
+        self.load_envs('Arms', env_names)
 
 
 if __name__ == '__main__':
