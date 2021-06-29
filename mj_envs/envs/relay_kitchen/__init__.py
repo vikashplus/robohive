@@ -142,6 +142,7 @@ register(
     kwargs={
                 'goal': {'microjoint': -1.25},
                 'obs_keys_wt': obs_keys_wt,
+                'interact_site': 'microhandle_site',
             }
 )
 
@@ -153,6 +154,7 @@ register(
     kwargs={
                 'goal': {'rightdoorhinge':1.57},
                 'obs_keys_wt': obs_keys_wt,
+                'interact_site': 'rightdoor_site',
             }
 )
 
@@ -164,6 +166,7 @@ register(
     kwargs={
                 'goal': {'leftdoorhinge':-1.25},
                 'obs_keys_wt': obs_keys_wt,
+                'interact_site': 'leftdoor_site',
             }
 )
 
@@ -175,6 +178,7 @@ register(
     kwargs={
                 'goal': {'slidedoor_joint':0.44},
                 'obs_keys_wt': obs_keys_wt,
+                'interact_site': 'slide_site',
             }
 )
 
@@ -186,6 +190,7 @@ register(
     kwargs={
                 'goal': {'lightswitch_joint':-.7},
                 'obs_keys_wt': obs_keys_wt,
+                'interact_site': 'light_site',
             }
 )
 
@@ -197,6 +202,7 @@ register(
     kwargs={
                 'goal': {'knob4_joint':-1.57},
                 'obs_keys_wt': obs_keys_wt,
+                'interact_site': 'knob4_site',
             }
 )
 
@@ -208,6 +214,7 @@ register(
     kwargs={
                 'goal': {'knob3_joint':-1.57},
                 'obs_keys_wt': obs_keys_wt,
+                'interact_site': 'knob3_site',
             }
 )
 
@@ -219,6 +226,7 @@ register(
     kwargs={
                 'goal': {'knob2_joint':-1.57},
                 'obs_keys_wt': obs_keys_wt,
+                'interact_site': 'knob2_site',
             }
 )
 
@@ -228,7 +236,8 @@ register(
     entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
     max_episode_steps=50,
     kwargs={
-                'goal': {'knob1_joint':-1.57, 'knob2_joint':-1.57, 'knob3_joint':-1.57, 'knob4_joint':-1.57},
+                'goal': {'knob1_joint':-1.57},
                 'obs_keys_wt': obs_keys_wt,
+                'interact_site': 'knob1_site',
             }
 )
