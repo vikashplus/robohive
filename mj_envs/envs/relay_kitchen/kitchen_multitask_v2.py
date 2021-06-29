@@ -67,7 +67,13 @@ class KitchenBase(env_base.MujocoEnv):
         self.obj['dof_ranges'] = self.obj['dof_ranges'][:,1] - self.obj['dof_ranges'][:,0]
 
         # configure env-goal
+        if interact_site == 'end_effector':
+            print("WARNING: Using the default interaction site of end-effector. \
+                  If you wish to evaluate on specific tasks, you should set the interaction site correctly.")
         self.set_goal(goal=goal, interact_site=interact_site)
+
+        # increase simulation timestep for faster experiments
+        # self.sim.model.opt.timestep = 0.008
 
         # get env
         env_base.MujocoEnv.__init__(self,
@@ -112,7 +118,7 @@ class KitchenBase(env_base.MujocoEnv):
         rwd_dict = collections.OrderedDict((
             # Optional Keys
             ('goal',    -np.sum(goal_dist, axis=-1)),
-            ('bonus',   np.sum(goal_dist < 0.75*self.obj['dof_ranges'], axis=-1) + np.sum(goal_dist < 0.25*self.obj['dof_ranges'], axis=-1)),
+            ('bonus',   np.product(goal_dist < 0.75*self.obj['dof_ranges'], axis=-1) + np.product(goal_dist < 0.25*self.obj['dof_ranges'], axis=-1)),
             ('pose',    -np.sum(np.abs(obs_dict['pose_err']), axis=-1)),
             ('approach',-np.linalg.norm(obs_dict['approach_err'], axis=-1)),
             # Must keys
