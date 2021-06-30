@@ -23,4 +23,4 @@
 	url = https://github.com/vikashplus/fetch_sim.git
 [submodule "mj_envs/sims/YCB_sim"]
 	path = mj_envs/sims/YCB_sim
-	url = https://github.com/vikashplus/YCB_sim.git
+	url = https://github.com/ShahRutav/YCB_sim.git

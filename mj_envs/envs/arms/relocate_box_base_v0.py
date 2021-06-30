@@ -36,9 +36,6 @@ class RelocateBoxBase(env_base.MujocoEnv):
         self.grasp = self.sim.model.site_name2id(robot_site_name)
         self.target = self.sim.model.site_name2id(target_site_name)
         self.sugar_box = self.sim.model.body_name2id(object_site_name)
-        print("Robot : ", robot_site_name)
-        print("Target : ", target_site_name)
-        print("Object : ", object_site_name)
 
         # get env
         env_base.MujocoEnv.__init__(self,
@@ -83,7 +80,7 @@ class RelocateBoxBase(env_base.MujocoEnv):
 class RelocateBoxEnvFixed(RelocateBoxBase):
 
     def reset(self):
-        self.sim.model.site_pos[self.target] = np.array([0.2, 0.3, 1.2])
+        self.sim.model.site_pos[self.target] = np.array([0.2, 0.3, 0.8])
         obs = super().reset(self.init_qpos, self.init_qvel)
         return obs
 
@@ -91,14 +88,6 @@ class RelocateBoxEnvFixed(RelocateBoxBase):
 class RelocateBoxEnvRandom(RelocateBoxBase):
 
     def reset(self):
-        self.sim.model.site_pos[self.target] = self.np_random.uniform(high=[0.3, .5, 1.2], low=[-.3, .1, .8])
+        self.sim.model.site_pos[self.target] = self.np_random.uniform(high=[0.3, .5, 0.8], low=[-.3, .1, .8])
         obs = super().reset(self.init_qpos, self.init_qvel)
         return obs
-
-
-
-if __name__ == '__main__':
-	env_name = 'FrankaRelocateBoxFixed-v0'
-	env = gym.make(env_name)
-	env.reset()
-	env.render()

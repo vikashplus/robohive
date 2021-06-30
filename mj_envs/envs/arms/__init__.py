@@ -27,6 +27,14 @@ register(
 )
 from mj_envs.envs.arms.franka.relocate_box_v0 import FrankaRelocateBoxFixed
 
+# Reach to random target
+register(
+    id='FrankaRelocateBoxRandom-v0',
+    entry_point='mj_envs.envs.arms.franka.relocate_box_v0:FrankaRelocateBoxRandom',
+    max_episode_steps=50, #50steps*40Skip*2ms = 4s
+)
+from mj_envs.envs.arms.franka.relocate_box_v0 import FrankaRelocateBoxRandom
+
 # FETCH =======================================================================
 
 # Reach to fixed target

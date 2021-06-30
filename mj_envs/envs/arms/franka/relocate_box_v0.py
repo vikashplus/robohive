@@ -12,3 +12,15 @@ class FrankaRelocateBoxFixed(RelocateBoxEnvFixed):
             target_site_name="target",
             object_site_name="object",
             )
+
+class FrankaRelocateBoxRandom(RelocateBoxEnvRandom):
+
+    def __init__(self):
+        curr_dir = os.path.dirname(os.path.abspath(__file__))+'/'
+        RelocateBoxEnvRandom.__init__(self,
+            model_path = '/franka/assets/franka_ycb_v0.xml',
+            config_path = curr_dir + '/assets/franka_reach_v0.config',
+            robot_site_name="end_effector",
+            target_site_name="target",
+            object_site_name="object",
+            )
