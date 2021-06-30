@@ -61,7 +61,7 @@ def main(env_name, policy, mode, seed, episodes, cam_name):
 
             img_arr = env.env.sim.render(width=640, height=480, mode='offscreen', camera_name=cam_name, device_id=0)
             img = Image.fromarray(img_arr[::-1,:,:])
-            img.save(output_dir + "img_ep{0:05d}_t{0:05d}".format(ep, t) + ".jpeg")
+            img.save(output_dir + f"img_ep{ep:05d}_t{t:05d}.jpeg")
 
             o, r, d, _ = env.step(a)
             t = t+1
