@@ -8,13 +8,13 @@
         branch = mj_envs
 [submodule "mj_envs/sims/furniture_sim"]
 	path = mj_envs/sims/furniture_sim
-	url = https://github.com/vikashplus/furniture_sim.git
+	url = https://github.com/ShahRutav/furniture_sim.git
 [submodule "mj_envs/sims/franka_sim"]
 	path = mj_envs/sims/franka_sim
 	url = https://github.com/vikashplus/franka_sim.git
 [submodule "mj_envs/sims/scene_sim"]
 	path = mj_envs/sims/scene_sim
-	url = https://github.com/vikashplus/scene_sim.git
+	url = https://github.com/ShahRutav/scene_sim.git
 [submodule "mj_envs/sims/sawyer_sim"]
 	path = mj_envs/sims/sawyer_sim
 	url = https://github.com/vikashplus/sawyer_sim.git
