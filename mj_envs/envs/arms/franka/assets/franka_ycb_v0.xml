@@ -47,11 +47,11 @@
 
         <!-- tasks details added here via include-->
         <!-- <site name='target' type='box' pos="0 -.1 .3" size=".021 .045 .088" rgba=".1 .8 .2 .4" group='1'/> -->
-        <site name='target' type='box' pos="0.2 0.3 0.8" size=".088 .045 .011" rgba=".1 .8 .2 .4" group='1'/>
+        <site name='target' type='box' pos="0.0 0.6 0.8" size=".088 .045 .011" rgba=".1 .8 .2 .4" group='1'/>
 
 
         <!-- object -->
-        <body pos="0.0 0.6 .833" euler='1.57 1.57 1.57' name='object'>
+        <body pos="0.0 0.4 0.9" euler='1.57 1.57 1.57' name='object'>
             <include file="../../../../sims/YCB_sim/includes/body_004_sugar_box.xml"/>
             <freejoint/>
         </body>

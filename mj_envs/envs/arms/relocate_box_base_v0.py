@@ -17,12 +17,13 @@ import collections
 class RelocateBoxBase(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS = [
-        'qp', 'qv', 'reach_err'
+        'qp', 'qv', 'reach_err', 'grasp_err'
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
         "reach": -1.0,
         "bonus": 4.0,
         "penalty": -50,
+        "grasp": -1.0,
     }
 
 
@@ -57,12 +58,16 @@ class RelocateBoxBase(env_base.MujocoEnv):
         obs_dict['qp'] = sim.data.qpos.copy()
         obs_dict['qv'] = sim.data.qvel.copy()
         obs_dict['reach_err'] = sim.data.site_xpos[self.target]-sim.data.body_xpos[self.sugar_box] # This is same as initially set in .xml file
+        obs_dict['grasp_err'] = sim.data.body_xpos[self.sugar_box]-sim.data.site_xpos[self.grasp] # This is same as initially set in .xml file
         # print("Reacher error : ", obs_dict['reach_err'])
         return obs_dict
 
     def get_reward_dict(self, obs_dict):
         reach_dist = np.linalg.norm(obs_dict['reach_err'], axis=-1)
+        grasp_dist = np.linalg.norm(obs_dict['grasp_err'], axis=-1)
         far_th = 1.0
+        if grasp_dist < 0.1 :
+             grasp_dist = 0.0
 
         rwd_dict = collections.OrderedDict((
             # Optional Keys
@@ -73,6 +78,7 @@ class RelocateBoxBase(env_base.MujocoEnv):
             ('sparse',  -1.0*reach_dist),
             ('solved',  reach_dist<.050),
             ('done',    reach_dist > far_th),
+            ('grasp',   grasp_dist),
         ))
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
@@ -80,7 +86,7 @@ class RelocateBoxBase(env_base.MujocoEnv):
 class RelocateBoxEnvFixed(RelocateBoxBase):
 
     def reset(self):
-        self.sim.model.site_pos[self.target] = np.array([0.2, 0.3, 0.8])
+        self.sim.model.site_pos[self.target] = np.array([0.0, 0.6, 0.8])
         obs = super().reset(self.init_qpos, self.init_qvel)
         return obs
 
@@ -88,6 +94,6 @@ class RelocateBoxEnvFixed(RelocateBoxBase):
 class RelocateBoxEnvRandom(RelocateBoxBase):
 
     def reset(self):
-        self.sim.model.site_pos[self.target] = self.np_random.uniform(high=[0.3, .5, 0.8], low=[-.3, .1, .8])
+        self.sim.model.site_pos[self.target] = self.np_random.uniform(high=[0.1, .6, 0.8], low=[-0.1, 0.5, 0.8])
         obs = super().reset(self.init_qpos, self.init_qvel)
         return obs
