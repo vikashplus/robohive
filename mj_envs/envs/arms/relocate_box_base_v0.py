@@ -36,6 +36,7 @@ class RelocateBoxBase(env_base.MujocoEnv):
         # ids
         self.grasp = self.sim.model.site_name2id(robot_site_name)
         self.target = self.sim.model.site_name2id(target_site_name)
+        self.push_point = self.sim.model.site_name2id("coord-1")
         self.sugar_box = self.sim.model.body_name2id(object_site_name)
 
         # get env
@@ -58,7 +59,7 @@ class RelocateBoxBase(env_base.MujocoEnv):
         obs_dict['qp'] = sim.data.qpos.copy()
         obs_dict['qv'] = sim.data.qvel.copy()
         obs_dict['reach_err'] = sim.data.site_xpos[self.target]-sim.data.body_xpos[self.sugar_box] # This is same as initially set in .xml file
-        obs_dict['grasp_err'] = sim.data.body_xpos[self.sugar_box]-sim.data.site_xpos[self.grasp] # This is same as initially set in .xml file
+        obs_dict['grasp_err'] = sim.data.site_xpos[self.push_point]-sim.data.site_xpos[self.grasp] # This is same as initially set in .xml file
         # print("Reacher error : ", obs_dict['reach_err'])
         return obs_dict
 
@@ -86,7 +87,7 @@ class RelocateBoxBase(env_base.MujocoEnv):
 class RelocateBoxEnvFixed(RelocateBoxBase):
 
     def reset(self):
-        self.sim.model.site_pos[self.target] = np.array([0.0, 0.6, 0.8])
+        self.sim.model.site_pos[self.target] = np.array([0.0, 0.8, 0.8])
         obs = super().reset(self.init_qpos, self.init_qvel)
         return obs
 
@@ -94,6 +95,6 @@ class RelocateBoxEnvFixed(RelocateBoxBase):
 class RelocateBoxEnvRandom(RelocateBoxBase):
 
     def reset(self):
-        self.sim.model.site_pos[self.target] = self.np_random.uniform(high=[0.1, .6, 0.8], low=[-0.1, 0.5, 0.8])
+        self.sim.model.site_pos[self.target] = self.np_random.uniform(high=[0.1, 0.8, 0.8], low=[-0.1, 0.85, 0.8])
         obs = super().reset(self.init_qpos, self.init_qvel)
         return obs

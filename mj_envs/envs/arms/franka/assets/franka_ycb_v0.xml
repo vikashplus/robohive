@@ -25,10 +25,10 @@
         <!-- <camera name='left_cam' pos='-0.8 0.3 1.4' euler="0 -0.9 3.14"/> -->
         <!-- <camera name='right_cam' pos='0.8 -0.1 1.3' quat='0.76 0.5 0.21 0.35'/> -->
         <!-- <camera name="right_cross" pos="-0.8 -0.2 1.4" euler="0.785 -0.785 0.0" /> -->
-        <camera name="left_cam" pos="0.865 -0.235 1.4" euler="0.785 0.785 0.0" />
-        <camera name="right_cam" pos="-0.865 -0.235 1.4" euler="0.785 -0.785 0.0" />
-        <camera name="left_cross" pos="0.865 1.135 1.4" euler="-0.785 0.785 2.75" />
-        <camera name="right_cross" pos="-0.865 1.135 1.4" euler="-0.785 -0.785 3.53" />
+        <camera name="left_cam" pos="0.865 -0.035 1.4" euler="0.785 0.785 0.0" />
+        <camera name="right_cam" pos="-0.865 -0.035 1.4" euler="0.785 -0.785 0.0" />
+        <camera name="left_cross" pos="0.865 1.335 1.4" euler="-0.785 0.785 2.75" />
+        <camera name="right_cross" pos="-0.865 1.335 1.4" euler="-0.785 -0.785 3.53" />
 
         <camera name="top" pos="0 0.6 2.1" euler="0 0 3.14" />
         <!-- <camera name='right_cam' pos='-0.6 0.1 1.4' quat='0.78 0.49 -0.22 -0.32'/> -->
@@ -41,17 +41,18 @@
         </body>
 
         <!-- simple Table -->
-        <body pos='0 0.475 0'>
+        <body pos='0 0.6 0'>
             <include file="../../../../sims/furniture_sim/simpleTable/simpleTable_body.xml"/>
         </body>
 
         <!-- tasks details added here via include-->
         <!-- <site name='target' type='box' pos="0 -.1 .3" size=".021 .045 .088" rgba=".1 .8 .2 .4" group='1'/> -->
-        <site name='target' type='box' pos="0.0 0.6 0.8" size=".088 .045 .011" rgba=".1 .8 .2 .4" group='1'/>
+        <site name='target' type='box' pos="0.0 0.8 0.8" size=".088 .045 .011" rgba=".1 .8 .2 .4" group='1'/>
 
 
         <!-- object -->
-        <body pos="0.0 0.4 0.9" euler='1.57 1.57 1.57' name='object'>
+        <body pos="0.0 0.6 0.9" euler='1.57 1.57 1.57' name='object'>
+            <site name="coord-1" type='sphere' size='.010' pos='.021 .045 .088' rgba="1 0 0 1"/>
             <include file="../../../../sims/YCB_sim/includes/body_004_sugar_box.xml"/>
             <freejoint/>
         </body>
