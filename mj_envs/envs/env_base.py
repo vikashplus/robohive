@@ -96,6 +96,7 @@ class MujocoEnv(gym.Env, utils.EzPickle, ObsVecDict):
         # finalize init
         utils.EzPickle.__init__(self)
         self.init_qpos = self.sim.data.qpos.ravel().copy()
+        self.init_qpos = np.mean(self.sim.model.actuator_ctrlrange, axis=1) if self.act_normalized else self.sim.data.qpos.ravel().copy()
         self.init_qvel = self.sim.data.qvel.ravel().copy()
 
 
