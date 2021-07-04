@@ -5,6 +5,7 @@ from collections import deque
 from mujoco_py import load_model_from_path, MjSim, functions
 import os
 from transforms3d.taitbryan import quat2euler
+np.set_printoptions(precision=4)
 
 
 _VERBOSE = False
@@ -235,8 +236,7 @@ class Robot():
                     franka_des_pos.append(control[actuator['sim_id']]*actuator['scale']+ actuator['offset'])
                 device['robot'].apply_commands(franka_des_pos)
             else:
-                print("ERROR: interface not found")
-                raise NotImplemented
+                raise NotImplemented("ERROR: interface not found")
 
 
     # close hardware
@@ -412,9 +412,10 @@ class Robot():
         """
         # last_obs = self.get_sensor_from_cache(-1)
         processed_controls = controls.copy()
-
+        act_id = -1
         for name, device in self.robot_config.items():
-            for act_id, actuator in enumerate(device['actuator']):
+            for actuator in device['actuator']:
+                act_id += 1
                 in_id = actuator['sim_id']
                 # output ordering is as per the config order for hdr
                 out_id = actuator['sim_id'] if out_space == 'sim' else act_id
@@ -441,6 +442,8 @@ class Robot():
                     # ALERT: This depends on previous sensor. This is not ideal as it breaks MDP addumptions. Be careful
                     last_obs = getattr(self.sim.data, actuator["data_type"])[actuator["data_id"]]
                     control = last_obs + control*step_duration
+                else:
+                    raise TypeError("Unknown act mode: {}".format(self._act_mode))
 
                 # enforce position limits
                 if position_limits:
