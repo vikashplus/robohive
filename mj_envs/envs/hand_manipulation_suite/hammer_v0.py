@@ -8,10 +8,10 @@ from mj_envs.utils.obj_vec_dict import ObsVecDict
 import collections
 
 ADD_BONUS_REWARDS = True
-# OBS_KEYS = ['hand_jnt', 'obj_vel', 'palm_pos', 'obj_pos', 'obj_rot', 'target_pos', 'nail_impact'] # DAPG
+OBS_KEYS = ['hand_jnt', 'obj_vel', 'palm_pos', 'obj_pos', 'obj_rot', 'target_pos', 'nail_impact'] # DAPG
 RWD_KEYS = ['palm_obj', 'tool_target', 'target_goal', 'smooth', 'bonus'] # DAPG
 
-OBS_KEYS = ['hand_jnt', 'obj_vel', 'palm_pos', 'obj_pos', 'obj_rot', 'target_pos', 'nail_impact', 'tool_pos', 'goal_pos', 'hand_vel']
+#OBS_KEYS = ['hand_jnt', 'obj_vel', 'palm_pos', 'obj_pos', 'obj_rot', 'target_pos', 'nail_impact', 'tool_pos', 'goal_pos', 'hand_vel']
 
 RWD_MODE = 'dense' # dense/ sparse
 
