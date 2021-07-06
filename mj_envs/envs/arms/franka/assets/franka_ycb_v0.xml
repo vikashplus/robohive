@@ -12,8 +12,10 @@
 
     <include file="../../../../sims/scene_sim/topfloor_scene.xml"/>
     <include file="../../../../sims/franka_sim/assets/assets.xml"/>
+    <include file="../../../../sims/franka_sim/assets/gripper_assets.xml"/>
     <include file="../../../../sims/furniture_sim/simpleTable/simpleTable_asset.xml"/>
     <include file="../../../../sims/franka_sim/assets/actuator0.xml"/>
+    <include file="../../../../sims/franka_sim/assets/gripper_actuator0.xml"/>
 
     <include file="../../../../sims/YCB_sim/includes/defaults_ycb.xml"/>
     <include file="../../../../sims/YCB_sim/includes/assets_004_sugar_box.xml"/>
