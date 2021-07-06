@@ -26,16 +26,16 @@
         <!-- Franka Arm-->
         <body pos='0 0 .775' euler='0 0 1.57'>
             <geom type='cylinder' size='.120 .4' pos='-.04 0 -.4'/>
-            <include file="../../../sims/franka_sim/assets/chain0.xml"/>
+            <include file="../../../sims/franka_sim/assets/chain0_nogripper.xml"/>
         </body>
 
         <!-- D'Manus Hand-->
-        <body name="Hand_stand" pos="0 .5 1.05" euler="-1.57 0 0">
+        <body name="DManus_mount" pos="0 0 .12" euler="0 0 -.785398">
             <include file="../../../sims/dmanus_sim/assets/dmanus_chain.xml"/>
         </body>
 
         <!-- simple Table -->
-        <body pos='0 0.475 0'>
+        <body name="table" pos='0 0.475 0'>
             <include file="../../../sims/furniture_sim/simpleTable/simpleTable_body.xml"/>
         </body>
 

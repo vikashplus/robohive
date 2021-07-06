@@ -1,5 +1,4 @@
 import unittest
-
 import gym
 import mj_envs
 
@@ -50,8 +49,10 @@ class TestEnvs(unittest.TestCase):
     # Functional Manipulation
     def test_fm(self):
         env_names = [
-            'FMReachFixed-v0']
-        self.load_envs('Arms', env_names)
+            # 'DManusReachFixed-v0',
+            'FMReachFixed-v0'
+            ]
+        self.load_envs('Functional Manipulation', env_names)
 
 
 if __name__ == '__main__':

@@ -10,7 +10,9 @@
 
     <include file="../../../sims/scene_sim/basic_scene.xml"/>
     <include file="../../../sims/franka_sim/assets/assets.xml"/>
+    <include file="../../../sims/franka_sim/assets/gripper_assets.xml"/>
     <include file="../../../sims/franka_sim/assets/actuator0.xml"/>
+    <include file="../../../sims/franka_sim/assets/gripper_actuator0.xml"/>
     <include file="../../../sims/furniture_sim/oven/oven_asset.xml"/>
     <include file="../../../sims/furniture_sim/counters/counters_asset.xml"/>
     <include file="../../../sims/furniture_sim/backwall/backwall_asset.xml"/>
