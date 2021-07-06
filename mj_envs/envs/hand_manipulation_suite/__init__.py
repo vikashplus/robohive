@@ -31,3 +31,11 @@ register(
     max_episode_steps=200,
 )
 from mj_envs.envs.hand_manipulation_suite.relocate_v0 import RelocateEnvV0
+
+# Mix Tools environment
+register(
+    id='mixtools-v0',
+    entry_point='mj_envs.envs.hand_manipulation_suite:MixToolsEnvV0',
+    max_episode_steps=200,
+)
+from mj_envs.envs.hand_manipulation_suite.mixtools_v0 import MixToolsEnvV0
