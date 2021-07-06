@@ -14,6 +14,7 @@
     <include file="../../../../sims/franka_sim/assets/assets.xml"/>
     <include file="../../../../sims/furniture_sim/simpleTable/simpleTable_asset.xml"/>
     <include file="../../../../sims/franka_sim/assets/actuator0.xml"/>
+    <include file="../../../../sims/franka_sim/assets/gripper_assets.xml"/>
 
     <worldbody>
 
