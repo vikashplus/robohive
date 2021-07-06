@@ -8,8 +8,8 @@ import collections
 
 ADD_BONUS_REWARDS = True
 RWD_KEYS = ['palm_obj', 'palm_tar', 'obj_tar', 'bonus']
-# OBS_KEYS = ['hand_jnt', 'palm_obj_err', 'palm_tar_err', 'obj_tar_err'] # DAPG
-OBS_KEYS = ['hand_jnt', 'palm_obj_err', 'palm_tar_err', 'obj_tar_err', 'obj_pos']
+OBS_KEYS = ['hand_jnt', 'palm_obj_err', 'palm_tar_err', 'obj_tar_err'] # DAPG
+# OBS_KEYS = ['hand_jnt', 'palm_obj_err', 'palm_tar_err', 'obj_tar_err', 'obj_pos']
 RWD_MODE = 'dense' # dense/ sparse
 
 

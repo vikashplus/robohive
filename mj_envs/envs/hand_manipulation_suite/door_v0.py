@@ -9,10 +9,10 @@ import collections
 # NOTES:
 #     1. why is qpos[0] not a part of the obs? ==> Hand translation isn't consistent due to randomization. Palm pos is a good substitute
 
-# OBS_KEYS = ['hand_jnt', 'latch_pos', 'door_pos', 'palm_pos', 'handle_pos', 'reach_err', 'door_open'] # DAPG
+OBS_KEYS = ['hand_jnt', 'latch_pos', 'door_pos', 'palm_pos', 'handle_pos', 'reach_err', 'door_open'] # DAPG
 # RWD_KEYS = ['reach', 'open', 'smooth', 'bonus'] # DAPG
 
-OBS_KEYS = ['hand_jnt', 'latch_pos', 'door_pos', 'palm_pos', 'handle_pos', 'reach_err']
+# OBS_KEYS = ['hand_jnt', 'latch_pos', 'door_pos', 'palm_pos', 'handle_pos', 'reach_err']
 RWD_KEYS = ['reach', 'open', 'bonus']
 
 RWD_MODE = 'dense' # dense/ sparse
