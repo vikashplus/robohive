@@ -18,21 +18,27 @@ import time as timer
 
 try:
     import mujoco_py
-    from mujoco_py import load_model_from_path, MjSim, MjViewer
+    from mujoco_py import load_model_from_path, MjSim, MjViewer, load_model_from_xml
 except ImportError as e:
     raise error.DependencyNotInstalled("{}. (HINT: you need to install mujoco_py, and also perform the setup instructions here: https://github.com/openai/mujoco-py/.)".format(e))
 
-def get_sim(model_path):
+def get_sim(model_path:str=None, model_xmlstr=None):
     """
-    Get sim using model path.
+    Get sim using model_path or model_xmlstr.
     """
-    if model_path.startswith("/"):
-        fullpath = model_path
+    if model_path:
+        if model_path.startswith("/"):
+            fullpath = model_path
+        else:
+            fullpath = os.path.join(os.path.dirname(__file__), "assets", model_path)
+        if not path.exists(fullpath):
+            raise IOError("File %s does not exist" % fullpath)
+        model = load_model_from_path(fullpath)
+    elif model_xmlstr:
+        model = load_model_from_xml(model_xmlstr)
     else:
-        fullpath = os.path.join(os.path.dirname(__file__), "assets", model_path)
-    if not path.exists(fullpath):
-        raise IOError("File %s does not exist" % fullpath)
-    model = load_model_from_path(fullpath)
+        raise TypeError("Both model_path and model_xmlstr can't be None")
+
     return MjSim(model)
 
 class MujocoEnv(gym.Env, utils.EzPickle, ObsVecDict):
