@@ -20,11 +20,13 @@
 
     <!-- ======= WORLD ======= -->
     <worldbody>
-        <light directional='false' diffuse='.7 .7 .7' specular='0.03 0.03 0.03' pos='-1 -1.0 4.0' dir='1 1.0 -4'/>
+        <light directional='false' castshadow='false' diffuse='.7 .7 .7' specular='0.03 0.03 0.03' pos='-1 -1.0 4.0' dir='1 1.0 -4'/>
         <geom name='ground' size="1.5 1.5 0.25" pos="0 0 -1" type="plane" contype="1" conaffinity="0" material="groundplane" />
         <camera name="fixed" pos="0 -0.7 0.7" quat="0.92388 0.382683 0 0" />
         <!-- Camera for the VIL paper -->
         <camera name="vil_camera" pos="0 -1.2 1.2" quat="0.92388 0.382683 0 0" />
+        <camera name="left_cross" pos="-1.0 -0.8 0.9" euler="0.785 -0.785 -0.49" />
+        <camera name="right_cross" pos="-1.0 0.8 0.9" euler="-0.785 -0.785 3.53" />
  
         <!-- ======= TABLE ======= -->
         <body name="table">
@@ -58,7 +60,7 @@
         </body>
 
         <!-- ======= DESTINATION ======= -->
-        <site name="target" pos="-0.007 0.0 0.2" size="0.07" rgba="0 1 0 0.125" />
+        <site name="target" pos="-0.007 0.0 0.2" size="0.07" rgba="0 1 0 0.525" />
 
         <!-- ======= OBJECT ======= -->
         <body name="Object" pos="-0.00 0.0 0.035" user="1001 0 2003 27 0 0 0.06 0 0">

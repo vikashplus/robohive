@@ -52,9 +52,9 @@
 
         <!-- object -->
         <body pos="0.0 0.6 0.9" euler='1.57 1.57 1.57' name='object'>
-            <site name="coord-1" type='sphere' size='.010' pos='.021 .045 .088' rgba="1 0 0 1"/>
+            <site name="coord-1" type='sphere' size='.010' pos='-.021 .045 .088' rgba="1 0 0 1"/>
             <include file="../../../../sims/YCB_sim/includes/body_004_sugar_box.xml"/>
-            <freejoint/>
+            <!-- <freejoint/> -->
         </body>
 
 
