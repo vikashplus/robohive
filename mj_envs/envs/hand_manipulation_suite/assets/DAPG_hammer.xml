@@ -81,8 +81,8 @@
             <body name="nail" pos="0 0 0">
                 <inertial pos="0 0 0.0775281" mass="0.0699004" diaginertia="8.23129e-05 8.23129e-05 2.51426e-05" />
                 <joint name="nail_dir" pos="0 0 0" axis="0 0 -1" type="slide" range="-0.01 0.09" frictionloss="2.5" />
-                <geom size="0.035 0.005" pos="0 0 0.1" type="cylinder" material="MatFoil" />
-                <geom size="0.01 0.05" pos="0 0 0.05" type="cylinder" material="MatFoil" />
+                <geom name="nail0" size="0.035 0.005" pos="0 0 0.1" type="cylinder" material="MatFoil" />
+                <geom name="nail1" size="0.01 0.05" pos="0 0 0.05" type="cylinder" material="MatFoil" />
                 <site name="S_target" pos="0 0 0.101" size="0.034 0.005" type="cylinder" rgba="0 1 0 0.2" />
             </body>
         </body>

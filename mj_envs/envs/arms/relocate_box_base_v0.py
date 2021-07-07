@@ -67,7 +67,7 @@ class RelocateBoxBase(env_base.MujocoEnv):
         reach_dist = np.linalg.norm(obs_dict['reach_err'], axis=-1)
         grasp_dist = np.linalg.norm(obs_dict['grasp_err'], axis=-1)
         far_th = 1.0
-        if grasp_dist < 0.1 :
+        if grasp_dist < 0.05 :
              grasp_dist = 0.0
 
         rwd_dict = collections.OrderedDict((
@@ -84,6 +84,25 @@ class RelocateBoxBase(env_base.MujocoEnv):
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
 
+    def get_env_state(self):
+        """
+        Get state of hand as well as objects and targets in the scene
+        """
+        qpos = self.sim.data.qpos.ravel().copy()
+        qvel = self.sim.data.qvel.ravel().copy()
+        box_pos = self.sim.model.body_pos[self.sugar_box].copy()
+        target_pos = self.sim.data.site_xpos[self.target].ravel().copy()
+        return dict(qpos=qpos, qvel=qvel, box_pos=box_pos, target_pos=target_pos)
+
+    def set_env_state(self, state_dict) : 
+        qp = state_dict['qpos']
+        qv = state_dict['qvel']
+        target_pos = state_dict['target_pos']
+        box_pos = state_dict['box_pos']
+        self.sim.model.body_pos[self.sugar_box] = box_pos
+        self.sim.model.site_pos[self.target] = target_pos
+        self.set_state(qp, qv)
+
 class RelocateBoxEnvFixed(RelocateBoxBase):
 
     def reset(self):
@@ -95,6 +114,7 @@ class RelocateBoxEnvFixed(RelocateBoxBase):
 class RelocateBoxEnvRandom(RelocateBoxBase):
 
     def reset(self):
-        self.sim.model.site_pos[self.target] = self.np_random.uniform(high=[0.1, 0.8, 0.8], low=[-0.1, 0.85, 0.8])
+        self.sim.model.site_pos[self.target] = self.np_random.uniform(high=[0.4, 0.4, 0.8], low=[-0.4, 0.8, 0.8])
+        self.sim.model.body_pos[self.sugar_box] = self.np_random.uniform(high=[0.4, 0.4, 0.8], low=[-0.4, 0.8, 0.8])
         obs = super().reset(self.init_qpos, self.init_qvel)
         return obs
