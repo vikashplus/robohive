@@ -11,7 +11,7 @@
 	url = https://github.com/ShahRutav/furniture_sim.git
 [submodule "mj_envs/sims/franka_sim"]
 	path = mj_envs/sims/franka_sim
-	url = https://github.com/vikashplus/franka_sim.git
+	url = https://github.com/ShahRutav/franka_sim.git
 [submodule "mj_envs/sims/scene_sim"]
 	path = mj_envs/sims/scene_sim
 	url = https://github.com/ShahRutav/scene_sim.git
