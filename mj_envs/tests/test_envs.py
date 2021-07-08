@@ -24,7 +24,7 @@ class TestEnvs(unittest.TestCase):
             'IFTHPoseMuscleRandom-v0',
             'IFTHKeyTurnFixed-v0', 'IFTHKeyTurnRandom-v0',
 
-            'IFTHPoseMuscleRandom-v0',
+            'IFTHPoseMuscleRandom-v0', 'HandPoseAMuscleFixed-v0',
             'IFTHKeyTurnFixed-v0', 'IFTHKeyTurnRandom-v0',
             'HandObjHoldFixed-v0', 'HandObjHoldRandom-v0',
             'HandPenTwirlFixed-v0', 'HandPenTwirlRandom-v0',

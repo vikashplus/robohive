@@ -1,7 +1,6 @@
 <mujoco model="2nd hand model for object grasps">
 
     <compiler meshdir='../../../../sims/neuromuscular_sim/hand/'/>
-    <!-- <include file="Index_Thumb_v0.xml"/> -->
     <include file="../../../../sims/neuromuscular_sim/hand/2nd_Hand_Model_full_hand_v0.xml"/>
 
     <worldbody>
