@@ -1,9 +1,16 @@
 from mj_envs.envs.biomechanics.base_v0 import BaseV0
 import numpy as np
 import collections
-from mjrl.envs.mujoco_env import get_sim
+from mj_envs.envs.env_base import get_sim
 
 class PoseEnvV0(BaseV0):
+
+    DEFAULT_OBS_KEYS = ['qpos', 'qvel', 'pose_err']
+    DEFAULT_RWD_KEYS_AND_WEIGHTS = {
+        "pose": -1.0,
+        "bonus": 4.0,
+        "penalty": -50,
+    }
 
     def __init__(self,
                 model_path:str,
@@ -12,8 +19,8 @@ class PoseEnvV0(BaseV0):
                 target_jnt_value:list = None,   # desired joint vector [des_qpos]_nq
                 reset_type = "init",            # none; init; random
                 target_type = "generate",       # generate; switch; fixed
-                obs_keys:list = ['qpos', 'qvel', 'pose_err'],
-                rwd_keys:list = ['pose', 'bonus', 'penalty'],
+                obs_keys:list = DEFAULT_OBS_KEYS,
+                rwd_keys_wt:dict = DEFAULT_RWD_KEYS_AND_WEIGHTS,
                 **kwargs):
 
         self.reset_type = reset_type
@@ -21,6 +28,7 @@ class PoseEnvV0(BaseV0):
 
         # pre-fetch sim
         sim = get_sim(model_path=model_path)
+        sim_obsd = get_sim(model_path=model_path)
 
         # resolve joint demands
         if target_jnt_range:
@@ -34,18 +42,29 @@ class PoseEnvV0(BaseV0):
         else:
             self.target_jnt_value = target_jnt_value
 
-        super().__init__(obs_keys=obs_keys, rwd_keys=rwd_keys, sites=viz_site_targets, sim=sim, **kwargs)
+        super().__init__(obs_keys=obs_keys, rwd_keys_wt=rwd_keys_wt, sites=viz_site_targets, sim=sim, sim_obsd=sim_obsd, **kwargs)
 
-    def get_obs(self):
+    def get_obs_vec(self):
         self.obs_dict['t'] = np.array([self.sim.data.time])
-        self.obs_dict['qpos'] = self.data.qpos[:].copy()
-        self.obs_dict['qvel'] = self.data.qvel[:].copy()
+        self.obs_dict['qpos'] = self.sim.data.qpos[:].copy()
+        self.obs_dict['qvel'] = self.sim.data.qvel[:].copy()
         if self.sim.model.na>0:
-            self.obs_dict['act'] = self.data.act[:].copy()
+            self.obs_dict['act'] = self.sim.data.act[:].copy()
 
         self.obs_dict['pose_err'] = self.target_jnt_value - self.obs_dict['qpos']
         t, obs = self.obsdict2obsvec(self.obs_dict, self.obs_keys)
         return obs
+
+    def get_obs_dict(self, sim):
+        obs_dict = {}
+        obs_dict['t'] = np.array([sim.data.time])
+        obs_dict['qpos'] = sim.data.qpos[:].copy()
+        obs_dict['qvel'] = sim.data.qvel[:].copy()
+        if sim.model.na>0:
+            obs_dict['act'] = sim.data.act[:].copy()
+
+        obs_dict['pose_err'] = self.target_jnt_value - obs_dict['qpos']
+        return obs_dict
 
     def get_reward_dict(self, obs_dict):
         pose_dist = np.linalg.norm(obs_dict['pose_err'], axis=-1)
@@ -53,25 +72,25 @@ class PoseEnvV0(BaseV0):
 
         rwd_dict = collections.OrderedDict((
             # Optional Keys
-            ('pose',    -1.*pose_dist),
-            ('bonus',   4.0*(pose_dist<.35) + 4.0*(pose_dist<.5)),
-            ('penalty', -50.*(pose_dist>far_th)),
+            ('pose',    pose_dist),
+            ('bonus',   (pose_dist<.35) + (pose_dist<.5)),
+            ('penalty', (pose_dist>far_th)),
             # Must keys
             ('sparse',  -1.0*pose_dist),
             ('solved',  pose_dist<.35),
             ('done',    pose_dist>far_th),
         ))
-        rwd_dict['dense'] = np.sum([rwd_dict[key] for key in self.rwd_keys], axis=0)
+        rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
 
     # generate a valid target pose
     def get_target_pose(self):
         if self.target_type is "fixed":
             return self.target_jnt_value
-        elif self.target_type is "random":
+        elif self.target_type is "generate":
             return self.np_random.uniform(high=self.target_jnt_range[:,0], low=self.target_jnt_range[:,1])
         else:
-            raise TypeError("Unknown Target type")
+            raise TypeError("Unknown Target type: {}".format(self.target_type))
 
     # update sim with a new target pose
     def update_target(self, restore_sim=False):
@@ -121,11 +140,11 @@ class PoseEnvV0(BaseV0):
             obs = self.get_obs()
         elif self.reset_type is "init":
             # reset to init state
-            obs = super().reset_model()
+            obs = super().reset()
         elif self.reset_type is "random":
             # reset to random state
-            jnt_init = self.np_random.uniform(high=self.model.jnt_range[:,1], low=self.model.jnt_range[:,0])
-            obs = super().reset_model(qp=jnt_init)
+            jnt_init = self.np_random.uniform(high=self.sim.model.jnt_range[:,1], low=self.sim.model.jnt_range[:,0])
+            obs = super().reset(reset_qpos=jnt_init)
         else:
             print("Reset Type not found")
 

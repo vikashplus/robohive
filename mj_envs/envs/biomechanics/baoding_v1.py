@@ -1,7 +1,7 @@
 from mj_envs.envs.biomechanics.base_v0 import BaseV0
+from mj_envs.envs.env_base import get_sim
 import numpy as np
 import collections
-from mjrl.envs.mujoco_env import get_sim
 from mj_envs.utils.quatmath import euler2quat
 from mj_envs.utils.vectormath import calculate_cosine
 import enum
@@ -20,13 +20,24 @@ WHICH_TASK = Task.BAODING_CCW
 
 class BaodingFixedEnvV1(BaseV0):
 
+    DEFAULT_OBS_KEYS = ['hand_pos', 'object1_pos', 'object1_velp', 'object2_pos', 'object2_velp', 'target1_pos', 'target2_pos']
+    DEFAULT_RWD_KEYS_AND_WEIGHTS = {
+       'pos_dist_1':-5.0,
+       'pos_dist_2':-5.0,
+       'drop_penalty':-500.0,
+       'wrist_angle':-0.5,
+       'act_reg':-.1,
+       'bonus':1.0
+    }
+
     def __init__(self,
                 reward_option:int = 1,
-                obs_keys:list = ['hand_pos', 'object1_pos', 'object1_velp', 'object2_pos', 'object2_velp', 'target1_pos', 'target2_pos'],
-                rwd_keys:list = ['pos_dist_1', 'pos_dist_2', 'drop_penalty', 'wrist_angle', 'act_reg', 'bonus'],
+                obs_keys:list = DEFAULT_OBS_KEYS,
+                rwd_keys_wt:list = DEFAULT_RWD_KEYS_AND_WEIGHTS,
                 **kwargs):
 
         self.sim = get_sim(model_path=kwargs['model_path'])
+        self.sim_obsd = get_sim(model_path=kwargs['model_path'])
 
         # user parameters
         self.reward_option = reward_option
@@ -53,7 +64,7 @@ class BaodingFixedEnvV1(BaseV0):
         self.target1_sid = self.sim.model.site_name2id('target1_site')
         self.target2_sid = self.sim.model.site_name2id('target2_site')
 
-        super().__init__(obs_keys=obs_keys, rwd_keys=rwd_keys, sim=self.sim, rwd_viz=False, **kwargs)
+        super().__init__(obs_keys=obs_keys, rwd_keys_wt=rwd_keys_wt, sim=self.sim, sim_obsd=self.sim_obsd, rwd_viz=False, **kwargs)
 
 
     def step(self, a):
@@ -67,15 +78,21 @@ class BaodingFixedEnvV1(BaseV0):
         desired_positions_wrt_palm[2] = self.x_radius*np.cos(desired_angle_wrt_palm[1]) + self.center_pos[0]
         desired_positions_wrt_palm[3] = self.y_radius*np.sin(desired_angle_wrt_palm[1]) + self.center_pos[1]
 
-        self.model.site_pos[self.target1_sid, 0] = desired_positions_wrt_palm[0]
-        self.model.site_pos[self.target1_sid, 1] = desired_positions_wrt_palm[1]
-        self.model.site_pos[self.target2_sid, 0] = desired_positions_wrt_palm[2]
-        self.model.site_pos[self.target2_sid, 1] = desired_positions_wrt_palm[3]
+        # Updated desired
+        self.sim.model.site_pos[self.target1_sid, 0] = desired_positions_wrt_palm[0]
+        self.sim.model.site_pos[self.target1_sid, 1] = desired_positions_wrt_palm[1]
+        self.sim.model.site_pos[self.target2_sid, 0] = desired_positions_wrt_palm[2]
+        self.sim.model.site_pos[self.target2_sid, 1] = desired_positions_wrt_palm[3]
+        # Updated desired (important to get consistent obs for both sims)
+        self.sim_obsd.model.site_pos[self.target1_sid, 0] = desired_positions_wrt_palm[0]
+        self.sim_obsd.model.site_pos[self.target1_sid, 1] = desired_positions_wrt_palm[1]
+        self.sim_obsd.model.site_pos[self.target2_sid, 0] = desired_positions_wrt_palm[2]
+        self.sim_obsd.model.site_pos[self.target2_sid, 1] = desired_positions_wrt_palm[3]
 
         self.counter +=1
         return super().step(a)
 
-    def get_obs(self):
+    def get_obs_vec(self):
 
         self.obs_dict['t']              = np.array([self.sim.data.time])
         self.obs_dict['hand_pos']       = self.sim.data.qpos[:-14].copy()
@@ -83,31 +100,64 @@ class BaodingFixedEnvV1(BaseV0):
         # object positions
         # self.obs_dict['object1_pos']    = self.sim.data.qpos[-14:-11].copy()
         # self.obs_dict['object2_pos']    = self.sim.data.qpos[-7:-4].copy()
-        self.obs_dict['object1_pos'] = self.data.site_xpos[self.object1_sid].copy()
-        self.obs_dict['object2_pos'] = self.data.site_xpos[self.object2_sid].copy()
+        self.obs_dict['object1_pos'] = self.sim.data.site_xpos[self.object1_sid].copy()
+        self.obs_dict['object2_pos'] = self.sim.data.site_xpos[self.object2_sid].copy()
 
         # object translational velocities
         self.obs_dict['object1_velp']   = self.sim.data.qvel[-12:-9].copy()
         self.obs_dict['object2_velp']   = self.sim.data.qvel[-6:-3].copy()
 
         # site locations in world frame, populated after the step/forward call
-        # self.obs_dict['target1_pos'] = np.array([self.data.site_xpos[self.target1_sid][0], self.data.site_xpos[self.target1_sid][1]])
-        # self.obs_dict['target2_pos'] = np.array([self.data.site_xpos[self.target2_sid][0], self.data.site_xpos[self.target2_sid][1]])
-        self.obs_dict['target1_pos'] = self.data.site_xpos[self.target1_sid].copy()
-        self.obs_dict['target2_pos'] = self.data.site_xpos[self.target2_sid].copy()
+        # self.obs_dict['target1_pos'] = np.array([self.sim.data.site_xpos[self.target1_sid][0], self.sim.data.site_xpos[self.target1_sid][1]])
+        # self.obs_dict['target2_pos'] = np.array([self.sim.data.site_xpos[self.target2_sid][0], self.sim.data.site_xpos[self.target2_sid][1]])
+        self.obs_dict['target1_pos'] = self.sim.data.site_xpos[self.target1_sid].copy()
+        self.obs_dict['target2_pos'] = self.sim.data.site_xpos[self.target2_sid].copy()
 
         # object position error
         self.obs_dict['target1_err'] = self.obs_dict['target1_pos'] - self.obs_dict['object1_pos']
         self.obs_dict['target2_err'] = self.obs_dict['target2_pos'] - self.obs_dict['object2_pos']
-        # self.obs_dict['target1_err'] = self.data.site_xpos[self.target1_sid] - self.data.site_xpos[self.object1_sid]
-        # self.obs_dict['target2_err'] = self.data.site_xpos[self.target2_sid] - self.data.site_xpos[self.object2_sid]
+        # self.obs_dict['target1_err'] = self.sim.data.site_xpos[self.target1_sid] - self.sim.data.site_xpos[self.object1_sid]
+        # self.obs_dict['target2_err'] = self.sim.data.site_xpos[self.target2_sid] - self.sim.data.site_xpos[self.object2_sid]
 
         # muscle activations
         if self.sim.model.na>0:
-            self.obs_dict['act'] = self.data.act[:].copy()
+            self.obs_dict['act'] = self.sim.data.act[:].copy()
 
         t, obs = self.obsdict2obsvec(self.obs_dict, self.obs_keys)
         return obs
+
+    def get_obs_dict(self, sim):
+        obs_dict = {}
+        obs_dict['t']              = np.array([sim.data.time])
+        obs_dict['hand_pos']       = sim.data.qpos[:-14].copy()
+
+        # object positions
+        # obs_dict['object1_pos']    = sim.data.qpos[-14:-11].copy()
+        # obs_dict['object2_pos']    = sim.data.qpos[-7:-4].copy()
+        obs_dict['object1_pos'] = sim.data.site_xpos[self.object1_sid].copy()
+        obs_dict['object2_pos'] = sim.data.site_xpos[self.object2_sid].copy()
+
+        # object translational velocities
+        obs_dict['object1_velp']   = sim.data.qvel[-12:-9].copy()
+        obs_dict['object2_velp']   = sim.data.qvel[-6:-3].copy()
+
+        # site locations in world frame, populated after the step/forward call
+        # obs_dict['target1_pos'] = np.array([sim.data.site_xpos[self.target1_sid][0], sim.data.site_xpos[self.target1_sid][1]])
+        # obs_dict['target2_pos'] = np.array([sim.data.site_xpos[self.target2_sid][0], sim.data.site_xpos[self.target2_sid][1]])
+        obs_dict['target1_pos'] = sim.data.site_xpos[self.target1_sid].copy()
+        obs_dict['target2_pos'] = sim.data.site_xpos[self.target2_sid].copy()
+
+        # object position error
+        obs_dict['target1_err'] = obs_dict['target1_pos'] - obs_dict['object1_pos']
+        obs_dict['target2_err'] = obs_dict['target2_pos'] - obs_dict['object2_pos']
+        # obs_dict['target1_err'] = sim.data.site_xpos[self.target1_sid] - sim.data.site_xpos[self.object1_sid]
+        # obs_dict['target2_err'] = sim.data.site_xpos[self.target2_sid] - sim.data.site_xpos[self.object2_sid]
+
+        # muscle activations
+        if sim.model.na>0:
+            obs_dict['act'] = sim.data.act[:].copy()
+
+        return obs_dict
 
     def get_reward_dict(self, obs_dict):
         # tracking error
@@ -115,27 +165,30 @@ class BaodingFixedEnvV1(BaseV0):
         target2_dist = np.linalg.norm(obs_dict['target2_err'], axis=-1)
 
         # wrist pose err
-        wrist_pose_err = np.linalg.norm(obs_dict['hand_pos'][:,:,:3]*np.array([5,0.5,1]), axis=-1)
+        hand_pos = obs_dict['hand_pos'][:,:,:3] if obs_dict['hand_pos'].ndim==3 else obs_dict['hand_pos'][:3]
+        wrist_pose_err = np.linalg.norm(hand_pos*np.array([5,0.5,1]), axis=-1)
 
         # detect fall
-        is_fall_1 = obs_dict['object1_pos'][:,:,2] < self.drop_height_threshold
-        is_fall_2 = obs_dict['object2_pos'][:,:,2] < self.drop_height_threshold
+        object1_pos = obs_dict['object1_pos'][:,:,2] if obs_dict['object1_pos'].ndim==3 else obs_dict['object1_pos'][2]
+        object1_pos = obs_dict['object2_pos'][:,:,2] if obs_dict['object2_pos'].ndim==3 else obs_dict['object2_pos'][2]
+        is_fall_1 = object1_pos < self.drop_height_threshold
+        is_fall_2 = object1_pos < self.drop_height_threshold
         is_fall = np.logical_or(is_fall_1, is_fall_2) #keep both balls up
 
         rwd_dict = collections.OrderedDict((
             # Optional Keys
-            ('pos_dist_1',      -5 * target1_dist),
-            ('pos_dist_2',      -5 * target2_dist),
-            ('drop_penalty',    -500 * is_fall),
-            ('wrist_angle',     -0.5 * wrist_pose_err),
-            ('act_reg',         -.1 * np.linalg.norm(self.obs_dict['act'], axis=-1)),
+            ('pos_dist_1',      target1_dist),
+            ('pos_dist_2',      target2_dist),
+            ('drop_penalty',    is_fall),
+            ('wrist_angle',     wrist_pose_err),
+            ('act_reg',         np.linalg.norm(self.obs_dict['act'], axis=-1)),
             ('bonus',           (target1_dist < self.proximity_threshold)+(target2_dist < self.proximity_threshold)+4*(target1_dist < self.proximity_threshold)*(target2_dist < self.proximity_threshold)),
             # Must keys
             ('sparse',          -target1_dist-target2_dist),
             ('solved',          (target1_dist < self.proximity_threshold)*(target2_dist < self.proximity_threshold)*(~is_fall)),
             ('done',            is_fall),
         ))
-        rwd_dict['dense'] = np.sum([rwd_dict[key] for key in self.rwd_keys], axis=0)
+        rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
 
 

@@ -2,15 +2,36 @@ import unittest
 
 import gym
 import mj_envs
-
+import numpy as np
 
 class TestEnvs(unittest.TestCase):
 
-    def load_envs(self, module_name, env_names):
+    def check_envs(self, module_name, env_names, lite=False):
         print("\nTesting module:: ", module_name)
         for env_name in env_names:
-           print("Testing env: ", env_name)
-           env = gym.make(env_name)
+            print("Testing env: ", env_name)
+            # test init
+            env = gym.make(env_name)
+            # test reset
+            env.env.reset()
+            # test obs vec
+            obs = env.env.get_obs()
+
+            if not lite:
+                # test obs dict
+                obs_dict = env.env.get_obs_dict(env.env.sim)
+                # test rewards
+                rwd = env.env.get_reward_dict(obs_dict)
+
+                # test vector => dict upgrade
+                # print(env.env.get_obs() - env.env.get_obs_vec())
+                # assert (env.env.get_obs() == env.env.get_obs_vec()).all(), "check vectorized computations"
+
+            # test env infos
+            infos = env.env.get_env_infos()
+
+            # test step (everything together)
+            observation, _reward, done, _info = env.env.step(np.zeros(env.env.sim.model.nu))
 
     # Biomechanics
     def test_biomechanics(self):
@@ -28,8 +49,10 @@ class TestEnvs(unittest.TestCase):
             'IFTHKeyTurnFixed-v0', 'IFTHKeyTurnRandom-v0',
             'HandObjHoldFixed-v0', 'HandObjHoldRandom-v0',
             'HandPenTwirlFixed-v0', 'HandPenTwirlRandom-v0',
+
+            'BaodingFixed-v1', 'BaodingFixed4th-v1', 'BaodingFixed8th-v1'
         ]
-        self.load_envs('Biomechanics', env_names)
+        self.check_envs('Biomechanics', env_names)
 
     # Hand Manipulation Suite
     def test_hand_manipulation_suite(self):
@@ -39,7 +62,7 @@ class TestEnvs(unittest.TestCase):
         'hammer-v0',
         'relocate-v0',
         ]
-        self.load_envs('Hand Manipulation', env_names)
+        self.check_envs('Hand Manipulation', env_names, lite=True)
 
 if __name__ == '__main__':
     unittest.main()

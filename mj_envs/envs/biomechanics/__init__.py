@@ -125,7 +125,7 @@ register(id='HandPoseAMuscleFixed-v0',
                 'viz_site_targets': ('THtip','IFtip','MFtip','RFtip','LFtip'),
                 'target_jnt_value': np.array([0, 0, 0, -0.0904, 0.0824475, -0.681555, -0.514888, 0, -0.013964, -0.0458132, 0, 0.67553, -0.020944, 0.76979, 0.65982, 0, 0, 0, 0, 0.479155, -0.099484, 0.95831, 0]),
                 'normalize_act': False,
-                'reset_type': "none",        # none, init, random
+                'reset_type': "random",        # none, init, random
                 'target_type': 'fixed',      # switch / generate/ fixed
             }
     )
@@ -135,7 +135,6 @@ register(id='IFTHKeyTurnFixed-v0',
             entry_point='mj_envs.envs.biomechanics.key_turn_v0:KeyTurnFixedEnvV0',
             max_episode_steps=200,
             kwargs={
-                'frame_skip': 10,
                 'model_path': curr_dir+'/assets/hand/Index_Thumb_keyturn_v0.xml',
                 'normalize_act': False
             }
@@ -145,7 +144,6 @@ register(id='IFTHKeyTurnRandom-v0',
             entry_point='mj_envs.envs.biomechanics.key_turn_v0:KeyTurnRandomEnvV0',
             max_episode_steps=200,
             kwargs={
-                'frame_skip': 10,
                 'model_path': curr_dir+'/assets/hand/Index_Thumb_keyturn_v0.xml',
                 'normalize_act': False
             }
@@ -157,7 +155,6 @@ register(id='HandObjHoldFixed-v0',
             entry_point='mj_envs.envs.biomechanics.obj_hold_v0:ObjHoldFixedEnvV0',
             max_episode_steps=75,
             kwargs={
-                'frame_skip': 10,
                 'model_path': curr_dir+'/assets/hand/2nd_hand_hold.xml',
                 'normalize_act': False
             }
@@ -167,7 +164,6 @@ register(id='HandObjHoldRandom-v0',
             entry_point='mj_envs.envs.biomechanics.obj_hold_v0:ObjHoldRandomEnvV0',
             max_episode_steps=75,
             kwargs={
-                'frame_skip': 10,
                 'model_path': curr_dir+'/assets/hand/2nd_hand_hold.xml',
                 'normalize_act': False
             }
@@ -200,7 +196,6 @@ register(id='BaodingFixed-v1',
             entry_point='mj_envs.envs.biomechanics.baoding_v1:BaodingFixedEnvV1',
             max_episode_steps=200,
             kwargs={
-                'frame_skip': 10,
                 'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
                 'normalize_act': True,
                 'reward_option':0
@@ -210,7 +205,6 @@ register(id='BaodingFixed4th-v1',
             entry_point='mj_envs.envs.biomechanics.baoding_v1:BaodingFixedEnvV1',
             max_episode_steps=200,
             kwargs={
-                'frame_skip': 10,
                 'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
                 'normalize_act': True,
                 'reward_option':1
@@ -220,7 +214,6 @@ register(id='BaodingFixed8th-v1',
             entry_point='mj_envs.envs.biomechanics.baoding_v1:BaodingFixedEnvV1',
             max_episode_steps=200,
             kwargs={
-                'frame_skip': 10,
                 'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
                 'normalize_act': True,
                 'reward_option':2
