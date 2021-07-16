@@ -15,6 +15,7 @@
     <include file="../../../../sims/furniture_sim/simpleTable/simpleTable_asset.xml"/>
     <include file="../../../../sims/franka_sim/assets/actuator0.xml"/>
     <include file="../../../../sims/franka_sim/assets/gripper_assets.xml"/>
+    <include file="../../../../sims/franka_sim/assets/gripper_actuator0.xml"/>
 
     <worldbody>
 
@@ -34,7 +35,7 @@
         </body>
 
         <!-- tasks details added here via include-->
-        <site name='target' type='sphere' size='.01' pos='0 0.475 1.0' group='1' rgba='.1 .8 .2 .4'/>
+        <site name='target' type='sphere' size='.1' pos='0 0.475 1.0' group='1' rgba='.1 .8 .2 .4'/>
 
     </worldbody>
 
