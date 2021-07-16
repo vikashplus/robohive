@@ -18,21 +18,27 @@ import time as timer
 
 try:
     import mujoco_py
-    from mujoco_py import load_model_from_path, MjSim, MjViewer
+    from mujoco_py import load_model_from_path, MjSim, MjViewer, load_model_from_xml
 except ImportError as e:
     raise error.DependencyNotInstalled("{}. (HINT: you need to install mujoco_py, and also perform the setup instructions here: https://github.com/openai/mujoco-py/.)".format(e))
 
-def get_sim(model_path):
+def get_sim(model_path:str=None, model_xmlstr=None):
     """
-    Get sim using model path.
+    Get sim using model_path or model_xmlstr.
     """
-    if model_path.startswith("/"):
-        fullpath = model_path
+    if model_path:
+        if model_path.startswith("/"):
+            fullpath = model_path
+        else:
+            fullpath = os.path.join(os.path.dirname(__file__), "assets", model_path)
+        if not path.exists(fullpath):
+            raise IOError("File %s does not exist" % fullpath)
+        model = load_model_from_path(fullpath)
+    elif model_xmlstr:
+        model = load_model_from_xml(model_xmlstr)
     else:
-        fullpath = os.path.join(os.path.dirname(__file__), "assets", model_path)
-    if not path.exists(fullpath):
-        raise IOError("File %s does not exist" % fullpath)
-    model = load_model_from_path(fullpath)
+        raise TypeError("Both model_path and model_xmlstr can't be None")
+
     return MjSim(model)
 
 class MujocoEnv(gym.Env, utils.EzPickle, ObsVecDict):
@@ -89,14 +95,22 @@ class MujocoEnv(gym.Env, utils.EzPickle, ObsVecDict):
         self.obs_keys = obs_keys
         ObsVecDict.__init__(self)
         observation, _reward, done, _info = self.step(np.zeros(self.sim.model.nu))
-        assert not done, "Checking initialization. Simulation starts in a done state."
+        assert not done, "Check initialization. Simulation starts in a done state."
         self.obs_dim = observation.size
         self.observation_space = spaces.Box(obs_range[0]*np.ones(self.obs_dim), obs_range[1]*np.ones(self.obs_dim), dtype=np.float32)
 
+        # resolve initial state
+        self.init_qvel = self.sim.data.qvel.ravel().copy()
+        self.init_qpos = self.sim.data.qpos.ravel().copy() # has issues with initial jump during reset
+        # self.init_qpos = np.mean(self.sim.model.actuator_ctrlrange, axis=1) if self.act_normalized else self.sim.data.qpos.ravel().copy() # has issues when nq!=nu
+        # self.init_qpos[self.sim.model.jnt_dofadr] = np.mean(self.sim.model.jnt_range, axis=1) if self.act_normalized else self.sim.data.qpos.ravel().copy()
+        if self.act_normalized:
+            linear_jnt_qposids = self.sim.model.jnt_qposadr[self.sim.model.jnt_type>1] #hinge and slides
+            linear_jnt_ids = self.sim.model.jnt_type>1
+            self.init_qpos[linear_jnt_qposids] = np.mean(self.sim.model.jnt_range[linear_jnt_ids], axis=1)
+
         # finalize init
         utils.EzPickle.__init__(self)
-        self.init_qpos = self.sim.data.qpos.ravel().copy()
-        self.init_qvel = self.sim.data.qvel.ravel().copy()
 
 
     def step(self, a):

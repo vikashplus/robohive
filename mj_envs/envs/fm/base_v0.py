@@ -1,5 +1,7 @@
+from time import process_time
 import numpy as np
 from mj_envs.envs import env_base
+from mj_envs.utils.xml_utils import reassign_parent
 import os
 import collections
 
@@ -14,12 +16,21 @@ class FMBase(env_base.MujocoEnv):
         "penalty": -50,
     }
 
-
     def __init__(self, model_path, config_path, target_pose, **kwargs):
-        # get sims
+
         curr_dir = os.path.dirname(os.path.abspath(__file__))
-        self.sim = env_base.get_sim(model_path=curr_dir+model_path)
-        self.sim_obsd = env_base.get_sim(model_path=curr_dir+model_path)
+
+        # Process model to ues DManus as end effector
+        raw_sim = env_base.get_sim(model_path=curr_dir+model_path)
+        raw_xml = raw_sim.model.get_xml()
+        processed_xml = reassign_parent(xml_str=raw_xml, receiver_node="panda0_link7", donor_node="DManus_mount")
+        processed_model_path = curr_dir+model_path[:-4]+"_processed.xml"
+        with open(processed_model_path, 'w') as file:
+            file.write(processed_xml)
+
+        self.sim = env_base.get_sim(model_path=processed_model_path)
+        self.sim_obsd = env_base.get_sim(model_path=processed_model_path)
+        os.remove(processed_model_path)
 
         self.target_pose = target_pose
 

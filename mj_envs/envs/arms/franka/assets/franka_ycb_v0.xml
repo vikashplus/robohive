@@ -12,8 +12,10 @@
 
     <include file="../../../../sims/scene_sim/topfloor_scene.xml"/>
     <include file="../../../../sims/franka_sim/assets/assets.xml"/>
+    <include file="../../../../sims/franka_sim/assets/gripper_assets.xml"/>
     <include file="../../../../sims/furniture_sim/simpleTable/simpleTable_asset.xml"/>
     <include file="../../../../sims/franka_sim/assets/actuator0.xml"/>
+    <include file="../../../../sims/franka_sim/assets/gripper_actuator0.xml"/>
 
     <include file="../../../../sims/YCB_sim/includes/defaults_ycb.xml"/>
     <include file="../../../../sims/YCB_sim/includes/assets_004_sugar_box.xml"/>
@@ -47,17 +49,30 @@
 
         <!-- tasks details added here via include-->
         <!-- <site name='target' type='box' pos="0 -.1 .3" size=".021 .045 .088" rgba=".1 .8 .2 .4" group='1'/> -->
-        <site name='target' type='box' pos="0.0 0.8 0.8" size=".088 .045 .011" rgba=".1 .8 .2 .4" group='1'/>
-
+        <!-- <site name='target' type='box' pos="0.0 0.8 0.8" size=".088 .045 .011" rgba=".1 .8 .2 .4" group='1'/> -->
+        <site name='target' type='cylinder' size='.088 0.021' pos='0.4 0.5 0.78' group='1' rgba='.1 .8 .2 .4'/>
 
         <!-- object -->
-        <body pos="0.0 0.6 0.9" euler='1.57 1.57 1.57' name='object'>
-            <site name="coord-1" type='sphere' size='.010' pos='-.021 .045 .088' rgba="1 0 0 1"/>
+        <body pos="0.0 0.5 .8">
             <include file="../../../../sims/YCB_sim/includes/body_004_sugar_box.xml"/>
-            <!-- <freejoint/> -->
+            <site name="sugarbox" size="0.01" pos="0 0 .088"/>
+            <joint name="Tx" axis="1 0 0" type="slide" damping="0" limited="true" range="-1.0 1.0"/>
+            <joint name="Ty" axis="0 1 0" type="slide" damping="0" limited="true" range="-0.5 0.5"/>
+            <joint name="Tz" axis="0 0 1" type="slide" damping="0" limited="true" range="-1.0 1.0"/>
+            <joint name="Rx" axis="1 0 0" type="hinge" damping="0" limited="true" range="-3.14 3.14"/>
+            <joint name="Ry" axis="0 1 0" type="hinge" damping="0" limited="true" range="-3.14 3.14"/>
+            <joint name="Rz" axis="0 0 1" type="hinge" damping="0" limited="true" range="-3.14 3.14"/>
         </body>
 
-
     </worldbody>
+
+    <sensor>
+        <jointpos name="Tx" joint="Tx"/>
+        <jointpos name="Ty" joint="Ty"/>
+        <jointpos name="Tz" joint="Tz"/>
+        <jointpos name="Rx" joint="Rx"/>
+        <jointpos name="Ry" joint="Ry"/>
+        <jointpos name="Rz" joint="Rz"/>
+    </sensor>
 
 </mujoco>

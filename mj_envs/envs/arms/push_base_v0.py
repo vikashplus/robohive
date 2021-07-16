@@ -1,23 +1,22 @@
 import numpy as np
-# from mjrl.envs import mujoco_env
 from mj_envs.envs import env_base
-# from mujoco_py import MjViewer
 import os
 import collections
 
-class ReachBaseV0(env_base.MujocoEnv):
+class PushBaseV0(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS = [
-        'qp', 'qv', 'reach_err'
+        'qp', 'qv', 'object_err', 'target_err'
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
-        "reach": -1.0,
+        "object_dist": -1.0,
+        "target_dist": -1.0,
         "bonus": 4.0,
         "penalty": -50,
     }
 
 
-    def __init__(self, model_path, config_path, robot_site_name,
+    def __init__(self, model_path, config_path, robot_site_name, object_site_name,
                 target_site_name, target_xyz_range, **kwargs):
         # get sims
         self.sim = env_base.get_sim(model_path=model_path)
@@ -25,6 +24,7 @@ class ReachBaseV0(env_base.MujocoEnv):
 
         # ids
         self.grasp_sid = self.sim.model.site_name2id(robot_site_name)
+        self.object_sid = self.sim.model.site_name2id(object_site_name)
         self.target_sid = self.sim.model.site_name2id(target_site_name)
 
         # get env
@@ -48,23 +48,26 @@ class ReachBaseV0(env_base.MujocoEnv):
         obs_dict['t'] = np.array([self.sim.data.time])
         obs_dict['qp'] = sim.data.qpos.copy()
         obs_dict['qv'] = sim.data.qvel.copy()
-        obs_dict['reach_err'] = sim.data.site_xpos[self.target_sid]-sim.data.site_xpos[self.grasp_sid]
+        obs_dict['object_err'] = sim.data.site_xpos[self.object_sid]-sim.data.site_xpos[self.grasp_sid]
+        obs_dict['target_err'] = sim.data.site_xpos[self.target_sid]-sim.data.site_xpos[self.object_sid]
         return obs_dict
 
 
     def get_reward_dict(self, obs_dict):
-        reach_dist = np.linalg.norm(obs_dict['reach_err'], axis=-1)
-        far_th = 1.0
+        object_dist = np.linalg.norm(obs_dict['object_err'], axis=-1)
+        target_dist = np.linalg.norm(obs_dict['target_err'], axis=-1)
+        far_th = 1.25
 
         rwd_dict = collections.OrderedDict((
             # Optional Keys
-            ('reach',   reach_dist),
-            ('bonus',   (reach_dist<.1) + (reach_dist<.05)),
-            ('penalty', (reach_dist>far_th)),
+            ('object_dist',   object_dist),
+            ('target_dist',   target_dist),
+            ('bonus',   (object_dist<.1) + (target_dist<.1) + (target_dist<.05)),
+            ('penalty', (object_dist>far_th)),
             # Must keys
-            ('sparse',  -1.0*reach_dist),
-            ('solved',  reach_dist<.050),
-            ('done',    reach_dist > far_th),
+            ('sparse',  -1.0*target_dist),
+            ('solved',  target_dist<.050),
+            ('done',    object_dist > far_th),
         ))
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
