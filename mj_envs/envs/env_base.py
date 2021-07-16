@@ -95,15 +95,22 @@ class MujocoEnv(gym.Env, utils.EzPickle, ObsVecDict):
         self.obs_keys = obs_keys
         ObsVecDict.__init__(self)
         observation, _reward, done, _info = self.step(np.zeros(self.sim.model.nu))
-        assert not done, "Checking initialization. Simulation starts in a done state."
+        assert not done, "Check initialization. Simulation starts in a done state."
         self.obs_dim = observation.size
         self.observation_space = spaces.Box(obs_range[0]*np.ones(self.obs_dim), obs_range[1]*np.ones(self.obs_dim), dtype=np.float32)
 
+        # resolve initial state
+        self.init_qvel = self.sim.data.qvel.ravel().copy()
+        self.init_qpos = self.sim.data.qpos.ravel().copy() # has issues with initial jump during reset
+        # self.init_qpos = np.mean(self.sim.model.actuator_ctrlrange, axis=1) if self.act_normalized else self.sim.data.qpos.ravel().copy() # has issues when nq!=nu
+        # self.init_qpos[self.sim.model.jnt_dofadr] = np.mean(self.sim.model.jnt_range, axis=1) if self.act_normalized else self.sim.data.qpos.ravel().copy()
+        if self.act_normalized:
+            linear_jnt_qposids = self.sim.model.jnt_qposadr[self.sim.model.jnt_type>1] #hinge and slides
+            linear_jnt_ids = self.sim.model.jnt_type>1
+            self.init_qpos[linear_jnt_qposids] = np.mean(self.sim.model.jnt_range[linear_jnt_ids], axis=1)
+
         # finalize init
         utils.EzPickle.__init__(self)
-        self.init_qpos = self.sim.data.qpos.ravel().copy()
-        self.init_qpos = np.mean(self.sim.model.actuator_ctrlrange, axis=1) if self.act_normalized else self.sim.data.qpos.ravel().copy()
-        self.init_qvel = self.sim.data.qvel.ravel().copy()
 
 
     def step(self, a):
