@@ -1,5 +1,5 @@
 # Human demonstrations
-Human demos for the kitchen scene collected using [MuJoCo-VR](https://github.com/vikashplus/puppet) and are stored in [MuJoCo's `.mjl` log format](http://www.mujoco.org/book/haptix.html#uiRecord). The demonstration dataset is included with this repository as the a zip file named [kitchen_demos_multitask.zip](kitchen_demos_multitask.zip). Below we provide instructions to parse these demonstrations in accordance with the kitchen environments.
+Human demos for the kitchen scene are collected using [MuJoCo-VR](https://github.com/vikashplus/puppet) and are stored in [MuJoCo's `.mjl` log format](http://www.mujoco.org/book/haptix.html#uiRecord). The demonstration dataset is available as a zip file here [kitchen_demos_multitask.zip](https://github.com/google-research/relay-policy-learning/raw/master/kitchen_demos_multitask.zip). Download and unzip the demonstration in the current `assets` folder. Below we provide instructions to parse these demonstrations in accordance with the kitchen environments.
 
 # Instructions on how to parse the demos
 1. Download and unzip the demonstration file
