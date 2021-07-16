@@ -57,6 +57,8 @@ class PushBaseV0(env_base.MujocoEnv):
         object_dist = np.linalg.norm(obs_dict['object_err'], axis=-1)
         target_dist = np.linalg.norm(obs_dict['target_err'], axis=-1)
         far_th = 1.25
+        if object_dist < 0.5 : 
+            object_dist = 0.0
 
         rwd_dict = collections.OrderedDict((
             # Optional Keys
@@ -76,3 +78,24 @@ class PushBaseV0(env_base.MujocoEnv):
         self.sim.model.site_pos[self.target_sid] = self.np_random.uniform(high=self.target_xyz_range['high'], low=self.target_xyz_range['low'])
         obs = super().reset(self.init_qpos, self.init_qvel)
         return obs
+
+    def get_env_state(self):
+        """
+        Get state of hand as well as objects and targets in the scene
+        """
+        qpos = self.sim.data.qpos.ravel().copy()
+        qvel = self.sim.data.qvel.ravel().copy()
+        object_pos = self.sim.model.body_pos[self.object_sid].copy()
+        target_pos = self.sim.model.body_pos[self.target_sid].copy()
+        grasp_pos = self.sim.model.body_pos[self.grasp_sid].copy()
+        return dict(qpos=qpos, qvel=qvel, object_pos=object_pos, target_pos=target_pos, grasp_pos=grasp_pos)
+
+    def set_env_state(self, state_dict) : 
+        qp = state_dict['qpos']
+        qv = state_dict['qvel']
+        target_pos = state_dict['target_pos']
+        object_pos = state_dict['object_pos']
+        self.sim.model.body_pos[self.object_sid] = object_pos
+        self.sim.model.body_pos[self.target_sid] = target_pos
+        self.set_state(qp, qv)
+        self.sim.forward()
