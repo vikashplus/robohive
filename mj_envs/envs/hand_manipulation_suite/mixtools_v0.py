@@ -27,7 +27,9 @@ class MixToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.ratchet = sim.model.body_name2id('ratchet')
         self.screwDriver = sim.model.body_name2id('screwDriver')
         self.turner = sim.model.body_name2id('turner')
-        self.objects_id = [self.knife, self.spatula, self.ratchet, self.screwDriver, self.turner]
+        self.hammer = sim.model.body_name2id('hammer')
+        self.objects_id = [self.knife, self.spatula, self.ratchet, self.screwDriver, self.turner, self.hammer]
+        print("Object ids : ", self.objects_id)
         self.curr_obj = self.knife
 
         utils.EzPickle.__init__(self)
@@ -75,6 +77,7 @@ class MixToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
 
     def reset_model(self):
         self.sim.reset()
+        self.np_random.choice(self.objects_id) # To avoid some weird numpy behavior
         self.curr_obj = self.np_random.choice(self.objects_id)
         for obj_id in self.objects_id :
             if obj_id == self.curr_obj:
