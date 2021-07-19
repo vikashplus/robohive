@@ -26,7 +26,7 @@ class TestEnvs(unittest.TestCase):
                 # check if the env is partially observable
                 for key in env.env.obs_keys:
                     if (obs_dict_sim[key] != obs_dict_sim_obsd[key]).any():
-                        print("WARNING: {} environment is partially observable. This can happen if there aren't enough sensors defined in the robot config file or if you are using sensor noise. Please make sure this is a conscious choice".format(env_name))
+                        print("WARNING: {} environment is partially observable. This can happen if there aren't enough sensors defined in the robot config file or if you are using sensor noise. Please make sure this is a conscious choice, and not an oversight".format(env_name))
                         print("\tobs_dict_sim[{}]: {}".format(key, obs_dict_sim[key]))
                         print("\tobs_dict_sim_obsd[{}]: {}\n".format(key, obs_dict_sim_obsd[key]))
 
@@ -78,8 +78,9 @@ class TestEnvs(unittest.TestCase):
             'FrankaPushFixed-v0',
             'FrankaPushRandom-v0',
             'FetchReachFixed-v0',
-            'FetchReachRandom-v0']
-        self.check_envs('Arms', env_names)
+            'FetchReachRandom-v0'
+            ]
+        self.check_envs('Arms', env_names, lite=False)
 
     # Functional Manipulation
     def test_fm(self):
