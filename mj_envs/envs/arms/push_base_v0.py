@@ -74,5 +74,6 @@ class PushBaseV0(env_base.MujocoEnv):
 
     def reset(self):
         self.sim.model.site_pos[self.target_sid] = self.np_random.uniform(high=self.target_xyz_range['high'], low=self.target_xyz_range['low'])
+        self.sim_obsd.model.site_pos[self.target_sid] = self.sim.model.site_pos[self.target_sid]
         obs = super().reset(self.init_qpos, self.init_qvel)
         return obs
