@@ -106,6 +106,7 @@ class KitchenBase(env_base.MujocoEnv):
         obs_dict['approach_err'] = self.sim.data.site_xpos[self.interact_sid] - self.sim.data.site_xpos[self.grasp_sid]
         obs_dict['pose_err'] = self.robot_meanpos-obs_dict['hand_jnt']
         obs_dict['end_effector'] = self.sim.data.site_xpos[self.grasp_sid]
+        obs_dict['qpos'] = self.sim.data.qpos.copy()
         for site in self.INTERACTION_SITES:
             site_id = self.sim.model.site_name2id(site)
             obs_dict[site+'_err'] = self.sim.data.site_xpos[site_id] - self.sim.data.site_xpos[self.grasp_sid]
@@ -185,6 +186,27 @@ class KitchenFrankaFixed(KitchenBase):
             interact_site=interact_site,
             **kwargs)
 
+
+DEMO_RESET_QPOS = np.array([ 1.01020992e-01, -1.76349747e+00,  1.88974607e+00, -2.47661710e+00,
+        3.25189114e-01,  8.29094410e-01,  1.62463629e+00,  3.99760380e-02,
+        3.99791002e-02,  2.45778156e-05,  2.95590127e-07,  2.45777410e-05,
+        2.95589217e-07,  2.45777410e-05,  2.95589217e-07,  2.45777410e-05,
+        2.95589217e-07,  2.16196258e-05,  5.08073663e-06,  0.00000000e+00,
+        0.00000000e+00,  0.00000000e+00,  0.00000000e+00, -2.68999994e-01,
+        3.49999994e-01,  1.61928391e+00,  6.89039584e-19, -2.26122120e-05,
+       -8.87580375e-19])
+DEMO_RESET_QVEL = np.array([-1.24094905e-02,  3.07730486e-04,  2.10558046e-02, -2.11170651e-02,
+        1.28676305e-02,  2.64535546e-02, -7.49515183e-03, -1.34369839e-04,
+        2.50969693e-04,  1.06229627e-13,  7.14243539e-16,  1.06224762e-13,
+        7.19794728e-16,  1.06224762e-13,  7.21644648e-16,  1.06224762e-13,
+        7.14243539e-16, -1.19464428e-16, -1.47079926e-17,  0.00000000e+00,
+        0.00000000e+00,  0.00000000e+00,  0.00000000e+00,  2.93530267e-09,
+       -1.99505748e-18,  3.42031125e-14, -4.39396125e-17,  6.64174740e-06,
+        3.52969879e-18])
+
+class KitchenFrankaDemo(KitchenFrankaFixed):
+    def reset(self, reset_qpos=None, reset_qvel=None):
+        return super().reset(reset_qpos=DEMO_RESET_QPOS, reset_qvel=DEMO_RESET_QVEL)
 
 class KitchenFrankaRandom(KitchenFrankaFixed):
     def reset(self, reset_qpos=None, reset_qvel=None):
