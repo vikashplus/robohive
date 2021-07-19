@@ -124,10 +124,13 @@ obs_keys_wt = {"hand_jnt": 1.0, "objs_jnt": 1.0, "goal": 1.0, "end_effector": 1.
 for site in KitchenFranka.INTERACTION_SITES:
     obs_keys_wt[site+'_err'] = 1.0
 
+DEMO_ENTRY_POINT = 'mj_envs.envs.relay_kitchen:KitchenFrankaDemo'
+RANDOM_ENTRY_POINT = 'mj_envs.envs.relay_kitchen:KitchenFranka'
+
 # Kitchen
 register(
     id='kitchen-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFrankaDemo',
+    entry_point=DEMO_ENTRY_POINT,
     max_episode_steps=280,
     kwargs={
                 'goal': {},
@@ -138,7 +141,7 @@ register(
 # Open Microwave door
 register(
     id='kitchen_micro_open-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
+    entry_point=DEMO_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
                 'goal': {'microjoint': -1.25},
@@ -150,7 +153,7 @@ register(
 # Open right hinge cabinet
 register(
     id='kitchen_rdoor_open-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
+    entry_point=DEMO_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
                 'goal': {'rightdoorhinge':1.57},
@@ -162,7 +165,7 @@ register(
 # Open left hinge cabinet
 register(
     id='kitchen_ldoor_open-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
+    entry_point=DEMO_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
                 'goal': {'leftdoorhinge':-1.25},
@@ -174,7 +177,7 @@ register(
 # Open slide cabinet
 register(
     id='kitchen_sdoor_open-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
+    entry_point=DEMO_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
                 'goal': {'slidedoor_joint':0.44},
@@ -186,7 +189,7 @@ register(
 # Lights on (left)
 register(
     id='kitchen_light_on-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
+    entry_point=DEMO_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
                 'goal': {'lightswitch_joint':-.7},
@@ -198,7 +201,7 @@ register(
 # Knob4 on
 register(
     id='kitchen_knob4_on-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFrankaDemo',
     max_episode_steps=50,
     kwargs={
                 'goal': {'knob4_joint':-1.57},
@@ -210,7 +213,7 @@ register(
 # Knob3 on
 register(
     id='kitchen_knob3_on-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
+    entry_point=DEMO_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
                 'goal': {'knob3_joint':-1.57},
@@ -222,7 +225,7 @@ register(
 # Knob2 on
 register(
     id='kitchen_knob2_on-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
+    entry_point=DEMO_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
                 'goal': {'knob2_joint':-1.57},
@@ -234,7 +237,7 @@ register(
 # Knob1 on
 register(
     id='kitchen_knob1_on-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
+    entry_point=DEMO_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
                 'goal': {'knob1_joint':-1.57},
