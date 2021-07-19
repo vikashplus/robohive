@@ -1,6 +1,7 @@
 from mj_envs.envs.relay_kitchen.kitchen_multitask_v1 import KitchenTasksV0
 # from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import KitchenFrankaFixed as KitchenFranka
 from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import KitchenFrankaRandom as KitchenFranka
+from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import KitchenFrankaDemo
 from gym.envs.registration import register
 # import numpy as np
 
@@ -126,7 +127,7 @@ for site in KitchenFranka.INTERACTION_SITES:
 # Kitchen
 register(
     id='kitchen-v3',
-    entry_point='mj_envs.envs.relay_kitchen:KitchenFranka',
+    entry_point='mj_envs.envs.relay_kitchen:KitchenFrankaDemo',
     max_episode_steps=280,
     kwargs={
                 'goal': {},
