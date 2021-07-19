@@ -65,44 +65,14 @@
 
 
         <!-- ======= DESTINATION ======= -->
-        <!-- <site name="target" pos="-0.07 0 0.3" size="0.07" rgba="0 1 0 0.125"/> -->
-
-
-        <!-- Knife -->
-        <body pos="0 -0.1 0.035" quat="0.707388 0.706825 0 0" name='knife'>
-            <include file="knife.xml"/>
-        </body>
-
-        <!-- Spatuala -->
-        <body pos="0 0 0.035" quat="0.707388 0.706825 0 0" name='spatula'>
-            <include file="spatula.xml"/>
-        </body>
-
-        <!-- Ratchet -->
-        <body pos="0 0.1 0.035" quat="0.707388 0.706825 0 0" name='ratchet'>
-            <include file="ratchet.xml"/>
-        </body>
-
-        <!-- screw driver -->
-        <body pos="0 0.2 0.035" quat="0.707388 0.706825 0 0" name='screwDriver'>
-            <include file="screwDriver.xml"/>
-        </body>
-
-        <!-- turner -->
-        <body pos="0 -0.2 0.035" quat="0.707388 0.706825 0 0" name='turner'>
-            <include file="turner.xml"/>
-        </body>
+        <site name="S_target" pos="0 -0.2 0.3" type="sphere" size="0.01" rgba="0 1 0 1"/>
 
         <!-- ======= Hammer ======= -->
-        <body name="hammer" pos="0 -0.2 0.035" quat="0.707388 0.706825 0 0">
+        <body name="object" pos="0 -0.2 0.035" quat="0.707388 0.706825 0 0">
              <include file="hammer.xml"/>
+             <site name="tool" pos="-0.2 0 -0.04" size="0.01" group="4" rgba="0.4 0.8 0.4 1" />
+             <freejoint/>
         </body>
-
-        <!-- pan -->
-        <!-- <body pos="0 0 0" quat="0 0 0 0.707" name='pan'>
-            <include file="pan.xml"/>
-        </body> -->
-
 
     </worldbody>
 
