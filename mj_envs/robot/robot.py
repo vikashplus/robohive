@@ -470,7 +470,7 @@ class Robot():
 
         # enforce limits
         ctrl_feasible = self.process_actuator(controls=ctrl_desired, step_duration=step_duration,\
-             normalized=ctrl_normalized, position_limits=True, velocity_limits=True, out_space=robot_type)
+             normalized=ctrl_normalized, position_limits=False, velocity_limits=False, out_space=robot_type)
 
         # Send controls to the robot
         if self.is_hardware:

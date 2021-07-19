@@ -78,7 +78,7 @@ class KitchenBase(env_base.MujocoEnv):
         # get env
         env_base.MujocoEnv.__init__(self,
                                 sim = self.sim,
-                                sim_obsd = self.sim_obsd,
+                                sim_obsd = self.sim,
                                 frame_skip = 40,
                                 config_path = config_path,
                                 obs_keys = list(obs_keys_wt.keys()),
