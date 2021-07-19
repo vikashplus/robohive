@@ -91,7 +91,16 @@
     </worldbody>
 
     <keyframe>
-        <key qpos='0.16 -1.76 1.84 -2.51 0.36 0.79 1.55 0.00 0.0 1.25561e-05 1.57437e-07 1.25561e-05 1.57437e-07 1.25561e-05 1.57437e-07 1.25561e-05 1.57437e-07 8.24417e-05 9.48283e-05 0 0 0 0 -0.22 0.35 1.61523 0 0 0'/>
+        <key qpos='0.16 -1.5 1.84 -2.51 0.36 0.79 1.55 0.00 0.0 1.25561e-05 1.57437e-07 1.25561e-05 1.57437e-07 1.25561e-05 1.57437e-07 1.25561e-05 1.57437e-07 8.24417e-05 9.48283e-05 0 0 0 0 -0.22 0.35 1.61523 0 0 0'/>
     </keyframe>
+
+    <sensor>
+        <jointpos name="kettle0:Tx" joint="kettle0:Tx"/>
+        <jointpos name="kettle0:Ty" joint="kettle0:Ty"/>
+        <jointpos name="kettle0:Tz" joint="kettle0:Tz"/>
+        <jointpos name="kettle0:Rx" joint="kettle0:Rx"/>
+        <jointpos name="kettle0:Ry" joint="kettle0:Ry"/>
+        <jointpos name="kettle0:Rz" joint="kettle0:Rz"/>
+    </sensor>
 
 </mujoco>
