@@ -49,7 +49,7 @@ register(
         'robot_site_name': "end_effector",
         'object_site_name': "sugarbox",
         'target_site_name': "target",
-        'target_xyz_range': {'high':[0.0, 0.7, 0.78], 'low':[0.0, 0.7, 0.78]}
+        'target_xyz_range': {'high':[0.0, 0.7, 0.8], 'low':[0.0, 0.7, 0.8]}
     }
 )
 
@@ -64,7 +64,7 @@ register(
         'robot_site_name': "end_effector",
         'object_site_name': "sugarbox",
         'target_site_name': "target",
-        'target_xyz_range': {'high':[0.4, 0.7, 0.78], 'low':[-.4, .8, 0.78]}
+        'target_xyz_range': {'high':[0.1, 0.6, 0.8], 'low':[-0.1, .8, 0.8]}
     }
 )
 

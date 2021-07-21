@@ -44,6 +44,7 @@
         <camera name="vil_camera" pos="0 -1.2 1.2" quat="0.92388 0.382683 0 0" />
         <camera name="left_cross" pos="-1.0 -0.8 1.1" euler="0.785 -0.785 -0.49" />
         <camera name="right_cross" pos="-1.0 0.8 1.1" euler="-0.785 -0.785 3.53" />
+        <camera name="top" pos="0 0 1.1" euler="0 0 3.14" />
  
         <!-- ======= TABLE ======= -->
         <body name="table">

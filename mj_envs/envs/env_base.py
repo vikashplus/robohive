@@ -145,7 +145,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.robot.sensor2sim(sen, self.sim_obsd)
 
         # get obs_dict using the observed information
-        self.obs_dict = self.get_obs_dict(self.sim_obsd)
+        self.obs_dict = self.get_obs_dict(self.sim)
 
         # recoved observation vector from the obs_dict
         t, obs = self.obsdict2obsvec(self.obs_dict, self.obs_keys)

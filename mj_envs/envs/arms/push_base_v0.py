@@ -7,7 +7,7 @@ from mj_envs.envs import env_base
 class PushBaseV0(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS = [
-        'qp', 'qv', 'object_err', 'target_err'
+        'qp', 'qv', 'object_err', 'target_err', 'object_pos', 'target_pos'
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
         "object_dist": -1.0,
@@ -64,6 +64,8 @@ class PushBaseV0(env_base.MujocoEnv):
         obs_dict['t'] = np.array([self.sim.data.time])
         obs_dict['qp'] = sim.data.qpos.copy()
         obs_dict['qv'] = sim.data.qvel.copy()
+        obs_dict['object_pos'] = sim.data.site_xpos[self.object_sid]
+        obs_dict['target_pos'] = sim.data.site_xpos[self.target_sid]
         obs_dict['object_err'] = sim.data.site_xpos[self.object_sid]-sim.data.site_xpos[self.grasp_sid]
         obs_dict['target_err'] = sim.data.site_xpos[self.target_sid]-sim.data.site_xpos[self.object_sid]
         return obs_dict
@@ -73,7 +75,7 @@ class PushBaseV0(env_base.MujocoEnv):
         object_dist = np.linalg.norm(obs_dict['object_err'], axis=-1)
         target_dist = np.linalg.norm(obs_dict['target_err'], axis=-1)
         far_th = 1.25
-        if object_dist < 0.5 : 
+        if object_dist < 0.1: 
             object_dist = 0.0
 
         rwd_dict = collections.OrderedDict((
@@ -84,7 +86,7 @@ class PushBaseV0(env_base.MujocoEnv):
             ('penalty', (object_dist>far_th)),
             # Must keys
             ('sparse',  -1.0*target_dist),
-            ('solved',  target_dist<.050),
+            ('solved',  target_dist<.10),
             ('done',    object_dist > far_th),
         ))
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
