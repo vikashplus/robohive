@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import collections
-from gym import utils
+from gym import utils, spaces
 from mjrl.envs import mujoco_env
 from mj_envs.utils.quatmath import euler2quat
 from mj_envs.utils.obj_vec_dict import ObsVecDict
@@ -43,6 +43,7 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.obs_dict = {}
         self.rwd_dict = {}
         mujoco_env.MujocoEnv.__init__(self, sim=sim, frame_skip=5)
+        self.action_space = spaces.Box(-1.0*np.ones_like(self.action_space.low), np.ones_like(self.action_space.high), dtype=np.float32)
 
 
     # step the simulation forward

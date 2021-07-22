@@ -1,5 +1,5 @@
 import numpy as np
-from gym import utils
+from gym import utils, spaces
 from mjrl.envs import mujoco_env
 from mujoco_py import MjViewer
 import os
@@ -43,6 +43,7 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.obs_dict = {}
         self.rwd_dict = {}
         mujoco_env.MujocoEnv.__init__(self, sim=sim, frame_skip=5)
+        self.action_space = spaces.Box(-1.0*np.ones_like(self.action_space.low), np.ones_like(self.action_space.high), dtype=np.float32)
 
     # step the simulation forward
     def step(self, a):
