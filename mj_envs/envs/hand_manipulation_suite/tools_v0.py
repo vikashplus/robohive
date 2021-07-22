@@ -1,5 +1,5 @@
 import numpy as np
-from gym import utils
+from gym import utils, spaces
 from mjrl.envs import mujoco_env
 from mujoco_py import MjViewer
 from mj_envs.utils.quatmath import *
@@ -8,7 +8,7 @@ from mj_envs.utils.obj_vec_dict import ObsVecDict
 import collections
 
 ADD_BONUS_REWARDS = True
-OBS_KEYS = ['hand_jnt', 'obj_vel', 'palm_pos', 'obj_pos', 'obj_rot', ] # DAPG
+OBS_KEYS = ['hand_jnt', 'obj_vel', 'palm_pos', 'obj_pos', 'obj_rot'] # DAPG
 RWD_KEYS = ['palm_obj', 'smooth', 'bonus'] # DAPG
 
 #OBS_KEYS = ['hand_jnt', 'obj_vel', 'palm_pos', 'obj_pos', 'obj_rot', 'target_pos', 'nail_impact', 'tool_pos', 'goal_pos', 'hand_vel']
@@ -42,6 +42,7 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.obs_dict = {}
         self.rwd_dict = {}
         mujoco_env.MujocoEnv.__init__(self, sim=sim, frame_skip=5)
+        self.action_space = spaces.Box(-1.0*np.ones_like(self.action_space.low), np.ones_like(self.action_space.high), dtype=np.float32)
 
     # step the simulation forward
     def step(self, a):
@@ -76,12 +77,13 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
 
         rwd_dict = collections.OrderedDict((
             # Optional Keys
+            # ('finger_dist', -0.1*finger_dist),
             ('palm_obj', - 0.1 * palm_obj_dist),
             ('tool_target', -1.0 * tool_target_dist),
             # ('target_goal', -10.0 * target_goal_dist),
             ('smooth', -1e-2 * (hand_vel_mag + obj_vel_mag)),
             # ('bonus', 2.0*lifted + 25.0*(target_goal_dist<0.020) + 75.0*(target_goal_dist<0.010)),
-            ('bonus', 0.5*lifted),
+            ('bonus', 50*lifted),
             # Must keys
             # ('sparse',  -1.0*target_goal_dist),
             ('sparse',  1.0*lifted),
@@ -156,7 +158,7 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
 
     def reset_model(self):
         self.sim.reset()
-        # self.model.body_pos[self.target_bid,2] = self.np_random.uniform(low=0.1, high=0.25)
+        self.model.site_pos[self.target_obj_sid,2] = self.np_random.uniform(low=0.1, high=0.25)
         self.sim.forward()
         return self.get_obs()
 
