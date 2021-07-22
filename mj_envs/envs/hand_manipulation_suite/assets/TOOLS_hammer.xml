@@ -65,9 +65,10 @@
 
 
         <!-- ======= DESTINATION ======= -->
-        <site name="S_target" pos="0 -0.2 0.3" type="sphere" size="0.01" rgba="0 1 0 1"/>
+        <site name="S_target" pos="0.05 0.0 0.4" type="sphere" size="0.01" rgba="0 1 0 1"/>
 
         <!-- ======= Hammer ======= -->
+        <!-- <body name="object" pos="0 -0.2 0.035" quat="0.5 0.5 -0.5 -0.5"> -->
         <body name="object" pos="0 -0.2 0.035" quat="0.707388 0.706825 0 0">
              <include file="hammer.xml"/>
              <site name="tool" pos="-0.2 0 -0.04" size="0.01" group="4" rgba="0.4 0.8 0.4 1" />
