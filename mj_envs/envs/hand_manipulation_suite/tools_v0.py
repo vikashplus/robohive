@@ -17,10 +17,14 @@ RWD_MODE = 'dense' # dense/ sparse
 
 class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
     def __init__(self, *args, **kwargs):
-
         # get sim
         curr_dir = os.path.dirname(os.path.abspath(__file__))
-        sim = mujoco_env.get_sim(model_path=curr_dir+'/assets/TOOLS_hammer.xml')
+        self.sims = []
+        self.sims_idx = []
+        for i, path in enumerate(kwargs['model_paths']) : 
+            self.sims.append(mujoco_env.get_sim(model_path=path))
+            self.sims_idx.append(i)
+        sim = self.sims[0]
         # ids
         self.target_obj_sid = sim.model.site_name2id('S_target')
         self.S_grasp_sid = sim.model.site_name2id('S_grasp')
@@ -28,13 +32,15 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.tool_sid = sim.model.site_name2id('tool')
 
         # change actuator sensitivity
-        sim.model.actuator_gainprm[sim.model.actuator_name2id('A_WRJ1'):sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([10, 0, 0])
-        sim.model.actuator_gainprm[sim.model.actuator_name2id('A_FFJ3'):sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([1, 0, 0])
-        sim.model.actuator_biasprm[sim.model.actuator_name2id('A_WRJ1'):sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([0, -10, 0])
-        sim.model.actuator_biasprm[sim.model.actuator_name2id('A_FFJ3'):sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([0, -1, 0])
-        # scales
-        self.act_mid = np.mean(sim.model.actuator_ctrlrange, axis=1)
-        self.act_rng = 0.5*(sim.model.actuator_ctrlrange[:,1]-sim.model.actuator_ctrlrange[:,0])
+        for sim in self.sims : 
+            sim.model.actuator_gainprm[sim.model.actuator_name2id('A_WRJ1'):sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([10, 0, 0])
+            sim.model.actuator_gainprm[sim.model.actuator_name2id('A_FFJ3'):sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([1, 0, 0])
+            sim.model.actuator_biasprm[sim.model.actuator_name2id('A_WRJ1'):sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([0, -10, 0])
+            sim.model.actuator_biasprm[sim.model.actuator_name2id('A_FFJ3'):sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([0, -1, 0])
+            # scales
+            self.act_mid = np.mean(sim.model.actuator_ctrlrange, axis=1)
+            self.act_rng = 0.5*(sim.model.actuator_ctrlrange[:,1]-sim.model.actuator_ctrlrange[:,0])
+        sim = self.sims[0]
 
         # get env
         utils.EzPickle.__init__(self)
@@ -157,6 +163,12 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         return paths
 
     def reset_model(self):
+        self.np_random.choice(self.sims_idx) # To avoid some weird numpy behavior
+        idx = self.np_random.choice(self.sims_idx)
+        self.sim = self.sims[idx]
+        self.data = self.sim.data
+        self.model = self.sim.model
+
         self.sim.reset()
         self.model.site_pos[self.target_obj_sid,2] = self.np_random.uniform(low=0.1, high=0.25)
         self.sim.forward()
