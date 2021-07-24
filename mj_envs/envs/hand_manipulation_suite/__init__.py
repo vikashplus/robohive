@@ -51,7 +51,7 @@ env_kwargs = {
 register(
     id='tools-v0',
     entry_point='mj_envs.envs.hand_manipulation_suite:ToolsEnvV0',
-    max_episode_steps=100,
+    max_episode_steps=50,
     kwargs=env_kwargs,
 )
 from mj_envs.envs.hand_manipulation_suite.tools_v0 import ToolsEnvV0
@@ -63,7 +63,7 @@ env_kwargs = {
 register(
     id='tools-test-v0',
     entry_point='mj_envs.envs.hand_manipulation_suite:ToolsEnvV0',
-    max_episode_steps=100,
+    max_episode_steps=50,
     kwargs=env_kwargs,
 )
 from mj_envs.envs.hand_manipulation_suite.tools_v0 import ToolsEnvV0
