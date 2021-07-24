@@ -8,8 +8,8 @@ from mj_envs.utils.obj_vec_dict import ObsVecDict
 import collections
 
 ADD_BONUS_REWARDS = True
-OBS_KEYS = ['hand_jnt', 'obj_vel', 'palm_pos', 'obj_pos', 'obj_rot'] # DAPG
-RWD_KEYS = ['palm_obj', 'smooth', 'bonus'] # DAPG
+OBS_KEYS = ['hand_jnt', 'obj_vel', 'palm_pos', 'obj_pos', 'obj_rot', 'target_pos'] # DAPG
+RWD_KEYS = ['palm_obj', 'smooth', 'bonus', 'tool_target'] # DAPG
 
 #OBS_KEYS = ['hand_jnt', 'obj_vel', 'palm_pos', 'obj_pos', 'obj_rot', 'target_pos', 'nail_impact', 'tool_pos', 'goal_pos', 'hand_vel']
 
@@ -80,21 +80,22 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         obj_vel_mag = np.linalg.norm(obs_dict['obj_vel'], axis=-1)
         # lifting tool
         lifted = (obs_dict['obj_pos'][:,:,2] > 0.04) * (obs_dict['tool_pos'][:,:,2] > 0.04)
+        solved = tool_target_dist < 0.05
 
         rwd_dict = collections.OrderedDict((
             # Optional Keys
             # ('finger_dist', -0.1*finger_dist),
             ('palm_obj', - 0.1 * palm_obj_dist),
-            ('tool_target', -1.0 * tool_target_dist),
+            ('tool_target', -5.0 * tool_target_dist),
             # ('target_goal', -10.0 * target_goal_dist),
             ('smooth', -1e-2 * (hand_vel_mag + obj_vel_mag)),
             # ('bonus', 2.0*lifted + 25.0*(target_goal_dist<0.020) + 75.0*(target_goal_dist<0.010)),
-            ('bonus', 50*lifted),
+            ('bonus', 5*lifted),
             # Must keys
             # ('sparse',  -1.0*target_goal_dist),
             ('sparse',  1.0*lifted),
             # ('solved',  target_goal_dist<0.010),
-            ('solved',  lifted),
+            ('solved',  solved),
             ('done',    palm_obj_dist > 1.0),
         ))
         rwd_dict['dense'] = np.sum([rwd_dict[key] for key in RWD_KEYS], axis=0)
