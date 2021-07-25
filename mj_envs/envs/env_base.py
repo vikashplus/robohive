@@ -1,15 +1,13 @@
-import os
-from re import A
-from xml.dom import InvalidStateErr
 import gym
 import numpy as np
-import six
+import os
 import time as timer
 
 from mj_envs.utils.obj_vec_dict import ObsVecDict
 from mj_envs.robot.robot import Robot
 from os import path
-
+from re import A
+from xml.dom import InvalidStateErr
 
 # TODO
 # remove rwd_mode
