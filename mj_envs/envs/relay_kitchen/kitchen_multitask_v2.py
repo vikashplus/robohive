@@ -23,7 +23,7 @@ class KitchenBase(env_base.MujocoEnv):
 
     def __init__(self, model_path, config_path,
                     robot_jnt_names, obj_jnt_names, obj_interaction_site,
-                    goal, interact_site,
+                    goal, interact_site, obj_init = None,
                     obs_keys_wt = DEFAULT_OBS_KEYS_AND_WEIGHTS,
                     rwd_keys_wt = DEFAULT_RWD_KEYS_AND_WEIGHTS,
                     **kwargs):
@@ -91,7 +91,10 @@ class KitchenBase(env_base.MujocoEnv):
                                 obs_range = (-8, 8),
                                 **kwargs)
 
-        self.init_qpos = self.sim.model.key_qpos[0].copy()
+        self.init_qpos[:] = self.sim.model.key_qpos[0].copy()
+        if obj_init:
+            self.set_obj_init(obj_init)
+
 
 
     def get_obs_dict(self, sim):
@@ -134,6 +137,20 @@ class KitchenBase(env_base.MujocoEnv):
             # self.dict_plot.append(rwd_dict)
 
         return rwd_dict
+
+
+    def set_obj_init(self, obj_init):
+        # resolve goals
+        if type(obj_init) is dict:
+            # overwrite explicit requests
+            for obj_name, obj_val in obj_init.items():
+                self.init_qpos[self.obj[obj_name]['dof_adr']]  = obj_val
+        elif type(obj_init) is np.ndarray:
+            assert len(obj_init) == len(self.obj['dof_adrs']), "Check size of provided onj_init"
+            self.init_qpos[self.obj['dof_adrs']] = obj_init.copy()
+        else:
+            raise TypeError("obj_init must be either a dict<obj_name, obb_init>, or a vector of all obj_init")
+
 
 
     def set_goal(self, goal=None, interact_site=None):
