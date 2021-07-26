@@ -32,7 +32,7 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.tool_sid = sim.model.site_name2id('tool')
 
         # change actuator sensitivity
-        for sim in self.sims : 
+        for sim in self.sims :
             sim.model.actuator_gainprm[sim.model.actuator_name2id('A_WRJ1'):sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([10, 0, 0])
             sim.model.actuator_gainprm[sim.model.actuator_name2id('A_FFJ3'):sim.model.actuator_name2id('A_THJ0')+1,:3] = np.array([1, 0, 0])
             sim.model.actuator_biasprm[sim.model.actuator_name2id('A_WRJ1'):sim.model.actuator_name2id('A_WRJ0')+1,:3] = np.array([0, -10, 0])
@@ -172,6 +172,7 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
 
         self.sim.reset()
         self.model.site_pos[self.target_obj_sid,2] = self.np_random.uniform(low=0.1, high=0.25)
+        self.data.qpos[-7:-6] = self.np_random.uniform(low=-0.1, high=0.1) # x,y,z,4 quat
         self.sim.forward()
         return self.get_obs()
 
