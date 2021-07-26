@@ -56,9 +56,12 @@ register(
 )
 from mj_envs.envs.hand_manipulation_suite.tools_v0 import ToolsEnvV0
 
+# env_kwargs = {
+            # 'model_paths' : [curr_dir + '/assets/TOOLS_hammer.xml', curr_dir + '/assets/TOOLS_ratchet.xml', curr_dir + '/assets/TOOLS_knife.xml', 
+            # curr_dir + '/assets/TOOLS_screwDriver.xml', curr_dir + '/assets/TOOLS_turner.xml', curr_dir + '/assets/TOOLS_spatula.xml'],
+            # }
 env_kwargs = {
-            'model_paths' : [curr_dir + '/assets/TOOLS_hammer.xml', curr_dir + '/assets/TOOLS_ratchet.xml', curr_dir + '/assets/TOOLS_knife.xml', 
-            curr_dir + '/assets/TOOLS_screwDriver.xml', curr_dir + '/assets/TOOLS_turner.xml', curr_dir + '/assets/TOOLS_spatula.xml'],
+            'model_paths' : [curr_dir + '/assets/TOOLS_hammer.xml'],
             }
 register(
     id='tools-test-v0',

@@ -73,6 +73,7 @@
 
         <!-- ======= SPATULA ======= -->
         <body name="object" pos="0 -0.2 0.035" quat="0.707388 0.706825 0 0">
+            <inertial pos="-0.11025 0 0" quat="0.50001 0.49999 0.49999 0.50001" mass="0.253442" diaginertia="0.00349644 0.00345287 8.947e-05"/>
              <include file="spatula.xml"/>
              <site name="tool" pos="-0.2 0 -0.04" size="0.01" group="4" rgba="0.4 0.8 0.4 1" />
              <freejoint/>
