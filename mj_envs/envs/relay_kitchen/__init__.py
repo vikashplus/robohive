@@ -179,8 +179,8 @@ register(
 
 # Kitchen
 register(
-    id="kitchen_close-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFranka",
+    id='kitchen_close-v3',
+    entry_point=DEMO_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -216,8 +216,8 @@ register(
     },
 )
 register(
-    id="kitchen_micro_close-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFranka",
+    id='kitchen_micro_close-v3',
+    entry_point=DEMO_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -244,8 +244,8 @@ register(
     },
 )
 register(
-    id="kitchen_rdoor_close-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFranka",
+    id='kitchen_rdoor_close-v3',
+    entry_point=DEMO_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -272,8 +272,8 @@ register(
     },
 )
 register(
-    id="kitchen_ldoor_close-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFranka",
+    id='kitchen_ldoor_close-v3',
+    entry_point=DEMO_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -300,8 +300,8 @@ register(
     },
 )
 register(
-    id="kitchen_sdoor_close-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFranka",
+    id='kitchen_sdoor_close-v3',
+    entry_point=DEMO_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -328,8 +328,8 @@ register(
     },
 )
 register(
-    id="kitchen_light_off-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFranka",
+    id='kitchen_light_off-v3',
+    entry_point=DEMO_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -343,8 +343,8 @@ register(
 
 # Knob4
 register(
-    id="kitchen_knob4_on-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFrankaDemo",
+    id='kitchen_knob4_on-v3',
+    entry_point=DEMO_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -356,8 +356,8 @@ register(
     },
 )
 register(
-    id="kitchen_knob4_off-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFranka",
+    id='kitchen_knob4_off-v3',
+    entry_point=DEMO_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -384,8 +384,8 @@ register(
     },
 )
 register(
-    id="kitchen_knob3_off-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFranka",
+    id='kitchen_knob3_off-v3',
+    entry_point=DEMO_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -412,8 +412,8 @@ register(
     },
 )
 register(
-    id="kitchen_knob2_off-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFranka",
+    id='kitchen_knob2_off-v3',
+    entry_point=DEMO_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -440,8 +440,8 @@ register(
     },
 )
 register(
-    id="kitchen_knob1_off-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFranka",
+    id='kitchen_knob1_off-v3',
+    entry_point=DEMO_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
