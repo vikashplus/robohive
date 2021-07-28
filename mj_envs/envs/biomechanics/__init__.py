@@ -1,10 +1,12 @@
 from gym.envs.registration import register
 import os
 import numpy as np
+
+
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 
-
 print("RS:> Registering Biomechanics Envs")
+
 # Finger-tip reaching ==============================
 register(id='FingerReachMotorFixed-v0',
             entry_point='mj_envs.envs.biomechanics.reach_v0:ReachEnvV0',
@@ -175,9 +177,9 @@ register(id='HandPenTwirlFixed-v0',
             entry_point='mj_envs.envs.biomechanics.pen_v0:PenTwirlFixedEnvV0',
             max_episode_steps=50,
             kwargs={
-                'frame_skip': 5,
                 'model_path': curr_dir+'/assets/hand/2nd_hand_pen.xml',
-                'normalize_act': True
+                'normalize_act': True,
+                'frame_skip': 5,
             }
     )
 
@@ -185,9 +187,9 @@ register(id='HandPenTwirlRandom-v0',
             entry_point='mj_envs.envs.biomechanics.pen_v0:PenTwirlRandomEnvV0',
             max_episode_steps=50,
             kwargs={
-                'frame_skip': 5,
                 'model_path': curr_dir+'/assets/hand/2nd_hand_pen.xml',
-                'normalize_act': True
+                'normalize_act': True,
+                'frame_skip': 5,
             }
     )
 
@@ -198,7 +200,7 @@ register(id='BaodingFixed-v1',
             kwargs={
                 'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
                 'normalize_act': True,
-                'reward_option':0
+                'reward_option': 0,
             }
     )
 register(id='BaodingFixed4th-v1',
@@ -207,7 +209,7 @@ register(id='BaodingFixed4th-v1',
             kwargs={
                 'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
                 'normalize_act': True,
-                'reward_option':1
+                'reward_option': 1,
             }
     )
 register(id='BaodingFixed8th-v1',
@@ -216,6 +218,6 @@ register(id='BaodingFixed8th-v1',
             kwargs={
                 'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
                 'normalize_act': True,
-                'reward_option':2
+                'reward_option': 2,
             }
     )

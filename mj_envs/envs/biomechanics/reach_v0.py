@@ -1,6 +1,10 @@
-from mj_envs.envs.biomechanics.base_v0 import BaseV0
-import numpy as np
 import collections
+import gym
+import numpy as np
+
+from mj_envs.envs.biomechanics.base_v0 import BaseV0
+
+
 
 class ReachEnvV0(BaseV0):
 
@@ -12,12 +16,51 @@ class ReachEnvV0(BaseV0):
     }
 
     def __init__(self,
+                model_path:str,
+                target_reach_range:dict,
                 obs_keys:list = DEFAULT_OBS_KEYS,
-                rwd_keys_wt:dict = DEFAULT_RWD_KEYS_AND_WEIGHTS,
-                target_reach_range:dict = {'IFtip': ((0.2, 0.05, 0.20), (0.2, 0.05, 0.20)),},
-                **kwargs):
+                weighted_reward_keys:dict = DEFAULT_RWD_KEYS_AND_WEIGHTS,
+                **kwargs,
+            ):
+
+        # EzPickle.__init__(**locals()) is capturing the input dictionary of the init method of this class.
+        # In order to successfully capture all arguments we need to call gym.utils.EzPickle.__init__(**locals())
+        # at the leaf level, when we do inheritance like we do here.
+        # kwargs is needed at the top level to account for injection of __class__ keyword.
+        # Also see: https://github.com/openai/gym/pull/1497
+        gym.utils.EzPickle.__init__(**locals())
+
+        # This two step construction is required for pickling to work correctly. All arguments to all __init__ 
+        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we 
+        # first construct the inheritance chain, which is just __init__ calls all the way down, with env_base
+        # creating the sim / sim_obsd instances. Next we run through "setup"  which relies on sim / sim_obsd
+        # created in __init__ to complete the setup.
+        super().__init__(model_path=model_path)
+        
+        self._setup(target_reach_range=target_reach_range, 
+                obs_keys=obs_keys, 
+                weighted_reward_keys=weighted_reward_keys)
+
+
+    def _setup(self,
+            target_reach_range:dict,
+            obs_keys:list,
+            weighted_reward_keys:dict,
+            frame_skip = 10,
+            seed = None,
+            is_hardware = False,
+            config_path = None,
+        ):
+
         self.target_reach_range = target_reach_range
-        super().__init__(obs_keys=obs_keys, rwd_keys_wt=rwd_keys_wt, sites=self.target_reach_range.keys(), **kwargs)
+
+        super()._setup(obs_keys=obs_keys, 
+                weighted_reward_keys=weighted_reward_keys, 
+                sites=self.target_reach_range.keys(), 
+                frame_skip=frame_skip, 
+                seed=seed, 
+                is_hardware=is_hardware, 
+                config_path=config_path)
 
     def get_obs_vec(self):
         self.obs_dict['t'] = np.array([self.sim.data.time])
