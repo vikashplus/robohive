@@ -139,6 +139,8 @@ class KitchenBase(env_base.MujocoEnv):
         return rwd_dict
 
 
+    # Set object initializations 
+    # Note: this doesn't directly initializes the objects. One has to either call reset or explicitely use init_qpos manually set the sim.
     def set_obj_init(self, obj_init):
         # resolve goals
         if type(obj_init) is dict:
