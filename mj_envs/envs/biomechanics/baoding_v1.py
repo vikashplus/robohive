@@ -37,6 +37,7 @@ class BaodingFixedEnvV1(BaseV0):
                 model_path:str,
                 normalize_act:bool,
                 reward_option:int,
+                seed = None,
                 obs_keys:list = DEFAULT_OBS_KEYS,
                 weighted_reward_keys:list = DEFAULT_RWD_KEYS_AND_WEIGHTS,
                 **kwargs):
@@ -59,7 +60,8 @@ class BaodingFixedEnvV1(BaseV0):
                     weighted_reward_keys=weighted_reward_keys, 
                     normalize_act=normalize_act, 
                     reward_option=reward_option, 
-                    rwd_viz=False)
+                    rwd_viz=False,
+                    seed=seed)
 
 
     def _setup(self,
@@ -68,6 +70,7 @@ class BaodingFixedEnvV1(BaseV0):
             normalize_act,
             reward_option,
             rwd_viz,
+            seed,
         ):
 
         # user parameters
@@ -98,7 +101,8 @@ class BaodingFixedEnvV1(BaseV0):
         super()._setup(obs_keys=obs_keys, 
                     weighted_reward_keys=weighted_reward_keys, 
                     normalize_act=normalize_act, 
-                    rwd_viz=rwd_viz)
+                    rwd_viz=rwd_viz,
+                    seed=seed)
 
 
     def step(self, a):
