@@ -1,4 +1,8 @@
 import unittest
+<<<<<<< HEAD
+=======
+
+>>>>>>> biomechanics
 import gym
 import mj_envs
 import numpy as np
