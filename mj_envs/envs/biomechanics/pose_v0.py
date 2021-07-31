@@ -16,6 +16,7 @@ class PoseEnvV0(BaseV0):
 
     def __init__(self,
                 model_path:str,
+                seed = None, 
                 viz_site_targets:tuple = None,  # site to use for targets visualization []
                 target_jnt_range:dict = None,   # joint ranges as tuples {name:(min, max)}_nq
                 target_jnt_value:list = None,   # desired joint vector [des_qpos]_nq
@@ -46,6 +47,7 @@ class PoseEnvV0(BaseV0):
                 target_type=target_type,
                 obs_keys=obs_keys,
                 weighted_reward_keys=weighted_reward_keys,
+                seed=seed,
             )
 
     def _setup(self,
@@ -126,9 +128,9 @@ class PoseEnvV0(BaseV0):
 
     # generate a valid target pose
     def get_target_pose(self):
-        if self.target_type is "fixed":
+        if self.target_type == "fixed":
             return self.target_jnt_value
-        elif self.target_type is "generate":
+        elif self.target_type == "generate":
             return self.np_random.uniform(high=self.target_jnt_range[:,0], low=self.target_jnt_range[:,1])
         else:
             raise TypeError("Unknown Target type: {}".format(self.target_type))
@@ -155,10 +157,10 @@ class PoseEnvV0(BaseV0):
     def reset(self):
 
         # update target
-        if self.target_type is "generate":
+        if self.target_type == "generate":
             # use target_jnt_range to generate targets
             self.update_target(restore_sim=True)
-        elif self.target_type is "switch":
+        elif self.target_type == "switch":
             # switch between given target choices
             # TODO: Remove hard-coded numbers
             if self.target_jnt_value[0] != -0.145125:
@@ -173,16 +175,16 @@ class PoseEnvV0(BaseV0):
         elif self.target_type is "fixed":
             self.update_target(restore_sim=True)
         else:
-            print("Target Type not found")
+            print("{} Target Type not found ".format(self.target_type))
 
         # update init state
-        if self.reset_type is "none" or self.reset_type is None:
+        if self.reset_type is None or self.reset_type == "none":
             # no reset; use last state
             obs = self.get_obs()
-        elif self.reset_type is "init":
+        elif self.reset_type == "init":
             # reset to init state
             obs = super().reset()
-        elif self.reset_type is "random":
+        elif self.reset_type == "random":
             # reset to random state
             jnt_init = self.np_random.uniform(high=self.sim.model.jnt_range[:,1], low=self.sim.model.jnt_range[:,0])
             obs = super().reset(reset_qpos=jnt_init)
