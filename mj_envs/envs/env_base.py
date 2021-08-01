@@ -65,6 +65,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             is_hardware = False,
             config_path = None,
             rwd_viz = False,
+            robot_name:str = 'default_robot', 
         ):
 
         if self.sim is None or self.sim_obsd is None:
@@ -77,6 +78,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         # resolve robot config
         self.robot = Robot(mj_sim=self.sim, 
+                        robot_name=robot_name,
                         random_generator=self.np_random, 
                         act_mode=act_mode,
                         is_hardware=is_hardware,
