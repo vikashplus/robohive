@@ -127,7 +127,7 @@ register(id='HandPoseAMuscleFixed-v0',
                 'viz_site_targets': ('THtip','IFtip','MFtip','RFtip','LFtip'),
                 'target_jnt_value': np.array([0, 0, 0, -0.0904, 0.0824475, -0.681555, -0.514888, 0, -0.013964, -0.0458132, 0, 0.67553, -0.020944, 0.76979, 0.65982, 0, 0, 0, 0, 0.479155, -0.099484, 0.95831, 0]),
                 'normalize_act': False,
-                'reset_type': "none",        # none, init, random
+                'reset_type': "init",        # none, init, random
                 'target_type': 'fixed',      # switch / generate/ fixed
             }
     )
