@@ -17,6 +17,7 @@ class ObjHoldFixedEnvV0(BaseV0):
     def __init__(self,
                 model_path:str,
                 normalize_act:bool,
+                seed = None,
                 obs_keys:list = DEFAULT_OBS_KEYS,
                 weighted_reward_keys:dict = DEFAULT_RWD_KEYS_AND_WEIGHTS,
                 **kwargs):
@@ -38,13 +39,15 @@ class ObjHoldFixedEnvV0(BaseV0):
         self._setup(obs_keys=obs_keys, 
                     weighted_reward_keys=weighted_reward_keys, 
                     normalize_act=normalize_act, 
-                    rwd_viz=False)
+                    rwd_viz=False,
+                    seed=seed)
 
     def _setup(self,
             obs_keys:list,
             weighted_reward_keys:dict,
             normalize_act,
             rwd_viz,
+            seed,
         ):
 
         self.object_sid = self.sim.model.site_name2id("object")
@@ -53,7 +56,8 @@ class ObjHoldFixedEnvV0(BaseV0):
         super()._setup(obs_keys=obs_keys, 
                     weighted_reward_keys=weighted_reward_keys, 
                     normalize_act=normalize_act, 
-                    rwd_viz=rwd_viz)
+                    rwd_viz=rwd_viz,
+                    seed=seed)
 
 
     def get_obs_vec(self):

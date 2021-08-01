@@ -23,6 +23,7 @@ class PenTwirlFixedEnvV0(BaseV0):
                 model_path:str,
                 normalize_act:bool,
                 frame_skip:int,
+                seed = None,
                 obs_keys:list = DEFAULT_OBS_KEYS,
                 weighted_reward_keys:list = DEFAULT_RWD_KEYS_AND_WEIGHTS,
                 **kwargs):
@@ -45,7 +46,8 @@ class PenTwirlFixedEnvV0(BaseV0):
                     weighted_reward_keys=weighted_reward_keys, 
                     normalize_act=normalize_act, 
                     frame_skip=frame_skip, 
-                    rwd_viz=False)
+                    rwd_viz=False,
+                    seed=seed)
 
     def _setup(self,
             obs_keys:list,
@@ -53,6 +55,7 @@ class PenTwirlFixedEnvV0(BaseV0):
             normalize_act,
             frame_skip,
             rwd_viz,
+            seed,
         ):
 
         self.target_obj_bid = self.sim.model.body_name2id("target")
@@ -70,7 +73,8 @@ class PenTwirlFixedEnvV0(BaseV0):
             weighted_reward_keys=weighted_reward_keys, 
             normalize_act=normalize_act, 
             rwd_viz=rwd_viz,
-            frame_skip=frame_skip)
+            frame_skip=frame_skip,
+            seed=seed)
 
     def get_obs_vec(self):
         # qpos for hand, xpos for obj, xpos for target

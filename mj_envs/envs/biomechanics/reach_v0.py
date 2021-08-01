@@ -18,6 +18,7 @@ class ReachEnvV0(BaseV0):
     def __init__(self,
                 model_path:str,
                 target_reach_range:dict,
+                seed = None,
                 obs_keys:list = DEFAULT_OBS_KEYS,
                 weighted_reward_keys:dict = DEFAULT_RWD_KEYS_AND_WEIGHTS,
                 **kwargs,
@@ -39,7 +40,8 @@ class ReachEnvV0(BaseV0):
         
         self._setup(target_reach_range=target_reach_range, 
                 obs_keys=obs_keys, 
-                weighted_reward_keys=weighted_reward_keys)
+                weighted_reward_keys=weighted_reward_keys,
+                seed=seed)
 
 
     def _setup(self,
