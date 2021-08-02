@@ -2,7 +2,7 @@ import time
 from termcolor import cprint
 import numpy as np
 from collections import deque
-from mujoco_py import load_model_from_path, MjSim, functions
+from mujoco_py import load_model_from_path, MjSim, functions, ignore_mujoco_warnings
 import os
 from transforms3d.taitbryan import quat2euler
 np.set_printoptions(precision=4)
@@ -42,7 +42,7 @@ class Robot():
                 sensor_cache_maxsize = 5,   # cache size for sensors
                 noise_scale = 0,            # scale for sensor noise
                 random_generator = None,    # random number generator
-                *args, **kwargs):
+            ):
 
         self.name = robot_name+'(sim)' if is_hardware is None else robot_name+'(hdr)'
         self._act_mode = act_mode
@@ -273,6 +273,11 @@ class Robot():
         """
         Read the model xml and robot configs from provided files. Compile config with the model
         """
+        if config_path is None:
+            robot_config = {}
+            robot_config['default_robot'] = {'sensor': ['qpos', 'qvel', 'act'], 'actuator': 'actuator'}
+            return robot_config
+
         prompt("Reading robot-configurations from %s" % config_path)
         with open(config_path, 'r') as f:
             robot_config = eval(f.read())
@@ -345,22 +350,32 @@ class Robot():
         else:
             current_sen['time']= self.sim.data.time # data time stamp
             for name, device in self.robot_config.items():
-                sen = []
-                for sensor in device['sensor']:
-                    s = self.sim.data.sensordata[sensor['sim_id']]
-                    # ensure range
-                    s = np.clip(s, sensor['range'][0], sensor['range'][1])
-                    # add noise
-                    if noise_scale!=0:
-                        s += noise_scale*sensor['noise']*self.np_random.uniform(low=-1.0, high=1.0)
-                    sen.append(s)
+                if name == "default_robot":
+                    sen = {}
+                    sen['qpos'] = self.sim.data.qpos.copy()
+                    sen['qvel'] = self.sim.data.qvel.copy()
+                    sen['act'] = self.sim.data.act.copy() if self.sim.model.na >0 else None
+                    current_sen[name] = sen
+                else:
+                    sen = []
+                    for sensor in device['sensor']:
+                        s = self.sim.data.sensordata[sensor['sim_id']]
+                        # ensure range
+                        s = np.clip(s, sensor['range'][0], sensor['range'][1])
+                        # add noise
+                        if noise_scale!=0:
+                            s += noise_scale*sensor['noise']*self.np_random.uniform(low=-1.0, high=1.0)
+                        sen.append(s)
+                    current_sen[name] = np.array(sen)
+
                 # create sensor reading
-                current_sen[name] = np.array(sen)
                 device['sensor_data'] = current_sen[name]
                 device['sensor_time'] = current_sen['time']
 
             # VIK???: Propagating sensors back to sim can create trouble with contact stability in presence of noise
             # self.sensor2sim(current_sen, self.sim)
+
+        # import ipdb; ipdb.set_trace()
 
         # cache sensors
         self._sensor_cache.append(current_sen)
@@ -385,17 +400,38 @@ class Robot():
 
         sim.data.time = sensor['time']
         for name, device in self.robot_config.items():
-            for s_id, s_val in enumerate(device['sensor']):
-                # prompt(getattr(sim.data, s_val["data_type"])[s_val["data_id"]], sensor[name][s_id])
-                data = getattr(sim.data, s_val["data_type"])
-                data[s_val["data_id"]] = sensor[name][s_id]
+            if name == "default_robot":
+                sim.data.qpos[:] = device['sensor_data']['qpos']
+                sim.data.qvel[:] = device['sensor_data']['qvel']
+                if self.sim.model.na >0:
+                    sim.data.act[:] = device['sensor_data']['act']
+            else:
+                for s_id, s_val in enumerate(device['sensor']):
+                    # prompt(getattr(sim.data, s_val["data_type"])[s_val["data_id"]], sensor[name][s_id])
+                    data = getattr(sim.data, s_val["data_type"])
+                    data[s_val["data_id"]] = sensor[name][s_id]
         sim.forward()
 
 
     # synchronize states between two sims
-    def sync_sim_state(self, source_sim, destination_sim):
-        destination_sim.data.qpos[:] = source_sim.data.qpos[:].copy()
-        destination_sim.data.qvel[:] = source_sim.data.qvel[:].copy()
+    def sync_sims(self, source_sim, destination_sim, model=True, data=True):
+        if data:
+            destination_sim.data.qpos[:] = source_sim.data.qpos[:].copy()
+            destination_sim.data.qvel[:] = source_sim.data.qvel[:].copy()
+            if destination_sim.model.na>0:
+                destination_sim.data.act[:] = source_sim.data.act[:].copy()
+            if destination_sim.model.nmocap>0:
+                destination_sim.data.mocap_pos[:] = source_sim.data.mocap_pos.copy()
+                destination_sim.data.mocap_quat[:] = source_sim.data.mocap_quat.copy()
+
+        if model:
+            if destination_sim.model.nsite>0:
+                destination_sim.model.site_pos[:] = source_sim.model.site_pos[:].copy()
+                destination_sim.model.site_quat[:] = source_sim.model.site_quat[:].copy()
+            if destination_sim.model.nbody>0:
+                destination_sim.model.body_pos[:] = source_sim.model.body_pos[:].copy()
+                destination_sim.model.body_quat[:] = source_sim.model.body_quat[:].copy()
+
         destination_sim.forward()
 
 
@@ -414,43 +450,44 @@ class Robot():
         processed_controls = controls.copy()
         act_id = -1
         for name, device in self.robot_config.items():
-            for actuator in device['actuator']:
-                act_id += 1
-                in_id = actuator['sim_id']
-                # output ordering is as per the config order for hdr
-                out_id = actuator['sim_id'] if out_space == 'sim' else act_id
+            if name != "default_robot":
+                for actuator in device['actuator']:
+                    act_id += 1
+                    in_id = actuator['sim_id']
+                    # output ordering is as per the config order for hdr
+                    out_id = actuator['sim_id'] if out_space == 'sim' else act_id
 
-                control = controls[in_id]
-                if self._act_mode == "pos":
-                    # remap to the limits if normalized
-                    if normalized:
-                        control = (actuator['pos_range'][1]+actuator['pos_range'][0])/2.0 + \
-                                    control*(actuator['pos_range'][1]-actuator['pos_range'][0])/2.0
-                    # enforce velocity limits
-                    # ALERT: This depends on previous sensor. This is not ideal as it breaks MDP addumptions. Be careful
-                    if velocity_limits:
+                    control = controls[in_id]
+                    if self._act_mode == "pos":
+                        # remap to the limits if normalized
+                        if normalized:
+                            control = (actuator['pos_range'][1]+actuator['pos_range'][0])/2.0 + \
+                                        control*(actuator['pos_range'][1]-actuator['pos_range'][0])/2.0
+                        # enforce velocity limits
+                        # ALERT: This depends on previous sensor. This is not ideal as it breaks MDP addumptions. Be careful
+                        if velocity_limits:
+                            last_obs = getattr(self.sim.data, actuator["data_type"])[actuator["data_id"]]
+                            ctrl_desired_vel = (control - last_obs)/step_duration
+                            ctrl_feasible_vel = np.clip(ctrl_desired_vel, actuator['vel_range'][0], actuator['vel_range'][1])
+                            control = last_obs + ctrl_feasible_vel*step_duration
+                    elif self._act_mode == "vel":
+                        # remap to the limits if normalized
+                        if normalized:
+                            control = (actuator['vel_range'][1]+actuator['vel_range'][0])/2.0 + \
+                                        control*(actuator['vel_range'][1]-actuator['vel_range'][0])/2.0
+                        # enforce velocity limits
+                        # ALERT: This depends on previous sensor. This is not ideal as it breaks MDP addumptions. Be careful
                         last_obs = getattr(self.sim.data, actuator["data_type"])[actuator["data_id"]]
-                        ctrl_desired_vel = (control - last_obs)/step_duration
-                        ctrl_feasible_vel = np.clip(ctrl_desired_vel, actuator['vel_range'][0], actuator['vel_range'][1])
-                        control = last_obs + ctrl_feasible_vel*step_duration
-                elif self._act_mode == "vel":
-                    # remap to the limits if normalized
-                    if normalized:
-                        control = (actuator['vel_range'][1]+actuator['vel_range'][0])/2.0 + \
-                                    control*(actuator['vel_range'][1]-actuator['vel_range'][0])/2.0
-                    # enforce velocity limits
-                    # ALERT: This depends on previous sensor. This is not ideal as it breaks MDP addumptions. Be careful
-                    last_obs = getattr(self.sim.data, actuator["data_type"])[actuator["data_id"]]
-                    control = last_obs + control*step_duration
-                else:
-                    raise TypeError("Unknown act mode: {}".format(self._act_mode))
+                        control = last_obs + control*step_duration
+                    else:
+                        raise TypeError("Unknown act mode: {}".format(self._act_mode))
 
-                # enforce position limits
-                if position_limits:
-                    control = np.clip(control, actuator['pos_range'][0], actuator['pos_range'][1])
+                    # enforce position limits
+                    if position_limits:
+                        control = np.clip(control, actuator['pos_range'][0], actuator['pos_range'][1])
 
-                # remap to desired space
-                processed_controls[out_id] = control
+                    # remap to desired space
+                    processed_controls[out_id] = control
 
         return processed_controls
 
@@ -480,11 +517,12 @@ class Robot():
         else:
             n_frames=int(step_duration/self.sim.model.opt.timestep)
             self.sim.data.ctrl[:] = ctrl_feasible
-            for _ in range(n_frames):
-                functions.mj_step2(self.sim.model, self.sim.data)
-                functions.mj_step1(self.sim.model, self.sim.data)
-                if render_cbk:
-                    render_cbk()
+            with ignore_mujoco_warnings():
+                for _ in range(n_frames):
+                    functions.mj_step2(self.sim.model, self.sim.data)
+                    functions.mj_step1(self.sim.model, self.sim.data)
+                    if render_cbk:
+                        render_cbk()
 
         # update viz
         if _ROBOT_VIZ:
@@ -524,17 +562,18 @@ class Robot():
         feasibe_vel = reset_vel.copy()
         ctrl_feasible=[]
         for name, device in self.robot_config.items():
-            if len(device['actuator'])>0: # actuated dofs
-                for actuator in device['actuator']:
-                    if actuator['data_type'] == 'qpos':
-                        feasibe_pos[actuator['data_id']] = np.clip(reset_pos[actuator['data_id']], actuator['pos_range'][0], actuator['pos_range'][1])
-                        ctrl_feasible.append(feasibe_pos[actuator['data_id']])
-            else: # passive dofs
-                for sensor in device['sensor']:
-                    if sensor['data_type'] == 'qpos':
-                        feasibe_pos[sensor['data_id']] = np.clip(reset_pos[sensor['data_id']], sensor['range'][0], sensor['range'][1])
-                    elif sensor['data_type'] == 'qvel':
-                        feasibe_vel[sensor['data_id']] = np.clip(reset_vel[sensor['data_id']], sensor['range'][0], sensor['range'][1])
+            if name != "default_robot":
+                if len(device['actuator'])>0: # actuated dofs
+                    for actuator in device['actuator']:
+                        if actuator['data_type'] == 'qpos':
+                            feasibe_pos[actuator['data_id']] = np.clip(reset_pos[actuator['data_id']], actuator['pos_range'][0], actuator['pos_range'][1])
+                            ctrl_feasible.append(feasibe_pos[actuator['data_id']])
+                else: # passive dofs
+                    for sensor in device['sensor']:
+                        if sensor['data_type'] == 'qpos':
+                            feasibe_pos[sensor['data_id']] = np.clip(reset_pos[sensor['data_id']], sensor['range'][0], sensor['range'][1])
+                        elif sensor['data_type'] == 'qvel':
+                            feasibe_vel[sensor['data_id']] = np.clip(reset_vel[sensor['data_id']], sensor['range'][0], sensor['range'][1])
 
         if self.is_hardware:
             prompt("Rollout took:{}".format(time.time() - self.time_start))
