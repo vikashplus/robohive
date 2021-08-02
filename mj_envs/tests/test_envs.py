@@ -1,10 +1,7 @@
 import unittest
-<<<<<<< HEAD
-=======
 
->>>>>>> biomechanics
 import gym
-import mj_envs
+import mj_envs # noqa
 import numpy as np
 
 

@@ -6,13 +6,7 @@ import time as timer
 from mj_envs.utils.obj_vec_dict import ObsVecDict
 from mj_envs.robot.robot import Robot
 from os import path
-from re import A
 from xml.dom import InvalidStateErr
-
-# TODO
-# remove rwd_mode
-# convet obs_keys to obs_keys_wt
-
 
 # TODO
 # remove rwd_mode

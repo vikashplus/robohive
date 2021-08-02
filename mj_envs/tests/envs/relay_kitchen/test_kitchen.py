@@ -1,5 +1,5 @@
 import gym
-import mj_envs.envs.relay_kitchen
+import mj_envs.envs.relay_kitchen # noqa
 import numpy
 import pickle
 import pytest

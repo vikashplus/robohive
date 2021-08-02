@@ -1,5 +1,5 @@
 import gym
-import mj_envs.envs.arms
+import mj_envs.envs.arms # noqa
 import numpy
 import pickle
 import pytest

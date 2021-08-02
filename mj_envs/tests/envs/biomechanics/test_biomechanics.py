@@ -1,5 +1,5 @@
 import gym
-import mj_envs.envs.biomechanics
+import mj_envs.envs.biomechanics # noqa
 import numpy
 import pickle
 import pytest
