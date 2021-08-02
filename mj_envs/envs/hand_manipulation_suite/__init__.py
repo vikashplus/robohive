@@ -1,5 +1,6 @@
 from gym.envs.registration import register
 
+print("RS:> Registering Hand Envs")
 # Swing the door open
 register(
     id='door-v0',
