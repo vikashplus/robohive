@@ -67,6 +67,7 @@ def local_visualize_policy_offscreen(env, policy, horizon=1000,
 
         
 def main(env_name, policy, mode, seed, episodes):
+    np.random.seed(seed)
     env = gym.make(env_name)
     env.seed(seed)
     if policy is not None:
