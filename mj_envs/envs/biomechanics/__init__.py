@@ -100,7 +100,7 @@ register(id='IFTHPoseMuscleRandom-v0',
             entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
             max_episode_steps=100,
             kwargs={
-                'model_path': curr_dir+'/../../sims/neuromuscular_sim/hand/Index_Thumb_v0.xml',
+                'model_path': curr_dir+'/../../sims/neuromuscular_sim/hand/2nd_hand_Index_Thumb_keyturn.xml',
                 'target_jnt_range': {'MCP2_lateral': (-0.349066, 0.349066),
                                     'MCP2_flex': (-0.174533, 1.5708),
                                     'PIP_flex': (-0.0872665, 1.5708),
@@ -130,12 +130,57 @@ register(id='HandPoseAMuscleFixed-v0',
             }
     )
 
+jnt_namesHand=['pro_sup', 'deviation', 'flexion', 'cmc_abduction', 'cmc_flexion', 'mp_flexion', 'ip_flexion', 'mcp2_flexion', 'mcp2_abduction', 'pm2_flexion', 'md2_flexion', 'mcp3_flexion', 'mcp3_abduction', 'pm3_flexion', 'md3_flexion', 'mcp4_flexion', 'mcp4_abduction', 'pm4_flexion', 'md4_flexion', 'mcp5_flexion', 'mcp5_abduction', 'pm5_flexion', 'md5_flexion']
+
+ASL_qpos={}
+ASL_qpos[0]='0 0 0 0.5624 0.28272 -0.75573 -1.309 1.30045 -0.006982 1.45492 0.998897 1.26466 0 1.40604 0.227795 1.07614 -0.020944 1.46103 0.06284 0.83263 -0.14399 1.571 1.38248'.split(' ')
+ASL_qpos[1]='0 0 0 0.0248 0.04536 -0.7854 -1.309 0.366605 0.010473 0.269258 0.111722 1.48459 0 1.45318 1.44532 1.44532 -0.204204 1.46103 1.44532 1.48459 -0.2618 1.47674 1.48459'.split(' ')
+ASL_qpos[2]='0 0 0 0.0248 0.04536 -0.7854 -1.13447 0.514973 0.010473 0.128305 0.111722 0.510575 0 0.37704 0.117825 1.44532 -0.204204 1.46103 1.44532 1.48459 -0.2618 1.47674 1.48459'.split(' ')
+ASL_qpos[3]='0 0 0 0.3384 0.25305 0.01569 -0.0262045 0.645885 0.010473 0.128305 0.111722 0.510575 0 0.37704 0.117825 1.571 -0.036652 1.52387 1.45318 1.40604 -0.068068 1.39033 1.571'.split(' ')
+ASL_qpos[4]='0 0 0 0.6392 -0.147495 -0.7854 -1.309 0.637158 0.010473 0.128305 0.111722 0.510575 0 0.37704 0.117825 0.306345 -0.010472 0.400605 0.133535 0.21994 -0.068068 0.274925 0.01571'.split(' ')
+ASL_qpos[5]='0 0 0 0.3384 0.25305 0.01569 -0.0262045 0.645885 0.010473 0.128305 0.111722 0.510575 0 0.37704 0.117825 0.306345 -0.010472 0.400605 0.133535 0.21994 -0.068068 0.274925 0.01571'.split(' ')
+ASL_qpos[6]='0 0 0 0.6392 -0.147495 -0.7854 -1.309 0.637158 0.010473 0.128305 0.111722 0.510575 0 0.37704 0.117825 0.306345 -0.010472 0.400605 0.133535 1.1861 -0.2618 1.35891 1.48459'.split(' ')
+ASL_qpos[7]='0 0 0 0.524 0.01569 -0.7854 -1.309 0.645885 -0.006982 0.128305 0.111722 0.510575 0 0.37704 0.117825 1.28036 -0.115192 1.52387 1.45318 0.432025 -0.068068 0.18852 0.149245'.split(' ')
+ASL_qpos[8]='0 0 0 0.428 0.22338 -0.7854 -1.309 0.645885 -0.006982 0.128305 0.194636 1.39033 0 1.08399 0.573415 0.667675 -0.020944 0 0.06284 0.432025 -0.068068 0.18852 0.149245'.split(' ')
+ASL_qpos[9]='0 0 0 0.5624 0.28272 -0.75573 -1.309 1.30045 -0.006982 1.45492 0.998897 0.39275 0 0.18852 0.227795 0.667675 -0.020944 0 0.06284 0.432025 -0.068068 0.18852 0.149245'.split(' ')
+
+for k in ASL_qpos.keys():
+    register(id='HandPose'+str(k)+'MuscleFixed-v0',
+            entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+            max_episode_steps=100,
+            kwargs={
+                'model_path': curr_dir+'/assets/hand/2nd_hand_pose.xml',
+                'viz_site_targets': ('THtip','IFtip','MFtip','RFtip','LFtip'),
+                'target_jnt_value': np.array(ASL_qpos[k],'float'),
+                'normalize_act': False,
+                'reset_type': "none",        # none, init, random
+                'target_type': 'fixed',      # switch / generate/ fixed
+            }
+    )
+
+m = np.array([ASL_qpos[i] for i in range(10)])
+Rpos = {}
+for i_n, n  in enumerate(jnt_namesHand):
+    Rpos[n]=m[:,i_n].astype(float)
+register(id='HandPoseMuscleRandom-v0',
+        entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+        max_episode_steps=100,
+        kwargs={
+            'model_path': curr_dir+'/assets/hand/2nd_hand_pose.xml',
+            'viz_site_targets': ('THtip','IFtip','MFtip','RFtip','LFtip'),
+            'target_jnt_range': Rpos,
+            'normalize_act': False,
+            'reset_type': "none",        # none, init, random
+            'target_type': 'fixed',      # switch / generate/ fixed
+        }
+)
+
 # Hand-Joint key turn ==============================
 register(id='IFTHKeyTurnFixed-v0',
             entry_point='mj_envs.envs.biomechanics.key_turn_v0:KeyTurnFixedEnvV0',
             max_episode_steps=200,
             kwargs={
-                'model_path': curr_dir+'/assets/hand/Index_Thumb_keyturn_v0.xml',
+                'model_path': curr_dir+'/assets/hand/2nd_hand_Index_Thumb_keyturn.xml',
                 'normalize_act': False
             }
     )
@@ -144,7 +189,7 @@ register(id='IFTHKeyTurnRandom-v0',
             entry_point='mj_envs.envs.biomechanics.key_turn_v0:KeyTurnRandomEnvV0',
             max_episode_steps=200,
             kwargs={
-                'model_path': curr_dir+'/assets/hand/Index_Thumb_keyturn_v0.xml',
+                'model_path': curr_dir+'/assets/hand/2nd_hand_Index_Thumb_keyturn.xml',
                 'normalize_act': False
             }
     )
