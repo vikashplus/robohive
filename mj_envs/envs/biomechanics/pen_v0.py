@@ -1,10 +1,12 @@
-from os import sendfile
+import collections
+import numpy as np
+import gym 
+
 from mj_envs.envs.biomechanics.base_v0 import BaseV0
 from mj_envs.envs.env_base import get_sim
 from mj_envs.utils.quatmath import euler2quat
 from mj_envs.utils.vectormath import calculate_cosine
-import numpy as np
-import collections
+from os import sendfile
 
 class PenTwirlFixedEnvV0(BaseV0):
 
@@ -18,12 +20,43 @@ class PenTwirlFixedEnvV0(BaseV0):
     }
 
     def __init__(self,
+                model_path:str,
+                normalize_act:bool,
+                frame_skip:int,
+                seed = None,
                 obs_keys:list = DEFAULT_OBS_KEYS,
-                rwd_keys_wt:list = DEFAULT_RWD_KEYS_AND_WEIGHTS,
+                weighted_reward_keys:list = DEFAULT_RWD_KEYS_AND_WEIGHTS,
                 **kwargs):
 
-        self.sim = get_sim(model_path=kwargs['model_path'])
-        self.sim_obsd = get_sim(model_path=kwargs['model_path'])
+        # EzPickle.__init__(**locals()) is capturing the input dictionary of the init method of this class.
+        # In order to successfully capture all arguments we need to call gym.utils.EzPickle.__init__(**locals())
+        # at the leaf level, when we do inheritance like we do here.
+        # kwargs is needed at the top level to account for injection of __class__ keyword.
+        # Also see: https://github.com/openai/gym/pull/1497
+        gym.utils.EzPickle.__init__(**locals())
+
+        # This two step construction is required for pickling to work correctly. All arguments to all __init__ 
+        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we 
+        # first construct the inheritance chain, which is just __init__ calls all the way down, with env_base
+        # creating the sim / sim_obsd instances. Next we run through "setup"  which relies on sim / sim_obsd
+        # created in __init__ to complete the setup.
+        super().__init__(model_path=model_path)
+
+        self._setup(obs_keys=obs_keys, 
+                    weighted_reward_keys=weighted_reward_keys, 
+                    normalize_act=normalize_act, 
+                    frame_skip=frame_skip, 
+                    rwd_viz=False,
+                    seed=seed)
+
+    def _setup(self,
+            obs_keys:list,
+            weighted_reward_keys:dict,
+            normalize_act,
+            frame_skip,
+            rwd_viz,
+            seed,
+        ):
 
         self.target_obj_bid = self.sim.model.body_name2id("target")
         self.S_grasp_sid = self.sim.model.site_name2id('S_grasp')
@@ -35,7 +68,13 @@ class PenTwirlFixedEnvV0(BaseV0):
         self.tar_b_sid = self.sim.model.site_name2id('target_bottom')
         self.pen_length = np.linalg.norm(self.sim.model.site_pos[self.obj_t_sid] - self.sim.model.site_pos[self.obj_b_sid])
         self.tar_length = np.linalg.norm(self.sim.model.site_pos[self.tar_t_sid] - self.sim.model.site_pos[self.tar_b_sid])
-        super().__init__(obs_keys=obs_keys, rwd_keys_wt=rwd_keys_wt, sim=self.sim, sim_obsd=self.sim_obsd, rwd_viz=False, **kwargs)
+
+        super()._setup(obs_keys=obs_keys, 
+            weighted_reward_keys=weighted_reward_keys, 
+            normalize_act=normalize_act, 
+            rwd_viz=rwd_viz,
+            frame_skip=frame_skip,
+            seed=seed)
 
     def get_obs_vec(self):
         # qpos for hand, xpos for obj, xpos for target

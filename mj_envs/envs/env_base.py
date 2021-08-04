@@ -1,17 +1,13 @@
-import os
-
-from gym import error, spaces
-# from gym.utils import seeding
-from gym import utils
-from mj_envs.utils.obj_vec_dict import ObsVecDict
-from mj_envs.robot.robot import Robot
-import numpy as np
-from os import path
 import gym
-import six
+import numpy as np
+import os
 import time as timer
 
-
+from mj_envs.utils.obj_vec_dict import ObsVecDict
+from mj_envs.robot.robot import Robot
+from os import path
+from re import A
+from xml.dom import InvalidStateErr
 
 # TODO
 # remove rwd_mode
@@ -21,7 +17,7 @@ try:
     import mujoco_py
     from mujoco_py import load_model_from_path, MjSim, MjViewer, load_model_from_xml, ignore_mujoco_warnings
 except ImportError as e:
-    raise error.DependencyNotInstalled("{}. (HINT: you need to install mujoco_py, and also perform the setup instructions here: https://github.com/openai/mujoco-py/.)".format(e))
+    raise gym.error.DependencyNotInstalled("{}. (HINT: you need to install mujoco_py, and also perform the setup instructions here: https://github.com/openai/mujoco-py/.)".format(e))
 
 def get_sim(model_path:str=None, model_xmlstr=None):
     """
@@ -42,77 +38,77 @@ def get_sim(model_path:str=None, model_xmlstr=None):
 
     return MjSim(model)
 
-class MujocoEnv(gym.Env, utils.EzPickle, ObsVecDict):
+class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     """
     Superclass for all MuJoCo environments.
     """
 
-    def __init__(self,
-                sim = None,             # true dynamics (used for simulation)
-                sim_obsd = None,        # observed dynamics (used to reconstruct (partially observed) sim from (noisy)sensor data)
-                model_path = None,      # xml to use to generate sim + sim_obsd
-                frame_skip = 1,         # frame_skip
-                obs_keys = None,        # keys from obs_dict to use
-                rwd_keys_wt = None,     # {keys, wt} from rwd_dict to use
-                rwd_mode = "dense",     # dense / sparse
-                act_normalized = True,  # use normalized actions
-                seed = None,            # seed the random number generator
-                obs_range = (-10, 10),  # obs_range (used to define obs_space)
-                *args, **kwargs):
+    def __init__(self, model_path):
+        self.sim = get_sim(model_path)
+        self.sim_obsd = get_sim(model_path)
+        ObsVecDict.__init__(self)
 
-        # resolve sim
-        if sim is None:
-            self.sim = get_sim(model_path)
-            self.sim_obsd = get_sim(model_path)
-        else:
-            assert sim_obsd is not None, "sim and sim_obsd needs to be specified together, else model_path should be provided"
-            self.sim = sim
-            self.sim_obsd = sim_obsd
+    def _setup(self,
+            obs_keys,
+            weighted_reward_keys,
+            reward_mode = "dense",             
+            frame_skip = 1,
+            normalize_act = True,
+            obs_range = (-10, 10),
+            seed = None,
+            act_mode = "pos",
+            is_hardware = False,
+            config_path = None,
+            rwd_viz = False,
+        ):
+
+        if self.sim is None or self.sim_obsd is None:
+            raise InvalidStateErr("sim and sim_obsd must be instantiated for setup to run")
 
         # seed the random number generator
         self.seed(seed)
         self.mujoco_render_frames = False
+        self.rwd_viz = rwd_viz
 
         # resolve robot config
-        self.robot = Robot(
-                mj_sim = self.sim,
-                random_generator = self.np_random,
-                *args, **kwargs)
+        self.robot = Robot(mj_sim=self.sim, 
+                        random_generator=self.np_random, 
+                        act_mode=act_mode,
+                        is_hardware=is_hardware,
+                        config_path = config_path,
+                    )
 
-        # resolve act
+        #resolve action space
         self.frame_skip = frame_skip
-        self.act_normalized = act_normalized
-        act_low = -np.ones(self.sim.model.nu) if self.act_normalized else self.sim.model.actuator_ctrlrange[:,0].copy()
-        act_high = np.ones(self.sim.model.nu) if self.act_normalized else self.sim.model.actuator_ctrlrange[:,1].copy()
-        self.action_space = spaces.Box(act_low, act_high, dtype=np.float32)
+        self.normalize_act = normalize_act
+        act_low = -np.ones(self.sim.model.nu) if self.normalize_act else self.sim.model.actuator_ctrlrange[:,0].copy()
+        act_high = np.ones(self.sim.model.nu) if self.normalize_act else self.sim.model.actuator_ctrlrange[:,1].copy()
+        self.action_space = gym.spaces.Box(act_low, act_high, dtype=np.float32)
 
         # resolve rewards
         self.rwd_dict = {}
-        self.rwd_mode = rwd_mode
-        self.rwd_keys_wt = rwd_keys_wt
+        self.rwd_mode = reward_mode
+        self.rwd_keys_wt = weighted_reward_keys
 
         # resolve obs
         self.obs_dict = {}
         self.obs_keys = obs_keys
-        ObsVecDict.__init__(self)
         observation, _reward, done, _info = self.step(np.zeros(self.sim.model.nu))
         assert not done, "Checking initialization. Simulation starts in a done state."
         self.obs_dim = observation.size
-        self.observation_space = spaces.Box(obs_range[0]*np.ones(self.obs_dim), obs_range[1]*np.ones(self.obs_dim), dtype=np.float32)
+        self.observation_space = gym.spaces.Box(obs_range[0]*np.ones(self.obs_dim), obs_range[1]*np.ones(self.obs_dim), dtype=np.float32)
 
         # resolve initial state
         self.init_qvel = self.sim.data.qvel.ravel().copy()
         self.init_qpos = self.sim.data.qpos.ravel().copy() # has issues with initial jump during reset
-        # self.init_qpos = np.mean(self.sim.model.actuator_ctrlrange, axis=1) if self.act_normalized else self.sim.data.qpos.ravel().copy() # has issues when nq!=nu
-        # self.init_qpos[self.sim.model.jnt_dofadr] = np.mean(self.sim.model.jnt_range, axis=1) if self.act_normalized else self.sim.data.qpos.ravel().copy()
-        if self.act_normalized:
+        # self.init_qpos = np.mean(self.sim.model.actuator_ctrlrange, axis=1) if self.normalize_act else self.sim.data.qpos.ravel().copy() # has issues when nq!=nu
+        # self.init_qpos[self.sim.model.jnt_dofadr] = np.mean(self.sim.model.jnt_range, axis=1) if self.normalize_act else self.sim.data.qpos.ravel().copy()
+        if self.normalize_act:
             linear_jnt_qposids = self.sim.model.jnt_qposadr[self.sim.model.jnt_type>1] #hinge and slides
             linear_jnt_ids = self.sim.model.jnt_type>1
             self.init_qpos[linear_jnt_qposids] = np.mean(self.sim.model.jnt_range[linear_jnt_ids], axis=1)
 
-        # finalize init
-        utils.EzPickle.__init__(self)
-
+        return 
 
     def step(self, a):
         """
@@ -121,7 +117,7 @@ class MujocoEnv(gym.Env, utils.EzPickle, ObsVecDict):
         """
         a = np.clip(a, self.action_space.low, self.action_space.high)
         self.last_ctrl = self.robot.step(ctrl_desired=a,
-                                        ctrl_normalized=self.act_normalized,
+                                        ctrl_normalized=self.normalize_act,
                                         step_duration=self.dt,
                                         realTimeSim=self.mujoco_render_frames,
                                         render_cbk=self.mj_render if self.mujoco_render_frames else None)
@@ -249,7 +245,7 @@ class MujocoEnv(gym.Env, utils.EzPickle, ObsVecDict):
         """
         Set random number seed
         """
-        self.np_random, seed = utils.seeding.np_random(seed)
+        self.np_random, seed = gym.utils.seeding.np_random(seed)
         return [seed]
 
 
