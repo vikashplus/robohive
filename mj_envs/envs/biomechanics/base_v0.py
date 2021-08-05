@@ -9,15 +9,11 @@ class BaseV0(env_base.MujocoEnv):
         super().__init__(model_path)
 
     def _setup(self,
-            obs_keys:list,
-            weighted_reward_keys:dict,
-            sites:list = None,
-            frame_skip = 10,
-            seed = None,
-            is_hardware = False,
-            config_path = None,
-            rwd_viz = False,
-            normalize_act = True,
+               obs_keys:list,
+               weighted_reward_keys:dict,
+               sites:list = None,
+               frame_skip = 10,
+               **kwargs,
         ):
 
         if self.sim.model.na>0 and 'act' not in obs_keys:
@@ -32,13 +28,9 @@ class BaseV0(env_base.MujocoEnv):
                 self.target_sids.append(self.sim.model.site_name2id(site+'_target'))
         
         super()._setup(obs_keys=obs_keys, 
-                    weighted_reward_keys=weighted_reward_keys, 
-                    frame_skip=frame_skip, 
-                    seed=seed, 
-                    is_hardware=is_hardware,
-                    config_path=config_path,
-                    rwd_viz=rwd_viz,
-                    normalize_act=normalize_act)
+                       weighted_reward_keys=weighted_reward_keys, 
+                       frame_skip=frame_skip, 
+                       **kwargs)
 
 
     # step the simulation forward
