@@ -98,11 +98,12 @@ register(id='FingerPoseMuscleRandom-v0',
     )
 
 # Hand-Joint posing ==============================
+# OLD MODEL -- Please use new one
 register(id='IFTHPoseMuscleRandom-v0',
             entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
             max_episode_steps=100,
             kwargs={
-                'model_path': curr_dir+'/../../sims/neuromuscular_sim/hand/2nd_hand_Index_Thumb_keyturn.xml',
+                'model_path': curr_dir+'/../../sims/neuromuscular_sim/hand/Index_Thumb_v0.xml',
                 'target_jnt_range': {'MCP2_lateral': (-0.349066, 0.349066),
                                     'MCP2_flex': (-0.174533, 1.5708),
                                     'PIP_flex': (-0.0872665, 1.5708),

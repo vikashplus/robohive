@@ -1,6 +1,7 @@
 <mujoco model="2nd hand model - Index Thumb Model for turning key task">
     <compiler meshdir='../../../../sims/neuromuscular_sim/hand/'/>
     <include file="../../../../sims/neuromuscular_sim/hand/2nd_Hand_Model_index_thumb_v0.1.3.xml"/>
+    
     <default>
         <default class="key">
             <geom rgba=".6 .6 .5 1"/>
