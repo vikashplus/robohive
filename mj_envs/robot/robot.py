@@ -42,6 +42,7 @@ class Robot():
                 sensor_cache_maxsize = 5,   # cache size for sensors
                 noise_scale = 0,            # scale for sensor noise
                 random_generator = None,    # random number generator
+                **kwargs,
             ):
 
         self.name = robot_name+'(sim)' if is_hardware is None else robot_name+'(hdr)'
