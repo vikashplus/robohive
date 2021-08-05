@@ -50,8 +50,13 @@ class TestEnvs(unittest.TestCase):
             'HandObjHoldFixed-v0', 'HandObjHoldRandom-v0',
             'HandPenTwirlFixed-v0', 'HandPenTwirlRandom-v0',
 
-            'BaodingFixed-v1', 'BaodingFixed4th-v1', 'BaodingFixed8th-v1'
+            'BaodingFixed-v1', 'BaodingFixed4th-v1', 'BaodingFixed8th-v1',
+
+            'HandPoseMuscleRandom-v0'
         ]
+        
+        for k in range(10): env_names+=['HandPose'+str(k)+'MuscleFixed-v0']
+
         self.check_envs('Biomechanics', env_names)
 
     # Hand Manipulation Suite
