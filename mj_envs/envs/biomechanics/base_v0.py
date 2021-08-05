@@ -5,7 +5,7 @@ import gym
 
 class BaseV0(env_base.MujocoEnv):
 
-    condition = 'fatigue'
+    muscle_condition = ''
     which_muscles = []
     which_gain_muscles = []
     MVC_rest = []
@@ -67,7 +67,7 @@ class BaseV0(env_base.MujocoEnv):
                     normalize_act=normalize_act)
 
         if self.sim.model.na:
-            assert self.act_normalized is False, "Explict action remapping is performed for envs with muscle actuator. Turn act_normalized to False to remove default linear remapping to action limits"
+            assert self.normalize_act is False, "Explict action remapping is performed for envs with muscle actuator. Turn act_normalized to False to remove default linear remapping to action limits"
 
     # step the simulation forward
     def step(self, a):

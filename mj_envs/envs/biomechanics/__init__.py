@@ -14,7 +14,7 @@ register(id='FingerReachMotorFixed-v0',
             kwargs={
                 'model_path': curr_dir+'/assets/finger/tendon_finger_motorAct_v0.xml',
                 'target_reach_range': {'IFtip': ((0.2, 0.05, 0.20), (0.2, 0.05, 0.20)),},
-                'act_normalized': True
+                'normalize_act': True
             }
     )
 register(id='FingerReachMotorRandom-v0',
@@ -23,7 +23,7 @@ register(id='FingerReachMotorRandom-v0',
             kwargs={
                 'model_path': curr_dir+'/assets/finger/tendon_finger_motorAct_v0.xml',
                 'target_reach_range': {'IFtip': ((0.27, .1, .3), (.1, -.1, .1)),},
-                'act_normalized': True
+                'normalize_act': True
             }
     )
 register(id='FingerReachMuscleFixed-v0',
@@ -32,7 +32,7 @@ register(id='FingerReachMuscleFixed-v0',
             kwargs={
                 'model_path': curr_dir+'/assets/finger/tendon_finger_muscleAct_v0.xml',
                 'target_reach_range': {'IFtip': ((0.2, 0.05, 0.20), (0.2, 0.05, 0.20)),},
-                'act_normalized': False,
+                'normalize_act': False,
             }
     )
 
@@ -42,7 +42,7 @@ register(id='FingerReachMuscleRandom-v0',
             kwargs={
                 'model_path': curr_dir+'/assets/finger/tendon_finger_muscleAct_v0.xml',
                 'target_reach_range': {'IFtip': ((0.27, .1, .3), (.1, -.1, .1)),},
-                'act_normalized': False,
+                'normalize_act': False,
             }
     )
 
@@ -58,7 +58,8 @@ register(id='FingerPoseMotorFixed-v0',
                                     'IFpip':(.75, .75),
                                     'IFdip':(.75, .75)
                                     },
-                'viz_site_targets': ('IFtip',)
+                'viz_site_targets': ('IFtip',),
+                'normalize_act': True
             }
     )
 register(id='FingerPoseMotorRandom-v0',
@@ -71,7 +72,8 @@ register(id='FingerPoseMotorRandom-v0',
                                     'IFpip':(.1, 1),
                                     'IFdip':(.1, 1)
                                     },
-                'viz_site_targets': ('IFtip',)
+                'viz_site_targets': ('IFtip',),
+                'normalize_act': True
             }
     )
 register(id='FingerPoseMuscleFixed-v0',
@@ -85,7 +87,7 @@ register(id='FingerPoseMuscleFixed-v0',
                                     'IFdip':(.75, .75)
                                     },
                 'viz_site_targets': ('IFtip',),
-                'act_normalized': False,
+                'normalize_act': False,
             }
     )
 register(id='FingerPoseMuscleRandom-v0',
@@ -99,7 +101,7 @@ register(id='FingerPoseMuscleRandom-v0',
                                     'IFdip':(.1, 1)
                                     },
                 'viz_site_targets': ('IFtip',),
-                'act_normalized': False,
+                'normalize_act': False,
             }
     )
 
@@ -120,7 +122,7 @@ register(id='IFTHPoseMuscleRandom-v0',
                                     'TCP2M2_flex': (-0.0872665, 1.5708)
                                     },
                 'viz_site_targets': ('IFtip','THtip'),
-                'act_normalized': False,
+                'normalize_act': False,
                 'reset_type': 'none',           # none, init, random
                 'target_type': 'generate',      # switch / generate
             }
@@ -210,7 +212,7 @@ register(id='HandObjHoldFixed-v0',
             max_episode_steps=75,
             kwargs={
                 'model_path': curr_dir+'/assets/hand/2nd_hand_hold.xml',
-                'act_normalized': False
+                'normalize_act': False
             }
     )
 
@@ -219,7 +221,7 @@ register(id='HandObjHoldRandom-v0',
             max_episode_steps=75,
             kwargs={
                 'model_path': curr_dir+'/assets/hand/2nd_hand_hold.xml',
-                'act_normalized': False
+                'normalize_act': False
             }
     )
 

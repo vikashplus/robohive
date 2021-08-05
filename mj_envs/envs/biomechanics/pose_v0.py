@@ -16,7 +16,8 @@ class PoseEnvV0(BaseV0):
 
     def __init__(self,
                 model_path:str,
-                seed = None, 
+                normalize_act:bool,
+                seed = None,
                 viz_site_targets:tuple = None,  # site to use for targets visualization []
                 target_jnt_range:dict = None,   # joint ranges as tuples {name:(min, max)}_nq
                 target_jnt_value:list = None,   # desired joint vector [des_qpos]_nq
@@ -33,15 +34,17 @@ class PoseEnvV0(BaseV0):
         # Also see: https://github.com/openai/gym/pull/1497
         gym.utils.EzPickle.__init__(**locals())
 
-        # This two step construction is required for pickling to work correctly. All arguments to all __init__ 
-        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we 
+        # This two step construction is required for pickling to work correctly. All arguments to all __init__
+        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we
         # first construct the inheritance chain, which is just __init__ calls all the way down, with env_base
         # creating the sim / sim_obsd instances. Next we run through "setup"  which relies on sim / sim_obsd
         # created in __init__ to complete the setup.
         super().__init__(model_path=model_path)
 
-        self._setup(viz_site_targets=viz_site_targets, 
-                target_jnt_range=target_jnt_range, 
+        self._setup(
+                normalize_act=normalize_act,
+                viz_site_targets=viz_site_targets,
+                target_jnt_range=target_jnt_range,
                 target_jnt_value=target_jnt_value,
                 reset_type=reset_type,
                 target_type=target_type,
@@ -51,11 +54,12 @@ class PoseEnvV0(BaseV0):
             )
 
     def _setup(self,
-            viz_site_targets:tuple, 
+            normalize_act:bool,
+            viz_site_targets:tuple,
             target_jnt_range:dict,
-            target_jnt_value:list,  
-            reset_type,           
-            target_type, 
+            target_jnt_value:list,
+            reset_type,
+            target_type,
             obs_keys:list,
             weighted_reward_keys:dict,
             frame_skip = 10,
@@ -79,13 +83,15 @@ class PoseEnvV0(BaseV0):
         else:
             self.target_jnt_value = target_jnt_value
 
-        super()._setup(obs_keys=obs_keys, 
-                weighted_reward_keys=weighted_reward_keys, 
-                sites=viz_site_targets, 
-                frame_skip=frame_skip, 
-                seed=seed, 
-                is_hardware=is_hardware, 
-                config_path=config_path)
+        super()._setup(obs_keys=obs_keys,
+                weighted_reward_keys=weighted_reward_keys,
+                sites=viz_site_targets,
+                frame_skip=frame_skip,
+                seed=seed,
+                is_hardware=is_hardware,
+                config_path=config_path,
+                normalize_act=normalize_act,
+                )
 
     def get_obs_vec(self):
         self.obs_dict['t'] = np.array([self.sim.data.time])
