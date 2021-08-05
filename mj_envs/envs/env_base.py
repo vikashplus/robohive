@@ -183,8 +183,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         obs_dict = self.obsvec2obsdict(paths["observations"])
         rwd_dict = self.get_reward_dict(obs_dict)
 
-        rewards = reward_dict[self.rwd_mode]
-        done = reward_dict['done']
+        rewards = rwd_dict[self.rwd_mode]
+        done = rwd_dict['done']
         # time align rewards. last step is redundant
         done[...,:-1] = done[...,1:]
         rewards[...,:-1] = rewards[...,1:]
