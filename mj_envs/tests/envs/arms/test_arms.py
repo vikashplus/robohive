@@ -17,7 +17,8 @@ ENVIRONMENT_IDS = (
 
 @pytest.mark.parametrize("environment_id", ENVIRONMENT_IDS)
 def test_serialize_deserialize(environment_id):
-    env1 = gym.make(environment_id, seed=123)
+    input_seed = 123
+    env1 = gym.make(environment_id, seed=input_seed)
     obs_dict_1 = env1.get_obs_dict(env1.env.sim)
     reward_dict_1 = env1.get_reward_dict(obs_dict_1)
     assert len(obs_dict_1) > 0
@@ -26,12 +27,17 @@ def test_serialize_deserialize(environment_id):
     assert len(obs) > 0
     infos1 = env1.env.get_env_infos()
     assert len(infos1) > 0
+    assert env1.get_input_seed() == input_seed
     
     env1.reset()
 
     env2 = pickle.loads(pickle.dumps(env1))
     env2.reset()
+    assert env2.get_input_seed() == input_seed
 
+    assert env1.get_input_seed() == env2.get_input_seed(), {
+        env1.get_input_seed(), env2.get_input_seed()
+    }
     assert env1.action_space == env2.action_space, (
         env1.action_space, env2.action_space
     )

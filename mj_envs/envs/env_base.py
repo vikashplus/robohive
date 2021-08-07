@@ -63,6 +63,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             raise InvalidStateErr("sim and sim_obsd must be instantiated for setup to run")
 
         # seed the random number generator
+        self.input_seed = None
         self.seed(seed)
         self.mujoco_render_frames = False
         self.rwd_viz = rwd_viz
@@ -183,8 +184,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         obs_dict = self.obsvec2obsdict(paths["observations"])
         rwd_dict = self.get_reward_dict(obs_dict)
 
-        rewards = reward_dict[self.rwd_mode]
-        done = reward_dict['done']
+        rewards = rwd_dict[self.rwd_mode]
+        done = rwd_dict['done']
         # time align rewards. last step is redundant
         done[...,:-1] = done[...,1:]
         rewards[...,:-1] = rewards[...,1:]
@@ -239,8 +240,13 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
         Set random number seed
         """
+        self.input_seed = seed
         self.np_random, seed = gym.utils.seeding.np_random(seed)
         return [seed]
+
+
+    def get_input_seed(self):
+        return self.input_seed
 
 
     def reset(self, reset_qpos=None, reset_qvel=None):
