@@ -173,7 +173,7 @@ for k in ASL_qpos.keys():
     )
 
 ## create one environments where the posture is chosen randomly from 0 to 9
-m = np.array([ASL_qpos[i] for i in range(10)])
+m = np.array([ASL_qpos[i] for i in range(10)]).astype(float)
 Rpos = {}
 for i_n, n  in enumerate(jnt_namesHand):
     Rpos[n]=m[:,i_n].astype(float)
