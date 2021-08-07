@@ -14,20 +14,14 @@ class ObjHoldFixedEnvV0(BaseV0):
         "penalty": -10,
     }
 
-    def __init__(self,
-                model_path:str,
-                normalize_act:bool,
-                seed = None,
-                obs_keys:list = DEFAULT_OBS_KEYS,
-                weighted_reward_keys:dict = DEFAULT_RWD_KEYS_AND_WEIGHTS,
-                **kwargs):
+    def __init__(self, model_path:str, **kwargs):
 
         # EzPickle.__init__(**locals()) is capturing the input dictionary of the init method of this class.
         # In order to successfully capture all arguments we need to call gym.utils.EzPickle.__init__(**locals())
         # at the leaf level, when we do inheritance like we do here.
         # kwargs is needed at the top level to account for injection of __class__ keyword.
         # Also see: https://github.com/openai/gym/pull/1497
-        gym.utils.EzPickle.__init__(**locals())
+        gym.utils.EzPickle.__init__(self, model_path, **kwargs)
 
         # This two step construction is required for pickling to work correctly. All arguments to all __init__ 
         # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we 
@@ -36,28 +30,17 @@ class ObjHoldFixedEnvV0(BaseV0):
         # created in __init__ to complete the setup.
         super().__init__(model_path=model_path)
 
-        self._setup(obs_keys=obs_keys, 
-                    weighted_reward_keys=weighted_reward_keys, 
-                    normalize_act=normalize_act, 
-                    rwd_viz=False,
-                    seed=seed)
+        self._setup(**kwargs)
 
-    def _setup(self,
-            obs_keys:list,
-            weighted_reward_keys:dict,
-            normalize_act,
-            rwd_viz,
-            seed,
-        ):
+
+    def _setup(self, **kwargs):
 
         self.object_sid = self.sim.model.site_name2id("object")
         self.goal_sid = self.sim.model.site_name2id("goal")
 
-        super()._setup(obs_keys=obs_keys, 
-                    weighted_reward_keys=weighted_reward_keys, 
-                    normalize_act=normalize_act, 
-                    rwd_viz=rwd_viz,
-                    seed=seed)
+        super()._setup(obs_keys=self.DEFAULT_OBS_KEYS, 
+                       weighted_reward_keys=self.DEFAULT_RWD_KEYS_AND_WEIGHTS, 
+                       **kwargs)
 
 
     def get_obs_vec(self):

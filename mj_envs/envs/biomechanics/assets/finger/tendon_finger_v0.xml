@@ -48,7 +48,7 @@
 			<body name="middle">
 				<geom type="capsule" fromto="0.1 0 0.3 0.2 0 0.3" size=".015"/>
 				<geom name="mg2" type="cylinder" fromto="0.1 0.005 0.3 0.1 -0.005 0.3"
-					size="0.020" rgba=".5 .5 .9 .4"/>
+				size="0.020" rgba=".5 .5 .9 .4"/>
 				<joint name="IFpip" pos="0.1 0 0.3"/>
 				<site name="ms4" pos="0.12 0 0.315"/>
 				<site name="ms5" pos="0.13 0 0.32"/>
@@ -61,7 +61,7 @@
 				<body name="distal">
 					<geom type="capsule" fromto="0.2 0 0.3 0.27 0 0.3" size=".012"/>
 					<geom name="dg3" type="cylinder" fromto="0.2 0.005 0.3 0.2 -0.005 0.3"
-						size="0.018" rgba=".5 .5 .9 .4"/>
+					size="0.018" rgba=".5 .5 .9 .4"/>
 					<geom type="ellipsoid" pos=".27 0 .310" size=".012 .009 .0025" rgba="1 .9 .9 1"/>
 					<joint name="IFdip" pos="0.2 0 0.3"/>
 					<site name="ds6" pos="0.22 0 0.31"/>
