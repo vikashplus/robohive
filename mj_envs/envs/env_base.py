@@ -48,36 +48,30 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         ObsVecDict.__init__(self)
 
     def _setup(self,
-            obs_keys,
-            weighted_reward_keys,
-            reward_mode = "dense",             
-            frame_skip = 1,
-            normalize_act = True,
-            obs_range = (-10, 10),
-            seed = None,
-            act_mode = "pos",
-            is_hardware = False,
-            config_path = None,
-            rwd_viz = False,
-            robot_name:str = 'default_robot', 
+               obs_keys,
+               weighted_reward_keys,
+               reward_mode = "dense",
+               frame_skip = 1,
+               normalize_act = True,
+               obs_range = (-10, 10),
+               seed = None,
+               rwd_viz = False,
+               **kwargs,
         ):
 
         if self.sim is None or self.sim_obsd is None:
             raise InvalidStateErr("sim and sim_obsd must be instantiated for setup to run")
 
         # seed the random number generator
+        self.input_seed = None
         self.seed(seed)
         self.mujoco_render_frames = False
         self.rwd_viz = rwd_viz
 
         # resolve robot config
-        self.robot = Robot(mj_sim=self.sim, 
-                        robot_name=robot_name,
-                        random_generator=self.np_random, 
-                        act_mode=act_mode,
-                        is_hardware=is_hardware,
-                        config_path = config_path,
-                    )
+        self.robot = Robot(mj_sim=self.sim,
+                           random_generator=self.np_random,
+                           **kwargs)
 
         #resolve action space
         self.frame_skip = frame_skip
@@ -109,7 +103,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             linear_jnt_ids = self.sim.model.jnt_type>1
             self.init_qpos[linear_jnt_qposids] = np.mean(self.sim.model.jnt_range[linear_jnt_ids], axis=1)
 
-        return 
+        return
 
     def step(self, a):
         """
@@ -190,8 +184,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         obs_dict = self.obsvec2obsdict(paths["observations"])
         rwd_dict = self.get_reward_dict(obs_dict)
 
-        rewards = reward_dict[self.rwd_mode]
-        done = reward_dict['done']
+        rewards = rwd_dict[self.rwd_mode]
+        done = rwd_dict['done']
         # time align rewards. last step is redundant
         done[...,:-1] = done[...,1:]
         rewards[...,:-1] = rewards[...,1:]
@@ -246,8 +240,13 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
         Set random number seed
         """
+        self.input_seed = seed
         self.np_random, seed = gym.utils.seeding.np_random(seed)
         return [seed]
+
+
+    def get_input_seed(self):
+        return self.input_seed
 
 
     def reset(self, reset_qpos=None, reset_qvel=None):
