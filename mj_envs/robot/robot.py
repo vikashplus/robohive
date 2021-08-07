@@ -296,11 +296,11 @@ class Robot():
                 sensor_type = sim.model.sensor_type[sensor['sim_id']]
                 sensor_objid = sim.model.sensor_objid[sensor['sim_id']]
                 if sensor_type == 8:  # mjSENS_JOINTPOS,// scalar joint position (hinge and slide only)
-                    sensor['sim_data'] = 'qpos'
-                    sensor['sim_id'] = sim.model.jnt_qposadr[sensor_objid]
+                    sensor['data_type'] = 'qpos'
+                    sensor['data_id'] = sim.model.jnt_qposadr[sensor_objid]
                 elif sensor_type == 9:  # mjSENS_JOINTVEL,// scalar joint position (hinge and slide only)
-                    sensor['sim_data'] = 'qvel'
-                    sensor['sim_id'] = sim.model.jnt_dofadr[sensor_objid]
+                    sensor['data_type'] = 'qvel'
+                    sensor['data_id'] = sim.model.jnt_dofadr[sensor_objid]
                 else:
                     quit("ERROR: Sensor {} has unsupported sensor_type: {}".format(sensor['name'],sensor_type))
 
@@ -314,8 +314,8 @@ class Robot():
                 actuator_trntype = sim.model.actuator_trntype[actuator['sim_id']]
                 actuator_trnid = sim.model.actuator_trnid[actuator['sim_id'], 0]
                 if actuator_trntype == 0:  # mjTRN_JOINT // force on joint
-                    actuator['sim_data'] = 'qpos'
-                    actuator['sim_id'] = sim.model.jnt_dofadr[actuator_trnid]
+                    actuator['data_type'] = 'qpos'
+                    actuator['data_id'] = sim.model.jnt_dofadr[actuator_trnid]
                 else:
                     quit("ERROR: actuator {} has unsupported transmission_type: {}".format(actuator['name'],actuator_trntype))
         return robot_config
@@ -408,9 +408,9 @@ class Robot():
                     sim.data.act[:] = device['sensor_data']['act']
             else:
                 for s_id, s_val in enumerate(device['sensor']):
-                    # prompt(getattr(sim.data, s_val["sim_data"])[s_val["sim_id"]], sensor[name][s_id])
-                    data = getattr(sim.data, s_val["sim_data"])
-                    data[s_val["sim_id"]] = sensor[name][s_id]
+                    # prompt(getattr(sim.data, s_val["data_type"])[s_val["data_id"]], sensor[name][s_id])
+                    data = getattr(sim.data, s_val["data_type"])
+                    data[s_val["data_id"]] = sensor[name][s_id]
         sim.forward()
 
 
@@ -474,7 +474,7 @@ class Robot():
                         # enforce velocity limits
                         # ALERT: This depends on previous sensor. This is not ideal as it breaks MDP addumptions. Be careful
                         if velocity_limits:
-                            last_obs = getattr(self.sim.data, actuator["sim_data"])[actuator["sim_id"]]
+                            last_obs = getattr(self.sim.data, actuator["data_type"])[actuator["data_id"]]
                             ctrl_desired_vel = (control - last_obs)/step_duration
                             ctrl_feasible_vel = np.clip(ctrl_desired_vel, actuator['vel_range'][0], actuator['vel_range'][1])
                             control = last_obs + ctrl_feasible_vel*step_duration
@@ -485,7 +485,7 @@ class Robot():
                                         control*(actuator['vel_range'][1]-actuator['vel_range'][0])/2.0
                         # enforce velocity limits
                         # ALERT: This depends on previous sensor. This is not ideal as it breaks MDP addumptions. Be careful
-                        last_obs = getattr(self.sim.data, actuator["sim_data"])[actuator["sim_id"]]
+                        last_obs = getattr(self.sim.data, actuator["data_type"])[actuator["data_id"]]
                         control = last_obs + control*step_duration
                     else:
                         raise TypeError("Unknown act mode: {}".format(self._act_mode))
@@ -573,15 +573,15 @@ class Robot():
             if name != "default_robot":
                 if len(device['actuator'])>0: # actuated dofs
                     for actuator in device['actuator']:
-                        if actuator['sim_data'] == 'qpos':
-                            feasibe_pos[actuator['sim_id']] = np.clip(reset_pos[actuator['sim_id']], actuator['pos_range'][0], actuator['pos_range'][1])
-                            ctrl_feasible.append(feasibe_pos[actuator['sim_id']])
+                        if actuator['data_type'] == 'qpos':
+                            feasibe_pos[actuator['data_id']] = np.clip(reset_pos[actuator['data_id']], actuator['pos_range'][0], actuator['pos_range'][1])
+                            ctrl_feasible.append(feasibe_pos[actuator['data_id']])
                 else: # passive dofs
                     for sensor in device['sensor']:
-                        if sensor['sim_data'] == 'qpos':
-                            feasibe_pos[sensor['sim_id']] = np.clip(reset_pos[sensor['sim_id']], sensor['range'][0], sensor['range'][1])
-                        elif sensor['sim_data'] == 'qvel':
-                            feasibe_vel[sensor['sim_id']] = np.clip(reset_vel[sensor['sim_id']], sensor['range'][0], sensor['range'][1])
+                        if sensor['data_type'] == 'qpos':
+                            feasibe_pos[sensor['data_id']] = np.clip(reset_pos[sensor['data_id']], sensor['range'][0], sensor['range'][1])
+                        elif sensor['data_type'] == 'qvel':
+                            feasibe_vel[sensor['data_id']] = np.clip(reset_vel[sensor['data_id']], sensor['range'][0], sensor['range'][1])
 
         if self.is_hardware:
             prompt("Rollout took:{}".format(time.time() - self.time_start))
