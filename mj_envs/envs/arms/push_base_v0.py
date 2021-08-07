@@ -3,8 +3,6 @@ import gym
 import numpy as np
 
 from mj_envs.envs import env_base
-from pydantic import NoneStrBytes
-
 
 class PushBaseV0(env_base.MujocoEnv):
 
@@ -27,8 +25,8 @@ class PushBaseV0(env_base.MujocoEnv):
         # Also see: https://github.com/openai/gym/pull/1497
         gym.utils.EzPickle.__init__(self, model_path, **kwargs)
 
-        # This two step construction is required for pickling to work correctly. All arguments to all __init__ 
-        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we 
+        # This two step construction is required for pickling to work correctly. All arguments to all __init__
+        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we
         # first construct the inheritance chain, which is just __init__ calls all the way down, with env_base
         # creating the sim / sim_obsd instances. Next we run through "setup"  which relies on sim / sim_obsd
         # created in __init__ to complete the setup.
@@ -40,7 +38,7 @@ class PushBaseV0(env_base.MujocoEnv):
     def _setup(self,
                robot_site_name,
                object_site_name,
-               target_site_name, 
+               target_site_name,
                target_xyz_range,
                frame_skip=4,
                reward_mode="dense",
@@ -53,10 +51,10 @@ class PushBaseV0(env_base.MujocoEnv):
         self.target_sid = self.sim.model.site_name2id(target_site_name)
         self.target_xyz_range = target_xyz_range
 
-        super()._setup(obs_keys=self.DEFAULT_OBS_KEYS, 
-                       weighted_reward_keys=self.DEFAULT_RWD_KEYS_AND_WEIGHTS, 
-                       reward_mode=reward_mode, 
-                       frame_skip=frame_skip, 
+        super()._setup(obs_keys=self.DEFAULT_OBS_KEYS,
+                       weighted_reward_keys=self.DEFAULT_RWD_KEYS_AND_WEIGHTS,
+                       reward_mode=reward_mode,
+                       frame_skip=frame_skip,
                        **kwargs)
 
     def get_obs_dict(self, sim):

@@ -57,10 +57,22 @@ class TestEnvs(unittest.TestCase):
 
             'HandPoseMuscleRandom-v0'
         ]
-        
+
         for k in range(10): env_names+=['HandPose'+str(k)+'MuscleFixed-v0']
 
         self.check_envs('Biomechanics', env_names)
+
+    # Arms
+    def test_arms(self):
+        env_names = [
+            'FrankaReachFixed-v0',
+            'FrankaReachRandom-v0',
+            'FrankaPushFixed-v0',
+            'FrankaPushRandom-v0',
+            'FetchReachFixed-v0',
+            'FetchReachRandom-v0'
+            ]
+        self.check_envs('Arms', env_names, lite=False)
 
     # Hand Manipulation Suite
     def test_hand_manipulation_suite(self):
