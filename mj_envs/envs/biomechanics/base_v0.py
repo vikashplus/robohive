@@ -22,7 +22,6 @@ class BaseV0(env_base.MujocoEnv):
                **kwargs,
         ):
 
-        print("#### obs_keys {}".format(str(obs_keys)))
         if self.sim.model.na>0 and 'act' not in obs_keys:
             obs_keys.append('act')
 
