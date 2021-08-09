@@ -34,7 +34,7 @@ class TestEnvs(unittest.TestCase):
 
             # test step (everything together)
             observation, _reward, done, _info = env.env.step(np.zeros(env.env.sim.model.nu))
-            del(env)
+            # del(env)
 
     # Biomechanics
     def test_biomechanics(self):

@@ -38,7 +38,10 @@ class PenTwirlFixedEnvV0(BaseV0):
         self._setup(**kwargs)
 
 
-    def _setup(self, **kwargs):
+    def _setup(self, 
+               obs_keys=DEFAULT_OBS_KEYS, 
+               weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS, 
+               **kwargs):
 
         self.target_obj_bid = self.sim.model.body_name2id("target")
         self.S_grasp_sid = self.sim.model.site_name2id('S_grasp')
@@ -51,8 +54,8 @@ class PenTwirlFixedEnvV0(BaseV0):
         self.pen_length = np.linalg.norm(self.sim.model.site_pos[self.obj_t_sid] - self.sim.model.site_pos[self.obj_b_sid])
         self.tar_length = np.linalg.norm(self.sim.model.site_pos[self.tar_t_sid] - self.sim.model.site_pos[self.tar_b_sid])
 
-        super()._setup(obs_keys=self.DEFAULT_OBS_KEYS, 
-                       weighted_reward_keys=self.DEFAULT_RWD_KEYS_AND_WEIGHTS, 
+        super()._setup(obs_keys=obs_keys, 
+                       weighted_reward_keys=weighted_reward_keys, 
                        **kwargs)
 
 
