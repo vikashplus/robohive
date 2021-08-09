@@ -116,6 +116,8 @@ class KitchenBase(env_base.MujocoEnv):
                goal,
                interact_site,
                obj_init,
+               obs_keys=list(DEFAULT_OBS_KEYS_AND_WEIGHTS.keys()),
+               weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
                # different defaults than what is used in env_base and robot
                frame_skip=40,
                obs_range=(-8, 8),
@@ -174,15 +176,13 @@ class KitchenBase(env_base.MujocoEnv):
             )
         self.set_goal(goal=goal, interact_site=interact_site)
 
-        super()._setup(
-            obs_keys=list(self.DEFAULT_OBS_KEYS_AND_WEIGHTS.keys()),
-            weighted_reward_keys=self.DEFAULT_RWD_KEYS_AND_WEIGHTS,
-            frame_skip=frame_skip,
-            act_mode=act_mode,
-            obs_range=obs_range,
-            robot_name=robot_name,
-            **kwargs,
-        )
+        super()._setup(obs_keys=obs_keys,
+                       weighted_reward_keys=weighted_reward_keys,
+                       frame_skip=frame_skip,
+                       act_mode=act_mode,
+                       obs_range=obs_range,
+                       robot_name=robot_name,
+                       **kwargs)
 
         self.init_qpos[:] = self.sim.model.key_qpos[0].copy()
         if obj_init:

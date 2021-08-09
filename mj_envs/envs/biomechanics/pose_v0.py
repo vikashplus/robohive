@@ -39,6 +39,8 @@ class PoseEnvV0(BaseV0):
                reset_type="none",           
                target_type="generate", 
                frame_skip = 10,
+               obs_keys=DEFAULT_OBS_KEYS, 
+               weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS, 
                **kwargs,
         ):
 
@@ -57,8 +59,8 @@ class PoseEnvV0(BaseV0):
         else:
             self.target_jnt_value = target_jnt_value
 
-        super()._setup(obs_keys=self.DEFAULT_OBS_KEYS, 
-                       weighted_reward_keys=self.DEFAULT_RWD_KEYS_AND_WEIGHTS, 
+        super()._setup(obs_keys=obs_keys, 
+                       weighted_reward_keys=weighted_reward_keys, 
                        frame_skip=frame_skip, 
                        **kwargs)
 
