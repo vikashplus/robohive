@@ -45,13 +45,20 @@ class FMBase(env_base.MujocoEnv):
 
         self._setup(**kwargs)
 
-    def _setup(self, target_pose, **kwargs):
+
+    def _setup(self, 
+               target_pose, 
+               obs_keys=DEFAULT_OBS_KEYS,
+               weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
+               **kwargs):
+
         self.target_pose = target_pose
 
-        super()._setup(obs_keys=self.DEFAULT_OBS_KEYS,
-                       weighted_reward_keys=self.DEFAULT_RWD_KEYS_AND_WEIGHTS,
+        super()._setup(obs_keys=obs_keys,
+                       weighted_reward_keys=weighted_reward_keys,
                        frame_skip=40,
                        **kwargs)
+
 
     def get_obs_dict(self, sim):
         obs_dict = {}

@@ -42,6 +42,8 @@ class ReachBaseV0(env_base.MujocoEnv):
                target_xyz_range,
                frame_skip = 40,
                reward_mode = "dense",
+               obs_keys=DEFAULT_OBS_KEYS,
+               weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
                **kwargs,
         ):
 
@@ -50,8 +52,8 @@ class ReachBaseV0(env_base.MujocoEnv):
         self.target_sid = self.sim.model.site_name2id(target_site_name)
         self.target_xyz_range = target_xyz_range
 
-        super()._setup(obs_keys=self.DEFAULT_OBS_KEYS,
-                       weighted_reward_keys=self.DEFAULT_RWD_KEYS_AND_WEIGHTS,
+        super()._setup(obs_keys=obs_keys,
+                       weighted_reward_keys=weighted_reward_keys,
                        reward_mode=reward_mode,
                        frame_skip=frame_skip,
                        **kwargs)
