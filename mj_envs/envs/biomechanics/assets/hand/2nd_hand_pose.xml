@@ -10,10 +10,10 @@
         <site name="RFtip_target" pos="0 0 0.002" size="0.005" rgba="0.8 0.8 0 .8"/>
         <site name="LFtip_target" pos="0 0 0.002" size="0.005" rgba="0.8 0 0.8 .8"/>
     </worldbody>
-
+<!--
     <keyframe>
         <key qpos='0 0 0 -0.0904 0.0824475 -0.681555 -0.514888 0 -0.013964 -0.0458132 0 0.67553 -0.020944 0.76979 0.65982 0 0 0 0 0.479155 -0.099484 0.95831 0'/>
-    </keyframe>
+    </keyframe> -->
 
     <tendon>
         <spatial name="THtip_err" rgba="0.8 0 0 0.1">

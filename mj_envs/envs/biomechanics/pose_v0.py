@@ -23,8 +23,8 @@ class PoseEnvV0(BaseV0):
         # Also see: https://github.com/openai/gym/pull/1497
         gym.utils.EzPickle.__init__(self, model_path, **kwargs)
 
-        # This two step construction is required for pickling to work correctly. All arguments to all __init__ 
-        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we 
+        # This two step construction is required for pickling to work correctly. All arguments to all __init__
+        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we
         # first construct the inheritance chain, which is just __init__ calls all the way down, with env_base
         # creating the sim / sim_obsd instances. Next we run through "setup"  which relies on sim / sim_obsd
         # created in __init__ to complete the setup.
@@ -35,9 +35,10 @@ class PoseEnvV0(BaseV0):
 
     def _setup(self,
                target_jnt_range:dict=None,
-               target_jnt_value:list=None,  
-               reset_type="none",           
-               target_type="generate", 
+               target_jnt_value:list=None,
+               viz_site_targets:tuple = None,
+               reset_type="none",
+               target_type="generate",
                frame_skip = 10,
                **kwargs,
         ):
@@ -57,9 +58,10 @@ class PoseEnvV0(BaseV0):
         else:
             self.target_jnt_value = target_jnt_value
 
-        super()._setup(obs_keys=self.DEFAULT_OBS_KEYS, 
-                       weighted_reward_keys=self.DEFAULT_RWD_KEYS_AND_WEIGHTS, 
-                       frame_skip=frame_skip, 
+        super()._setup(obs_keys=self.DEFAULT_OBS_KEYS,
+                       weighted_reward_keys=self.DEFAULT_RWD_KEYS_AND_WEIGHTS,
+                       frame_skip=frame_skip,
+                       sites = viz_site_targets,
                        **kwargs)
 
 

@@ -164,7 +164,7 @@ for k in ASL_qpos.keys():
                 'viz_site_targets': ('THtip','IFtip','MFtip','RFtip','LFtip'),
                 'target_jnt_value': np.array(ASL_qpos[k],'float'),
                 'normalize_act': False,
-                'reset_type': "none",        # none, init, random
+                'reset_type': "init",        # none, init, random
                 'target_type': 'fixed',      # switch / generate/ fixed
             }
     )
@@ -181,8 +181,8 @@ register(id='HandPoseMuscleRandom-v0',
             'viz_site_targets': ('THtip','IFtip','MFtip','RFtip','LFtip'),
             'target_jnt_range': Rpos,
             'normalize_act': False,
-            'reset_type': "none",        # none, init, random
-            'target_type': 'fixed',      # switch / generate/ fixed
+            'reset_type': "init",        # none, init, random
+            'target_type': 'generate',      # switch / generate/ fixed
         }
 )
 

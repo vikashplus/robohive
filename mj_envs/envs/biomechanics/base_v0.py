@@ -5,9 +5,6 @@ import gym
 
 class BaseV0(env_base.MujocoEnv):
 
-    muscle_condition = ''
-    which_muscles = []
-    which_gain_muscles = []
     MVC_rest = []
     f_load = {}
 
@@ -33,15 +30,13 @@ class BaseV0(env_base.MujocoEnv):
                 self.tip_sids.append(self.sim.model.site_name2id(site))
                 self.target_sids.append(self.sim.model.site_name2id(site+'_target'))
 
-        # TODO: pick it from kwargs
-        self.which_muscles = [2, 3, 4]
-        self.which_gain_muscles = [100, 100, 100]
-        # self.muscle_condition = muscle_condition
+        self.muscle_condition =  kwargs.pop('condition_muscles', '')
+
         # for muscle weakness we assume that a weaker muscle has a
         # reduced maximum force
         if self.muscle_condition == 'weakness':
             for mus_idx in self.which_muscles:
-                self.sim.model.actuator_gainprm[mus_idx,2] = self.which_gain_muscles[mus_idx]*sim.model.actuator_gainprm[mus_idx,2]
+                self.sim.model.actuator_gainprm[mus_idx,2] = 0.5*sim.model.actuator_gainprm[mus_idx,2]
         # for muscle fatigue we used the model from
         # Liang Ma, Damien Chablat, Fouad Bennis, Wei Zhang
         # A new simple dynamic muscle fatigue model and its validation
@@ -75,7 +70,8 @@ class BaseV0(env_base.MujocoEnv):
                 f_cem = self.MVC_rest[mus_idx]*np.exp(f_int)
                 self.sim.model.actuator_gainprm[mus_idx,2] = f_cem
                 self.sim_obsd.model.actuator_gainprm[mus_idx,2] = f_cem
-
+        elif self.muscle_condition == 'reafferentation':
+            print('Reafferentation NOT YET IMPLEMENTED')
         return super().step(a=a)
 
     # def mj_viewer_setup(self):
