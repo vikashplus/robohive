@@ -169,10 +169,10 @@ for k in ASL_qpos.keys():
             }
     )
 
-m = np.array([ASL_qpos[i] for i in range(10)])
+m = np.array([ASL_qpos[i] for i in range(10)]).astype(float)
 Rpos = {}
 for i_n, n  in enumerate(jnt_namesHand):
-    Rpos[n]=m[:,i_n].astype(float)
+    Rpos[n]=(np.min(m[:,i_n]), np.max(m[:,i_n]))
 register(id='HandPoseMuscleRandom-v0',
         entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
         max_episode_steps=100,
