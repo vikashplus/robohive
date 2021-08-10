@@ -52,7 +52,11 @@ class BaodingFixedEnvV1(BaseV0):
         self._setup(**kwargs)
 
 
-    def _setup(self, reward_option, **kwargs):
+    def _setup(self, 
+               reward_option, 
+               obs_keys=DEFAULT_OBS_KEYS, 
+               weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS, 
+               **kwargs):
 
         # user parameters
         self.reward_option = reward_option
@@ -79,8 +83,8 @@ class BaodingFixedEnvV1(BaseV0):
         self.target1_sid = self.sim.model.site_name2id('target1_site')
         self.target2_sid = self.sim.model.site_name2id('target2_site')
 
-        super()._setup(obs_keys=self.DEFAULT_OBS_KEYS, 
-                       weighted_reward_keys=self.DEFAULT_RWD_KEYS_AND_WEIGHTS, 
+        super()._setup(obs_keys=obs_keys, 
+                       weighted_reward_keys=weighted_reward_keys, 
                        **kwargs)
 
 

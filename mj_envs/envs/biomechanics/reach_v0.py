@@ -37,13 +37,15 @@ class ReachEnvV0(BaseV0):
     def _setup(self,
                target_reach_range:dict,
                frame_skip = 10,
+               obs_keys=DEFAULT_OBS_KEYS, 
+               weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
                **kwargs,
         ):
 
         self.target_reach_range = target_reach_range
 
-        super()._setup(obs_keys=self.DEFAULT_OBS_KEYS, 
-                       weighted_reward_keys=self.DEFAULT_RWD_KEYS_AND_WEIGHTS, 
+        super()._setup(obs_keys=obs_keys, 
+                       weighted_reward_keys=weighted_reward_keys, 
                        sites=self.target_reach_range.keys(), 
                        frame_skip=frame_skip, 
                        **kwargs)
