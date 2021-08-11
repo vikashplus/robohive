@@ -2,6 +2,7 @@ from gym.envs.registration import register
 import os
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 
+print("RS:> Registering Arms Envs")
 
 # FRANKA REACH =======================================================================
 from mj_envs.envs.arms.reach_base_v0 import ReachBaseV0
