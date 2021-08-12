@@ -90,28 +90,14 @@ class KitchenBase(env_base.MujocoEnv):
         "approach": 0.5,
     }
 
-    def __init__(
-        self,
-        model_path,
-        config_path,
-        robot_jnt_names,
-        obj_jnt_names,
-        obj_interaction_site,
-        goal,
-        interact_site,
-        seed=None,
-        obj_init=None,
-        obs_keys_wt=DEFAULT_OBS_KEYS_AND_WEIGHTS,
-        weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
-        **kwargs,
-    ):
+    def __init__(self, model_path, **kwargs):
 
         # EzPickle.__init__(**locals()) is capturing the input dictionary of the init method of this class.
         # In order to successfully capture all arguments we need to call gym.utils.EzPickle.__init__(**locals())
         # at the leaf level, when we do inheritance like we do here.
         # kwargs is needed at the top level to account for injection of __class__ keyword.
         # Also see: https://github.com/openai/gym/pull/1497
-        gym.utils.EzPickle.__init__(**locals())
+        gym.utils.EzPickle.__init__(self, model_path, **kwargs)
 
         # This two step construction is required for pickling to work correctly. All arguments to all __init__
         # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we
@@ -120,38 +106,24 @@ class KitchenBase(env_base.MujocoEnv):
         # created in __init__ to complete the setup.
         super().__init__(model_path=model_path)
 
-        self._setup(
-            config_path=config_path,
-            robot_jnt_names=robot_jnt_names,
-            obj_jnt_names=obj_jnt_names,
-            obj_interaction_site=obj_interaction_site,
-            goal=goal,
-            interact_site=interact_site,
-            obj_init=obj_init,
-            obs_keys_wt=obs_keys_wt,
-            weighted_reward_keys=weighted_reward_keys,
-            seed=seed,
-        )
+        self._setup(**kwargs)
 
-    def _setup(
-        self,
-        config_path,
-        robot_jnt_names,
-        obj_jnt_names,
-        obj_interaction_site,
-        goal,
-        interact_site,
-        obj_init,
-        obs_keys_wt,
-        weighted_reward_keys,
-        seed,
-        frame_skip=40,
-        reward_mode="dense",
-        act_mode="vel",
-        normalize_act=True,
-        is_hardware=False,
-        robot_name="Franka_kitchen_sim",
-        obs_range=(-8, 8),
+
+    def _setup(self,
+               robot_jnt_names,
+               obj_jnt_names,
+               obj_interaction_site,
+               goal,
+               interact_site,
+               obj_init,
+               obs_keys=list(DEFAULT_OBS_KEYS_AND_WEIGHTS.keys()),
+               weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
+               # different defaults than what is used in env_base and robot
+               frame_skip=40,
+               obs_range=(-8, 8),
+               act_mode="vel",
+               robot_name="Franka_kitchen_sim",
+               **kwargs,
     ):
 
         if VIZ:
@@ -204,19 +176,13 @@ class KitchenBase(env_base.MujocoEnv):
             )
         self.set_goal(goal=goal, interact_site=interact_site)
 
-        super()._setup(
-            obs_keys=list(obs_keys_wt.keys()),
-            weighted_reward_keys=weighted_reward_keys,
-            reward_mode=reward_mode,
-            frame_skip=frame_skip,
-            normalize_act=normalize_act,
-            seed=seed,
-            act_mode=act_mode,
-            is_hardware=is_hardware,
-            config_path=config_path,
-            obs_range=obs_range,
-            robot_name=robot_name,
-        )
+        super()._setup(obs_keys=obs_keys,
+                       weighted_reward_keys=weighted_reward_keys,
+                       frame_skip=frame_skip,
+                       act_mode=act_mode,
+                       obs_range=obs_range,
+                       robot_name=robot_name,
+                       **kwargs)
 
         self.init_qpos[:] = self.sim.model.key_qpos[0].copy()
         if obj_init:
@@ -380,26 +346,22 @@ class KitchenFrankaFixed(KitchenBase):
     def __init__(
         self,
         model_path,
-        config_path,
         robot_jnt_names=ROBOT_JNT_NAMES,
         obj_jnt_names=OBJ_JNT_NAMES,
         obj_interaction_site=INTERACTION_SITES,
         goal=None,
         interact_site="end_effector",
-        seed=None,
         obj_init=None,
         **kwargs,
     ):
         KitchenBase.__init__(
             self,
             model_path=model_path,
-            config_path=config_path,
             robot_jnt_names=robot_jnt_names,
             obj_jnt_names=obj_jnt_names,
             obj_interaction_site=obj_interaction_site,
             goal=goal,
             interact_site=interact_site,
-            seed=seed,
             obj_init=obj_init,
             **kwargs,
         )

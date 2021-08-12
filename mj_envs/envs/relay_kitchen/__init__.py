@@ -7,6 +7,9 @@ from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import (
 )
 from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import KitchenFrankaDemo
 
+print("RS:> Registering Kitchen Envs")
+
+
 CURR_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = CURR_DIR + "/assets/franka_kitchen.xml"
 CONFIG_PATH = CURR_DIR + "/assets/franka_kitchen.config"
@@ -305,7 +308,7 @@ register(
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
-        "config_path": CONFIG_PATH,        
+        "config_path": CONFIG_PATH,
         "init": {"slidedoor_joint": 0.44},
         "goal": {"slidedoor_joint": 0},
         "obs_keys_wt": obs_keys_wt,

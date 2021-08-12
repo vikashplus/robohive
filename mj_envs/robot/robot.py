@@ -42,6 +42,7 @@ class Robot():
                 sensor_cache_maxsize = 5,   # cache size for sensors
                 noise_scale = 0,            # scale for sensor noise
                 random_generator = None,    # random number generator
+                **kwargs,
             ):
 
         self.name = robot_name+'(sim)' if is_hardware is None else robot_name+'(hdr)'
@@ -450,7 +451,14 @@ class Robot():
         processed_controls = controls.copy()
         act_id = -1
         for name, device in self.robot_config.items():
-            if name != "default_robot":
+            if name == "default_robot":
+                if self._act_mode == "pos":
+                    if normalized:
+                        processed_controls = np.mean(self.sim.model.actuator_ctrlrange, axis=-1)+ \
+                            controls*(self.sim.model.actuator_ctrlrange[:,1]-self.sim.model.actuator_ctrlrange[:,0])/2.0
+                else:
+                    raise TypeError("only pos act supported")
+            else:
                 for actuator in device['actuator']:
                     act_id += 1
                     in_id = actuator['sim_id']

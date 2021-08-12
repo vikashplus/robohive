@@ -15,21 +15,14 @@ class ReachEnvV0(BaseV0):
         "penalty": -50,
     }
 
-    def __init__(self,
-                model_path:str,
-                target_reach_range:dict,
-                seed = None,
-                obs_keys:list = DEFAULT_OBS_KEYS,
-                weighted_reward_keys:dict = DEFAULT_RWD_KEYS_AND_WEIGHTS,
-                **kwargs,
-            ):
+    def __init__(self, model_path:str, **kwargs):
 
         # EzPickle.__init__(**locals()) is capturing the input dictionary of the init method of this class.
         # In order to successfully capture all arguments we need to call gym.utils.EzPickle.__init__(**locals())
         # at the leaf level, when we do inheritance like we do here.
         # kwargs is needed at the top level to account for injection of __class__ keyword.
         # Also see: https://github.com/openai/gym/pull/1497
-        gym.utils.EzPickle.__init__(**locals())
+        gym.utils.EzPickle.__init__(self, model_path, **kwargs)
 
         # This two step construction is required for pickling to work correctly. All arguments to all __init__ 
         # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we 
@@ -38,31 +31,25 @@ class ReachEnvV0(BaseV0):
         # created in __init__ to complete the setup.
         super().__init__(model_path=model_path)
         
-        self._setup(target_reach_range=target_reach_range, 
-                obs_keys=obs_keys, 
-                weighted_reward_keys=weighted_reward_keys,
-                seed=seed)
+        self._setup(**kwargs)
 
 
     def _setup(self,
-            target_reach_range:dict,
-            obs_keys:list,
-            weighted_reward_keys:dict,
-            frame_skip = 10,
-            seed = None,
-            is_hardware = False,
-            config_path = None,
+               target_reach_range:dict,
+               frame_skip = 10,
+               obs_keys=DEFAULT_OBS_KEYS, 
+               weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
+               **kwargs,
         ):
 
         self.target_reach_range = target_reach_range
 
         super()._setup(obs_keys=obs_keys, 
-                weighted_reward_keys=weighted_reward_keys, 
-                sites=self.target_reach_range.keys(), 
-                frame_skip=frame_skip, 
-                seed=seed, 
-                is_hardware=is_hardware, 
-                config_path=config_path)
+                       weighted_reward_keys=weighted_reward_keys, 
+                       sites=self.target_reach_range.keys(), 
+                       frame_skip=frame_skip, 
+                       **kwargs)
+
 
     def get_obs_vec(self):
         self.obs_dict['t'] = np.array([self.sim.data.time])
