@@ -212,7 +212,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "init": {"microjoint": 0},
+        "obj_init": {"microjoint": 0},
         "goal": {"microjoint": -1.25},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "microhandle_site",
@@ -225,7 +225,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "init": {"microjoint": -1.25},
+        "obj_init": {"microjoint": -1.25},
         "goal": {"microjoint": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "microhandle_site",
@@ -240,7 +240,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "init": {"rightdoorhinge": 0},
+        "obj_init": {"rightdoorhinge": 0},
         "goal": {"rightdoorhinge": 1.57},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "rightdoor_site",
@@ -253,7 +253,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "init": {"rightdoorhinge": 1.57},
+        "obj_init": {"rightdoorhinge": 1.57},
         "goal": {"rightdoorhinge": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "rightdoor_site",
@@ -268,7 +268,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "init": {"leftdoorhinge": 0},
+        "obj_init": {"leftdoorhinge": 0},
         "goal": {"leftdoorhinge": -1.25},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "leftdoor_site",
@@ -281,7 +281,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "init": {"leftdoorhinge": -1.25},
+        "obj_init": {"leftdoorhinge": -1.25},
         "goal": {"leftdoorhinge": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "leftdoor_site",
@@ -296,7 +296,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "init": {"slidedoor_joint": 0},
+        "obj_init": {"slidedoor_joint": 0},
         "goal": {"slidedoor_joint": 0.44},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "slide_site",
@@ -309,7 +309,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "init": {"slidedoor_joint": 0.44},
+        "obj_init": {"slidedoor_joint": 0.44},
         "goal": {"slidedoor_joint": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "slide_site",
@@ -324,7 +324,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "init": {"lightswitch_joint": 0},
+        "obj_init": {"lightswitch_joint": 0},
         "goal": {"lightswitch_joint": -0.7},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "light_site",
@@ -337,7 +337,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "init": {"lightswitch_joint": -0.7},
+        "obj_init": {"lightswitch_joint": -0.7},
         "goal": {"lightswitch_joint": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "light_site",
@@ -352,7 +352,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "init": {"knob4_joint": 0},
+        "obj_init": {"knob4_joint": 0},
         "goal": {"knob4_joint": -1.57},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "knob4_site",
@@ -365,7 +365,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "init": {"knob4_joint": -1.57},
+        "obj_init": {"knob4_joint": -1.57},
         "goal": {"knob4_joint": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "knob4_site",
@@ -380,7 +380,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "init": {"knob3_joint": 0},
+        "obj_init": {"knob3_joint": 0},
         "goal": {"knob3_joint": -1.57},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "knob3_site",
@@ -393,7 +393,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "init": {"knob3_joint": -1.57},
+        "obj_init": {"knob3_joint": -1.57},
         "goal": {"knob3_joint": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "knob3_site",
@@ -408,7 +408,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "init": {"knob2_joint": 0},
+        "obj_init": {"knob2_joint": 0},
         "goal": {"knob2_joint": -1.57},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "knob2_site",
@@ -421,7 +421,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "init": {"knob2_joint": -1.57},
+        "obj_init": {"knob2_joint": -1.57},
         "goal": {"knob2_joint": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "knob2_site",
@@ -436,7 +436,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "init": {"knob1_joint": 0},
+        "obj_init": {"knob1_joint": 0},
         "goal": {"knob1_joint": -1.57},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "knob1_site",
@@ -449,7 +449,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "init": {"knob1_joint": -1.57},
+        "obj_init": {"knob1_joint": -1.57},
         "goal": {"knob1_joint": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "knob1_site",
