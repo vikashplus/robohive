@@ -78,9 +78,9 @@ class BaseV0(env_base.MujocoEnv):
 
         return super().step(a=a)
 
-    # def mj_viewer_setup(self):
-    #     self.viewer = MjViewer(self.sim)
-    #     self.viewer.cam.azimuth = 90
-    #     self.sim.forward()
-    #     self.viewer.cam.distance = 1.5
-    #     self.viewer.vopt.flags[3] = 1 # render actuators ***
+    def viewer_setup(self):
+        self.viewer = MjViewer(self.sim)
+        self.viewer.cam.azimuth = 90
+        self.viewer.cam.distance = 1.5
+        self.viewer.vopt.flags[3] = 1 # render actuators ***
+        # self.sim.forward()
