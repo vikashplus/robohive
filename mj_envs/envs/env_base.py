@@ -374,17 +374,15 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     #     #return None
 
 
-    def visualize_policy(self, policy, horizon=1000, num_episodes=1, mode='exploration'):
+    def visualize_policy(self, policy, o, horizon=1000, num_episodes=1, mode='exploration'):
         self.mujoco_render_frames = True
         for ep in range(num_episodes):
-            o = self.reset()
+            if o is None:
+                o = self.reset()
             d = False
             t = 0
             score = 0.0
             while t < horizon and d is False:
-                # o = self._get_obs()
-                # import ipdb; ipdb.set_trace()
-
                 a = policy.get_action(o)[0] if mode == 'exploration' else policy.get_action(o)[1]['evaluation']
                 o, r, d, _ = self.step(a)
                 t = t+1
