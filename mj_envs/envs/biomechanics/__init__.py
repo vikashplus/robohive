@@ -10,7 +10,7 @@ print("RS:> Registering Biomechanics Envs")
 # Finger-tip reaching ==============================
 register(id='FingerReachMotorFixed-v0',
             entry_point='mj_envs.envs.biomechanics.reach_v0:ReachEnvV0',
-            max_episode_steps=10,
+            max_episode_steps=100,
             kwargs={
                 'model_path': curr_dir+'/assets/finger/tendon_finger_motorAct_v0.xml',
                 'target_reach_range': {'IFtip': ((0.2, 0.05, 0.20), (0.2, 0.05, 0.20)),},
@@ -19,7 +19,7 @@ register(id='FingerReachMotorFixed-v0',
     )
 register(id='FingerReachMotorRandom-v0',
             entry_point='mj_envs.envs.biomechanics.reach_v0:ReachEnvV0',
-            max_episode_steps=10,
+            max_episode_steps=100,
             kwargs={
                 'model_path': curr_dir+'/assets/finger/tendon_finger_motorAct_v0.xml',
                 'target_reach_range': {'IFtip': ((0.27, .1, .3), (.1, -.1, .1)),},
@@ -28,21 +28,21 @@ register(id='FingerReachMotorRandom-v0',
     )
 register(id='FingerReachMuscleFixed-v0',
             entry_point='mj_envs.envs.biomechanics.reach_v0:ReachEnvV0',
-            max_episode_steps=10,
+            max_episode_steps=100,
             kwargs={
                 'model_path': curr_dir+'/assets/finger/tendon_finger_muscleAct_v0.xml',
                 'target_reach_range': {'IFtip': ((0.2, 0.05, 0.20), (0.2, 0.05, 0.20)),},
-                'normalize_act': False,
+                'normalize_act': True,
             }
     )
 
 register(id='FingerReachMuscleRandom-v0',
             entry_point='mj_envs.envs.biomechanics.reach_v0:ReachEnvV0',
-            max_episode_steps=10,
+            max_episode_steps=100,
             kwargs={
                 'model_path': curr_dir+'/assets/finger/tendon_finger_muscleAct_v0.xml',
                 'target_reach_range': {'IFtip': ((0.27, .1, .3), (.1, -.1, .1)),},
-                'normalize_act': False,
+                'normalize_act': True,
             }
     )
 
@@ -87,7 +87,7 @@ register(id='FingerPoseMuscleFixed-v0',
                                     'IFdip':(.75, .75)
                                     },
                 'viz_site_targets': ('IFtip',),
-                'normalize_act': False,
+                'normalize_act': True,
             }
     )
 register(id='FingerPoseMuscleRandom-v0',
@@ -101,7 +101,7 @@ register(id='FingerPoseMuscleRandom-v0',
                                     'IFdip':(.1, 1)
                                     },
                 'viz_site_targets': ('IFtip',),
-                'normalize_act': False,
+                'normalize_act': True,
             }
     )
 
@@ -122,7 +122,7 @@ register(id='IFTHPoseMuscleRandom-v0',
                                     'TCP2M2_flex': (-0.0872665, 1.5708)
                                     },
                 'viz_site_targets': ('IFtip','THtip'),
-                'normalize_act': False,
+                'normalize_act': True,
                 'reset_type': 'none',           # none, init, random
                 'target_type': 'generate',      # switch / generate
             }
@@ -135,7 +135,7 @@ register(id='HandPoseAMuscleFixed-v0',
                 'model_path': curr_dir+'/assets/hand/2nd_hand_pose.xml',
                 'viz_site_targets': ('THtip','IFtip','MFtip','RFtip','LFtip'),
                 'target_jnt_value': np.array([0, 0, 0, -0.0904, 0.0824475, -0.681555, -0.514888, 0, -0.013964, -0.0458132, 0, 0.67553, -0.020944, 0.76979, 0.65982, 0, 0, 0, 0, 0.479155, -0.099484, 0.95831, 0]),
-                'normalize_act': False,
+                'normalize_act': True,
                 'reset_type': "init",        # none, init, random
                 'target_type': 'fixed',      # switch / generate/ fixed
             }
@@ -163,7 +163,7 @@ for k in ASL_qpos.keys():
                 'model_path': curr_dir+'/assets/hand/2nd_hand_pose.xml',
                 'viz_site_targets': ('THtip','IFtip','MFtip','RFtip','LFtip'),
                 'target_jnt_value': np.array(ASL_qpos[k],'float'),
-                'normalize_act': False,
+                'normalize_act': True,
                 'reset_type': "none",        # none, init, random
                 'target_type': 'fixed',      # switch / generate/ fixed
             }
@@ -180,7 +180,7 @@ register(id='HandPoseMuscleRandom-v0',
             'model_path': curr_dir+'/assets/hand/2nd_hand_pose.xml',
             'viz_site_targets': ('THtip','IFtip','MFtip','RFtip','LFtip'),
             'target_jnt_range': Rpos,
-            'normalize_act': False,
+            'normalize_act': True,
             'reset_type': "none",        # none, init, random
             'target_type': 'fixed',      # switch / generate/ fixed
         }
@@ -192,7 +192,7 @@ register(id='IFTHKeyTurnFixed-v0',
             max_episode_steps=200,
             kwargs={
                 'model_path': curr_dir+'/assets/hand/2nd_hand_Index_Thumb_keyturn.xml',
-                'normalize_act': False
+                'normalize_act': True
             }
     )
 
@@ -201,7 +201,7 @@ register(id='IFTHKeyTurnRandom-v0',
             max_episode_steps=200,
             kwargs={
                 'model_path': curr_dir+'/assets/hand/2nd_hand_Index_Thumb_keyturn.xml',
-                'normalize_act': False
+                'normalize_act': True
             }
     )
 
@@ -212,7 +212,7 @@ register(id='HandObjHoldFixed-v0',
             max_episode_steps=75,
             kwargs={
                 'model_path': curr_dir+'/assets/hand/2nd_hand_hold.xml',
-                'normalize_act': False
+                'normalize_act': True
             }
     )
 
@@ -221,7 +221,7 @@ register(id='HandObjHoldRandom-v0',
             max_episode_steps=75,
             kwargs={
                 'model_path': curr_dir+'/assets/hand/2nd_hand_hold.xml',
-                'normalize_act': False
+                'normalize_act': True
             }
     )
 
@@ -232,7 +232,7 @@ register(id='HandPenTwirlFixed-v0',
             max_episode_steps=50,
             kwargs={
                 'model_path': curr_dir+'/assets/hand/2nd_hand_pen.xml',
-                'normalize_act': False,
+                'normalize_act': True,
                 'frame_skip': 5,
             }
     )
@@ -242,7 +242,7 @@ register(id='HandPenTwirlRandom-v0',
             max_episode_steps=50,
             kwargs={
                 'model_path': curr_dir+'/assets/hand/2nd_hand_pen.xml',
-                'normalize_act': False,
+                'normalize_act': True,
                 'frame_skip': 5,
             }
     )
@@ -253,7 +253,7 @@ register(id='BaodingFixed-v1',
             max_episode_steps=200,
             kwargs={
                 'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
-                'normalize_act': False,
+                'normalize_act': True,
                 'reward_option': 0,
             }
     )
@@ -262,7 +262,7 @@ register(id='BaodingFixed4th-v1',
             max_episode_steps=200,
             kwargs={
                 'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
-                'normalize_act': False,
+                'normalize_act': True,
                 'reward_option':1
             }
     )
@@ -271,7 +271,7 @@ register(id='BaodingFixed8th-v1',
             max_episode_steps=200,
             kwargs={
                 'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
-                'normalize_act': False,
+                'normalize_act': True,
                 'reward_option': 2,
             }
     )

@@ -66,25 +66,53 @@ class BaseV0(env_base.MujocoEnv):
                     rwd_viz=rwd_viz,
                     normalize_act=normalize_act)
 
-        if self.sim.model.na:
-            assert self.normalize_act is False, "Explict action remapping is performed for envs with muscle actuator. Turn act_normalized to False to remove default linear remapping to action limits"
 
     # step the simulation forward
     def step(self, a):
-        # Override default linear action remapping for Muscle actuators. Remapping must respect actuator limits
-        if self.sim.model.na:
-            a = 1.0/(1.0+np.exp(-5.0*(a-0.5)))
+        """
+        Step the simulation forward (t => t+1)
+        Uses robot interface to safely step the forward respecting pos/ vel limits
+        """
 
+        # handle fatigue
         if self.muscle_condition == 'fatigue':
             for mus_idx in range(self.sim.model.actuator_gainprm.shape[0]):
                 self.f_load[mus_idx].append(self.sim.data.actuator_moment[mus_idx,1].copy())
-                # import ipdb; ipdb.set_trace()
                 f_int = np.sum(self.f_load[mus_idx])/self.MVC_rest[mus_idx]
                 f_cem = self.MVC_rest[mus_idx]*np.exp(f_int)
                 self.sim.model.actuator_gainprm[mus_idx,2] = f_cem
                 self.sim_obsd.model.actuator_gainprm[mus_idx,2] = f_cem
 
-        return super().step(a=a)
+
+        # step the env one step forward
+        if self.sim.model.na:
+            # explicitely project normalized space (-1,1) to actuator space (0,1)
+            # TODO: actuator space may not always be (0,1)
+            a = 1.0/(1.0+np.exp(-5.0*(a-0.5)))
+            isNormalized = False # refuse internal reprojection as we explicitely did it here
+        else:
+            isNormalized = True # accept internal reprojection as we explicitely did it her
+
+        self.last_ctrl = self.robot.step(ctrl_desired=a,
+                                        ctrl_normalized=isNormalized,
+                                        step_duration=self.dt,
+                                        realTimeSim=self.mujoco_render_frames,
+                                        render_cbk=self.mj_render if self.mujoco_render_frames else None)
+
+        # observation
+        obs = self.get_obs()
+
+        # rewards
+        self.expand_dims(self.obs_dict) # required for vectorized rewards calculations
+        self.rwd_dict = self.get_reward_dict(self.obs_dict)
+        self.squeeze_dims(self.rwd_dict)
+        self.squeeze_dims(self.obs_dict)
+
+        # finalize step
+        env_info = self.get_env_infos()
+
+        # returns obs(t+1), rew(t), done(t), info(t+1)
+        return obs, env_info['rwd_'+self.rwd_mode], bool(env_info['done']), env_info
 
     # def mj_viewer_setup(self):
     #     self.viewer = MjViewer(self.sim)
