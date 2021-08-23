@@ -72,32 +72,6 @@ register(id='elbow1D6MRandom-v0',
             }
     )
 
-# Simple models posing ==============================
-register(id='elbow1D1MRandom-v0',
-            entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
-            max_episode_steps=100,
-            kwargs={
-                'model_path': curr_dir+'/assets/arm/elbow_1dof1muscle.xml',
-                'target_jnt_range': {'r_elbow_flex':(0, 2.27),},
-                'viz_site_targets': ('wrist',),
-                'normalize_act': True,
-                'pose_thd': .175,
-                'reset_type': 'random'
-            }
-    )
-register(id='elbow1D6MRandom-v0',
-            entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
-            max_episode_steps=100,
-            kwargs={
-                'model_path': curr_dir+'/assets/arm/elbow_1dof6muscles.xml',
-                'target_jnt_range': {'r_elbow_flex':(0, 2.27),},
-                'viz_site_targets': ('wrist',),
-                'normalize_act': True,
-                'pose_thd': .175,
-                'reset_type': 'random'
-            }
-    )
-
 # Finger-Joint posing ==============================
 register(id='FingerPoseMotorFixed-v0',
             entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
