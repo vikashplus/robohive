@@ -1,6 +1,6 @@
 import collections
 import numpy as np
-import gym 
+import gym
 
 from mj_envs.envs.biomechanics.base_v0 import BaseV0
 from mj_envs.envs.env_base import get_sim
@@ -35,17 +35,19 @@ class PenTwirlFixedEnvV0(BaseV0):
         # Also see: https://github.com/openai/gym/pull/1497
         gym.utils.EzPickle.__init__(**locals())
 
-        # This two step construction is required for pickling to work correctly. All arguments to all __init__ 
-        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we 
+        # This two step construction is required for pickling to work correctly. All arguments to all __init__
+        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we
         # first construct the inheritance chain, which is just __init__ calls all the way down, with env_base
         # creating the sim / sim_obsd instances. Next we run through "setup"  which relies on sim / sim_obsd
         # created in __init__ to complete the setup.
         super().__init__(model_path=model_path)
 
-        self._setup(obs_keys=obs_keys, 
-                    weighted_reward_keys=weighted_reward_keys, 
-                    normalize_act=normalize_act, 
-                    frame_skip=frame_skip, 
+        self.sim.data.qpos[:]='0 0 0.172788 0 0 0 0 0.212085 0 0.212085 0 0.212085 0 0.212085 0 0.212085 0 0.212085 0 0.212085 0 0 0'.split(' ')+6*[0]
+
+        self._setup(obs_keys=obs_keys,
+                    weighted_reward_keys=weighted_reward_keys,
+                    normalize_act=normalize_act,
+                    frame_skip=frame_skip,
                     rwd_viz=False,
                     seed=seed)
 
@@ -69,9 +71,9 @@ class PenTwirlFixedEnvV0(BaseV0):
         self.pen_length = np.linalg.norm(self.sim.model.site_pos[self.obj_t_sid] - self.sim.model.site_pos[self.obj_b_sid])
         self.tar_length = np.linalg.norm(self.sim.model.site_pos[self.tar_t_sid] - self.sim.model.site_pos[self.tar_b_sid])
 
-        super()._setup(obs_keys=obs_keys, 
-            weighted_reward_keys=weighted_reward_keys, 
-            normalize_act=normalize_act, 
+        super()._setup(obs_keys=obs_keys,
+            weighted_reward_keys=weighted_reward_keys,
+            normalize_act=normalize_act,
             rwd_viz=rwd_viz,
             frame_skip=frame_skip,
             seed=seed)

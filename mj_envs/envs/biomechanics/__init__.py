@@ -42,6 +42,31 @@ register(id='FingerReachMuscleRandom-v0',
             }
     )
 
+# Simple models posing ==============================
+register(id='elbow1D1MRandom-v0',
+            entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+            max_episode_steps=100,
+            kwargs={
+                'model_path': curr_dir+'/assets/arm/elbow_1dof1muscle.xml',
+                'target_jnt_range': {'r_elbow_flex':(0, 2.27),},
+                'viz_site_targets': ('wrist',),
+                'normalize_act': True,
+                'pose_thd': .175,
+                'reset_type': 'random'
+            }
+    )
+register(id='elbow1D6MRandom-v0',
+            entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+            max_episode_steps=100,
+            kwargs={
+                'model_path': curr_dir+'/assets/arm/elbow_1dof6muscles.xml',
+                'target_jnt_range': {'r_elbow_flex':(0, 2.27),},
+                'viz_site_targets': ('wrist',),
+                'normalize_act': True,
+                'pose_thd': .175,
+                'reset_type': 'random'
+            }
+    )
 
 # Finger-Joint posing ==============================
 register(id='FingerPoseMotorFixed-v0',
@@ -120,6 +145,43 @@ register(id='IFTHPoseMuscleRandom-v0',
             }
     )
 
+register(id='ITPoseMuscleRandom-v0',
+            entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+            max_episode_steps=100,
+            kwargs={
+                'model_path': curr_dir+'/../../sims/neuromuscular_sim/hand/2nd_Hand_Model_index_thumb_v0.1.3.xml',
+                # 'target_jnt_range': {'pro_sup': (0, 0),
+                #                     'deviation': (0, 0),
+                #                     'flexion': (0, 0),
+                #                     'cmc_abduction': (-0.505, 0.505),
+                #                     'cmc_flexion': (-0.7, 0.7),
+                #                     'mp_flexion': (-0.5, 0.5),
+                #                     'ip_flexion': (-1.31, 0.4),
+                #                     'mcp2_flexion': (0, 1.57),
+                #                     'mcp2_abduction': (-0.26, 0.26),
+                #                     'pm2_flexion': (0, 1.57),
+                #                     'md2_flexion': (0, 1.57)
+                #                     },
+                'target_jnt_range': {'pro_sup': (0.0, 0.0),
+                                    'deviation': (0.0, 0.0),
+                                    'flexion': (0.0, 0.0),
+                                    'cmc_abduction': (0.0248, 0.6392),
+                                    'cmc_flexion': (-0.147495, 0.28272),
+                                    'mp_flexion': (-0.7854, 0.01569),
+                                    'ip_flexion': (-1.309, -0.0262045),
+                                    'mcp2_flexion': (0.366605, 1.30045),
+                                    'mcp2_abduction': (-0.006982, 0.010473),
+                                    'pm2_flexion': (0.128305, 1.45492),
+                                    'md2_flexion': (0.111722, 0.998897),
+                                    },
+                'viz_site_targets': ('IFtip','THtip'),
+                'normalize_act': False,
+                'reset_type': 'none',           # none, init, random
+                'target_type': 'generate',      # switch / generate
+            }
+    )
+
+
 register(id='HandPoseAMuscleFixed-v0',
             entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
             max_episode_steps=100,
@@ -161,10 +223,10 @@ for k in ASL_qpos.keys():
             }
     )
 
-m = np.array([ASL_qpos[i] for i in range(10)])
+m = np.array([ASL_qpos[i] for i in range(10)]).astype(float)
 Rpos = {}
 for i_n, n  in enumerate(jnt_namesHand):
-    Rpos[n]=m[:,i_n].astype(float)
+    Rpos[n]=(np.min(m[:,i_n]), np.max(m[:,i_n]))
 register(id='HandPoseMuscleRandom-v0',
         entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
         max_episode_steps=100,
@@ -173,8 +235,8 @@ register(id='HandPoseMuscleRandom-v0',
             'viz_site_targets': ('THtip','IFtip','MFtip','RFtip','LFtip'),
             'target_jnt_range': Rpos,
             'normalize_act': False,
-            'reset_type': "none",        # none, init, random
-            'target_type': 'fixed',      # switch / generate/ fixed
+            'reset_type': "init",        # none, init, random
+            'target_type': 'generate',      # switch / generate/ fixed
         }
 )
 

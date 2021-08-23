@@ -67,6 +67,7 @@ def local_visualize_policy_offscreen(env, policy, horizon=1000,
 
         
 def main(env_name, policy, mode, seed, episodes):
+    
     env = gym.make(env_name)
     env.seed(seed)
     if policy is not None:
@@ -80,6 +81,8 @@ def main(env_name, policy, mode, seed, episodes):
         env.visualize_policy(pi, num_episodes=episodes, horizon=env.spec.max_episode_steps, mode=mode)
     elif mode == 'save_video':
         local_visualize_policy_offscreen(env, pi, num_episodes=episodes, filename='newvid_'+env_name+'_')
+    else:
+        env.visualize_policy(pi, num_episodes=episodes)
 
     
 if __name__ == '__main__':
