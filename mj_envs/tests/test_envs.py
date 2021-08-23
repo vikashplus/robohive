@@ -6,12 +6,14 @@ import numpy as np
 
 class TestEnvs(unittest.TestCase):
 
-    def check_envs(self, module_name, env_names, lite=False):
+    def check_envs(self, module_name, env_names, lite=False, seed=1234):
         print("\nTesting module:: ", module_name)
         for env_name in env_names:
             print("Testing env: ", env_name)
             # test init
             env = gym.make(env_name)
+            env.seed(seed)
+
             # test reset
             env.env.reset()
             # test obs vec
@@ -32,6 +34,7 @@ class TestEnvs(unittest.TestCase):
 
             # test step (everything together)
             observation, _reward, done, _info = env.env.step(np.zeros(env.env.sim.model.nu))
+            del(env)
 
     # Biomechanics
     def test_biomechanics(self):

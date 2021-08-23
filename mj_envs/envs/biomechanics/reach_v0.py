@@ -17,6 +17,7 @@ class ReachEnvV0(BaseV0):
 
     def __init__(self,
                 model_path:str,
+                normalize_act:bool,
                 target_reach_range:dict,
                 seed = None,
                 obs_keys:list = DEFAULT_OBS_KEYS,
@@ -31,20 +32,22 @@ class ReachEnvV0(BaseV0):
         # Also see: https://github.com/openai/gym/pull/1497
         gym.utils.EzPickle.__init__(**locals())
 
-        # This two step construction is required for pickling to work correctly. All arguments to all __init__ 
-        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we 
+        # This two step construction is required for pickling to work correctly. All arguments to all __init__
+        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we
         # first construct the inheritance chain, which is just __init__ calls all the way down, with env_base
         # creating the sim / sim_obsd instances. Next we run through "setup"  which relies on sim / sim_obsd
         # created in __init__ to complete the setup.
         super().__init__(model_path=model_path)
-        
-        self._setup(target_reach_range=target_reach_range, 
-                obs_keys=obs_keys, 
+
+        self._setup(target_reach_range=target_reach_range,
+                normalize_act=normalize_act,
+                obs_keys=obs_keys,
                 weighted_reward_keys=weighted_reward_keys,
                 seed=seed)
 
 
     def _setup(self,
+            normalize_act:bool,
             target_reach_range:dict,
             obs_keys:list,
             weighted_reward_keys:dict,
@@ -56,12 +59,13 @@ class ReachEnvV0(BaseV0):
 
         self.target_reach_range = target_reach_range
 
-        super()._setup(obs_keys=obs_keys, 
-                weighted_reward_keys=weighted_reward_keys, 
-                sites=self.target_reach_range.keys(), 
-                frame_skip=frame_skip, 
-                seed=seed, 
-                is_hardware=is_hardware, 
+        super()._setup(obs_keys=obs_keys,
+                weighted_reward_keys=weighted_reward_keys,
+                normalize_act=normalize_act,
+                sites=self.target_reach_range.keys(),
+                frame_skip=frame_skip,
+                seed=seed,
+                is_hardware=is_hardware,
                 config_path=config_path)
 
     def get_obs_vec(self):

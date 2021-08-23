@@ -97,7 +97,36 @@ class BaseV0(env_base.MujocoEnv):
             # Set EIP to 0
             a[self.EIPpos] = 0
 
-        return super().step(a=a)
+
+        # step the env one step forward
+        if self.sim.model.na:
+            # explicitely project normalized space (-1,1) to actuator space (0,1)
+            # TODO: actuator space may not always be (0,1)
+            a = 1.0/(1.0+np.exp(-5.0*(a-0.5)))
+            isNormalized = False # refuse internal reprojection as we explicitely did it here
+        else:
+            isNormalized = True # accept internal reprojection as we explicitely did it her
+
+        self.last_ctrl = self.robot.step(ctrl_desired=a,
+                                        ctrl_normalized=isNormalized,
+                                        step_duration=self.dt,
+                                        realTimeSim=self.mujoco_render_frames,
+                                        render_cbk=self.mj_render if self.mujoco_render_frames else None)
+
+        # observation
+        obs = self.get_obs()
+
+        # rewards
+        self.expand_dims(self.obs_dict) # required for vectorized rewards calculations
+        self.rwd_dict = self.get_reward_dict(self.obs_dict)
+        self.squeeze_dims(self.rwd_dict)
+        self.squeeze_dims(self.obs_dict)
+
+        # finalize step
+        env_info = self.get_env_infos()
+
+        # returns obs(t+1), rew(t), done(t), info(t+1)
+        return obs, env_info['rwd_'+self.rwd_mode], bool(env_info['done']), env_info
 
     # def mj_viewer_setup(self):
     #     self.viewer = MjViewer(self.sim)

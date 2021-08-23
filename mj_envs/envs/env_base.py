@@ -51,7 +51,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     def _setup(self,
             obs_keys,
             weighted_reward_keys,
-            reward_mode = "dense",             
+            reward_mode = "dense",
             frame_skip = 1,
             normalize_act = True,
             obs_range = (-10, 10),
@@ -71,8 +71,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.rwd_viz = rwd_viz
 
         # resolve robot config
-        self.robot = Robot(mj_sim=self.sim, 
-                        random_generator=self.np_random, 
+        self.robot = Robot(mj_sim=self.sim,
+                        random_generator=self.np_random,
                         act_mode=act_mode,
                         is_hardware=is_hardware,
                         config_path = config_path,
@@ -108,7 +108,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             linear_jnt_ids = self.sim.model.jnt_type>1
             self.init_qpos[linear_jnt_qposids] = np.mean(self.sim.model.jnt_range[linear_jnt_ids], axis=1)
 
-        return 
+        return
 
     def step(self, a):
         """
