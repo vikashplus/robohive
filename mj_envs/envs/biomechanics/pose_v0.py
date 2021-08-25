@@ -25,6 +25,7 @@ class PoseEnvV0(BaseV0):
                 target_type = "generate",       # generate; switch; fixed
                 obs_keys:list = DEFAULT_OBS_KEYS,
                 weighted_reward_keys:dict = DEFAULT_RWD_KEYS_AND_WEIGHTS,
+                pose_thd = 0.35,
                 **kwargs):
 
         # EzPickle.__init__(**locals()) is capturing the input dictionary of the init method of this class.
@@ -51,6 +52,8 @@ class PoseEnvV0(BaseV0):
                 obs_keys=obs_keys,
                 weighted_reward_keys=weighted_reward_keys,
                 seed=seed,
+                pose_thd = pose_thd,
+                **kwargs
             )
 
     def _setup(self,
@@ -62,6 +65,7 @@ class PoseEnvV0(BaseV0):
             target_type,
             obs_keys:list,
             weighted_reward_keys:dict,
+            pose_thd:int,
             frame_skip = 10,
             seed = None,
             is_hardware = False,
@@ -70,6 +74,7 @@ class PoseEnvV0(BaseV0):
 
         self.reset_type = reset_type
         self.target_type = target_type
+        self.pose_thd = pose_thd
 
         # resolve joint demands
         if target_jnt_range:
@@ -122,11 +127,11 @@ class PoseEnvV0(BaseV0):
         rwd_dict = collections.OrderedDict((
             # Optional Keys
             ('pose',    pose_dist),
-            ('bonus',   (pose_dist<.35) + (pose_dist<.5)),
+            ('bonus',   (pose_dist<self.pose_thd) + (pose_dist<1.5*self.pose_thd)),
             ('penalty', (pose_dist>far_th)),
             # Must keys
             ('sparse',  -1.0*pose_dist),
-            ('solved',  pose_dist<.35),
+            ('solved',  pose_dist<self.pose_thd),
             ('done',    pose_dist>far_th),
         ))
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
