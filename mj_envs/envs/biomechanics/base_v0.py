@@ -7,7 +7,7 @@ class BaseV0(env_base.MujocoEnv):
 
     MVC_rest = []
     f_load = {}
-
+    k_fatigue = 1
     def __init__(self, model_path):
         super().__init__(model_path)
 
@@ -38,29 +38,7 @@ class BaseV0(env_base.MujocoEnv):
 
         self.muscle_condition =  kwargs.pop('condition_muscles', '')
 
-        # self.muscle_condition = muscle_condition
-        # for muscle weakness we assume that a weaker muscle has a
-        # reduced maximum force
-        if self.muscle_condition == 'weakness':
-            for mus_idx in self.which_muscles:
-                self.sim.model.actuator_gainprm[mus_idx,2] = 0.5*self.sim.model.actuator_gainprm[mus_idx,2]
-
-        # for muscle fatigue we used the model from
-        # Liang Ma, Damien Chablat, Fouad Bennis, Wei Zhang
-        # A new simple dynamic muscle fatigue model and its validation
-        # International Journal of Industrial Ergonomics 39 (2009) 211–220
-        elif self.muscle_condition == 'fatigue':
-            self.f_load = {}
-            self.MVC_rest = {}
-            for mus_idx in range(self.sim.model.actuator_gainprm.shape[0]):
-                self.f_load[mus_idx] = []
-                self.MVC_rest[mus_idx] = self.sim.model.actuator_gainprm[mus_idx,2]
-
-        # Tendon transfer to redirect EIP --> EPL
-        # https://www.assh.org/handcare/condition/tendon-transfer-surgery
-        elif self.muscle_condition == 'reafferentation':
-            self.EPLpos = self.sim.model.actuator_name2id('EPL')
-            self.EIPpos = self.sim.model.actuator_name2id('EIP')
+        self.initializeConditions()
 
 
         super()._setup(obs_keys=obs_keys,
@@ -73,6 +51,30 @@ class BaseV0(env_base.MujocoEnv):
                     normalize_act=normalize_act, # <- doesn't seem to be needed
                     **kwargs)
 
+    def initializeConditions(self):
+        # self.muscle_condition = muscle_condition
+        # for muscle weakness we assume that a weaker muscle has a
+        # reduced maximum force
+        if self.muscle_condition == 'weakness':
+            for mus_idx in range(self.sim.model.actuator_gainprm.shape[0]):
+                self.sim.model.actuator_gainprm[mus_idx,2] = 0.5*self.sim.model.actuator_gainprm[mus_idx,2].copy()
+
+        # for muscle fatigue we used the model from
+        # Liang Ma, Damien Chablat, Fouad Bennis, Wei Zhang
+        # A new simple dynamic muscle fatigue model and its validation
+        # International Journal of Industrial Ergonomics 39 (2009) 211–220
+        elif self.muscle_condition == 'fatigue':
+            self.f_load = {}
+            self.MVC_rest = {}
+            for mus_idx in range(self.sim.model.actuator_gainprm.shape[0]):
+                self.f_load[mus_idx] = []
+                self.MVC_rest[mus_idx] = self.sim.model.actuator_gainprm[mus_idx,2].copy()
+
+        # Tendon transfer to redirect EIP --> EPL
+        # https://www.assh.org/handcare/condition/tendon-transfer-surgery
+        elif self.muscle_condition == 'reafferentation':
+            self.EPLpos = self.sim.model.actuator_name2id('EPL')
+            self.EIPpos = self.sim.model.actuator_name2id('EIP')
 
     # step the simulation forward
     def step(self, a):
@@ -87,10 +89,11 @@ class BaseV0(env_base.MujocoEnv):
                 else:
                     self.f_load[mus_idx].append(self.sim.data.actuator_moment[mus_idx,1].copy())
 
-                f_int = np.sum(self.f_load[mus_idx])/self.MVC_rest[mus_idx]
-                f_cem = self.MVC_rest[mus_idx]*np.exp(f_int)
+                f_int = np.sum(self.f_load[mus_idx]-np.max(self.f_load[mus_idx],0),0)/self.MVC_rest[mus_idx]
+                f_cem = self.MVC_rest[mus_idx]*np.exp(self.k_fatigue*f_int)
                 self.sim.model.actuator_gainprm[mus_idx,2] = f_cem
                 self.sim_obsd.model.actuator_gainprm[mus_idx,2] = f_cem
+
         elif self.muscle_condition == 'reafferentation':
             # redirect EIP --> EPL
             a[self.EPLpos] = a[self.EIPpos].copy()
