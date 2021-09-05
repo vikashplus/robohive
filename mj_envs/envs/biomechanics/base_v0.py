@@ -78,9 +78,15 @@ class BaseV0(env_base.MujocoEnv):
 
     # step the simulation forward
     def step(self, a):
-        if self.normalize_act:
+        # Explicitely project normalized space (-1,1) to actuator space (0,1) if muscles
+        if self.sim.model.na:
+            # TODO: actuator space may not always be (0,1)
             a = 1.0/(1.0+np.exp(-5.0*(a-0.5)))
+            isNormalized = False # refuse internal reprojection as we explicitely did it here
+        else:
+            isNormalized = self.normalize_act # accept requested reprojection
 
+        # implement abnormalities
         if self.muscle_condition == 'fatigue':
             for mus_idx in range(self.sim.model.actuator_gainprm.shape[0]):
 
@@ -93,23 +99,13 @@ class BaseV0(env_base.MujocoEnv):
                 f_cem = self.MVC_rest[mus_idx]*np.exp(self.k_fatigue*f_int)
                 self.sim.model.actuator_gainprm[mus_idx,2] = f_cem
                 self.sim_obsd.model.actuator_gainprm[mus_idx,2] = f_cem
-
         elif self.muscle_condition == 'reafferentation':
             # redirect EIP --> EPL
             a[self.EPLpos] = a[self.EIPpos].copy()
             # Set EIP to 0
             a[self.EIPpos] = 0
 
-
-        # step the env one step forward
-        if self.sim.model.na:
-            # explicitely project normalized space (-1,1) to actuator space (0,1)
-            # TODO: actuator space may not always be (0,1)
-            a = 1.0/(1.0+np.exp(-5.0*(a-0.5)))
-            isNormalized = False # refuse internal reprojection as we explicitely did it here
-        else:
-            isNormalized = True # accept internal reprojection as we explicitely did it her
-
+        # step forward
         self.last_ctrl = self.robot.step(ctrl_desired=a,
                                         ctrl_normalized=isNormalized,
                                         step_duration=self.dt,
