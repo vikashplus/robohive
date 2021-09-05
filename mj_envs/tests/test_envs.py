@@ -44,22 +44,21 @@ class TestEnvs(unittest.TestCase):
 
             'FingerPoseMotorFixed-v0', 'FingerPoseMotorRandom-v0',
             'FingerPoseMuscleFixed-v0', 'FingerPoseMuscleRandom-v0',
-
-            'elbow1D1MRandom-v0', 'elbow1D6MRandom-v0',
+            'ElbowPose1D1MRandom-v0', 'ElbowPose1D6MRandom-v0',
 
             'IFTHPoseMuscleRandom-v0',
-            'IFTHKeyTurnFixed-v0', 'IFTHKeyTurnRandom-v0',
 
-            'IFTHPoseMuscleRandom-v0', 'HandPoseAMuscleFixed-v0',
             'IFTHKeyTurnFixed-v0', 'IFTHKeyTurnRandom-v0',
+            'HandKeyTurnFixed-v0', 'HandKeyTurnRandom-v0',
+
             'HandObjHoldFixed-v0', 'HandObjHoldRandom-v0',
+
             'HandPenTwirlFixed-v0', 'HandPenTwirlRandom-v0',
 
             'BaodingFixed-v1', 'BaodingFixed4th-v1', 'BaodingFixed8th-v1',
 
-            'HandPoseMuscleRandom-v0'
+            'HandPoseAMuscleFixed-v0', 'HandPoseMuscleRandom-v0'
         ]
-
         for k in range(10): env_names+=['HandPose'+str(k)+'MuscleFixed-v0']
 
         self.check_envs('Biomechanics', env_names)

@@ -47,7 +47,7 @@ register(id='FingerReachMuscleRandom-v0',
     )
 
 # Simple models posing ==============================
-register(id='elbow1D1MRandom-v0',
+register(id='ElbowPose1D1MRandom-v0',
             entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
             max_episode_steps=100,
             kwargs={
@@ -59,7 +59,7 @@ register(id='elbow1D1MRandom-v0',
                 'reset_type': 'random'
             }
     )
-register(id='elbow1D6MRandom-v0',
+register(id='ElbowPose1D6MRandom-v0',
             entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
             max_episode_steps=100,
             kwargs={
@@ -177,7 +177,7 @@ register(id='ITPoseMuscleRandom-v0',
             }
     )
 
-
+# Remove this one the ASL envs stablizes
 register(id='HandPoseAMuscleFixed-v0',
             entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
             max_episode_steps=100,
@@ -191,6 +191,7 @@ register(id='HandPoseAMuscleFixed-v0',
             }
     )
 
+# Create ASL envs ==============================
 jnt_namesHand=['pro_sup', 'deviation', 'flexion', 'cmc_abduction', 'cmc_flexion', 'mp_flexion', 'ip_flexion', 'mcp2_flexion', 'mcp2_abduction', 'pm2_flexion', 'md2_flexion', 'mcp3_flexion', 'mcp3_abduction', 'pm3_flexion', 'md3_flexion', 'mcp4_flexion', 'mcp4_abduction', 'pm4_flexion', 'md4_flexion', 'mcp5_flexion', 'mcp5_abduction', 'pm5_flexion', 'md5_flexion']
 
 ASL_qpos={}
@@ -205,6 +206,7 @@ ASL_qpos[7]='0 0 0 0.524 0.01569 -0.7854 -1.309 0.645885 -0.006982 0.128305 0.11
 ASL_qpos[8]='0 0 0 0.428 0.22338 -0.7854 -1.309 0.645885 -0.006982 0.128305 0.194636 1.39033 0 1.08399 0.573415 0.667675 -0.020944 0 0.06284 0.432025 -0.068068 0.18852 0.149245'.split(' ')
 ASL_qpos[9]='0 0 0 0.5624 0.28272 -0.75573 -1.309 1.30045 -0.006982 1.45492 0.998897 0.39275 0 0.18852 0.227795 0.667675 -0.020944 0 0.06284 0.432025 -0.068068 0.18852 0.149245'.split(' ')
 
+# ASl Eval envs for each numerals
 for k in ASL_qpos.keys():
     register(id='HandPose'+str(k)+'MuscleFixed-v0',
             entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
@@ -219,10 +221,12 @@ for k in ASL_qpos.keys():
             }
     )
 
+# ASL Train Env
 m = np.array([ASL_qpos[i] for i in range(10)]).astype(float)
 Rpos = {}
 for i_n, n  in enumerate(jnt_namesHand):
     Rpos[n]=(np.min(m[:,i_n]), np.max(m[:,i_n]))
+
 register(id='HandPoseMuscleRandom-v0',
         entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
         max_episode_steps=100,
@@ -234,10 +238,28 @@ register(id='HandPoseMuscleRandom-v0',
             'reset_type': "init",        # none, init, random
             'target_type': 'generate',      # switch / generate/ fixed
         }
-)
+    )
+
 
 # Hand-Joint key turn ==============================
 register(id='IFTHKeyTurnFixed-v0',
+            entry_point='mj_envs.envs.biomechanics.key_turn_v0:KeyTurnFixedEnvV0',
+            max_episode_steps=200,
+            kwargs={
+                'model_path': curr_dir+'/assets/hand/Index_Thumb_keyturn_v0.xml',
+                'normalize_act': True
+            }
+    )
+
+register(id='IFTHKeyTurnRandom-v0', # Hand init pose is random
+            entry_point='mj_envs.envs.biomechanics.key_turn_v0:KeyTurnRandomEnvV0',
+            max_episode_steps=200,
+            kwargs={
+                'model_path': curr_dir+'/assets/hand/Index_Thumb_keyturn_v0.xml',
+                'normalize_act': True
+            }
+    )
+register(id='HandKeyTurnFixed-v0',
             entry_point='mj_envs.envs.biomechanics.key_turn_v0:KeyTurnFixedEnvV0',
             max_episode_steps=200,
             kwargs={
@@ -246,7 +268,7 @@ register(id='IFTHKeyTurnFixed-v0',
             }
     )
 
-register(id='IFTHKeyTurnRandom-v0',
+register(id='HandKeyTurnRandom-v0', # Hand init pose is random
             entry_point='mj_envs.envs.biomechanics.key_turn_v0:KeyTurnRandomEnvV0',
             max_episode_steps=200,
             kwargs={
