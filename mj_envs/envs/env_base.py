@@ -349,6 +349,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             self.viewer.cam.distance = 2.5
             # self.viewer.lookat = np.array([-0.15602934,  0.32243594,  0.70929817])
             #self.viewer._run_speed /= self.frame_skip
+            self.viewer_setup()
             self.viewer.render()
 
 
@@ -445,9 +446,9 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
         raise NotImplementedError
 
-    # def mj_viewer_setup(self):
-    #     """
-    #     Due to specifics of new mujoco rendering, the standard viewer cannot be used
-    #     with this set-up. Instead we use this mujoco specific function.
-    #     """
-    #     pass
+    def viewer_setup(self):
+        """
+        Due to specifics of new mujoco rendering, the standard viewer cannot be used
+        with this set-up. Instead we use this mujoco specific function. Customize your viewer here
+        """
+        pass
