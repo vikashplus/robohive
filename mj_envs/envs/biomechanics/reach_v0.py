@@ -10,9 +10,9 @@ class ReachEnvV0(BaseV0):
 
     DEFAULT_OBS_KEYS = ['qpos', 'qvel', 'tip_pos', 'reach_err']
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
-        "reach": -1.0,
+        "reach": 1.0,
         "bonus": 4.0,
-        "penalty": -50,
+        "penalty": 50,
     }
 
     def __init__(self,
@@ -71,7 +71,7 @@ class ReachEnvV0(BaseV0):
     def get_obs_vec(self):
         self.obs_dict['t'] = np.array([self.sim.data.time])
         self.obs_dict['qpos'] = self.sim.data.qpos[:].copy()
-        self.obs_dict['qvel'] = self.sim.data.qvel[:].copy()
+        self.obs_dict['qvel'] = self.sim.data.qvel[:].copy()*self.dt
         if self.sim.model.na>0:
             self.obs_dict['act'] = self.sim.data.act[:].copy()
 
@@ -90,7 +90,7 @@ class ReachEnvV0(BaseV0):
         obs_dict = {}
         obs_dict['t'] = np.array([sim.data.time])
         obs_dict['qpos'] = sim.data.qpos[:].copy()
-        obs_dict['qvel'] = sim.data.qvel[:].copy()
+        obs_dict['qvel'] = sim.data.qvel[:].copy()*self.dt
         if sim.model.na>0:
             obs_dict['act'] = sim.data.act[:].copy()
 
@@ -105,15 +105,17 @@ class ReachEnvV0(BaseV0):
 
     def get_reward_dict(self, obs_dict):
         reach_dist = np.linalg.norm(obs_dict['reach_err'], axis=-1)
+        act_mag = np.linalg.norm(self.obs_dict['act'], axis=-1)/self.sim.model.na if self.sim.model.na !=0 else 0
         far_th = .35*len(self.tip_sids)
 
         rwd_dict = collections.OrderedDict((
             # Optional Keys
-            ('reach',   reach_dist),
-            ('bonus',   (reach_dist<.010) + (reach_dist<.005)),
-            ('penalty', (reach_dist>far_th)),
+            ('reach',   -1.*reach_dist),
+            ('bonus',   1.*(reach_dist<.010) + 1.*(reach_dist<.005)),
+            ('act_reg', -1.*act_mag),
+            ('penalty', -1.*(reach_dist>far_th)),
             # Must keys
-            ('sparse',  -1.0*reach_dist),
+            ('sparse',  -1.*reach_dist),
             ('solved',  reach_dist<.005),
             ('done',    reach_dist > far_th),
         ))

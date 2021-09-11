@@ -9,9 +9,10 @@ class PoseEnvV0(BaseV0):
 
     DEFAULT_OBS_KEYS = ['qpos', 'qvel', 'pose_err']
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
-        "pose": -1.0,
+        "pose": 1.0,
         "bonus": 4.0,
-        "penalty": -50,
+        "act_reg": 1.0,
+        "penalty": 50,
     }
 
     def __init__(self,
@@ -101,7 +102,7 @@ class PoseEnvV0(BaseV0):
     def get_obs_vec(self):
         self.obs_dict['t'] = np.array([self.sim.data.time])
         self.obs_dict['qpos'] = self.sim.data.qpos[:].copy()
-        self.obs_dict['qvel'] = self.sim.data.qvel[:].copy()
+        self.obs_dict['qvel'] = self.sim.data.qvel[:].copy()*self.dt
         if self.sim.model.na>0:
             self.obs_dict['act'] = self.sim.data.act[:].copy()
 
@@ -113,7 +114,7 @@ class PoseEnvV0(BaseV0):
         obs_dict = {}
         obs_dict['t'] = np.array([sim.data.time])
         obs_dict['qpos'] = sim.data.qpos[:].copy()
-        obs_dict['qvel'] = sim.data.qvel[:].copy()
+        obs_dict['qvel'] = sim.data.qvel[:].copy()*self.dt
         if sim.model.na>0:
             obs_dict['act'] = sim.data.act[:].copy()
 
@@ -122,13 +123,15 @@ class PoseEnvV0(BaseV0):
 
     def get_reward_dict(self, obs_dict):
         pose_dist = np.linalg.norm(obs_dict['pose_err'], axis=-1)
+        act_mag = np.linalg.norm(self.obs_dict['act'], axis=-1)/self.sim.model.na if self.sim.model.na !=0 else 0
         far_th = 4*np.pi/2
 
         rwd_dict = collections.OrderedDict((
             # Optional Keys
-            ('pose',    pose_dist),
-            ('bonus',   (pose_dist<self.pose_thd) + (pose_dist<1.5*self.pose_thd)),
-            ('penalty', (pose_dist>far_th)),
+            ('pose',    -1.*pose_dist),
+            ('bonus',   1.*(pose_dist<self.pose_thd) + 1.*(pose_dist<1.5*self.pose_thd)),
+            ('penalty', -1.*(pose_dist>far_th)),
+            ('act_reg', -1.*act_mag),
             # Must keys
             ('sparse',  -1.0*pose_dist),
             ('solved',  pose_dist<self.pose_thd),

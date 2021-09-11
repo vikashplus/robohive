@@ -10,10 +10,10 @@ class KeyTurnFixedEnvV0(BaseV0):
     DEFAULT_OBS_KEYS = ['hand_qpos', 'hand_qvel', 'key_qpos', 'key_qvel', 'IFtip_approach', 'THtip_approach']
     DEFAULT_RWD_KEYS_AND_WEIGHTS= {
         'key_turn':1.0,
-        'IFtip_approach':-100.0,
-        'THtip_approach':-100.0,
+        'IFtip_approach':100.0,
+        'THtip_approach':100.0,
         'bonus':4.0,
-        'penalty':-25.0
+        'penalty':25.0
     }
 
     def __init__(self,
@@ -31,17 +31,17 @@ class KeyTurnFixedEnvV0(BaseV0):
         # Also see: https://github.com/openai/gym/pull/1497
         gym.utils.EzPickle.__init__(**locals())
 
-        # This two step construction is required for pickling to work correctly. All arguments to all __init__ 
-        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we 
+        # This two step construction is required for pickling to work correctly. All arguments to all __init__
+        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we
         # first construct the inheritance chain, which is just __init__ calls all the way down, with env_base
         # creating the sim / sim_obsd instances. Next we run through "setup"  which relies on sim / sim_obsd
         # created in __init__ to complete the setup.
         super().__init__(model_path=model_path)
 
-        self._setup(obs_keys=obs_keys, 
-                    weighted_reward_keys=weighted_reward_keys, 
-                    normalize_act=normalize_act, 
-                    rwd_viz=False, 
+        self._setup(obs_keys=obs_keys,
+                    weighted_reward_keys=weighted_reward_keys,
+                    normalize_act=normalize_act,
+                    rwd_viz=False,
                     seed=seed)
 
     def _setup(self,
@@ -53,14 +53,15 @@ class KeyTurnFixedEnvV0(BaseV0):
         ):
         self.keyhead_sid = self.sim.model.site_name2id("keyhead")
         self.IF_sid = self.sim.model.site_name2id("IFtip")
-        self.TH_sid = self.sim.model.site_name2id("THtip")   
-        # self.init_qpos = self.sim.model.key_qpos[0]    
+        self.TH_sid = self.sim.model.site_name2id("THtip")
+        # self.init_qpos = self.sim.model.key_qpos[0]
 
-        super()._setup(obs_keys=obs_keys, 
-                    weighted_reward_keys=weighted_reward_keys, 
-                    normalize_act=normalize_act, 
+        super()._setup(obs_keys=obs_keys,
+                    weighted_reward_keys=weighted_reward_keys,
+                    normalize_act=normalize_act,
                     rwd_viz=rwd_viz,
                     seed=seed)
+        self.init_qpos[:-1] *= 0 # Use fully open as init pos
 
     def get_obs_vec(self):
         self.obs_dict['t'] = np.array([self.sim.data.time])
@@ -81,9 +82,9 @@ class KeyTurnFixedEnvV0(BaseV0):
         obs_dict = {}
         obs_dict['t'] = np.array([sim.data.time])
         obs_dict['hand_qpos'] = sim.data.qpos[:-1].copy()
-        obs_dict['hand_qvel'] = sim.data.qvel[:-1].copy()
+        obs_dict['hand_qvel'] = sim.data.qvel[:-1].copy()*self.dt
         obs_dict['key_qpos'] = np.array([sim.data.qpos[-1]])
-        obs_dict['key_qvel'] = np.array([sim.data.qvel[-1]])
+        obs_dict['key_qvel'] = np.array([sim.data.qvel[-1]])*self.dt
         obs_dict['IFtip_approach'] = sim.data.site_xpos[self.keyhead_sid]-sim.data.site_xpos[self.IF_sid]
         obs_dict['THtip_approach'] = sim.data.site_xpos[self.keyhead_sid]-sim.data.site_xpos[self.TH_sid]
         if sim.model.na>0:
@@ -93,20 +94,21 @@ class KeyTurnFixedEnvV0(BaseV0):
     def get_reward_dict(self, obs_dict):
         IF_approach_dist = np.abs(np.linalg.norm(self.obs_dict['IFtip_approach'], axis=-1)-0.040)
         TH_approach_dist = np.abs(np.linalg.norm(self.obs_dict['THtip_approach'], axis=-1)-0.040)
-
         key_qvel = obs_dict['key_qvel'][:,:,0] if obs_dict['key_qvel'].ndim==3 else obs_dict['key_qvel'][0]
+        act_mag = np.linalg.norm(self.obs_dict['act'], axis=-1)/self.sim.model.na if self.sim.model.na !=0 else 0
         far_th = .07
 
         rwd_dict = collections.OrderedDict((
             # Optional Keys
-            ('key_turn', key_qvel),
-            ('IFtip_approach', IF_approach_dist),
-            ('THtip_approach', TH_approach_dist),
-            ('bonus', (key_qvel>np.pi*2) + (key_qvel>np.pi*3)),
-            ('penalty', (IF_approach_dist>far_th/2)+(TH_approach_dist>far_th/2) ),
+            ('key_turn', key_qvel/self.dt),
+            ('IFtip_approach', -1.*IF_approach_dist),
+            ('THtip_approach', -1.*TH_approach_dist),
+            ('act_reg', -1.*act_mag),
+            ('bonus', 1.*(key_qvel>self.dt*np.pi/2) + 1.*(key_qvel>self.dt*np.pi)),
+            ('penalty', -1.*(IF_approach_dist>far_th/2)+1.*(TH_approach_dist>far_th/2) ),
             # Must keys
-            ('sparse', key_qvel),
-            ('solved', obs_dict['key_qpos']>2*np.pi),
+            ('sparse', obs_dict['key_qpos']),
+            ('solved', obs_dict['key_qpos']>np.pi),
             ('done', (IF_approach_dist>far_th) or (TH_approach_dist>far_th)),
         ))
 
