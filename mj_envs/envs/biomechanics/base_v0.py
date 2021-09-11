@@ -80,8 +80,9 @@ class BaseV0(env_base.MujocoEnv):
     def step(self, a):
         # Explicitely project normalized space (-1,1) to actuator space (0,1) if muscles
         if self.sim.model.na:
-            # TODO: actuator space may not always be (0,1)
-            a = 1.0/(1.0+np.exp(-5.0*(a-0.5)))
+            # find muscle actuators
+            muscle_act_ind = self.sim.model.actuator_dyntype==3
+            # TODO: actuator space may not always be (0,1) for muscle or (-1, 1) for others
             isNormalized = False # refuse internal reprojection as we explicitely did it here
         else:
             isNormalized = self.normalize_act # accept requested reprojection
