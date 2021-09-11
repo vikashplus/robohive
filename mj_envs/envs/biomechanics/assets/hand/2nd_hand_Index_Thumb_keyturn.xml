@@ -13,7 +13,7 @@
             <geom type="ellipsoid" size=".030 .030 .004" name="keyhead"/>
             <geom type="capsule" size="0.005 0.070" pos="-.045 0 0" euler="0 1.57 0"/>
             <geom type="box" size=".015 .010 .004" pos="-.1 0.008 0"/>
-            <joint axis="1 0 0" type="hinge" frictionloss="0.2"/>
+            <joint axis="1 0 0" type="hinge" frictionloss="0.02" damping=".1"/>
             <site name="keyhead" size="0.005"/>
         </body>
     </worldbody>

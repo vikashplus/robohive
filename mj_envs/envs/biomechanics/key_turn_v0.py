@@ -10,8 +10,9 @@ class KeyTurnFixedEnvV0(BaseV0):
     DEFAULT_OBS_KEYS = ['hand_qpos', 'hand_qvel', 'key_qpos', 'key_qvel', 'IFtip_approach', 'THtip_approach']
     DEFAULT_RWD_KEYS_AND_WEIGHTS= {
         'key_turn':1.0,
-        'IFtip_approach':100.0,
-        'THtip_approach':100.0,
+        'IFtip_approach':10.0,
+        'THtip_approach':10.0,
+        'act_reg':1.0,
         'bonus':4.0,
         'penalty':25.0
     }
@@ -66,9 +67,9 @@ class KeyTurnFixedEnvV0(BaseV0):
     def get_obs_vec(self):
         self.obs_dict['t'] = np.array([self.sim.data.time])
         self.obs_dict['hand_qpos'] = self.sim.data.qpos[:-1].copy()
-        self.obs_dict['hand_qvel'] = self.sim.data.qvel[:-1].copy()
+        self.obs_dict['hand_qvel'] = self.sim.data.qvel[:-1].copy()*self.dt
         self.obs_dict['key_qpos'] = np.array([self.sim.data.qpos[-1]])
-        self.obs_dict['key_qvel'] = np.array([self.sim.data.qvel[-1]])
+        self.obs_dict['key_qvel'] = np.array([self.sim.data.qvel[-1]])*self.dt
         self.obs_dict['IFtip_approach'] = self.sim.data.site_xpos[self.keyhead_sid]-self.sim.data.site_xpos[self.IF_sid]
         self.obs_dict['THtip_approach'] = self.sim.data.site_xpos[self.keyhead_sid]-self.sim.data.site_xpos[self.TH_sid]
 
@@ -94,20 +95,19 @@ class KeyTurnFixedEnvV0(BaseV0):
     def get_reward_dict(self, obs_dict):
         IF_approach_dist = np.abs(np.linalg.norm(self.obs_dict['IFtip_approach'], axis=-1)-0.040)
         TH_approach_dist = np.abs(np.linalg.norm(self.obs_dict['THtip_approach'], axis=-1)-0.040)
-        key_qvel = obs_dict['key_qvel'][:,:,0] if obs_dict['key_qvel'].ndim==3 else obs_dict['key_qvel'][0]
+        key_pos = obs_dict['key_qpos'][:,:,0] if obs_dict['key_qpos'].ndim==3 else obs_dict['key_qpos'][0]
         act_mag = np.linalg.norm(self.obs_dict['act'], axis=-1)/self.sim.model.na if self.sim.model.na !=0 else 0
-        far_th = .07
-
+        far_th = .060
         rwd_dict = collections.OrderedDict((
             # Optional Keys
-            ('key_turn', key_qvel/self.dt),
+            ('key_turn', key_pos),
             ('IFtip_approach', -1.*IF_approach_dist),
             ('THtip_approach', -1.*TH_approach_dist),
             ('act_reg', -1.*act_mag),
-            ('bonus', 1.*(key_qvel>self.dt*np.pi/2) + 1.*(key_qvel>self.dt*np.pi)),
-            ('penalty', -1.*(IF_approach_dist>far_th/2)+1.*(TH_approach_dist>far_th/2) ),
+            ('bonus', 1.*(key_pos>np.pi/2) + 1.*(key_pos>np.pi)),
+            ('penalty', -1.*(IF_approach_dist>far_th/2)-1.*(TH_approach_dist>far_th/2) ),
             # Must keys
-            ('sparse', obs_dict['key_qpos']),
+            ('sparse', key_pos),
             ('solved', obs_dict['key_qpos']>np.pi),
             ('done', (IF_approach_dist>far_th) or (TH_approach_dist>far_th)),
         ))
