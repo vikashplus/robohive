@@ -12,7 +12,7 @@
 	<default>
 		<geom rgba=".9 .8 .6 1" size="0.01"/>
 		<site type="sphere" rgba=".9 .9 .9 1" size="0.005"/>
-		<joint type="hinge" axis="0 1 0" damping=".05" limited="true" range="0 60" solimplimit="0.95 0.95 0.1"/>
+		<joint type="hinge" axis="0 1 0" damping=".5" armature="0.01" limited="true" range="0 60" solimplimit="0.95 0.95 0.1"/>
 		<default class="muscle">
 			<muscle ctrllimited="true" ctrlrange="0 1" scale="10000"></muscle>
 		</default>
