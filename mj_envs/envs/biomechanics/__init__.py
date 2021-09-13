@@ -89,7 +89,61 @@ register(id='ElbowPose1D6MExoRandom-v0',
             }
         }
     )
+register(id='ElbowPose1D6M_SoftExo_Random-v0',
+        entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+        max_episode_steps=100,
+        kwargs={
+            'model_path': curr_dir+'/assets/arm/elbow_1dof6muscles_1dofsoftexo.xml',
+            'target_jnt_range': {'r_elbow_flex':(0, 2.27),},
+            'viz_site_targets': ('wrist',),
+            'normalize_act': True,
+            'pose_thd': .175,
+            'reset_type': 'random',
+            'weighted_reward_keys':{
+                                "pose": 1.0,
+                                "bonus": 4.0,
+                                "act_reg": 5.0,
+                                "penalty": 50,
+            }
+        }
+    )
+register(id='ElbowPose1D6MExoRandom_1kg-v0',
+        entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+        max_episode_steps=100,
+        kwargs={
+            'model_path': curr_dir+'/assets/arm/elbow_1dof6muscles_1dofexo_1kg.xml',
+            'target_jnt_range': {'r_elbow_flex':(0, 2.27),},
+            'viz_site_targets': ('wrist',),
+            'normalize_act': True,
+            'pose_thd': .175,
+            'reset_type': 'random',
+            'weighted_reward_keys':{
+                                "pose": 1.0,
+                                "bonus": 4.0,
+                                "act_reg": 5.0,
+                                "penalty": 50,
+            }
+        }
+    )
 
+register(id='ElbowPose1D6MExoRandom_2kg-v0',
+        entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+        max_episode_steps=100,
+        kwargs={
+            'model_path': curr_dir+'/assets/arm/elbow_1dof6muscles_1dofexo_2kg.xml',
+            'target_jnt_range': {'r_elbow_flex':(0, 2.27),},
+            'viz_site_targets': ('wrist',),
+            'normalize_act': True,
+            'pose_thd': .175,
+            'reset_type': 'random',
+            'weighted_reward_keys':{
+                                "pose": 1.0,
+                                "bonus": 4.0,
+                                "act_reg": 5.0,
+                                "penalty": 50,
+            }
+        }
+    )
 # Finger-Joint posing ==============================
 register(id='FingerPoseMotorFixed-v0',
         entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
