@@ -21,7 +21,7 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         curr_dir = os.path.dirname(os.path.abspath(__file__))
         self.sims = []
         self.sims_idx = []
-        for i, path in enumerate(kwargs['model_paths']) : 
+        for i, path in enumerate(kwargs['model_paths']) :
             self.sims.append(mujoco_env.get_sim(model_path=path))
             self.sims_idx.append(i)
         sim = self.sims[0]
@@ -30,6 +30,10 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.S_grasp_sid = sim.model.site_name2id('S_grasp')
         self.obj_bid = sim.model.body_name2id('object')
         self.tool_sid = sim.model.site_name2id('tool')
+
+        self.target_pos_range = kwargs['target_pos_range']
+        self.tool_pos_range = kwargs['tool_pos_range']
+        self.tool_euler_range = kwargs['tool_euler_range']
 
         # change actuator sensitivity
         for sim in self.sims :
@@ -171,8 +175,11 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.model = self.sim.model
 
         self.sim.reset()
-        self.model.site_pos[self.target_obj_sid,2] = self.np_random.uniform(low=0.1, high=0.25)
-        self.data.qpos[-7:-6] = self.np_random.uniform(low=-0.1, high=0.1) # x,y,z,4 quat
+        #self.model.site_pos[self.target_obj_sid,2] = self.np_random.uniform(low=0.1, high=0.25)
+        #self.data.qpos[-7:-6] = self.np_random.uniform(low=-0.1, high=0.1) # x,y,z,4 quat
+        self.model.site_pos[self.target_obj_sid] = [self.np_random.uniform(low=self.target_pos_range[i][0], high=self.target_pos_range[i][1]) for i in range(3)]
+        self.data.qpos[-7:-4] = [self.np_random.uniform(low=self.tool_pos_range[i][0], high=self.tool_pos_range[i][1]) for i in range(3)]
+        self.data.qpos[-4:] = euler2quat([self.np_random.uniform(low=self.tool_euler_range[i][0], high=self.tool_euler_range[i][1]) for i in range(3)])
         self.sim.forward()
         return self.get_obs()
 
@@ -199,6 +206,9 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.viewer.cam.azimuth = 45
         self.viewer.cam.distance = 2.0
         self.sim.forward()
+
+    def render(self, *args, **kwargs):
+        return self.mj_render()
 
     # evaluate paths and log metrics to logger
     def evaluate_success(self, paths, logger=None):
