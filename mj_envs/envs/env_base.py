@@ -296,18 +296,20 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
         qp = self.sim.data.qpos.ravel().copy()
         qv = self.sim.data.qvel.ravel().copy()
-        mocap_pos = self.sim.data.mocap_pos.copy()
-        mocap_quat = self.sim.data.mocap_quat.copy()
-        site_pos = self.sim.model.site_pos[:].copy()
+        mocap_pos = self.sim.data.mocap_pos.copy() if self.sim.model.nmocap>0 else None
+        mocap_quat = self.sim.data.mocap_quat.copy() if self.sim.model.nmocap>0 else None
+        site_pos = self.sim.model.site_pos[:].copy() if self.sim.model.nsite>0 else None
+        site_quat = self.sim.model.site_quat[:].copy() if self.sim.model.nsite>0 else None
         body_pos = self.sim.model.body_pos[:].copy()
+        body_quat = self.sim.model.body_quat[:].copy()
         return dict(qpos=qp,
                     qvel=qv,
                     mocap_pos=mocap_pos,
                     mocap_quat=mocap_quat,
                     site_pos=site_pos,
-                    site_quat=self.sim.model.site_quat[:].copy(),
+                    site_quat=site_quat,
                     body_pos=body_pos,
-                    body_quat=self.sim.model.body_quat[:].copy())
+                    body_quat=body_quat)
 
 
     def set_env_state(self, state_dict):
@@ -318,8 +320,12 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         qp = state_dict['qpos']
         qv = state_dict['qvel']
         self.set_state(qp, qv)
-        self.sim.model.site_pos[:] = state_dict['site_pos']
-        self.sim.model.site_quat[:] = state_dict['site_quat']
+        if self.sim.model.nmocap>0:
+            self.sim.model.mocap_pos[:] = state_dict['mocap_pos']
+            self.sim.model.mocap_quat[:] = state_dict['mocap_quat']
+        if self.sim.model.nsite>0:
+            self.sim.model.site_pos[:] = state_dict['site_pos']
+            self.sim.model.site_quat[:] = state_dict['site_quat']
         self.sim.model.body_pos[:] = state_dict['body_pos']
         self.sim.model.body_quat[:] = state_dict['body_quat']
         self.sim.forward()

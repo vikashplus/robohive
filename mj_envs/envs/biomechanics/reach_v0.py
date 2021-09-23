@@ -10,51 +10,46 @@ class ReachEnvV0(BaseV0):
 
     DEFAULT_OBS_KEYS = ['qpos', 'qvel', 'tip_pos', 'reach_err']
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
-        "reach": -1.0,
+        "reach": 1.0,
         "bonus": 4.0,
-        "penalty": -50,
+        "penalty": 50,
     }
 
     def __init__(self, model_path:str, **kwargs):
-
         # EzPickle.__init__(**locals()) is capturing the input dictionary of the init method of this class.
         # In order to successfully capture all arguments we need to call gym.utils.EzPickle.__init__(**locals())
         # at the leaf level, when we do inheritance like we do here.
         # kwargs is needed at the top level to account for injection of __class__ keyword.
         # Also see: https://github.com/openai/gym/pull/1497
-        gym.utils.EzPickle.__init__(self, model_path, **kwargs)
+        gym.utils.EzPickle.__init__(**locals())
 
-        # This two step construction is required for pickling to work correctly. All arguments to all __init__ 
-        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we 
+        # This two step construction is required for pickling to work correctly. All arguments to all __init__
+        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we
         # first construct the inheritance chain, which is just __init__ calls all the way down, with env_base
         # creating the sim / sim_obsd instances. Next we run through "setup"  which relies on sim / sim_obsd
         # created in __init__ to complete the setup.
         super().__init__(model_path=model_path)
-        
+
         self._setup(**kwargs)
 
 
     def _setup(self,
-               target_reach_range:dict,
-               frame_skip = 10,
-               obs_keys=DEFAULT_OBS_KEYS, 
-               weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
-               **kwargs,
+            target_reach_range:dict,
+            obs_keys:list = DEFAULT_OBS_KEYS,
+            weighted_reward_keys:dict = DEFAULT_RWD_KEYS_AND_WEIGHTS,
+            **kwargs,
         ):
-
         self.target_reach_range = target_reach_range
-
-        super()._setup(obs_keys=obs_keys, 
-                       weighted_reward_keys=weighted_reward_keys, 
-                       sites=self.target_reach_range.keys(), 
-                       frame_skip=frame_skip, 
-                       **kwargs)
-
+        super()._setup(obs_keys=obs_keys,
+                weighted_reward_keys=weighted_reward_keys,
+                sites=self.target_reach_range.keys(),
+                **kwargs,
+                )
 
     def get_obs_vec(self):
         self.obs_dict['t'] = np.array([self.sim.data.time])
         self.obs_dict['qpos'] = self.sim.data.qpos[:].copy()
-        self.obs_dict['qvel'] = self.sim.data.qvel[:].copy()
+        self.obs_dict['qvel'] = self.sim.data.qvel[:].copy()*self.dt
         if self.sim.model.na>0:
             self.obs_dict['act'] = self.sim.data.act[:].copy()
 
@@ -73,7 +68,7 @@ class ReachEnvV0(BaseV0):
         obs_dict = {}
         obs_dict['t'] = np.array([sim.data.time])
         obs_dict['qpos'] = sim.data.qpos[:].copy()
-        obs_dict['qvel'] = sim.data.qvel[:].copy()
+        obs_dict['qvel'] = sim.data.qvel[:].copy()*self.dt
         if sim.model.na>0:
             obs_dict['act'] = sim.data.act[:].copy()
 
@@ -88,15 +83,17 @@ class ReachEnvV0(BaseV0):
 
     def get_reward_dict(self, obs_dict):
         reach_dist = np.linalg.norm(obs_dict['reach_err'], axis=-1)
+        act_mag = np.linalg.norm(self.obs_dict['act'], axis=-1)/self.sim.model.na if self.sim.model.na !=0 else 0
         far_th = .35*len(self.tip_sids)
 
         rwd_dict = collections.OrderedDict((
             # Optional Keys
-            ('reach',   reach_dist),
-            ('bonus',   (reach_dist<.010) + (reach_dist<.005)),
-            ('penalty', (reach_dist>far_th)),
+            ('reach',   -1.*reach_dist),
+            ('bonus',   1.*(reach_dist<.010) + 1.*(reach_dist<.005)),
+            ('act_reg', -1.*act_mag),
+            ('penalty', -1.*(reach_dist>far_th)),
             # Must keys
-            ('sparse',  -1.0*reach_dist),
+            ('sparse',  -1.*reach_dist),
             ('solved',  reach_dist<.005),
             ('done',    reach_dist > far_th),
         ))

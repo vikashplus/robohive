@@ -25,25 +25,24 @@ class BaodingFixedEnvV1(BaseV0):
 
     DEFAULT_OBS_KEYS = ['hand_pos', 'object1_pos', 'object1_velp', 'object2_pos', 'object2_velp', 'target1_pos', 'target2_pos']
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
-       'pos_dist_1':-5.0,
-       'pos_dist_2':-5.0,
-       'drop_penalty':-500.0,
-       'wrist_angle':-0.5,
-       'act_reg':-.1,
+       'pos_dist_1':5.0,
+       'pos_dist_2':5.0,
+       'drop_penalty':500.0,
+       'wrist_angle':0.5,
+       'act_reg':1.0,
        'bonus':1.0
     }
 
     def __init__(self, model_path:str, **kwargs):
-
         # EzPickle.__init__(**locals()) is capturing the input dictionary of the init method of this class.
         # In order to successfully capture all arguments we need to call gym.utils.EzPickle.__init__(**locals())
         # at the leaf level, when we do inheritance like we do here.
         # kwargs is needed at the top level to account for injection of __class__ keyword.
         # Also see: https://github.com/openai/gym/pull/1497
-        gym.utils.EzPickle.__init__(self, model_path, **kwargs)
+        gym.utils.EzPickle.__init__(**locals())
 
-        # This two step construction is required for pickling to work correctly. All arguments to all __init__ 
-        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we 
+        # This two step construction is required for pickling to work correctly. All arguments to all __init__
+        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we
         # first construct the inheritance chain, which is just __init__ calls all the way down, with env_base
         # creating the sim / sim_obsd instances. Next we run through "setup"  which relies on sim / sim_obsd
         # created in __init__ to complete the setup.
@@ -52,11 +51,12 @@ class BaodingFixedEnvV1(BaseV0):
         self._setup(**kwargs)
 
 
-    def _setup(self, 
-               reward_option, 
-               obs_keys=DEFAULT_OBS_KEYS, 
-               weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS, 
-               **kwargs):
+    def _setup(self,
+            reward_option:int=0,
+            obs_keys:list = DEFAULT_OBS_KEYS,
+            weighted_reward_keys:list = DEFAULT_RWD_KEYS_AND_WEIGHTS,
+            **kwargs,
+        ):
 
         # user parameters
         self.reward_option = reward_option
@@ -68,7 +68,7 @@ class BaodingFixedEnvV1(BaseV0):
         #   1= yellow = top right
         #   2= pink = bottom left
         self.ball_1_starting_angle = 3.*np.pi/4.0
-        self.ball_2_starting_angle = -1*np.pi/4.0
+        self.ball_2_starting_angle = -1.*np.pi/4.0
         # init desired trajectory, for baoding
         self.x_radius = 0.025 #0.03
         self.y_radius = 0.028 #0.02 * 1.5 * 1.2
@@ -83,9 +83,11 @@ class BaodingFixedEnvV1(BaseV0):
         self.target1_sid = self.sim.model.site_name2id('target1_site')
         self.target2_sid = self.sim.model.site_name2id('target2_site')
 
-        super()._setup(obs_keys=obs_keys, 
-                       weighted_reward_keys=weighted_reward_keys, 
-                       **kwargs)
+        super()._setup(obs_keys=obs_keys,
+                    weighted_reward_keys=weighted_reward_keys,
+                    **kwargs,
+                )
+        self.init_qpos[:-14] *= 0 # Use fully open as init pos
 
 
     def step(self, a):
@@ -159,8 +161,8 @@ class BaodingFixedEnvV1(BaseV0):
         obs_dict['object2_pos'] = sim.data.site_xpos[self.object2_sid].copy()
 
         # object translational velocities
-        obs_dict['object1_velp']   = sim.data.qvel[-12:-9].copy()
-        obs_dict['object2_velp']   = sim.data.qvel[-6:-3].copy()
+        obs_dict['object1_velp']   = sim.data.qvel[-12:-9].copy()*self.dt
+        obs_dict['object2_velp']   = sim.data.qvel[-6:-3].copy()*self.dt
 
         # site locations in world frame, populated after the step/forward call
         # obs_dict['target1_pos'] = np.array([sim.data.site_xpos[self.target1_sid][0], sim.data.site_xpos[self.target1_sid][1]])
@@ -184,6 +186,7 @@ class BaodingFixedEnvV1(BaseV0):
         # tracking error
         target1_dist = np.linalg.norm(obs_dict['target1_err'], axis=-1)
         target2_dist = np.linalg.norm(obs_dict['target2_err'], axis=-1)
+        act_mag = np.linalg.norm(self.obs_dict['act'], axis=-1)/self.sim.model.na if self.sim.model.na !=0 else 0
 
         # wrist pose err
         hand_pos = obs_dict['hand_pos'][:,:,:3] if obs_dict['hand_pos'].ndim==3 else obs_dict['hand_pos'][:3]
@@ -191,19 +194,19 @@ class BaodingFixedEnvV1(BaseV0):
 
         # detect fall
         object1_pos = obs_dict['object1_pos'][:,:,2] if obs_dict['object1_pos'].ndim==3 else obs_dict['object1_pos'][2]
-        object1_pos = obs_dict['object2_pos'][:,:,2] if obs_dict['object2_pos'].ndim==3 else obs_dict['object2_pos'][2]
+        object2_pos = obs_dict['object2_pos'][:,:,2] if obs_dict['object2_pos'].ndim==3 else obs_dict['object2_pos'][2]
         is_fall_1 = object1_pos < self.drop_height_threshold
-        is_fall_2 = object1_pos < self.drop_height_threshold
+        is_fall_2 = object2_pos < self.drop_height_threshold
         is_fall = np.logical_or(is_fall_1, is_fall_2) #keep both balls up
 
         rwd_dict = collections.OrderedDict((
             # Optional Keys
-            ('pos_dist_1',      target1_dist),
-            ('pos_dist_2',      target2_dist),
-            ('drop_penalty',    is_fall),
-            ('wrist_angle',     wrist_pose_err),
-            ('act_reg',         np.linalg.norm(self.obs_dict['act'], axis=-1)),
-            ('bonus',           (target1_dist < self.proximity_threshold)+(target2_dist < self.proximity_threshold)+4*(target1_dist < self.proximity_threshold)*(target2_dist < self.proximity_threshold)),
+            ('pos_dist_1',      -1.*target1_dist),
+            ('pos_dist_2',      -1.*target2_dist),
+            ('drop_penalty',    -1.*is_fall),
+            ('wrist_angle',     -1.*wrist_pose_err),
+            ('act_reg',         -1.*act_mag),
+            ('bonus',           1.*(target1_dist < self.proximity_threshold)+1.*(target2_dist < self.proximity_threshold)+4.*(target1_dist < self.proximity_threshold)*(target2_dist < self.proximity_threshold)),
             # Must keys
             ('sparse',          -target1_dist-target2_dist),
             ('solved',          (target1_dist < self.proximity_threshold)*(target2_dist < self.proximity_threshold)*(~is_fall)),
@@ -332,7 +335,7 @@ class BaodingFixedEnvV1(BaseV0):
             rwd_dense = np.mean([np.sum(p['env_infos']['rwd_dense'])/horizon for p in paths]) # return rwd/step
             logger.log_kv('rwd_sparse', rwd_sparse)
             logger.log_kv('rwd_dense', rwd_dense)
-            logger.log_kv('success_rate', success_percentage)
+            logger.log_kv('success_percentage', success_percentage)
 
         return success_percentage
 

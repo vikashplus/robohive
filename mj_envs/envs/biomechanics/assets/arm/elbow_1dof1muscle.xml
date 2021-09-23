@@ -1,0 +1,17 @@
+<mujoco model="Elbow joint with single muscle">
+
+    <compiler meshdir='../../../../sims/neuromuscular_sim/elbow/'/>
+    <include file="../../../../sims/neuromuscular_sim/elbow/elbow_1dof1muscle.xml"/>
+
+    <worldbody>
+        <site name="wrist_target" pos="0.001 0.001 0.001" size=".02" rgba="0 1 0 .2"></site>
+    </worldbody>
+
+    <tendon>
+        <spatial name="error" rgba="0 1 0 0.2">
+            <site site="wrist"></site>
+            <site site="wrist_target"></site>
+        </spatial>
+    </tendon>
+
+</mujoco>
