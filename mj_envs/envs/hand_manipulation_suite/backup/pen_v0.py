@@ -48,7 +48,6 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         self.action_space.low  = -1.0 * np.ones_like(self.model.actuator_ctrlrange[:,0])
 
     def step(self, a):
-        env_state = self.get_env_state()
         a = np.clip(a, -1.0, 1.0)
         try:
             starting_up = False
@@ -85,7 +84,7 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
 
         goal_achieved = True if (dist < 0.075 and orien_similarity > 0.95) else False
 
-        return self.get_obs(), reward, done, dict(goal_achieved=goal_achieved, env_state=env_state)
+        return self.get_obs(), reward, done, dict(goal_achieved=goal_achieved)
 
     def get_obs(self):
         qp = self.data.qpos.ravel()

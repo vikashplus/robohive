@@ -35,7 +35,6 @@ class HammerEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         self.action_space.low  = -1.0 * np.ones_like(self.model.actuator_ctrlrange[:,0])
 
     def step(self, a):
-        env_state = self.get_env_state()
         a = np.clip(a, -1.0, 1.0)
         try:
             a = self.act_mid + a * self.act_rng  # mean center and scale
@@ -71,7 +70,7 @@ class HammerEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
 
         goal_achieved = True if np.linalg.norm(target_pos - goal_pos) < 0.010 else False
 
-        return ob, reward, False, dict(goal_achieved=goal_achieved, env_state=env_state)
+        return ob, reward, False, dict(goal_achieved=goal_achieved)
 
     def get_obs(self):
         # qpos for hand

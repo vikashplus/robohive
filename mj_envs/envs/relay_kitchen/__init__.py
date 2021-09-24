@@ -2,9 +2,8 @@ import os
 
 from gym.envs.registration import register
 from mj_envs.envs.relay_kitchen.kitchen_multitask_v1 import KitchenTasksV0
-from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import (
-    KitchenFrankaRandom as KitchenFranka,
-)
+from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import KitchenFrankaFixed as KitchenFranka
+from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import KitchenFrankaRandom
 from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import KitchenFrankaDemo
 
 print("RS:> Registering Kitchen Envs")
@@ -154,12 +153,13 @@ for site in KitchenFranka.INTERACTION_SITES:
     obs_keys_wt[site + "_err"] = 1.0
 
 DEMO_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFrankaDemo"
-RANDOM_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFranka"
+RANDOM_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFrankaRandom"
+FIXED_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFranka"
 
 # Kitchen
 register(
     id="kitchen-v3",
-    entry_point=DEMO_ENTRY_POINT,
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=280,
     kwargs={
         "model_path": MODEL_PATH,
@@ -183,7 +183,7 @@ register(
 # Kitchen
 register(
     id="kitchen_close-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFranka",
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -207,7 +207,7 @@ register(
 # Microwave door
 register(
     id="kitchen_micro_open-v3",
-    entry_point=DEMO_ENTRY_POINT,
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -220,7 +220,7 @@ register(
 )
 register(
     id="kitchen_micro_close-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFranka",
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -235,7 +235,7 @@ register(
 # Right hinge cabinet
 register(
     id="kitchen_rdoor_open-v3",
-    entry_point=DEMO_ENTRY_POINT,
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -248,7 +248,7 @@ register(
 )
 register(
     id="kitchen_rdoor_close-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFranka",
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -263,7 +263,7 @@ register(
 # Left hinge cabinet
 register(
     id="kitchen_ldoor_open-v3",
-    entry_point=DEMO_ENTRY_POINT,
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -276,7 +276,7 @@ register(
 )
 register(
     id="kitchen_ldoor_close-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFranka",
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -291,7 +291,7 @@ register(
 # Slide cabinet
 register(
     id="kitchen_sdoor_open-v3",
-    entry_point=DEMO_ENTRY_POINT,
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -304,7 +304,7 @@ register(
 )
 register(
     id="kitchen_sdoor_close-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFranka",
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -319,7 +319,7 @@ register(
 # Lights
 register(
     id="kitchen_light_on-v3",
-    entry_point=DEMO_ENTRY_POINT,
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -332,7 +332,7 @@ register(
 )
 register(
     id="kitchen_light_off-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFranka",
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -347,7 +347,7 @@ register(
 # Knob4
 register(
     id="kitchen_knob4_on-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFrankaDemo",
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -360,7 +360,7 @@ register(
 )
 register(
     id="kitchen_knob4_off-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFranka",
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -375,7 +375,7 @@ register(
 # Knob3
 register(
     id="kitchen_knob3_on-v3",
-    entry_point=DEMO_ENTRY_POINT,
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -388,7 +388,7 @@ register(
 )
 register(
     id="kitchen_knob3_off-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFranka",
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -403,7 +403,7 @@ register(
 # Knob2
 register(
     id="kitchen_knob2_on-v3",
-    entry_point=DEMO_ENTRY_POINT,
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -416,7 +416,7 @@ register(
 )
 register(
     id="kitchen_knob2_off-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFranka",
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -431,7 +431,7 @@ register(
 # Knob1
 register(
     id="kitchen_knob1_on-v3",
-    entry_point=DEMO_ENTRY_POINT,
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
@@ -444,7 +444,7 @@ register(
 )
 register(
     id="kitchen_knob1_off-v3",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenFranka",
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,

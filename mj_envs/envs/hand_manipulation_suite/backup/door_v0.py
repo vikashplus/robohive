@@ -33,7 +33,6 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         self.door_bid = self.model.body_name2id('frame')
 
     def step(self, a):
-        env_state = self.get_env_state()
         a = np.clip(a, -1.0, 1.0)
         try:
             a = self.act_mid + a*self.act_rng # mean center and scale
@@ -63,7 +62,7 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
 
         goal_achieved = True if door_pos >= 1.35 else False
 
-        return ob, reward, False, dict(goal_achieved=goal_achieved, env_state=env_state)
+        return ob, reward, False, dict(goal_achieved=goal_achieved)
 
     def get_obs(self):
         # qpos for hand
