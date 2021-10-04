@@ -47,6 +47,9 @@ class FrankaArm(hardwareBase):
     def __init__(self, name, ip_address, **kwargs):
         self.name = name
         self.robot = None
+        self.JOINT_OFFSET = torch.tensor(
+            [0, 0, 0, 0, 0., np.pi/2, np.pi/4],
+            dtype=torch.float32) # TODO replace hardcode with config
 
         # Initialize self.robot interface
         self.robot = RobotInterface(
@@ -54,22 +57,20 @@ class FrankaArm(hardwareBase):
         )
         # self.reset()
 
+    def default_policy(self, kq_ratio=.5, kqd_ratio=.5):
+        q_initial = self.get_sensors().clone()
+        kq = kq_ratio * torch.Tensor(self.robot.metadata.default_Kq)
+        kqd = kqd_ratio * torch.Tensor(self.robot.metadata.default_Kqd)
+        return JointPDPolicy(
+                desired_joint_pos=torch.tensor(q_initial),
+                kq=kq, kqd=kqd,
+        )
+
     def connect(self, policy=None):
         """Establish hardware connection"""
-
         if policy==None:
-            # Create policy instance
-            q_initial = self.get_sensors()
-            default_kq = .025*torch.Tensor(self.robot.metadata.default_Kq)
-            default_kqd = .025*torch.Tensor(self.robot.metadata.default_Kqd)
-            policy = JointPDPolicy(
-                desired_joint_pos=q_initial,
-                kq=default_kq,
-                kqd=default_kqd,
-            )
-
-        # Send policy
-        print("\nRunning PD policy...")
+            print("\nRunning PD policy...")
+            policy = self.default_policy()
         self.robot.send_torch_policy(policy, blocking=False)
 
     def okay(self):
@@ -94,14 +95,21 @@ class FrankaArm(hardwareBase):
 
     def get_sensors(self):
         """Get hardware sensors"""
-        joint_angel = self.robot.get_joint_angles()
-        return joint_angel
+        return self.robot.get_joint_angles()
 
-    def apply_commands(self, q_desired):
+    def apply_commands(self):
         """Apply hardware commands"""
-        q_initial = self.get_sensors()
         q_des_tensor = torch.tensor(q_desired)
-        # print(q_initial, q_des_tensor)
+        self.robot.update_current_policy({"q_desired": q_des_tensor})
+
+    def get_sensors_offsets(self):
+        """Get hardware sensors (apply offset)"""
+        joint_angle = self.robot.get_joint_angles()
+        return joint_angle - self.JOINT_OFFSET
+
+    def apply_commands_offsets(self, q_desired):
+        """Apply hardware commands (apply offset)"""
+        q_des_tensor = torch.tensor(q_desired) + self.JOINT_OFFSET
         self.robot.update_current_policy({"q_desired": q_des_tensor})
 
     def __del__(self):
@@ -126,6 +134,7 @@ if __name__ == "__main__":
 
     # user inputs
     time_to_go = 2*np.pi
+    joint = 6
     m = 0.5  # magnitude of sine wave (rad)
     T = 2.0  # period of sine wave
     hz = 50  # update frequency
@@ -133,22 +142,23 @@ if __name__ == "__main__":
     # Initialize robot
     franka = FrankaArm(name="Franka-Demo", ip_address=args.server_ip)
 
+    import time
+    start = time.time()
+    franka.robot.go_home()
     # connect to robot with default policy
     franka.connect(policy=None)
 
-    # Update policy to execute a sine trajectory on joint 6 for 5 seconds
-    print("Starting sine motion updates...")
-    q_initial = franka.get_sensors()
-    q_desired = q_initial.clone()
-    print(list(q_desired.shape))
+    print(f"Took {time.time() - start} sec to go home and set policy")
+
+    q_initial = franka.get_sensors_offsets()
+    q_desired = np.array(q_initial)
+    print(f"Shape of q_desired: {list(q_desired.shape)}")
+    print(f"Starting sine motion updates... will repeat for {time_to_go} seconds")
 
     for i in range(int(time_to_go * hz)):
-        # q_desired[5] = q_initial[5] + m * np.sin(np.pi * i / (T * hz))
-        # q_desired[5] = q_initial[5] + 0.05*np.random.uniform(high=1, low=-1)
-        q_desired = q_initial + 0.01*np.random.uniform(high=1, low=-1, size=7)
-
-        franka.apply_commands(q_desired = q_desired)
+        q_desired[joint] = q_initial[joint] + m * np.sin(np.pi * i / (T * hz))
+        franka.apply_commands_offsets(q_desired = q_desired)
         time.sleep(1 / hz)
 
+    print("Finished moving")
     franka.close()
-
