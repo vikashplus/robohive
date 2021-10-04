@@ -97,7 +97,7 @@ class FrankaArm(hardwareBase):
         """Get hardware sensors"""
         return self.robot.get_joint_angles()
 
-    def apply_commands(self):
+    def apply_commands(self, q_desired):
         """Apply hardware commands"""
         q_des_tensor = torch.tensor(q_desired)
         self.robot.update_current_policy({"q_desired": q_des_tensor})
@@ -110,7 +110,8 @@ class FrankaArm(hardwareBase):
     def apply_commands_offsets(self, q_desired):
         """Apply hardware commands (apply offset)"""
         q_des_tensor = torch.tensor(q_desired) + self.JOINT_OFFSET
-        self.robot.update_current_policy({"q_desired": q_des_tensor})
+        #print('RAW_CMD_DIFF', q_des_tensor.float() - self.robot.get_joint_angles())
+        self.robot.update_current_policy({"q_desired": q_des_tensor.float()})
 
     def __del__(self):
         self.close()
@@ -151,7 +152,7 @@ if __name__ == "__main__":
     print(f"Took {time.time() - start} sec to go home and set policy")
 
     q_initial = franka.get_sensors_offsets()
-    q_desired = np.array(q_initial)
+    q_desired = np.array(q_initial, dtype=np.float64)
     print(f"Shape of q_desired: {list(q_desired.shape)}")
     print(f"Starting sine motion updates... will repeat for {time_to_go} seconds")
 
