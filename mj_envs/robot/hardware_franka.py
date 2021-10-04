@@ -5,9 +5,9 @@ import numpy as np
 from numpy.core.fromnumeric import size
 import torch
 
-from fair_controller_manager import RobotInterface
+from polymetis import RobotInterface
 import torchcontrol as toco
-from .hardware_base import hardwareBase
+from hardware_base import hardwareBase
 import argparse
 
 class JointPDPolicy(toco.PolicyModule):
@@ -31,15 +31,15 @@ class JointPDPolicy(toco.PolicyModule):
 
     def forward(self, state_dict: Dict[str, torch.Tensor]):
         # Parse states
-        q_current = state_dict["joint_pos"]
-        qd_current = state_dict["joint_vel"]
+        q_current = state_dict["joint_positions"]
+        qd_current = state_dict["joint_velocities"]
 
         # Execute PD control
         output = self.feedback(
             q_current, qd_current, self.q_desired, torch.zeros_like(qd_current)
         )
 
-        return {"torque_desired": output}
+        return {"joint_torques": output}
 
 
 
@@ -116,7 +116,7 @@ def get_args():
     parser.add_argument("-i", "--server_ip",
                         type=str,
                         help="IP address or hostname of the franka server",
-                        default="localhost") # 10.0.0.123 # "169.254.163.91",
+                        default="172.16.0.1") # 10.0.0.123 # "169.254.163.91",
     return parser.parse_args()
 
 
