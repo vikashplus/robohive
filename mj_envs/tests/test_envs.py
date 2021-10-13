@@ -41,25 +41,22 @@ class TestEnvs(unittest.TestCase):
         env_names = [
             'FingerReachMotorFixed-v0', 'FingerReachMotorRandom-v0',
             'FingerReachMuscleFixed-v0', 'FingerReachMuscleRandom-v0',
+            'HandReachMuscleFixed-v0', 'HandReachMuscleRandom-v0',
 
             'FingerPoseMotorFixed-v0', 'FingerPoseMotorRandom-v0',
             'FingerPoseMuscleFixed-v0', 'FingerPoseMuscleRandom-v0',
+
             'ElbowPose1D1MRandom-v0', 'ElbowPose1D6MRandom-v0',
-            'ElbowPose1D6MExoRandom-v0',
+            'ElbowPose1D6MExoRandom-v0', 'ElbowPose1D6M_SoftExo_Random-v0',
+            'ElbowPose1D6MExoRandom_1kg-v0', 'ElbowPose1D6MExoRandom_2kg-v0',
+            'HandPoseMuscleFixed-v0', 'HandPoseMuscleRandom-v0',
 
-            'ElbowPose1D6M_SoftExo_Random-v0', 'ElbowPose1D6MExoRandom_1kg-v0', 'ElbowPose1D6MExoRandom_2kg-v0',
-
-            'IFTHKeyTurnFixed-v0', 'IFTHKeyTurnRandom-v0',
             'HandKeyTurnFixed-v0', 'HandKeyTurnRandom-v0',
-
             'HandObjHoldFixed-v0', 'HandObjHoldRandom-v0',
-
             'HandPenTwirlFixed-v0', 'HandPenTwirlRandom-v0',
 
-            'BaodingFixed-v1', 'BaodingFixed4th-v1', 'BaodingFixed8th-v1',
-
-            'IFTHPoseMuscleRandom-v0',
-            'HandPoseAMuscleFixed-v0', 'HandPoseMuscleRandom-v0'
+            'BaodingFixed-v1', 'BaodingRandom-v1',
+            'BaodingFixed4th-v1','BaodingFixed8th-v1',
         ]
         for k in range(10): env_names+=['HandPose'+str(k)+'MuscleFixed-v0']
 

@@ -10,20 +10,22 @@ print("RS:> Registering Biomechanics Envs")
 # Finger-tip reaching ==============================
 register(id='FingerReachMotorFixed-v0',
         entry_point='mj_envs.envs.biomechanics.reach_v0:ReachEnvV0',
-        max_episode_steps=100,
+        max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/finger/tendon_finger_motorAct_v0.xml',
             'target_reach_range': {'IFtip': ((0.2, 0.05, 0.20), (0.2, 0.05, 0.20)),},
-            'normalize_act': True
+            'normalize_act': True,
+            'frame_skip': 5,
         }
     )
 register(id='FingerReachMotorRandom-v0',
         entry_point='mj_envs.envs.biomechanics.reach_v0:ReachEnvV0',
-        max_episode_steps=100,
+        max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/finger/tendon_finger_motorAct_v0.xml',
             'target_reach_range': {'IFtip': ((0.27, .1, .3), (.1, -.1, .1)),},
-            'normalize_act': True
+            'normalize_act': True,
+            'frame_skip': 5,
         }
     )
 register(id='FingerReachMuscleFixed-v0',
@@ -147,7 +149,7 @@ register(id='ElbowPose1D6MExoRandom_2kg-v0',
 # Finger-Joint posing ==============================
 register(id='FingerPoseMotorFixed-v0',
         entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
-        max_episode_steps=100,
+        max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/finger/tendon_finger_motorAct_v0.xml',
             'target_jnt_range': {'IFadb':(0, 0),
@@ -156,12 +158,13 @@ register(id='FingerPoseMotorFixed-v0',
                                 'IFdip':(.75, .75)
                                 },
             'viz_site_targets': ('IFtip',),
-            'normalize_act': True
+            'normalize_act': True,
+            'frame_skip': 5,
         }
 )
 register(id='FingerPoseMotorRandom-v0',
         entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
-        max_episode_steps=100,
+        max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/finger/tendon_finger_motorAct_v0.xml',
             'target_jnt_range': {'IFadb':(-.2, .2),
@@ -170,7 +173,8 @@ register(id='FingerPoseMotorRandom-v0',
                                 'IFdip':(.1, 1)
                                 },
             'viz_site_targets': ('IFtip',),
-            'normalize_act': True
+            'normalize_act': True,
+            'frame_skip': 5,
         }
     )
 register(id='FingerPoseMuscleFixed-v0',
@@ -203,54 +207,9 @@ register(id='FingerPoseMuscleRandom-v0',
     )
 
 # Hand-Joint posing ==============================
-# OLD MODEL -- Please use new one
-register(id='IFTHPoseMuscleRandom-v0',
-        entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
-        max_episode_steps=100,
-        kwargs={
-            'model_path': curr_dir+'/../../sims/neuromuscular_sim/hand/Index_Thumb_v0.xml',
-            'target_jnt_range': {'MCP2_lateral': (-0.349066, 0.349066),
-                                'MCP2_flex': (-0.174533, 1.5708),
-                                'PIP_flex': (-0.0872665, 1.5708),
-                                'DIP_flex': (-0.0872665, 1.5708),
-                                'thumb_abd': (-0.785398, 0.261799),
-                                'thumb_flex': (-0.785398, 1.5708),
-                                'TCP2M_flex': (-0.17, 0.95),
-                                'TCP2M2_flex': (-0.0872665, 1.5708)
-                                },
-            'viz_site_targets': ('IFtip','THtip'),
-            'normalize_act': True,
-            'reset_type': 'none',           # none, init, random
-            'target_type': 'generate',      # switch / generate
-        }
-    )
-
-register(id='ITPoseMuscleRandom-v0',
-        entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
-        max_episode_steps=100,
-        kwargs={
-            'model_path': curr_dir+'/../../sims/neuromuscular_sim/hand/2nd_Hand_Model_index_thumb_v0.0.2.xml',
-            'target_jnt_range': {'pro_sup': (0.0, 0.0),
-                                'deviation': (0.0, 0.0),
-                                'flexion': (0.0, 0.0),
-                                'cmc_abduction': (0.0248, 0.6392),
-                                'cmc_flexion': (-0.147495, 0.28272),
-                                'mp_flexion': (-0.7854, 0.01569),
-                                'ip_flexion': (-1.309, -0.0262045),
-                                'mcp2_flexion': (0.366605, 1.30045),
-                                'mcp2_abduction': (-0.006982, 0.010473),
-                                'pm2_flexion': (0.128305, 1.45492),
-                                'md2_flexion': (0.111722, 0.998897),
-                                },
-            'viz_site_targets': ('IFtip','THtip'),
-            'normalize_act': True,
-            'reset_type': 'none',           # none, init, random
-            'target_type': 'generate',      # switch / generate
-        }
-    )
 
 # Remove this when the ASL envs stablizes
-register(id='HandPoseAMuscleFixed-v0',
+register(id='HandPoseMuscleFixed-v0',
         entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
@@ -258,6 +217,7 @@ register(id='HandPoseAMuscleFixed-v0',
             'viz_site_targets': ('THtip','IFtip','MFtip','RFtip','LFtip'),
             'target_jnt_value': np.array([0, 0, 0, -0.0904, 0.0824475, -0.681555, -0.514888, 0, -0.013964, -0.0458132, 0, 0.67553, -0.020944, 0.76979, 0.65982, 0, 0, 0, 0, 0.479155, -0.099484, 0.95831, 0]),
             'normalize_act': True,
+            'pose_thd': .7,
             'reset_type': "init",        # none, init, random
             'target_type': 'fixed',      # switch / generate/ fixed
         }
@@ -288,7 +248,8 @@ for k in ASL_qpos.keys():
                 'viz_site_targets': ('THtip','IFtip','MFtip','RFtip','LFtip'),
                 'target_jnt_value': np.array(ASL_qpos[k],'float'),
                 'normalize_act': True,
-                'reset_type': "none",        # none, init, random
+                'pose_thd': .7,
+                'reset_type': "init",        # none, init, random
                 'target_type': 'fixed',      # switch / generate/ fixed
             }
     )
@@ -307,31 +268,48 @@ register(id='HandPoseMuscleRandom-v0',
             'viz_site_targets': ('THtip','IFtip','MFtip','RFtip','LFtip'),
             'target_jnt_range': Rpos,
             'normalize_act': True,
-            'reset_type': "init",        # none, init, random
+            'pose_thd': .7,
+            'reset_type': "random",         # none, init, random
             'target_type': 'generate',      # switch / generate/ fixed
         }
     )
 
+# Hand-Joint Reaching ==============================
+register(id='HandReachMuscleFixed-v0',
+        entry_point='mj_envs.envs.biomechanics.reach_v0:ReachEnvV0',
+        max_episode_steps=100,
+        kwargs={
+            'model_path': curr_dir+'/assets/hand/2nd_hand_pose.xml',
+            'target_reach_range': {
+                'THtip': ((-.24, -.22, 1.02), (-.24, -.22, 1.02)),
+                'IFtip': ((-.22, -.22, 1.02), (-.22, -.22, 1.02)),
+                'MFtip': ((-.21, -.22, 1.02), (-.21, -.22, 1.02)),
+                'RFtip': ((-.20, -.22, 1.02), (-.20, -.22, 1.02)),
+                'LFtip': ((-.19, -.22, 1.02), (-.19, -.22, 1.02)),
+                },
+            'normalize_act': True,
+            'far_th': 0.044
+        }
+    )
+
+register(id='HandReachMuscleRandom-v0',
+    entry_point='mj_envs.envs.biomechanics.reach_v0:ReachEnvV0',
+    max_episode_steps=100,
+    kwargs={
+        'model_path': curr_dir+'/assets/hand/2nd_hand_pose.xml',
+        'target_reach_range': {
+            'THtip': ((-.24, -.24, 1.01), (-.19, -.19, 1.04)),
+            'IFtip': ((-.24, -.24, 1.01), (-.19, -.19, 1.04)),
+            'MFtip': ((-.24, -.24, 1.01), (-.19, -.19, 1.04)),
+            'RFtip': ((-.24, -.24, 1.01), (-.19, -.19, 1.04)),
+            'LFtip': ((-.14, -.24, 1.01), (-.19, -.19, 1.04)),
+            },
+        'normalize_act': True,
+        'far_th': 0.044
+    }
+)
 
 # Hand-Joint key turn ==============================
-register(id='IFTHKeyTurnFixed-v0', #remove
-        entry_point='mj_envs.envs.biomechanics.key_turn_v0:KeyTurnEnvV0',
-        max_episode_steps=200,
-        kwargs={
-            'model_path': curr_dir+'/assets/hand/Index_Thumb_keyturn_v0.xml',
-            'normalize_act': True
-        }
-    )
-
-register(id='IFTHKeyTurnRandom-v0', #remove
-        entry_point='mj_envs.envs.biomechanics.key_turn_v0:KeyTurnEnvV0',
-        max_episode_steps=200,
-        kwargs={
-            'model_path': curr_dir+'/assets/hand/Index_Thumb_keyturn_v0.xml',
-            'normalize_act': True,
-            'key_init_range':(-np.pi/2, np.pi/2)
-        }
-    )
 register(id='HandKeyTurnFixed-v0',
         entry_point='mj_envs.envs.biomechanics.key_turn_v0:KeyTurnEnvV0',
         max_episode_steps=200,
@@ -347,7 +325,8 @@ register(id='HandKeyTurnRandom-v0',
         kwargs={
             'model_path': curr_dir+'/assets/hand/2nd_hand_Index_Thumb_keyturn.xml',
             'normalize_act': True,
-            'key_init_range':(-np.pi/2, np.pi/2)
+            'key_init_range':(-np.pi/2, np.pi/2),
+            'goal_th': 2*np.pi
         }
     )
 
@@ -396,6 +375,15 @@ register(id='HandPenTwirlRandom-v0',
 # Baoding ==============================
 register(id='BaodingFixed-v1',
         entry_point='mj_envs.envs.biomechanics.baoding_v1:BaodingFixedEnvV1',
+        max_episode_steps=200,
+        kwargs={
+            'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
+            'normalize_act': True,
+            'reward_option': 0,
+        }
+    )
+register(id='BaodingRandom-v1',
+        entry_point='mj_envs.envs.biomechanics.baoding_v1:BaodingRandomEnvV1',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',

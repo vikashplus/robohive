@@ -216,22 +216,21 @@ class BaodingFixedEnvV1(BaseV0):
         return rwd_dict
 
 
-    def reset_model(self, reset_pose=None, reset_vel=None, reset_goal=None):
+    def reset(self, reset_pose=None, reset_vel=None, reset_goal=None, period=200):
 
         # reset counters
         self.counter=0
 
         # reset goal
-        self.goal = self.create_goal_trajectory() if reset_goal is None else reset_goal.copy()
+        self.goal = self.create_goal_trajectory(period=period) if reset_goal is None else reset_goal.copy()
 
         # reset scene
-        obs = super().reset_model(qp=reset_pose, qv=reset_vel)
+        obs = super().reset(reset_qpos=reset_pose, reset_qvel=reset_vel)
         return obs
 
-    def create_goal_trajectory(self):
+    def create_goal_trajectory(self, period = 200):
 
         len_of_goals = 1000
-        period = 200
         goal_traj = []
         if self.which_task==Task.BAODING_CW:
             sign = -1
@@ -342,11 +341,6 @@ class BaodingFixedEnvV1(BaseV0):
 
 class BaodingRandomEnvV1(BaodingFixedEnvV1):
 
-    def reset_model(self):
-        # randomize target
-        desired_orien = np.zeros(3)
-        desired_orien[0] = self.np_random.uniform(low=-1, high=1)
-        desired_orien[1] = self.np_random.uniform(low=-1, high=1)
-        # self.model.body_quat[self.target_obj_bid] = euler2quat(desired_orien)
-        obs = super().reset_model()
+    def reset(self):
+        obs = super().reset(period = self.np_random.uniform(high=300, low=100))
         return obs

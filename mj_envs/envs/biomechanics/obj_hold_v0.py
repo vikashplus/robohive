@@ -44,6 +44,8 @@ class ObjHoldFixedEnvV0(BaseV0):
                     weighted_reward_keys=weighted_reward_keys,
                     **kwargs,
         )
+        self.init_qpos[:-7] *= 0 # Use fully open as init pos
+
 
     def get_obs_vec(self):
         self.obs_dict['t'] = np.array([self.sim.data.time])
@@ -69,7 +71,7 @@ class ObjHoldFixedEnvV0(BaseV0):
         return obs_dict
 
     def get_reward_dict(self, obs_dict):
-        goal_dist = np.abs(np.linalg.norm(self.obs_dict['obj_err'], axis=-1)-0.040)
+        goal_dist = np.abs(np.linalg.norm(self.obs_dict['obj_err'], axis=-1)) #-0.040)
         act_mag = np.linalg.norm(self.obs_dict['act'], axis=-1)/self.sim.model.na if self.sim.model.na !=0 else 0
         gaol_th = .010
         drop = goal_dist > 0.300
@@ -85,7 +87,6 @@ class ObjHoldFixedEnvV0(BaseV0):
             ('solved', goal_dist<gaol_th),
             ('done', drop),
         ))
-        # rwd_dict['done'] = False
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
 
@@ -95,6 +96,10 @@ class ObjHoldRandomEnvV0(ObjHoldFixedEnvV0):
     def reset(self):
         # randomize target pos
         self.sim.model.site_pos[self.goal_sid] = np.array([-.2, -.2, 1]) + self.np_random.uniform(high=np.array([0.030, 0.030, 0.030]), low=np.array([-.030, -.030, -.030]))
+        # randomize object
+        size = self.np_random.uniform(high=np.array([0.030, 0.030, 0.030]), low=np.array([.020, .020, .020]))
+        self.sim.model.geom_size[-1] = size
+        self.sim.model.site_size[self.goal_sid] = size
         self.robot.sync_sims(self.sim, self.sim_obsd)
         obs = super().reset()
         return obs

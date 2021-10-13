@@ -10,7 +10,7 @@ $ git clone --recursive https://github.com/vikashplus/mj_envs.git
 ```
 2. Update submodules
 ```
-$ cd mj_envs  
+$ cd mj_envs
 $ git submodule update --remote
 ```
 3. Install package using `pip`
@@ -38,4 +38,4 @@ Hand-Manipulation-Suite Tasks [(video)](https://youtu.be/jJtBll8l_OM)
 :-------------------------:
 ![Alt text](mj_envs/hand_manipulation_suite/assets/tasks.jpg?raw=false "Fetch Pole")
 
-## 2. More coming soon 
+## 2. More coming soon

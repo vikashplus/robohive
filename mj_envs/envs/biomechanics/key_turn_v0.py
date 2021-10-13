@@ -38,11 +38,13 @@ class KeyTurnEnvV0(BaseV0):
         self._setup(**kwargs)
 
     def _setup(self,
+            goal_th:float=3.14,
             obs_keys:list = DEFAULT_OBS_KEYS,
             weighted_reward_keys:list = DEFAULT_RWD_KEYS_AND_WEIGHTS,
             key_init_range:tuple=(0,0),
             **kwargs,
         ):
+        self.goal_th = goal_th
         self.keyhead_sid = self.sim.model.site_name2id("keyhead")
         self.IF_sid = self.sim.model.site_name2id("IFtip")
         self.TH_sid = self.sim.model.site_name2id("THtip")
@@ -98,10 +100,9 @@ class KeyTurnEnvV0(BaseV0):
             ('penalty', -1.*(IF_approach_dist>far_th/2)-1.*(TH_approach_dist>far_th/2) ),
             # Must keys
             ('sparse', key_pos),
-            ('solved', obs_dict['key_qpos']>np.pi),
+            ('solved', obs_dict['key_qpos']>self.goal_th),
             ('done', (IF_approach_dist>far_th) or (TH_approach_dist>far_th)),
         ))
-
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
 
@@ -109,5 +110,7 @@ class KeyTurnEnvV0(BaseV0):
         qpos = self.init_qpos.copy() if reset_qpos is None else reset_qpos
         qvel = self.init_qvel.copy() if reset_qvel is None else reset_qvel
         qpos[-1] = self.np_random.uniform(low=self.key_init_range[0], high=self.key_init_range[1])
+        if self.key_init_range[0]!=self.key_init_range[1]: # randomEnv
+            self.sim.model.body_pos[-1] = self.np_random.uniform(low=np.array([-0.24, -0.24, 0.97]), high=np.array([-0.22, -0.22, 0.99]))
         self.robot.reset(qpos, qvel)
         return self.get_obs()
