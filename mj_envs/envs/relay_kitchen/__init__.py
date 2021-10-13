@@ -455,3 +455,51 @@ register(
         "interact_site": "knob1_site",
     },
 )
+
+register(
+    id="kitchen_micro_open_light_on-v3",
+    entry_point=DEMO_ENTRY_POINT,
+    max_episode_steps=50,
+    kwargs={
+        "model_path": MODEL_PATH,
+        "config_path": CONFIG_PATH,
+        "obj_init": {
+            "lightswitch_joint": 0,
+            "microjoint": 0,
+        },
+        "goal": {
+            "lightswitch_joint": -0.48,
+            "microjoint": -0.77
+        },
+        "obs_keys_wt": obs_keys_wt,
+        "interact_site": "light_site",
+    },
+)
+
+register(
+    id="kitchen_light_on_demo-v3",
+    entry_point=DEMO_ENTRY_POINT,
+    max_episode_steps=50,
+    kwargs={
+        "model_path": MODEL_PATH,
+        "config_path": CONFIG_PATH,
+        "obj_init": {"lightswitch_joint": 0},
+        "goal": {"lightswitch_joint": -0.48},
+        "obs_keys_wt": obs_keys_wt,
+        "interact_site": "light_site",
+    },
+)
+
+register(
+    id="kitchen_micro_open_demo-v3",
+    entry_point=DEMO_ENTRY_POINT,
+    max_episode_steps=50,
+    kwargs={
+        "model_path": MODEL_PATH,
+        "config_path": CONFIG_PATH,
+        "obj_init": {"microjoint": 0},
+        "goal": {"microjoint": -0.77},
+        "obs_keys_wt": obs_keys_wt,
+        "interact_site": "microhandle_site",
+    },
+)

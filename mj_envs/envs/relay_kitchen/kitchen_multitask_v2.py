@@ -370,7 +370,11 @@ class KitchenFrankaFixed(KitchenBase):
 
 class KitchenFrankaDemo(KitchenFrankaFixed):
     def reset(self, reset_qpos=None, reset_qvel=None):
-        return super().reset(reset_qpos=DEMO_RESET_QPOS, reset_qvel=DEMO_RESET_QVEL)
+        if reset_qpos is None:
+            reset_qpos = DEMO_RESET_QPOS
+        if reset_qvel is None:
+            reset_qvel = DEMO_RESET_QVEL
+        return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel)
 
 
 class KitchenFrankaRandom(KitchenFrankaFixed):
