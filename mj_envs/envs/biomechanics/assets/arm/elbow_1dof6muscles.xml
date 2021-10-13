@@ -1,4 +1,4 @@
-<mujoco model="Elbow joint with single muscle">
+<mujoco model="Elbow joint with six muscle">
 
     <compiler meshdir='../../../../sims/neuromuscular_sim/elbow/'/>
     <include file="../../../../sims/neuromuscular_sim/elbow/elbow_1dof6muscles.xml"/>
