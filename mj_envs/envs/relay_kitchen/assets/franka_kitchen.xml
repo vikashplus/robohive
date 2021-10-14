@@ -8,7 +8,7 @@
 ====================================================== -©vk©-->
     <size njmax='1000' nconmax='1000'/>
 
-    <include file="../../../sims/scene_sim/basic_scene.xml"/>
+    <include file="../../../sims/scene_sim/topfloor_scene.xml"/>
     <include file="../../../sims/franka_sim/assets/assets.xml"/>
     <include file="../../../sims/franka_sim/assets/gripper_assets.xml"/>
     <include file="../../../sims/franka_sim/assets/actuator0.xml"/>
@@ -44,7 +44,7 @@
 
         <!-- Mocap -->
         <body name="vive_controller" mocap="true" pos="-0.440 -0.092 2.026" euler="-1.57 0 -.785">
-            <geom type="box" group="2" pos='0 0 .142' size="0.02 0.10 0.03" contype="0" conaffinity="0" rgba=".9 .7 .95 0" euler="0 0 -.785"/>
+            <geom type="box" group="2" pos='0 0 .142' size="0.02 0.10 0.03" contype="0" conaffinity="0" rgba=".9 .7 .95 1" euler="0 0 -.785"/>
         </body>
 
         <site name='target' pos='0 0 0' size='0.1' rgba='0 2 0 .2'/>
