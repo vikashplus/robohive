@@ -28,7 +28,8 @@ class MixToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.screwDriver = sim.model.body_name2id('screwDriver')
         self.turner = sim.model.body_name2id('turner')
         self.hammer = sim.model.body_name2id('hammer')
-        self.objects_id = [self.knife, self.spatula, self.ratchet, self.screwDriver, self.turner, self.hammer]
+        #self.objects_id = [self.knife, self.spatula, self.ratchet, self.screwDriver, self.turner, self.hammer]
+        self.objects_id = [self.hammer]
         print("Object ids : ", self.objects_id)
         self.curr_obj = self.knife
 

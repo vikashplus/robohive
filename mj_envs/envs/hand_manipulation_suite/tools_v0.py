@@ -34,6 +34,10 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.target_pos_range = kwargs['target_pos_range']
         self.tool_pos_range = kwargs['tool_pos_range']
         self.tool_euler_range = kwargs['tool_euler_range']
+        self.tool_eulery_curr = None
+        print(kwargs.keys())
+        if 'obj_eulery_curriculum' in kwargs:
+            self.tool_eulery_curr = kwargs['obj_eulery_curriculum']
 
         # change actuator sensitivity
         for sim in self.sims :
@@ -85,6 +89,7 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         # lifting tool
         lifted = (obs_dict['obj_pos'][:,:,2] > 0.04) * (obs_dict['tool_pos'][:,:,2] > 0.04)
         solved = tool_target_dist < 0.05
+        #solved = (obs_dict['obj_pos'][:,:,2] > 0.1) * (obs_dict['tool_pos'][:,:,2] > 0.1)
 
         rwd_dict = collections.OrderedDict((
             # Optional Keys
@@ -179,7 +184,13 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         #self.data.qpos[-7:-6] = self.np_random.uniform(low=-0.1, high=0.1) # x,y,z,4 quat
         self.model.site_pos[self.target_obj_sid] = [self.np_random.uniform(low=self.target_pos_range[i][0], high=self.target_pos_range[i][1]) for i in range(3)]
         self.data.qpos[-7:-4] = [self.np_random.uniform(low=self.tool_pos_range[i][0], high=self.tool_pos_range[i][1]) for i in range(3)]
-        self.data.qpos[-4:] = euler2quat([self.np_random.uniform(low=self.tool_euler_range[i][0], high=self.tool_euler_range[i][1]) for i in range(3)])
+        euler_angles = [self.np_random.uniform(low=self.tool_euler_range[i][0], high=self.tool_euler_range[i][1]) for i in range(3)]
+        if self.tool_eulery_curr:  
+            #print("Reseting y angle based on curriculum")
+            euler_angles[1] = self.tool_eulery_curr.status()
+        #print("Y angles : ", euler_angles)
+        self.data.qpos[-4:] = euler2quat(euler_angles)
+        #print(self.data.qpos[-7:])
         self.sim.forward()
         return self.get_obs()
 
