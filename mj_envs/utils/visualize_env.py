@@ -29,8 +29,9 @@ class rand_policy():
 @click.option('-n', '--num_episodes', type=int, help='number of episodes to visualize', default=10)
 @click.option('-r', '--render', type=click.Choice(['onscreen', 'offscreen']), help='visualize onscreen or offscreen', default='onscreen')
 @click.option('-f', '--filename', type=str, default='newvideo', help=('The name to save the rendered video as.'))
+@click.option('-c', '--camera_name', type=str, help='The name to camera.', default=None)
 
-def main(env_name, policy, mode, seed, num_episodes, render, filename):
+def main(env_name, policy, mode, seed, num_episodes, render, filename,camera_name):
 
     # seed and load environments
     np.random.seed(seed)
@@ -58,7 +59,8 @@ def main(env_name, policy, mode, seed, num_episodes, render, filename):
             num_episodes=num_episodes,
             frame_size=(640,480),
             mode=mode,
-            filename=filename)
+            filename=filename,
+            camera_name=camera_name)
 
 if __name__ == '__main__':
     main()
