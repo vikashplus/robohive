@@ -19,6 +19,7 @@ class BaseV0(env_base.MujocoEnv):
             **kwargs,
         ):
         if self.sim.model.na>0 and 'act' not in obs_keys:
+            obs_keys = obs_keys.copy() # copy before editing incase other envs are using the defaults
             obs_keys.append('act')
 
         # ids
