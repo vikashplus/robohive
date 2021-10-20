@@ -351,6 +351,23 @@ register(id='HandKeyTurnRandom-v0', # Hand init pose is random
         }
     )
 
+register(id='HandKeyTurnFixed_TTrans-v0',
+            entry_point='mj_envs.envs.biomechanics.key_turn_v0:KeyTurnFixedEnvV0',
+            max_episode_steps=200,
+            kwargs={
+                'model_path': curr_dir+'/assets/hand/2nd_hand_Index_Thumb_keyturn_TTrans.xml',
+                'normalize_act': True
+            }
+    )
+
+register(id='HandKeyTurnRandom_TTrans-v0',
+            entry_point='mj_envs.envs.biomechanics.key_turn_v0:KeyTurnFixedEnvV0',
+            max_episode_steps=200,
+            kwargs={
+                'model_path': curr_dir+'/assets/hand/2nd_hand_Index_Thumb_keyturn_TTrans.xml',
+                'normalize_act': True
+            }
+    )
 
 # Hold objects ==============================
 register(id='HandObjHoldFixed-v0',
