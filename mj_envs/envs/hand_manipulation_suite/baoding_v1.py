@@ -3,7 +3,7 @@ import enum
 import gym
 import numpy as np
 
-from mj_envs.envs.biomechanics.base_v0 import BaseV0
+from mj_envs.envs import env_base
 
 # Define the task enum
 class Task(enum.Enum):
@@ -13,7 +13,7 @@ class Task(enum.Enum):
 # Choose task
 WHICH_TASK = Task.BAODING_CCW
 
-class BaodingFixedEnvV1(BaseV0):
+class BaodingFixedEnvV1(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS = [
         'hand_pos',
@@ -55,7 +55,7 @@ class BaodingFixedEnvV1(BaseV0):
         self._setup(**kwargs)
 
     def _setup(self,
-            frame_skip:int=10,
+            frame_skip:int=40,
             n_shifts_per_period:int=-1, # n_shifts/ rotation for target update (-1 contineous)
             obs_keys:list = DEFAULT_OBS_KEYS,
             weighted_reward_keys:list = DEFAULT_RWD_KEYS_AND_WEIGHTS,
@@ -64,21 +64,21 @@ class BaodingFixedEnvV1(BaseV0):
 
         # user parameters
         self.which_task = Task(WHICH_TASK)
-        self.drop_height_threshold = 0.85 # 0.06
+        self.drop_height_threshold = 0.06
         self.proximity_threshold = 0.015
         self.n_shifts_per_period = n_shifts_per_period
 
         # balls start at these angles
-        #   1= yellow = top right
-        #   2= pink = bottom left
+        #   1= yellow = bottom right
+        #   2= pink = top left
         self.ball_1_starting_angle = 3.*np.pi/4.0
         self.ball_2_starting_angle = -1.*np.pi/4.0
 
         # init desired trajectory, for rotations
         if self.which_task!=Task.MOVE_TO_LOCATION:
-            self.x_radius = 0.025 #0.03
-            self.y_radius = 0.028 #0.02 * 1.5 * 1.2
-            self.center_pos = [-.0125, -.05] # [-.0020, -.0522]
+            self.x_radius = 0.03
+            self.y_radius = 0.02 * 1.5 * 1.2
+            self.center_pos = [0.005, 0.06]
         self.counter=0
         self.goal = self.create_goal_trajectory(time_step=frame_skip*self.sim.model.opt.timestep, time_period=6)
 
@@ -102,8 +102,6 @@ class BaodingFixedEnvV1(BaseV0):
                 object2_gid = self.sim.model.geom_name2id('ball2')
                 sim.model.geom_rgba[object2_gid,3] = 0
                 sim.model.site_rgba[self.object2_sid,3] = 0
-                # make object-target tendons invisible
-                self.sim.model.tendon_rgba[-2:,3] = 0
 
             # update target1 to be move target
             self.target1_sid = self.sim.model.site_name2id('move_target_site')
@@ -117,8 +115,8 @@ class BaodingFixedEnvV1(BaseV0):
                 )
 
         # reset position
-        # self.init_qpos = self.sim.model.key_qpos[0].copy()
-        self.init_qpos[:-14] *= 0 # Use fully open as init pos
+        self.init_qpos = self.sim.model.key_qpos[0].copy()
+        # self.init_qpos[:-14] *= 0 # Use fully open as init pos
 
         # V0: Centered the action space around key_qpos[0]. Not sure if it matter.
         # self.act_mid = self.init_qpos[:self.n_jnt].copy()
@@ -151,13 +149,14 @@ class BaodingFixedEnvV1(BaseV0):
 
             # update both sims with desired targets
             for sim in [self.sim, self.sim_obsd]:
-                self.sim.model.site_pos[self.target1_sid, 0] = desired_positions_wrt_palm[0]
-                self.sim.model.site_pos[self.target1_sid, 1] = desired_positions_wrt_palm[1]
-                self.sim.model.site_pos[self.target2_sid, 0] = desired_positions_wrt_palm[2]
-                self.sim.model.site_pos[self.target2_sid, 1] = desired_positions_wrt_palm[3]
+                sim.model.site_pos[self.target1_sid, 0] = desired_positions_wrt_palm[0]
+                sim.model.site_pos[self.target1_sid, 2] = desired_positions_wrt_palm[1]
+                sim.model.site_pos[self.target2_sid, 0] = desired_positions_wrt_palm[2]
+                sim.model.site_pos[self.target2_sid, 2] = desired_positions_wrt_palm[3]
                 # move upward, to be seen
-                sim.model.site_pos[self.target1_sid, 2] = -0.07
-                sim.model.site_pos[self.target2_sid, 2] = -0.07
+                sim.model.site_pos[self.target1_sid, 1] = -0.07
+                sim.model.site_pos[self.target2_sid, 1] = -0.07
+
         self.counter +=1
         # V0: mean center and scaled differently
         # a[a>0] = self.act_mid[a>0] + a[a>0]*self.upper_rng[a>0]
@@ -244,26 +243,26 @@ class BaodingFixedEnvV1(BaseV0):
     def create_goal_trajectory(self, time_step=.1, time_period=6):
         len_of_goals = 1000 # assumes that its greator than env horizon
 
-        # populate go-to task with a target location (pos likely needs update)
+        # populate go-to task with a target location
         if self.which_task==Task.MOVE_TO_LOCATION:
             goal_pos = np.random.randint(4)
             desired_position = []
             if goal_pos==0:
-                desired_position.append(-.195) #x
-                desired_position.append(-.180 ) #y
-                desired_position.append(0.995)  #z
+                desired_position.append(0.01)  #x
+                desired_position.append(0.04)  #y
+                desired_position.append(0.2)  #z
             elif goal_pos==1:
-                desired_position.append(-.185)
-                desired_position.append(-.280)
-                desired_position.append(0.995)
+                desired_position.append(0)
+                desired_position.append(-0.06)
+                desired_position.append(0.24)
             elif goal_pos==2:
-                desired_position.append(-.241)
-                desired_position.append(-.220)
-                desired_position.append(0.995)
+                desired_position.append(-0.02)
+                desired_position.append(-0.02)
+                desired_position.append(0.2)
             else:
-                desired_position.append(-.171)
-                desired_position.append(-.220)
-                desired_position.append(0.995)
+                desired_position.append(0.03)
+                desired_position.append(-0.02)
+                desired_position.append(0.2)
 
             goal_traj = np.tile(desired_position, (len_of_goals, 1))
 

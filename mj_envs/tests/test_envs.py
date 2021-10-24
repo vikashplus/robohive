@@ -81,6 +81,7 @@ class TestEnvs(unittest.TestCase):
         'door-v0',
         'hammer-v0',
         'relocate-v0',
+        'baoding-v1', 'baoding4th-v1', 'baoding8th-v1'
         ]
         self.check_envs('Hand Manipulation', env_names, lite=True)
 

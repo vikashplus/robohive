@@ -14,14 +14,16 @@
     <worldbody>
         <body name="ball1" pos="-.181 -.20 0.995">
             <freejoint/>
-            <geom material="MatBallY" type="sphere" size="0.022" group='0' mass='0.043' condim='4'/>
+            <geom name="ball1" material="MatBallY" type="sphere" size="0.022" group='0' mass='0.043' condim='4'/>
             <site name="ball1_site"  type="sphere" size="0.005" material="MatBallY" group="0"/>
         </body>
         <body name="ball2" pos="-.22 -.24 0.975">
             <freejoint/>
-            <geom material="MatBallP" type="sphere" size="0.022" group='0' mass='0.043' condim='4'/>
+            <geom name="ball2" material="MatBallP" type="sphere" size="0.022" group='0' mass='0.043' condim='4'/>
             <site name="ball2_site"  type="sphere" size="0.005" material="MatBallP" group="0"/>
         </body>
+
+        <site name="move_target_site" type="sphere" size="0.01" rgba="1 0 0 0.5" group="0" pos="0 0 0.01" />
 
         <!-- cameras -->
         <!-- <camera name="cam0" pos="-0.32 0 0.6" quat='0.3 0.19 -0.43 -0.83' fovy='55'/> -->

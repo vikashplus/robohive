@@ -397,7 +397,7 @@ register(id='BaodingFixed4th-v1',
         kwargs={
             'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
             'normalize_act': True,
-            'reward_option':1
+            'n_shifts_per_period':4,
         }
     )
 register(id='BaodingFixed8th-v1',
@@ -406,6 +406,6 @@ register(id='BaodingFixed8th-v1',
         kwargs={
             'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
             'normalize_act': True,
-            'reward_option': 2,
+            'n_shifts_per_period':8,
         }
     )
