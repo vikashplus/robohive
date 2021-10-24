@@ -277,14 +277,19 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
     # state utilities ========================================================
 
-    def set_state(self, qpos, qvel):
+    def set_state(self, qpos=None, qvel=None, act=None):
         """
         Set MuJoCo sim state
         """
         assert qpos.shape == (self.sim.model.nq,) and qvel.shape == (self.sim.model.nv,)
         old_state = self.sim.get_state()
-        new_state = mujoco_py.MjSimState(old_state.time, qpos, qvel,
-                                         old_state.act, old_state.udd_state)
+        if qpos is None:
+            qpos = old_state.qpos
+        if qvel is None:
+            qvel = old_state.qvel
+        if act is None:
+            act = old_state.act
+        new_state = mujoco_py.MjSimState(old_state.time, qpos, qvel, act)
         self.sim.set_state(new_state)
         self.sim.forward()
 
@@ -296,6 +301,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
         qp = self.sim.data.qpos.ravel().copy()
         qv = self.sim.data.qvel.ravel().copy()
+        act = self.sim.data.act.ravel().copy() if self.sim.model.na>0 else None
         mocap_pos = self.sim.data.mocap_pos.copy() if self.sim.model.nmocap>0 else None
         mocap_quat = self.sim.data.mocap_quat.copy() if self.sim.model.nmocap>0 else None
         site_pos = self.sim.model.site_pos[:].copy() if self.sim.model.nsite>0 else None
@@ -304,6 +310,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         body_quat = self.sim.model.body_quat[:].copy()
         return dict(qpos=qp,
                     qvel=qv,
+                    act=act,
                     mocap_pos=mocap_pos,
                     mocap_quat=mocap_quat,
                     site_pos=site_pos,
@@ -319,7 +326,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
         qp = state_dict['qpos']
         qv = state_dict['qvel']
-        self.set_state(qp, qv)
+        act = state_dict['act']
+        self.set_state(qp, qv, act)
         if self.sim.model.nmocap>0:
             self.sim.model.mocap_pos[:] = state_dict['mocap_pos']
             self.sim.model.mocap_quat[:] = state_dict['mocap_quat']
