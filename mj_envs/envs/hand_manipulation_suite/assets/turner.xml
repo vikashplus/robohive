@@ -21,7 +21,8 @@
         <geom name="t_handleB" size="0.0125 0.030 0.005" pos=".05 0 0" quat="0.707388 0 0.706825 0" type="box" condim="4" rgba="0.4 0.42 0.42 1"/>
         <geom name="t_handleT" size="0.0125 0.030 0.005" pos="-.05 0 0" quat="0.707388 0 0.706825 0" type="box" condim="4" rgba="0.4 0.42 0.42 1"/>
 
-        <geom name="t_lip" size="0.006 0.015 0.025" pos="-0.075 0 0" quat="0.707388 0 0.706825 0" type="box" condim="4" rgba="1 1 1 1" />
+        <!-- <geom name="t_lip" size="0.006 0.015 0.025" pos="-0.075 0 0" quat="0.707388 0 0.706825 0" type="box" condim="4" rgba="1 1 1 1" /> -->
+        <geom name="t_neckL" size="0.006 0.015 0.025" pos="-0.075 0 0" quat="0.707388 0 0.706825 0" type="box" condim="4" rgba="1 1 1 1" />
         <geom name="t_neck" size="0.006 0.015 0.025" pos="-0.108 0 -.018" euler="0 .57 0" type="box" condim="4" rgba="1 1 1 1" />
         <geom name="t_head" size="0.006 0.015 0.055" pos="-0.175 0 -.0225" euler="0 -1.4 0" type="box" condim="4" rgba="1 1 1 1" />
 </mujocoinclude>

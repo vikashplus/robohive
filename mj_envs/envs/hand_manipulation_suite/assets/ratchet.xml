@@ -23,5 +23,6 @@
 
     <geom name="r_neck" size="0.006 0.015 0.085" pos="-0.14 0 0" quat="0.707388 0 0.706825 0" type="box" condim="4" rgba="1 1 1 1" />
     <geom name="r_head" size="0.03 0.006" pos="-0.205 0 0" type="cylinder" condim="4" rgba="1 1 1 1" euler="0 0 0"/>
-    <geom name="r_hex" size="0.01 0.01 0.02" pos="-0.205 0 0" type="box" condim="4" rgba=".84 .89 .92 1" euler="0 0 0"/>
+    <!-- <geom name="r_hex" size="0.01 0.01 0.02" pos="-0.205 0 0" type="box" condim="4" rgba=".84 .89 .92 1" euler="0 0 0"/> -->
+    <geom name="r_head2" size="0.01 0.01 0.02" pos="-0.205 0 0" type="box" condim="4" rgba=".84 .89 .92 1" euler="0 0 0"/>
 </mujocoinclude>

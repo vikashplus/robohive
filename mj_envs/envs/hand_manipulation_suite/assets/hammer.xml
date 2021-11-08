@@ -1,7 +1,7 @@
 <mujocoinclude>
         <!-- ======= Knife ======= -->
 
-        <geom name="handle" size="0.025 0.05" quat="0.707388 0 0.706825 0" type="capsule" condim="4" material="MatWood" />
-        <geom name="neck" size="0.007 0.085" pos="-0.14 0 0" quat="0.707388 0 0.706825 0" type="capsule" condim="4" rgba="1 1 1 1" />
-        <geom name="head" size="0.02 0.04" pos="-0.24 0 0" type="cylinder" condim="4" rgba="0.4 0.4 0.4 1" />
+        <geom name="h_handle" size="0.025 0.05" quat="0.707388 0 0.706825 0" type="capsule" condim="4" material="MatWood" />
+        <geom name="h_neck" size="0.007 0.085" pos="-0.14 0 0" quat="0.707388 0 0.706825 0" type="capsule" condim="4" rgba="1 1 1 1" />
+        <geom name="h_head" size="0.02 0.04" pos="-0.24 0 0" type="cylinder" condim="4" rgba="0.4 0.4 0.4 1" />
 </mujocoinclude>
