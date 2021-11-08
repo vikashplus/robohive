@@ -65,7 +65,6 @@
         </body>
 
     </worldbody>
-
     <sensor>
         <jointpos name="Tx" joint="Tx"/>
         <jointpos name="Ty" joint="Ty"/>
@@ -74,5 +73,4 @@
         <jointpos name="Ry" joint="Ry"/>
         <jointpos name="Rz" joint="Rz"/>
     </sensor>
-
 </mujoco>

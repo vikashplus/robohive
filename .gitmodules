@@ -5,7 +5,7 @@
 [submodule "dependencies/Adroit"]
 	path = mj_envs/sims/Adroit
 	url = https://github.com/vikashplus/Adroit.git
-        branch = mj_envs
+    branch = mj_envs
 [submodule "mj_envs/sims/furniture_sim"]
 	path = mj_envs/sims/furniture_sim
 	url = https://github.com/ShahRutav/furniture_sim.git

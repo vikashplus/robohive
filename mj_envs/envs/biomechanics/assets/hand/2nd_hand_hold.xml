@@ -1,0 +1,16 @@
+<mujoco model="2nd hand model for object grasps">
+
+    <compiler meshdir='../../../../sims/neuromuscular_sim/hand/'/>
+    <include file="../../../../sims/neuromuscular_sim/hand/2nd_Hand_Model_full_hand_v0.1.3.xml"/>
+
+    <worldbody>
+        <site name="goal" size="0.04" pos="-.2 -.2 1" rgba="0 1 0 .2"/>
+
+        <body name="object" pos="-.2 -.2 1">
+            <geom type="ellipsoid" size=".030 .030 .030" name="object" condim="1" conaffinity="1"/>
+            <freejoint/>
+            <site name="object" size="0.005"/>
+        </body>
+    </worldbody>
+
+</mujoco>

@@ -1,7 +1,8 @@
-import numpy as np
-from mj_envs.envs import env_base
-import os
 import collections
+import gym
+import numpy as np
+
+from mj_envs.envs import env_base
 
 class PushBaseV0(env_base.MujocoEnv):
 
@@ -15,33 +16,48 @@ class PushBaseV0(env_base.MujocoEnv):
         "penalty": -50,
     }
 
+    def __init__(self, model_path, **kwargs):
 
-    def __init__(self, model_path, config_path, robot_site_name, object_site_name,
-                target_site_name, target_xyz_range, **kwargs):
-        # get sims
-        self.sim = env_base.get_sim(model_path=model_path)
-        self.sim_obsd = env_base.get_sim(model_path=model_path)
+        # EzPickle.__init__(**locals()) is capturing the input dictionary of the init method of this class.
+        # In order to successfully capture all arguments we need to call gym.utils.EzPickle.__init__(**locals())
+        # at the leaf level, when we do inheritance like we do here.
+        # kwargs is needed at the top level to account for injection of __class__ keyword.
+        # Also see: https://github.com/openai/gym/pull/1497
+        gym.utils.EzPickle.__init__(self, model_path, **kwargs)
+
+        # This two step construction is required for pickling to work correctly. All arguments to all __init__
+        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we
+        # first construct the inheritance chain, which is just __init__ calls all the way down, with env_base
+        # creating the sim / sim_obsd instances. Next we run through "setup"  which relies on sim / sim_obsd
+        # created in __init__ to complete the setup.
+        super().__init__(model_path=model_path)
+
+        self._setup(**kwargs)
+
+
+    def _setup(self,
+               robot_site_name,
+               object_site_name,
+               target_site_name,
+               target_xyz_range,
+               frame_skip=4,
+               reward_mode="dense",
+               obs_keys=DEFAULT_OBS_KEYS,
+               weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
+               **kwargs,
+        ):
 
         # ids
         self.grasp_sid = self.sim.model.site_name2id(robot_site_name)
         self.object_sid = self.sim.model.site_name2id(object_site_name)
         self.target_sid = self.sim.model.site_name2id(target_site_name)
-
-        # get env
         self.target_xyz_range = target_xyz_range
-        env_base.MujocoEnv.__init__(self,
-                                sim = self.sim,
-                                sim_obsd = self.sim_obsd,
-                                frame_skip = 40,
-                                config_path = config_path,
-                                obs_keys = self.DEFAULT_OBS_KEYS,
-                                rwd_keys_wt = self.DEFAULT_RWD_KEYS_AND_WEIGHTS,
-                                rwd_mode = "dense",
-                                act_mode = "pos",
-                                act_normalized = True,
-                                is_hardware = False,
-                                **kwargs)
 
+        super()._setup(obs_keys=obs_keys,
+                       weighted_reward_keys=weighted_reward_keys,
+                       reward_mode=reward_mode,
+                       frame_skip=frame_skip,
+                       **kwargs)
 
     def get_obs_dict(self, sim):
         obs_dict = {}
@@ -78,6 +94,7 @@ class PushBaseV0(env_base.MujocoEnv):
 
     def reset(self):
         self.sim.model.site_pos[self.target_sid] = self.np_random.uniform(high=self.target_xyz_range['high'], low=self.target_xyz_range['low'])
+        self.sim_obsd.model.site_pos[self.target_sid] = self.sim.model.site_pos[self.target_sid]
         obs = super().reset(self.init_qpos, self.init_qvel)
         return obs
 
