@@ -175,6 +175,8 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
     def reset_model(self):
         self.np_random.choice(self.sims_idx) # To avoid some weird numpy behavior
         idx = self.np_random.choice(self.sims_idx)
+        #print("Tool picked : ", idx)
+        self.sim_idx = idx
         self.sim = self.sims[idx]
         self.data = self.sim.data
         self.model = self.sim.model
@@ -185,10 +187,11 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.model.site_pos[self.target_obj_sid] = [self.np_random.uniform(low=self.target_pos_range[i][0], high=self.target_pos_range[i][1]) for i in range(3)]
         self.data.qpos[-7:-4] = [self.np_random.uniform(low=self.tool_pos_range[i][0], high=self.tool_pos_range[i][1]) for i in range(3)]
         euler_angles = [self.np_random.uniform(low=self.tool_euler_range[i][0], high=self.tool_euler_range[i][1]) for i in range(3)]
-        if self.tool_eulery_curr:  
+        if self.tool_eulery_curr:
             #print("Reseting y angle based on curriculum")
             euler_angles[1] = self.tool_eulery_curr.status()
         #print("Y angles : ", euler_angles)
+        #rint("Euler angles: ", euler_angles)
         self.data.qpos[-4:] = euler2quat(euler_angles)
         #print(self.data.qpos[-7:])
         self.sim.forward()
