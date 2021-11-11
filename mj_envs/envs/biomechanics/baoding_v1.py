@@ -104,7 +104,7 @@ class BaodingFixedEnvV1(BaseV0):
                     rwd_viz=rwd_viz,
                     seed=seed)
 
-        self.init_qpos[:-14] *= 0 # Use fully open as init pos
+        # self.init_qpos[:-14] *= 0 # Use fully open as init pos
 
 
     def step(self, a):

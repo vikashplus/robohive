@@ -1,7 +1,7 @@
 <mujoco model="2nd hand model for object grasps">
 
     <compiler meshdir='../../../../sims/neuromuscular_sim/hand/'/>
-    <include file="../../../../sims/neuromuscular_sim/hand/2nd_Hand_Model_full_hand_v0.1.3.xml"/>
+    <include file="../../../../sims/neuromuscular_sim/hand/2nd_Hand_Model_full_hand_v0.1.4.xml"/>
 
     <worldbody>
         <site name="goal" size="0.04" pos="-.2 -.2 1" rgba="0 1 0 .2"/>
@@ -12,5 +12,9 @@
             <site name="object" size="0.005"/>
         </body>
     </worldbody>
+
+    <keyframe>
+        <key qpos='-1.571 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -0.2 -0.2 1 1 0 0 0'/>
+    </keyframe>
 
 </mujoco>

@@ -1,7 +1,7 @@
 <mujoco model="2nd hand model for pen reorient">
 
     <compiler meshdir='../../../../sims/neuromuscular_sim/hand/'/>
-    <include file="../../../../sims/neuromuscular_sim/hand/2nd_Hand_Model_full_hand_v0.0.2.xml"/>
+    <include file="../../../../sims/neuromuscular_sim/hand/2nd_Hand_Model_full_hand_v0.1.4.xml"/>
 
     <option timestep="0.0025"/>
 
@@ -40,8 +40,8 @@
         </spatial>
     </tendon>
 
-    <!-- <keyframe>
-        <key qpos='0.0126 -0.398 0.379 0.0564 1.167 0.0407 0.265 -0.136 1.144 0.045 0.074 0.139 1.112 0.234 -0.022 -0.368 -0.000 1.25 0.152 -0.021 0.374 0.0939 -0.126 -0.536 -0.029 -0.001 0.19 1 0 0 0 0.03 0.01 0.19 1 0 0 0'/>
-    </keyframe> -->
+    <keyframe>
+        <key qpos='-1.571 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -0.181 -0.2 0.995 1 0 0 0 -0.22 -0.24 0.975 1 0 0 0'/>
+    </keyframe>
 
 </mujoco>

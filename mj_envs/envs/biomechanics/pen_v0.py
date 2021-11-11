@@ -77,7 +77,7 @@ class PenTwirlFixedEnvV0(BaseV0):
             rwd_viz=rwd_viz,
             frame_skip=frame_skip,
             seed=seed)
-        self.init_qpos[:-6] *= 0 # Use fully open as init pos
+        # self.init_qpos[:-6] *= 0 # Use fully open as init pos
 
     def get_obs_vec(self):
         # qpos for hand, xpos for obj, xpos for target
