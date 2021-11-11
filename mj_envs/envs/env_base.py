@@ -108,6 +108,13 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             linear_jnt_ids = self.sim.model.jnt_type>1
             self.init_qpos[linear_jnt_qposids] = np.mean(self.sim.model.jnt_range[linear_jnt_ids], axis=1)
 
+        # import ipdb; ipdb.set_trace()
+
+        if self.sim.model.key_qpos is not None:
+            #if the keyframe field is defined in the model, use that initial posture
+            self.init_qpos = self.sim.model.key_qpos[0].copy()
+            # self.init_qpos[:-14] *= 0
+
         return
 
     def step(self, a):
