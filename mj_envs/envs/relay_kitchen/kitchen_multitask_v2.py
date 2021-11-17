@@ -171,11 +171,10 @@ class KitchenBase(env_base.MujocoEnv):
 
         # configure env-goal
         if interact_site == "end_effector":
-            # print(
-            #     "WARNING: Using the default interaction site of end-effector. \
-            #       If you wish to evaluate on specific tasks, you should set the interaction site correctly."
-            # )
-            pass
+            print(
+                "WARNING: Using the default interaction site of end-effector. \
+                  If you wish to evaluate on specific tasks, you should set the interaction site correctly."
+            )
 
         self.real_step = True
         self.set_goal(goal=goal, interact_site=interact_site)
@@ -210,7 +209,6 @@ class KitchenBase(env_base.MujocoEnv):
         obs_dict["pose_err"] = self.robot_meanpos - obs_dict["hand_jnt"]
         obs_dict["end_effector"] = self.sim.data.site_xpos[self.grasp_sid]
         obs_dict["qpos"] = self.sim.data.qpos.copy()
-        obs_dict["qvel"] = self.sim.data.qvel.copy()
         for site in self.INTERACTION_SITES:
             site_id = self.sim.model.site_name2id(site)
             obs_dict[site + "_err"] = (
@@ -374,11 +372,7 @@ class KitchenFrankaFixed(KitchenBase):
 
 class KitchenFrankaDemo(KitchenFrankaFixed):
     def reset(self, reset_qpos=None, reset_qvel=None):
-        if reset_qpos is None:
-            reset_qpos = DEMO_RESET_QPOS
-        if reset_qvel is None:
-            reset_qvel = DEMO_RESET_QVEL
-        return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel)
+        return super().reset(reset_qpos=DEMO_RESET_QPOS, reset_qvel=DEMO_RESET_QVEL)
 
 
 class KitchenFrankaRandom(KitchenFrankaFixed):
