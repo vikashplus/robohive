@@ -418,7 +418,7 @@ class KitchenFrankaContinual(KitchenFrankaFixed):
         obs = super().reset()
         if self.real_step:
             self.set_goal({})
-            self.subtask_idcs = self.perm_subtask_idcs or self.np_random.choice(9, self.num_subtasks, replace=False).tolist()
+            self.subtask_idcs = self.perm_subtask_idcs or self.np_random.choice(9, self.num_subtasks).tolist()
             print("New goal joints:", [self.INTERACTION_SITES[jnt_idx] for jnt_idx in self.subtask_idcs])
             self.curr_subtask = 0
             self.subtask_steps = 0
