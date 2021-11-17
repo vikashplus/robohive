@@ -6,6 +6,7 @@ from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import (
     KitchenFrankaRandom as KitchenFranka,
 )
 from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import KitchenFrankaDemo
+from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import KitchenFrankaContinual
 
 print("RS:> Registering Kitchen Envs")
 
@@ -155,6 +156,7 @@ for site in KitchenFranka.INTERACTION_SITES:
 
 DEMO_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFrankaDemo"
 RANDOM_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFranka"
+CONTINUAL_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFrankaContinual"
 
 # Kitchen
 register(
@@ -453,5 +455,32 @@ register(
         "goal": {"knob1_joint": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "knob1_site",
+    },
+)
+
+register(
+    id="kitchen_continual-v4",
+    entry_point=CONTINUAL_ENTRY_POINT,
+    max_episode_steps=200,
+    kwargs={
+        "model_path": MODEL_PATH,
+        "config_path": CONFIG_PATH,
+        "obs_keys_wt": obs_keys_wt,
+        "interact_site": "end_effector",
+        "goal": {},
+    },
+)
+
+register(
+    id="kitchen_continual_ldoor_knob2_micro_light-v4",
+    entry_point=CONTINUAL_ENTRY_POINT,
+    max_episode_steps=200,
+    kwargs={
+        "model_path": MODEL_PATH,
+        "config_path": CONFIG_PATH,
+        "obs_keys_wt": obs_keys_wt,
+        "interact_site": "end_effector",
+        "goal": {},
+        "subtasks": ["leftdoorhinge", "knob2_joint", "microjoint", "lightswitch_joint"],
     },
 )
