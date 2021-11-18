@@ -33,7 +33,7 @@ class FMBase(env_base.MujocoEnv):
         # at the leaf level, when we do inheritance like we do here.
         # kwargs is needed at the top level to account for injection of __class__ keyword.
         # Also see: https://github.com/openai/gym/pull/1497
-        gym.utils.EzPickle.__init__(self, model_path, **kwargs)
+        gym.utils.EzPickle.__init__(self, processed_model_path, **kwargs)
 
         # This two step construction is required for pickling to work correctly. All arguments to all __init__
         # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we
@@ -46,8 +46,8 @@ class FMBase(env_base.MujocoEnv):
         self._setup(**kwargs)
 
 
-    def _setup(self, 
-               target_pose, 
+    def _setup(self,
+               target_pose,
                obs_keys=DEFAULT_OBS_KEYS,
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
                **kwargs):

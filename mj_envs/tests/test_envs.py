@@ -85,5 +85,11 @@ class TestEnvs(unittest.TestCase):
         ]
         self.check_envs('Hand Manipulation', env_names, lite=True)
 
+    def test_fm(self):
+        env_names = [
+        'FMReachFixed-v0',
+        ]
+        self.check_envs('FM', env_names, lite=True)
+
 if __name__ == '__main__':
     unittest.main()

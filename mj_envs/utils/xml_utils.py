@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 from xml.dom import minidom
 import sys
 
-def parse_xml_with_comments(xml_path: str):
+def parse_xml_with_comments(xml_path: str=None, xml_str: str=None):
     """
     Parse XML while preserving comments.
         Input:
@@ -10,18 +10,25 @@ def parse_xml_with_comments(xml_path: str):
         Outputs:
             tree    : Parsed tree
     """
-    if sys.version_info[0]+0.1*sys.version_info[1]< 3.8:
-        # python version < 3.8: Create a custom parser
-        class CommentedTreeBuilder(ET.TreeBuilder):
-            def comment(self, data):
-                self.start(ET.Comment, {})
-                self.data(data)
-                self.end(ET.Comment)
-        tree = ET.parse(xml_path, parser=ET.XMLParser(target=CommentedTreeBuilder()))
+
+    if xml_str:
+        tree = ET.ElementTree(ET.fromstring(xml_str))
+    elif xml_path:
+        if sys.version_info[0]+0.1*sys.version_info[1]< 3.8:
+            # python version < 3.8: Create a custom parser
+            class CommentedTreeBuilder(ET.TreeBuilder):
+                def comment(self, data):
+                    self.start(ET.Comment, {})
+                    self.data(data)
+                    self.end(ET.Comment)
+            tree = ET.parse(xml_path, parser=ET.XMLParser(target=CommentedTreeBuilder()))
+        else:
+            # python version >= 3.8: Use default parser with corrent configuration
+            parser_with_comments = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
+            tree = ET.parse(xml_path, parser=parser_with_comments)
     else:
-        # python version >= 3.8: Use default parser with corrent configuration
-        parser_with_comments = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
-        tree = ET.parse(xml_path, parser=parser_with_comments)
+        raise TypeError("Both xml_path and xml_str can't be None")
+
     return tree
 
 
@@ -39,9 +46,20 @@ def get_xml_str(tree: ET.ElementTree=None,
     """
     node = tree.getroot() if node is None else node
     # ET.dump(node)  # debug print
-    xmlstr = ET.tostring(node, encoding='unicode', method='xml')
+
     if pretty:
+        # remove previous formatting
+        node.tail = ""
+        node.text = ""
+        for elem in node.iter():
+            elem.tail=""
+            if elem.tag != ET.Comment:
+                elem.text = ""
+        xmlstr = ET.tostring(node, encoding='unicode', method='xml')
         xmlstr = minidom.parseString(xmlstr).toprettyxml(indent="\t")
+    else:
+        xmlstr = ET.tostring(node, encoding='unicode', method='xml')
+
     return(xmlstr)
 
 
@@ -76,28 +94,41 @@ def merge_xmls( receiver_xml:str,
     elif destination == "tree":
         return receiver_tree
 
+def reassign_parent( xml_path: str=None,
+                    xml_str: str=None,
+                    receiver_node=None,
+                    donor_node=None,
+                    destination="str"):
+    """
+    Merge XMLs preserving MuJoCo structure
+        Input:
+            xml_path        : XML_filepath receiving data
+            xml_str         : XML_str receiving data (higher priority over XML_filepath)
+            receiver_node   : node_name where donor gets attached
+            donor_node      : list of donor-nodes to attached (TODO)
+            destination     : str / tree
 
-# test_xml = ET.parse("tendon_finger_v0.xml")
-# print_xml(test_xml)
-# xmlstr = merge_xmls(receiver_xml="tendon_finger_v0.xml",
-#         donor_xml="tendon_finger_muscleAct.xml")
+        Output:
+            merged_xml      : str or tree format
+    """
+    # import ipdb; ipdb.set_trace()
 
-# with open("output_xmlstr.xml", "w") as f:
-#     f.write(xmlstr)
+    # find elements
+    xml_tree = parse_xml_with_comments(xml_path=xml_path, xml_str=xml_str)
+    parent_elem = xml_tree.find(".//body[@name='{}']".format(receiver_node))
+    assert parent_elem, "Parent node:{} not found".format(parent_elem)
 
+    child_elem = xml_tree.find(".//body[@name='{}']".format(donor_node))
+    assert child_elem, "Child node:{} not found".format(child_elem)
 
-# finger_tree = ET.parse("tendon_finger_v0.xml")
-# foceAct_tree = ET.parse("tendon_finger_forceAct.xml")
+    child_parent_elem = xml_tree.find(".//body[@name='{}']...".format(donor_node))
+    assert child_parent_elem, "Child's parent node:{} not found".format(child_elem)
 
-# root = finger_tree.getroot()
-# # for child in root:
-#     # print(child.tag, child.attrib)
+    # move child
+    parent_elem.append(child_elem)
+    child_parent_elem.remove(child_elem)
 
-# wb = finger_tree.find('worldbody')
-# include_root = foceAct_tree.getroot()
-# for child in include_root:
-#     root.append(child)
-
-# ET.dump(root)
-# # import ipdb; ipdb.set_trace()
-
+    if destination == "str":
+        return get_xml_str(xml_tree)
+    elif destination == "tree":
+        return xml_tree
