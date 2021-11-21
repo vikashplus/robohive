@@ -169,14 +169,8 @@ class KitchenBase(env_base.MujocoEnv):
             self.obj["dof_ranges"][:, 1] - self.obj["dof_ranges"][:, 0]
         )
 
-        # configure env-goal
-        if interact_site == "end_effector":
-            print(
-                "WARNING: Using the default interaction site of end-effector. \
-                  If you wish to evaluate on specific tasks, you should set the interaction site correctly."
-            )
-
         self.real_step = True
+        # configure env-goal
         self.set_goal(goal=goal, interact_site=interact_site)
 
         super()._setup(obs_keys=obs_keys_wt,
@@ -415,6 +409,10 @@ class KitchenFrankaContinual(KitchenFrankaFixed):
                 self.perm_subtask_idcs.append(subtask_idx)
 
     def reset(self):
+        obj_init = {}
+        for key in CONTINUAL_GOALS:
+            obj_init[key] = CONTINUAL_GOALS[key][int(self.np_random.uniform() > 0.5)]
+        self.set_obj_init(obj_init)
         obs = super().reset()
         if self.real_step:
             self.set_goal({})
