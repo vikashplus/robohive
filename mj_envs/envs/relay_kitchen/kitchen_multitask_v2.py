@@ -183,6 +183,7 @@ class KitchenBase(env_base.MujocoEnv):
 
         self.init_qpos[:] = self.sim.model.key_qpos[0].copy()
         if obj_init:
+            self.perm_obj_init = obj_init
             self.set_obj_init(obj_init)
 
     def get_obs_dict(self, sim):
@@ -398,6 +399,7 @@ class KitchenFrankaContinual(KitchenFrankaFixed):
 
     def __init__(self, *args, subtasks=None, num_subtasks=4, **kwargs):
         self.subtask_idcs, self.curr_subtask, self.subtask_steps = None, None, None
+        self.perm_obj_init = None
         super().__init__(*args, **kwargs)
         self.num_subtasks = num_subtasks
         self.perm_subtask_idcs = None
@@ -409,10 +411,11 @@ class KitchenFrankaContinual(KitchenFrankaFixed):
                 self.perm_subtask_idcs.append(subtask_idx)
 
     def reset(self):
-        obj_init = {}
-        for key in CONTINUAL_GOALS:
-            obj_init[key] = CONTINUAL_GOALS[key][int(self.np_random.uniform() > 0.5)]
-        self.set_obj_init(obj_init)
+        if not self.perm_obj_init:
+            obj_init = {}
+            for key in CONTINUAL_GOALS:
+                obj_init[key] = CONTINUAL_GOALS[key][int(self.np_random.uniform() > 0.5)]
+            self.set_obj_init(obj_init)
         obs = super().reset()
         if self.real_step:
             self.set_goal({})

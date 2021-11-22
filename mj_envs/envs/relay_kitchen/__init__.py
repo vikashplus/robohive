@@ -482,5 +482,16 @@ register(
         "interact_site": "end_effector",
         "goal": {},
         "subtasks": ["leftdoorhinge", "knob2_joint", "microjoint", "lightswitch_joint"],
+        "obj_init": {
+            "knob1_joint": 0,
+            "knob2_joint": 0,
+            "knob3_joint": 0,
+            "knob4_joint": 0,
+            "lightswitch_joint": 0,
+            "slidedoor_joint": 0,
+            "microjoint": 0,
+            "rightdoorhinge": 0,
+            "leftdoorhinge": 0,
+        },
     },
 )
