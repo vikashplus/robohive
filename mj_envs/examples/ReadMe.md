@@ -94,14 +94,7 @@ env.close()
 ```
 
 ## Resume Learning of policies
-
+TODO
 ```bash
-import myoSuite
-import gym
-env = gym.make('ElbowPose1D6MRandom-v0')
-env.reset()
-for _ in range(1000):
-  env.sim.render(mode='window')
-  env.step(env.action_space.sample()) # take a random action
-env.close()
+python ../
 ```
