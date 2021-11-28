@@ -458,40 +458,83 @@ register(
     },
 )
 
-register(
-    id="kitchen_continual-v4",
-    entry_point=CONTINUAL_ENTRY_POINT,
-    max_episode_steps=200,
-    kwargs={
-        "model_path": MODEL_PATH,
-        "config_path": CONFIG_PATH,
-        "obs_keys_wt": obs_keys_wt,
-        "interact_site": "end_effector",
-        "goal": {},
-    },
-)
+for maybe_plan in ["", "plan_"]:
+    register(
+        id=f"kitchen_{maybe_plan}continual-v4",
+        entry_point=CONTINUAL_ENTRY_POINT,
+        max_episode_steps=200,
+        kwargs={
+            "model_path": MODEL_PATH,
+            "config_path": CONFIG_PATH,
+            "obs_keys_wt": obs_keys_wt,
+            "interact_site": "end_effector",
+            "goal": {},
+            "seq_subgoals": len(maybe_plan) > 0
+        },
+    )
+
+    register(
+        id=f"kitchen_continual_{maybe_plan}ldoor_knob2_micro_light-v3",
+        entry_point=CONTINUAL_ENTRY_POINT,
+        max_episode_steps=200,
+        kwargs={
+            "model_path": MODEL_PATH,
+            "config_path": CONFIG_PATH,
+            "obs_keys_wt": obs_keys_wt,
+            "interact_site": "end_effector",
+            "goal": {},
+            "subtasks": ["leftdoorhinge", "knob2_joint", "microjoint", "lightswitch_joint"],
+            "obj_init": {
+                "knob1_joint": 0,
+                "knob2_joint": 0,
+                "knob3_joint": 0,
+                "knob4_joint": 0,
+                "lightswitch_joint": 0,
+                "slidedoor_joint": 0,
+                "microjoint": 0,
+                "rightdoorhinge": 0,
+                "leftdoorhinge": 0,
+            },
+            "seq_subgoals": len(maybe_plan) > 0
+        },
+    )
 
 register(
-    id="kitchen_continual_ldoor_knob2_micro_light-v4",
-    entry_point=CONTINUAL_ENTRY_POINT,
-    max_episode_steps=200,
+    id="kitchen_micro_open_random-v3",
+    entry_point=RANDOM_ENTRY_POINT,
+    max_episode_steps=50,
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
+        "obj_init": {"microjoint": 0},
+        "goal": {"microjoint": -1.25},
         "obs_keys_wt": obs_keys_wt,
-        "interact_site": "end_effector",
-        "goal": {},
-        "subtasks": ["leftdoorhinge", "knob2_joint", "microjoint", "lightswitch_joint"],
-        "obj_init": {
-            "knob1_joint": 0,
-            "knob2_joint": 0,
-            "knob3_joint": 0,
-            "knob4_joint": 0,
-            "lightswitch_joint": 0,
-            "slidedoor_joint": 0,
-            "microjoint": 0,
-            "rightdoorhinge": 0,
-            "leftdoorhinge": 0,
-        },
+        "interact_site": "microhandle_site",
+    },
+)
+register(
+    id="kitchen_knob2_on_random-v3",
+    entry_point=RANDOM_ENTRY_POINT,
+    max_episode_steps=50,
+    kwargs={
+        "model_path": MODEL_PATH,
+        "config_path": CONFIG_PATH,
+        "obj_init": {"knob2_joint": 0},
+        "goal": {"knob2_joint": -1.57},
+        "obs_keys_wt": obs_keys_wt,
+        "interact_site": "knob2_site",
+    },
+)
+register(
+    id="kitchen_sdoor_open_random-v3",
+    entry_point=RANDOM_ENTRY_POINT,
+    max_episode_steps=50,
+    kwargs={
+        "model_path": MODEL_PATH,
+        "config_path": CONFIG_PATH,
+        "obj_init": {"slidedoor_joint": 0},
+        "goal": {"slidedoor_joint": 0.44},
+        "obs_keys_wt": obs_keys_wt,
+        "interact_site": "slide_site",
     },
 )

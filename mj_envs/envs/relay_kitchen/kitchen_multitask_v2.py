@@ -397,7 +397,7 @@ CONTINUAL_GOALS = {
 
 class KitchenFrankaContinual(KitchenFrankaFixed):
 
-    def __init__(self, *args, subtasks=None, num_subtasks=4, **kwargs):
+    def __init__(self, *args, subtasks=None, num_subtasks=4, seq_subgoals=False, **kwargs):
         self.subtask_idcs, self.curr_subtask, self.subtask_steps = None, None, None
         self.perm_obj_init = None
         super().__init__(*args, **kwargs)
@@ -409,6 +409,7 @@ class KitchenFrankaContinual(KitchenFrankaFixed):
             for joint in subtasks:
                 subtask_idx = self.obj_jnt_names.index(joint)
                 self.perm_subtask_idcs.append(subtask_idx)
+        self.seq_subgoals = seq_subgoals
 
     def reset(self):
         if not self.perm_obj_init:
@@ -416,14 +417,32 @@ class KitchenFrankaContinual(KitchenFrankaFixed):
             for key in CONTINUAL_GOALS:
                 obj_init[key] = CONTINUAL_GOALS[key][int(self.np_random.uniform() > 0.5)]
             self.set_obj_init(obj_init)
-        obs = super().reset()
+        reset_qpos = self.init_qpos.copy()
+        reset_qpos[self.robot_dofs] += (
+            0.05
+            * (self.np_random.uniform(size=len(self.robot_dofs)) - 0.5)
+            * (self.robot_ranges[:, 1] - self.robot_ranges[:, 0])
+        )
+        obs = super().reset(reset_qpos=reset_qpos)
         if self.real_step:
             self.set_goal({})
             self.subtask_idcs = self.perm_subtask_idcs or self.np_random.choice(9, self.num_subtasks).tolist()
             print("New goal joints:", [self.INTERACTION_SITES[jnt_idx] for jnt_idx in self.subtask_idcs])
-            self.curr_subtask = 0
-            self.subtask_steps = 0
-            self._set_next_goal()
+            if self.seq_subgoals:
+                self.curr_subtask = 0
+                self.subtask_steps = 0
+                self._set_next_goal()
+            else:
+                goal_dict = {}
+                for jnt_idx in self.subtask_idcs:
+                    jnt_name = self.obj_jnt_names[jnt_idx]
+                    close_goal, open_goal = CONTINUAL_GOALS[jnt_name]
+                    curr_goal = self.goal[self.obj[jnt_name]["goal_adr"]]
+                    if np.abs(curr_goal - close_goal) > np.abs(curr_goal - open_goal):
+                        goal_dict[jnt_name] = close_goal
+                    else:
+                        goal_dict[jnt_name] = open_goal
+                self.set_goal(goal_dict, "end_effector")
         return obs
 
     def _set_next_goal(self):
