@@ -112,7 +112,7 @@ env_kwargs = {
                             curr_dir + '/assets/TOOLS_spatula.xml'],
             'target_pos_range' : [[0.05, 0.05], [0.0, 0.0], [0.1, 0.25]],
             'tool_pos_range' : [[-0.1, 0.1], [-0.2, -0.2], [0.035, 0.035]], # 0 -0.2 0.035
-            'tool_euler_range' : [[1.57, 1.57], [0.0, 0.8], [0, 0]], # TODO 3.1415927, 0, 0
+            'tool_euler_range' : [[1.57, 1.57], [0.0, 0.4], [0, 0]], # TODO 3.1415927, 0, 0
             #'tool_euler_range' : [[1.57, 1.57], [-1.57, 1.57], [0, 0]], # TODO 3.1415927, 0, 0
             }
 register(
@@ -123,14 +123,57 @@ register(
 )
 
 env_kwargs = {
-            'model_paths' : [curr_dir + '/assets/TOOLS_hammer.xml'],
+            'model_paths' : [
+                             curr_dir + '/assets/TOOLS_hammer.xml',
+                             curr_dir + '/assets/TOOLS_spoon.xml',
+                             curr_dir + '/assets/TOOLS_fork.xml',
+                             curr_dir + '/assets/TOOLS_flat_screwdriver.xml',
+                            ],
             'target_pos_range' : [[0.05, 0.05], [0.0, 0.0], [0.1, 0.25]],
             'tool_pos_range' : [[-0.1, 0.1], [-0.2, -0.2], [0.035, 0.035]], # 0 -0.2 0.035
-            'tool_euler_range' : [[1.57, 1.57], [0.0, 0.8], [0, 0]], # TODO 3.1415927, 0, 0
+            'tool_euler_range' : [[1.57, 1.57], [0.0, 0.4], [0, 0]], # TODO 3.1415927, 0, 0
             #'tool_euler_range' : [[1.57, 1.57], [-1.57, 1.57], [0, 0]], # TODO 3.1415927, 0, 0
             }
 register(
     id='tools-demos-test-v1',
+    entry_point='mj_envs.envs.hand_manipulation_suite:ToolsEnvV0',
+    max_episode_steps=50,
+    kwargs=env_kwargs,
+)
+
+env_kwargs = {
+            'model_paths' : [
+                                curr_dir + '/assets/TOOLS_ratchet.xml',
+                                curr_dir + '/assets/TOOLS_screwDriver.xml',
+                                curr_dir + '/assets/TOOLS_turner.xml',
+                                curr_dir + '/assets/TOOLS_spatula.xml',
+                                curr_dir + '/assets/TOOLS_spoon.xml',
+                                curr_dir + '/assets/TOOLS_flat_screwdriver.xml',
+                            ],
+            'target_pos_range' : [[0.05, 0.05], [0.0, 0.0], [0.1, 0.25]],
+            'tool_pos_range' : [[-0.1, 0.1], [-0.2, -0.2], [0.035, 0.035]], # 0 -0.2 0.035
+            'tool_euler_range' : [[1.57, 1.57], [0.0, 0.4], [0, 0]],
+            #'tool_euler_range' : [[1.57, 1.57], [-1.57, 1.57], [0, 0]],
+            }
+register(
+    id='tools-v2',
+    entry_point='mj_envs.envs.hand_manipulation_suite:ToolsEnvV0',
+    max_episode_steps=50,
+    kwargs=env_kwargs,
+)
+env_kwargs = {
+            'model_paths' : [
+                                curr_dir + '/assets/TOOLS_hammer.xml',
+                                curr_dir + '/assets/TOOLS_fork.xml',
+                                curr_dir + '/assets/TOOLS_knife.xml',
+                            ],
+            'target_pos_range' : [[0.05, 0.05], [0.0, 0.0], [0.1, 0.25]],
+            'tool_pos_range' : [[-0.1, 0.1], [-0.2, -0.2], [0.035, 0.035]], # 0 -0.2 0.035
+            'tool_euler_range' : [[1.57, 1.57], [0.0, 0.4], [0, 0]],
+            #'tool_euler_range' : [[1.57, 1.57], [-1.57, 1.57], [0, 0]],
+            }
+register(
+    id='tools-test-v2',
     entry_point='mj_envs.envs.hand_manipulation_suite:ToolsEnvV0',
     max_episode_steps=50,
     kwargs=env_kwargs,

@@ -1,11 +1,11 @@
 <!-- ======================================================
     Model       :: ADROIT Knife
- 
+
     Mujoco      :: Advanced physics simulation engine
         Source      : www.roboti.us
         Version     : 1.50
         Released    : 17Jan'17
-        
+
     Author      :: Vikash Kumar
         Contacts    : vikash@cs.washington.edu
         Last edits  : 17Jan'17
@@ -17,6 +17,8 @@
 ====================================================== -->
 
 <mujocoinclude>
+        <inertial pos="-0.11025 0 0" quat="0.50001 0.49999 0.49999 0.50001" mass="0.253442" diaginertia="0.00349644 0.00345287 8.947e-05"/>
+        <site name="tool" pos="-0.26 0 0.0" size="0.01" group="4" rgba="0.4 0.8 0.4 1" />
         <geom name="sd_handle" size="0.025 0.05" quat="0.707388 0 0.706825 0" type="capsule" condim="4" rgba="0.3 0.42 0.2 1"/>
         <geom name="sd_handleB" size="0.030 0.0005" pos=".05 0 0" quat="0.707388 0 0.706825 0" type="capsule" condim="4" rgba="0.8 0.42 0.2 1"/>
         <geom name="sd_handleT" size="0.030 0.0005" pos="-.05 0 0" quat="0.707388 0 0.706825 0" type="capsule" condim="4" rgba="0.8 0.42 0.2 1"/>

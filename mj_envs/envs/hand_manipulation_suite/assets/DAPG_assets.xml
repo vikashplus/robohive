@@ -32,6 +32,16 @@
         </default>
     </default>
     <asset>
+        <texture name="030_fork" type="2d" file="./../../../YCB_sim/textures/030_fork.png"/>
+        <texture name="031_spoon" type="2d" file="./../../../YCB_sim/textures/031_spoon.png"/>
+        <texture name="044_flat_screwdriver" type="2d" file="./../../../YCB_sim/textures/044_flat_screwdriver.png"/>
+        <material name="030_fork" texture="030_fork"/>
+        <material name="031_spoon" texture="031_spoon"/>
+        <material name="044_flat_screwdriver" texture="044_flat_screwdriver"/>
+        <mesh name="030_fork" file="./../../../YCB_sim/meshes/030_fork.msh" scale="1.6 1.6 1.6"/>
+        <mesh name="031_spoon" file="./../../../YCB_sim/meshes/031_spoon.msh" scale="1.6 1.6 1.6"/>
+        <mesh name="044_flat_screwdriver" file="./../../../YCB_sim/meshes/044_flat_screwdriver.msh" scale="1.6 1.6 1.6"/>
+
         <texture type="cube" name="texgeom" builtin="flat" mark="cross" rgb1="0.3 0.6 0.5" rgb2="0.3 0.6 0.5" width="127" height="762" />
         <texture type="cube" name="wood" file="wood.png" />
         <texture type="2d" name="wood2d" file="wood.png" />
@@ -238,7 +248,7 @@
             <joint joint="THJ0" coef="-0.009" />
         </fixed>
     </tendon>
-   
+
    <actuator>
         <general name="A_WRJ1" joint="WRJ1" ctrlrange="-0.524 0.175" biastype="affine" gainprm="10 0 0" biasprm="0 -10 0" user="1002 0 2001 -0.02 0.02 0 0 0 0 0 0 0 0 0 0 0" />
         <general name="A_WRJ0" joint="WRJ0" ctrlrange="-0.79 0.61" biastype="affine" gainprm="10 0 0" biasprm="0 -10 0" user="1002 0 2001 -0.02 0.02 0 0 0 0 0 0 0 0 0 0 0" />
@@ -287,7 +297,7 @@
         <actuatorfrc actuator="A_THJ2" name="Saf_A_THJ2" />
         <actuatorfrc actuator="A_THJ1" name="Saf_A_THJ1" />
         <actuatorfrc actuator="A_THJ0" name="Saf_A_THJ0" />
-        
+
         <!-- ======= Touch Sensors ======= -->
         <touch name="ST_Tch_fftip"  site="Tch_fftip"/>
         <touch name="ST_Tch_mftip"  site="Tch_mftip"/>
@@ -312,9 +322,9 @@
         <touch name="ST_Tch_rfmetacarpal"   site="Tch_rfmetacarpal"/>
         <touch name="ST_Tch_lfmetacarpal"   site="Tch_lfmetacarpal"/>
         <touch name="ST_Tch_thmetacarpal"   site="Tch_thmetacarpal"/>
-        
+
         <touch name="ST_Tch_palm"   site="Tch_palm"/>
-        
+
         <jointpos joint="WRJ1" name="Sjp_WRJ1" />
         <jointpos joint="WRJ0" name="Sjp_WRJ0" />
         <jointpos joint="FFJ3" name="Sjp_FFJ3" />
