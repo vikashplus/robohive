@@ -27,4 +27,7 @@
         <geom name="t_neckL" size="0.006 0.015 0.025" pos="-0.075 0 0" quat="0.707388 0 0.706825 0" type="box" condim="4" rgba="1 1 1 1" />
         <geom name="t_neck" size="0.006 0.015 0.025" pos="-0.108 0 -.018" euler="0 .57 0" type="box" condim="4" rgba="1 1 1 1" />
         <geom name="t_head" size="0.006 0.015 0.055" pos="-0.175 0 -.0225" euler="0 -1.4 0" type="box" condim="4" rgba="1 1 1 1" />
+        <site name="keypt1" pos="-0.23 0 0.0" size="0.01" rgba="0.4 0.8 0.4 1" />
+        <site name="keypt2" pos="-0.06 0 0" size="0.01" rgba="0.4 0.8 0.4 1" />
+        <site name="keypt3" pos="0.06 0 0" size="0.01" rgba="0.4 0.8 0.4 1" />
 </mujocoinclude>

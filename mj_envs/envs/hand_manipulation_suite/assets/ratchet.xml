@@ -28,4 +28,7 @@
     <geom name="r_head" size="0.03 0.006" pos="-0.205 0 0" type="cylinder" condim="4" rgba="1 1 1 1" euler="0 0 0"/>
     <!-- <geom name="r_hex" size="0.01 0.01 0.02" pos="-0.205 0 0" type="box" condim="4" rgba=".84 .89 .92 1" euler="0 0 0"/> -->
     <geom name="r_head2" size="0.01 0.01 0.02" pos="-0.205 0 0" type="box" condim="4" rgba=".84 .89 .92 1" euler="0 0 0"/>
+    <site name="keypt1" pos="-0.23 0 0" size="0.01" rgba="0.4 0.8 0.4 1" />
+    <site name="keypt2" pos="-0.06 0 0" size="0.01" rgba="0.4 0.8 0.4 1" />
+    <site name="keypt3" pos="0.06 0 0" size="0.01" rgba="0.4 0.8 0.4 1" />
 </mujocoinclude>
