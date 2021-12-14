@@ -102,21 +102,21 @@ class FrankaArm(hardwareBase):
         """Reset hardware"""
         self.robot.go_home()
 
+    # def get_sensors(self):
+    #     """Get hardware sensors"""
+    #     return self.robot.get_joint_angles()
+
+    # def apply_commands(self, q_desired):
+    #     """Apply hardware commands"""
+    #     q_des_tensor = torch.tensor(q_desired)
+    #     self.robot.update_current_policy({"q_desired": q_des_tensor})
+
     def get_sensors(self):
-        """Get hardware sensors"""
-        return self.robot.get_joint_angles()
-
-    def apply_commands(self, q_desired):
-        """Apply hardware commands"""
-        q_des_tensor = torch.tensor(q_desired)
-        self.robot.update_current_policy({"q_desired": q_des_tensor})
-
-    def get_sensors_offsets(self):
         """Get hardware sensors (apply offset)"""
         joint_angle = self.robot.get_joint_angles()
         return joint_angle - self.JOINT_OFFSET
 
-    def apply_commands_offsets(self, q_desired):
+    def apply_commands(self, q_desired):
         """Apply hardware commands (apply offset)"""
         q_des_tensor = np.array(q_desired) + self.JOINT_OFFSET
         q_des_tensor = torch.tensor(np.clip(
@@ -148,15 +148,15 @@ class FrankaArmWithGripper(FrankaArm):
     def open_gripper(self):
         self.gripper.goto(width=self.gripper.gripper_max_width, speed=0.1, force=0.1)
 
-    def get_sensors_offsets(self):
+    def get_sensors(self):
         """Get hardware sensors (apply offset)"""
-        self.state_nparray[0:7] = super(FrankaArmWithGripper, self).get_sensors_offsets()
+        self.state_nparray[0:7] = super(FrankaArmWithGripper, self).get_sensors()
         self.state_nparray[-1] = self.gripper.get()
         return self.state_nparray
 
-    def apply_commands_offsets(self, q_desired):
+    def apply_commands(self, q_desired):
         """Apply hardware commands (apply offset)"""
-        super(FrankaArmWithGripper, self).apply_commands_offsets(q_desired[:-1])
+        super(FrankaArmWithGripper, self).apply_commands(q_desired[:-1])
         self.gripper.goto(width=q_desired[-1], speed=0.1, force=0.1)
 
 class FrankaArmWithRobotiQGripper(FrankaArmWithGripper):
@@ -200,14 +200,14 @@ if __name__ == "__main__":
 
     print(f"Took {time.time() - start} sec to go home and set policy")
 
-    q_initial = franka.get_sensors_offsets()
+    q_initial = franka.get_sensors()
     q_desired = np.array(q_initial, dtype=np.float64)
     print(f"Shape of q_desired: {list(q_desired.shape)}")
     print(f"Starting sine motion updates... will repeat for {time_to_go} seconds")
 
     for i in range(int(time_to_go * hz)):
         q_desired[joint] = q_initial[joint] + m * np.sin(np.pi * i / (T * hz))
-        franka.apply_commands_offsets(q_desired = q_desired)
+        franka.apply_commands(q_desired = q_desired)
         time.sleep(1 / hz)
 
     print("Finished moving")
