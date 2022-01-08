@@ -49,6 +49,16 @@
 
         <site name='target' pos='0 0 0' size='0.1' rgba='0 2 0 .2'/>
         <camera name='left_cap' pos='-1.2 -0.5 1.8' quat='0.78 0.49 -0.22 -0.32' />
+        <camera name='micro_cam' pos='-0.27 -0.5 2.3' euler='1.085 0.4 0.2'/>
+        <camera name='hand_micro_cam' pos='-1.2 -1.8 2.5' euler='1.4 -0.37 0.0'/>
+        <camera name='sdoor_cam' pos='0.6 -0.6 3.3' euler='1.085 0.4 0.2'/>
+        <camera name='hand_sdoor_cam' pos='-1.2 -1.0 2.7' euler='1.4 -0.65 0.0'/>
+        <camera name='knob1_cam' pos='0.2 0.3 2.3' euler='0.1 0.0 0.0'/>
+        <camera name='hand_knob1_cam' pos='1.6 -1.5 2.5' euler='1.4 0.57 0.0'/>
+        <camera name='light_cam' pos='-0.4 -0.1 2.3' euler='1.6 -0.0 0.0'/>
+        <camera name='hand_light_cam' pos='-1.65 -0.4 2.5' euler='1.4 -1.06 0.0'/>
+        <camera name='diag_cap' pos='2.0 -3.0 4.5' euler='0.785 0.4 0.4'/>
+        <camera name='side_cap' pos='2.0 -0.5 3.0' euler='0.785 1.0 0.7'/>
         <camera name='right_cap' pos='1.2 -0.5 1.8' quat='0.76 0.5 0.21 0.35'/>
 
         <!-- Robot -->

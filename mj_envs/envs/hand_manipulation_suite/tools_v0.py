@@ -30,6 +30,9 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.S_grasp_sid = sim.model.site_name2id('S_grasp')
         self.obj_bid = sim.model.body_name2id('object')
         self.tool_sid = sim.model.site_name2id('tool')
+        self.keypt1 = sim.model.site_name2id('keypt1')
+        self.keypt2 = sim.model.site_name2id('keypt2')
+        self.keypt3 = sim.model.site_name2id('keypt3')
 
         self.target_pos_range = kwargs['target_pos_range']
         self.tool_pos_range = kwargs['tool_pos_range']
@@ -110,6 +113,27 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         rwd_dict['dense'] = np.sum([rwd_dict[key] for key in RWD_KEYS], axis=0)
         return rwd_dict
 
+    def get_obs_dict(self):
+        # qpos for hand, xpos for obj, xpos for target
+        self.obs_dict['t'] = np.array([self.sim.data.time])
+        self.obs_dict['hand_jnt'] = self.data.qpos[:-6].copy()
+        self.obs_dict['obj_vel'] = np.clip(self.data.qvel[-6:].copy(), -1.0, 1.0)
+        self.obs_dict['palm_pos'] = self.data.site_xpos[self.S_grasp_sid].copy()
+        self.obs_dict['obj_pos'] = self.data.body_xpos[self.obj_bid].copy()
+        self.obs_dict['obj_rot'] = quat2euler(self.data.body_xquat[self.obj_bid].copy())
+        self.obs_dict['target_pos'] = self.data.site_xpos[self.target_obj_sid].copy()
+        self.obs_dict['keypt1'] = self.data.site_xpos[self.keypt1].copy()
+        self.obs_dict['keypt2'] = self.data.site_xpos[self.keypt2].copy()
+        self.obs_dict['keypt3'] = self.data.site_xpos[self.keypt3].copy()
+
+        # keys missing from DAPG-env but needed for rewards calculations
+        self.obs_dict['tool_pos'] = self.data.site_xpos[self.tool_sid].copy()
+        # self.obs_dict['goal_pos'] = self.data.site_xpos[self.goal_sid].copy()
+        self.obs_dict['hand_vel'] = np.clip(self.data.qvel[:-6].copy(), -1.0, 1.0)
+
+        return self.obs_dict
+
+
     def get_obs(self):
         # qpos for hand, xpos for obj, xpos for target
         self.obs_dict['t'] = np.array([self.sim.data.time])
@@ -119,6 +143,9 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.obs_dict['obj_pos'] = self.data.body_xpos[self.obj_bid].copy()
         self.obs_dict['obj_rot'] = quat2euler(self.data.body_xquat[self.obj_bid].copy())
         self.obs_dict['target_pos'] = self.data.site_xpos[self.target_obj_sid].copy()
+        self.obs_dict['keypt1'] = self.data.site_xpos[self.keypt1].copy()
+        self.obs_dict['keypt2'] = self.data.site_xpos[self.keypt2].copy()
+        self.obs_dict['keypt3'] = self.data.site_xpos[self.keypt3].copy()
 
         # keys missing from DAPG-env but needed for rewards calculations
         self.obs_dict['tool_pos'] = self.data.site_xpos[self.tool_sid].copy()
@@ -189,8 +216,11 @@ class ToolsEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         euler_angles = [self.np_random.uniform(low=self.tool_euler_range[i][0], high=self.tool_euler_range[i][1]) for i in range(3)]
         if self.tool_eulery_curr:
             #print("Reseting y angle based on curriculum")
-            euler_angles[1] = self.tool_eulery_curr.status()
-        #print("Y angles : ", euler_angles)
+            #euler_angles[1] = self.tool_eulery_curr.status()
+            euler_angles[1] = self.np_random.uniform(low=self.tool_eulery_curr.start, high=self.tool_eulery_curr.status())
+            #euler_angles[1] = self.np_random.uniform(low=self.tool_eulery_curr.start, high=self.tool_eulery_curr.end)
+
+        print("Y angles : ", euler_angles)
         #rint("Euler angles: ", euler_angles)
         self.data.qpos[-4:] = euler2quat(euler_angles)
         #print(self.data.qpos[-7:])
