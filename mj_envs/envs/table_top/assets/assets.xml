@@ -1,0 +1,84 @@
+ <mujocoinclude>
+ 	<compiler angle="radian" meshdir='../../../sims/Adroit/resources/meshes/' texturedir='../../../sims/Adroit/resources/textures/' />
+    <option apirate="200" iterations="20" noslip_iterations="20"/>
+    <size njmax="500" nconmax="100" nstack="600000" nuser_body="9" nuser_jnt="1" nuser_site="1" nuser_tendon="1" nuser_actuator="16" nuser_sensor="1" />
+    <visual>
+        <global offwidth="3024" offheight="1680" />
+        <quality shadowsize="4096" offsamples="8" />
+        <map force="0.1" fogend="5" />
+    </visual>
+    <default class="main">
+        <mesh scale="0.001 0.001 0.001" />
+        <joint limited="true" margin="0.01" armature="0.001" damping="0.05" frictionloss="0.001" />
+        <geom friction="1 0.5 0.01" margin="0.0005" />
+        <site size="0.005 0 0" rgba="0.4 0.9 0.4 1" />
+        <tendon limited="true" />
+        <general ctrllimited="true" ctrlrange="-1 1" user="0 1 0.03 0.0939711 0.513477 0.0358776 1.23598 8.40409 0.485031 6.04244 1.02187 0.175297 0.121642 0 0 0" />
+        <default class="D_Touch">
+            <site size="0.009 0.004 0.013" group="4" type="box" rgba="0.8 0.8 0.8 0.15" />
+            <general user="0 1 0.03 0.0939711 0.513477 0.0358776 1.23598 8.40409 0.485031 6.04244 1.02187 0.175297 0.121642 0 0 0" />
+        </default>
+        <default class="DC_Hand">
+            <geom conaffinity="0" group="4" material="MatColl" />
+            <general user="0 1 0.03 0.0939711 0.513477 0.0358776 1.23598 8.40409 0.485031 6.04244 1.02187 0.175297 0.121642 0 0 0" />
+        </default>
+        <default class="D_Vizual">
+            <geom type="mesh" contype="0" conaffinity="0" group="1" material="MatViz" />
+            <general user="0 1 0.03 0.0939711 0.513477 0.0358776 1.23598 8.40409 0.485031 6.04244 1.02187 0.175297 0.121642 0 0 0" />
+        </default>
+        <default class="free">
+            <joint type="free" limited="false" armature="0" damping="0" />
+            <general user="0 1 0.03 0.0939711 0.513477 0.0358776 1.23598 8.40409 0.485031 6.04244 1.02187 0.175297 0.121642 0 0 0" />
+        </default>
+    </default>
+    <asset>
+        <texture name="030_fork" type="2d" file="./../../../YCB_sim/textures/030_fork.png"/>
+        <texture name="031_spoon" type="2d" file="./../../../YCB_sim/textures/031_spoon.png"/>
+        <texture name="044_flat_screwdriver" type="2d" file="./../../../YCB_sim/textures/044_flat_screwdriver.png"/>
+        <material name="030_fork" texture="030_fork"/>
+        <material name="031_spoon" texture="031_spoon"/>
+        <material name="044_flat_screwdriver" texture="044_flat_screwdriver"/>
+        <mesh name="030_fork" file="./../../../YCB_sim/meshes/030_fork.msh" scale="1.6 1.6 1.6"/>
+        <mesh name="031_spoon" file="./../../../YCB_sim/meshes/031_spoon.msh" scale="1.6 1.6 1.6"/>
+        <mesh name="044_flat_screwdriver" file="./../../../YCB_sim/meshes/044_flat_screwdriver.msh" scale="1.6 1.6 1.6"/>
+
+        <texture type="cube" name="texgeom" builtin="flat" mark="cross" rgb1="0.3 0.6 0.5" rgb2="0.3 0.6 0.5" width="127" height="762" />
+        <texture type="cube" name="wood" file="wood.png" />
+        <texture type="2d" name="wood2d" file="wood.png" />
+        <texture type="cube" name="square" file="square.png" />
+        <texture type="cube" name="foil" file="silverRaw.png" />
+        <texture type="cube" name="woodb" file="woodb.png" />
+        <texture type="2d" name="groundplane" builtin="checker" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" width="100" height="100" />
+        <texture type="2d" name="marble2d" file="marble.png" />
+        <texture type="cube" name="marblecube" file="marble.png" />
+        <material name="MatColl" specular="1" shininess="0.3" reflectance="0.5" rgba="0.4 0.5 0.6 1" />
+        <material name="MatViz" specular="0.75" shininess="0.1" reflectance="0.5" rgba="0.9 0.7 0.5 1" />
+        <material name="MatGnd" specular="0.3" shininess="0.3" reflectance="0.3" rgba="0.5 0.55 0.5 1" />
+        <material name="object" texture="texgeom" />
+        <material name="groundplane" texture="groundplane" texrepeat="10 10" />
+        <material name="table2d" texture="marble2d" reflectance="0.3" rgba="0.8 0.8 0.8 1" />
+        <material name="tablecube" texture="marblecube" rgba="0.8 0.8 0.8 1" />
+        <material name="MatFoil" texture="foil" specular="1" shininess="0.3" rgba="0.9 0.9 0.9 1" />
+        <material name="MatPlane" specular="0.3" shininess="0.3" rgba="0.3 0.3 0.2 1" />
+        <material name="MatWood" texture="wood" texrepeat="3 3" specular="0.4" shininess="0.1" />
+        <material name="MatSquare" texture="square" specular="1" shininess="0.6" rgba="0.8 0.8 0.8 1" />
+        <material name="MatWoodR" texture="wood" specular="1" shininess="0.3" rgba="1 0.5 0.5 1" />
+        <material name="MatWoodG" texture="wood" specular="1" shininess="0.3" rgba="0.2 1 0.2 1" />
+        <material name="MatWoodB" texture="woodb" specular="1" shininess="0.3" />
+        <mesh name="forearm_simple" file="forearm_simple.stl" scale="1 1 1"/>
+        <mesh name="wrist" file="wrist.stl" />
+        <mesh name="palm" file="palm.stl" />
+        <mesh name="lfmetacarpal" file="lfmetacarpal.stl" />
+        <mesh name="knuckle" file="knuckle.stl" />
+        <mesh name="F3" file="F3.stl" />
+        <mesh name="F2" file="F2.stl" />
+        <mesh name="F1" file="F1.stl" />
+        <mesh name="TH3_z" file="TH3_z.stl" />
+        <mesh name="TH2_z" file="TH2_z.stl" />
+        <mesh name="TH1_z" file="TH1_z.stl" />
+    </asset>
+    <!-- <equality>
+        <weld body1="vive_tracker" body2="forearm" solref="0.01 1" solimp="0.9 0.9 0.01" />
+    </equality> -->
+
+ </mujocoinclude>

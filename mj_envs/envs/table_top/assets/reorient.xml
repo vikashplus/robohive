@@ -1,0 +1,78 @@
+<!-- ======================================================
+    Model       :: ADROIT Knife
+
+    Mujoco      :: Advanced physics simulation engine
+        Source      : www.roboti.us
+        Version     : 1.50
+        Released    : 17Jan'17
+
+    Author      :: Vikash Kumar
+        Contacts    : vikash@cs.washington.edu
+        Last edits  : 17Jan'17
+
+    Designed for :: Demo Augmented Policy Gradient (DAPG)
+
+    Copyright   :: Vikash Kumar
+        Licensed under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+====================================================== -->
+
+<mujoco model='Reorient'>
+
+    <default>
+        <default class="board">
+            <geom type="box" material="MatWood" />
+            <general user="0 1 0.03 0.0939711 0.513477 0.0358776 1.23598 8.40409 0.485031 6.04244 1.02187 0.175297 0.121642 0 0 0" />
+        </default>
+    </default>
+
+    <!-- ======= WORLD ======= -->
+    <worldbody>
+        <light directional='false' castshadow='false' diffuse='.7 .7 .7' specular='0.03 0.03 0.03' pos='-1 -1.0 4.0' dir='1 1.0 -4'/>
+        <geom name='ground' size="1.5 1.5 0.25" pos="0 0 -1" type="plane" contype="1" conaffinity="0" material="groundplane" />
+        <camera name="fixed" pos="0 -0.7 0.7" quat="0.92388 0.382683 0 0" />
+
+        <!-- ======= TABLE ======= -->
+        <body name="table">
+            <!-- <geom size="0.5 0.5 0.025" type="plane" material="table2d" /> --> <!-- Plane has better contacts -->
+            <geom size="0.45 0.45 0.025" pos="0 0 -0.025" type="box" material="tablecube" />
+            <geom size="0.04 0.5" pos="0.4 0.4 -0.501" quat="0 1 0 0" type="cylinder" contype="0" conaffinity="0" />
+            <geom size="0.04 0.5" pos="-0.4 0.4 -0.501" quat="0 1 0 0" type="cylinder" contype="0" conaffinity="0" />
+            <geom size="0.04 0.5" pos="0.4 -0.4 -0.501" quat="0 1 0 0" type="cylinder" contype="0" conaffinity="0" />
+            <geom size="0.04 0.5" pos="-0.4 -0.4 -0.501" quat="0 1 0 0" type="cylinder" contype="0" conaffinity="0" />
+        </body>
+
+        <body name="controller1" pos="0.05 -0.1 0.035">
+            <geom size="0.04" pos="0 0 0" type="sphere" rgba="1 0 0 1" />
+            <joint name="crx1" pos="0 0 0" type="slide" axis="1 0 0" range="-.4 .4" damping="20" />
+            <joint name="cry1" pos="0 0 0" type="slide" axis="0 1 0" range="-.4 .4" damping="20" />
+        </body>
+
+        <!-- <body name="controller2" pos="-0.2 -0.1 0.035">
+            <geom size="0.04" pos="0 0 0" type="sphere" rgba="0 1 0 1" />
+            <joint name="crx2" pos="0 0 0" type="slide" axis="1 0 0" range="-.4 .4" damping="20" />
+            <joint name="cry2" pos="0 0 0" type="slide" axis="0 1 0" range="-.4 .4" damping="20" />
+        </body> -->
+
+        <!-- ======= Hammer ======= -->
+        <body name="Object" pos="0 0 0.035" quat="0.707388 0.706825 0 0">
+             <include file="hammer.xml"/>
+             <!-- <joint type="ball" axis="0 0 0" damping="0.01" stiffness="0"/> -->
+             <!-- <joint type="hinge" axis="0 1 0" damping=".05" limited="true" range="0 60" solimplimit="0.95 0.95 0.1"/> -->
+             <joint type="hinge" axis="0 1 0" range="0 360"/>
+             <!-- <freejoint/> -->
+        </body>
+
+        <body name="target" pos="0 0 0">
+            <site name="target_bottom" type="sphere" size="0.01" rgba="0.8 0.2 0.2 1" pos="0 0.2 0" />
+            <site name="target_top" type="sphere" size="0.01" rgba="0.2 0.8 0.2 1" pos="0 -0.2 0" />
+        </body>
+
+    </worldbody>
+    <include file='assets.xml'/>
+    <actuator>
+        <general name="A_crx1" joint="crx1" ctrlrange="-1. 1." biastype="affine" gainprm="500 0 0" biasprm="0 -200 0"/>
+        <general name="A_cry1" joint="cry1" ctrlrange="-1. 1." biastype="affine" gainprm="500 0 0" biasprm="0 -200 0"/>
+        <!-- <general name="A_crx2" joint="crx2" ctrlrange="-1. 1." biastype="affine" gainprm="500 0 0" biasprm="0 -200 0"/>
+        <general name="A_cry2" joint="cry2" ctrlrange="-1. 1." biastype="affine" gainprm="500 0 0" biasprm="0 -200 0"/> -->
+    </actuator>
+</mujoco>
