@@ -67,6 +67,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.seed(seed)
         self.mujoco_render_frames = False
         self.rwd_viz = rwd_viz
+        self.kwargs = kwargs
 
         # resolve robot config
         self.robot = Robot(mj_sim=self.sim,
@@ -132,6 +133,19 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         # returns obs(t+1), rew(t), done(t), info(t+1)
         return obs, env_info['rwd_'+self.rwd_mode], bool(env_info['done']), env_info
 
+    def get_img_obs(self, sim):
+        for key in self.obs_keys:
+            if key.startswith('rgb'):
+                cam = key.split(':')[1]
+                img = sim.render(
+                                    width=self.kwargs['width'],
+                                    height=self.kwargs['height'],
+                                    mode='offscreen',
+                                    camera_name=cam,
+                                    device_id=self.kwargs['device_id']
+                                )
+                img = img[::-1, :, : ].reshape(-1) # Image has to be flipped
+                self.obs_dict.update({key:img})
 
     def get_obs(self):
         """
@@ -146,6 +160,9 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         # get obs_dict using the observed information
         self.obs_dict = self.get_obs_dict(self.sim_obsd)
+
+        # update obs_dict with image if present in key
+        self.get_img_obs(self.sim_obsd)
 
         # recoved observation vector from the obs_dict
         t, obs = self.obsdict2obsvec(self.obs_dict, self.obs_keys)

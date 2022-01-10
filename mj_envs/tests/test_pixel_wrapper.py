@@ -15,8 +15,8 @@ DESC = ""
 @click.option('-c','--camera', type=str, help='Camera name', default='cam0')
 @click.option('-p','--policy', type=str, help='Path to policy', default=None)
 def main(env_name, episodes, camera, policy):
-    env = gym.make(env_name)
-    env = GymPixelWrapper(env, [camera], hybrid_state=True)
+    env = gym.make(env_name, height=84, width=84, device_id=0)
+    #env = GymPixelWrapper(env, [camera], hybrid_state=True)
     mode = 'exploration'
     width = 84
     height = 84
