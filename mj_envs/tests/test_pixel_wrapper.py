@@ -15,7 +15,7 @@ DESC = ""
 @click.option('-c','--camera', type=str, help='Camera name', default='cam0')
 @click.option('-p','--policy', type=str, help='Path to policy', default=None)
 def main(env_name, episodes, camera, policy):
-    env = gym.make(env_name, height=84, width=84, device_id=0)
+    env = gym.make(env_name, device_id=0)
     #env = GymPixelWrapper(env, [camera], hybrid_state=True)
     mode = 'exploration'
     width = 84
@@ -38,8 +38,8 @@ def main(env_name, episodes, camera, policy):
             score = score + r
 
     avg_rendering_time = total_rendering_time / total_steps
-    print(colored("Average time to render one image : {}".format(avg_rendering_time), "red"))
-    print(colored("Frequency : {} images/second".format(1/avg_rendering_time), "red"))
+    print(colored("Average time to take one step : {}".format(avg_rendering_time), "red"))
+    print(colored("Frequency : {} steps/second".format(1/avg_rendering_time), "red"))
 
 
 if __name__ == '__main__':

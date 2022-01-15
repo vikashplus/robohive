@@ -82,7 +82,7 @@ class KitchenBase(env_base.MujocoEnv):
         "goal": 1.0,
         "goal_err": 1.0,
         "approach_err": 1.0,
-        "rgb:left_cap": 1.0,
+        "rgb:left_cap:84:84": 1.0,
     }
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
         "goal": 1.0,

@@ -133,18 +133,38 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         # returns obs(t+1), rew(t), done(t), info(t+1)
         return obs, env_info['rwd_'+self.rwd_mode], bool(env_info['done']), env_info
 
+    def render_imgs(
+                          self,
+                          height,
+                          width,
+                          cameras,
+                          device_id,
+                          sim=None,
+                     ):
+        if sim is None:
+            sim = self.sim_obsd
+        imgs = np.zeros((len(cameras), height, width, 3), dtype=np.uint8)
+        for ind, cam in enumerate(cameras) :
+            img = sim.render(width=width, height=height, mode='offscreen', camera_name=cam, device_id=device_id)
+            img = img[::-1, :, : ] # Image has to be flipped
+            imgs[ind, :, :, :] = img
+        return imgs
+
     def get_img_obs(self, sim):
         for key in self.obs_keys:
             if key.startswith('rgb'):
                 cam = key.split(':')[1]
-                img = sim.render(
-                                    width=self.kwargs['width'],
-                                    height=self.kwargs['height'],
-                                    mode='offscreen',
-                                    camera_name=cam,
-                                    device_id=self.kwargs['device_id']
-                                )
-                img = img[::-1, :, : ].reshape(-1) # Image has to be flipped
+                height = int(key.split(':')[2])
+                width = int(key.split(':')[3])
+                device_id = self.kwargs['device_id']
+                img = self.render_imgs(
+                                    height=height,
+                                    width=width,
+                                    cameras=[cam],
+                                    device_id=device_id,
+                                    sim=self.sim_obsd,
+                                  )
+                img = img.reshape(-1)
                 self.obs_dict.update({key:img})
 
     def get_obs(self):
