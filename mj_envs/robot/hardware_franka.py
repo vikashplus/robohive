@@ -5,7 +5,7 @@ import numpy as np
 from numpy.core.fromnumeric import size
 import torch
 
-from fair_controller_manager import RobotInterface
+from polymetis import RobotInterface
 import torchcontrol as toco
 from .hardware_base import hardwareBase
 import argparse
@@ -31,15 +31,15 @@ class JointPDPolicy(toco.PolicyModule):
 
     def forward(self, state_dict: Dict[str, torch.Tensor]):
         # Parse states
-        q_current = state_dict["joint_pos"]
-        qd_current = state_dict["joint_vel"]
+        q_current = state_dict["joint_positions"]
+        qd_current = state_dict["joint_velocities"]
 
         # Execute PD control
         output = self.feedback(
             q_current, qd_current, self.q_desired, torch.zeros_like(qd_current)
         )
 
-        return {"torque_desired": output}
+        return {"joint_torques": output}
 
 
 
@@ -60,8 +60,8 @@ class FrankaArm(hardwareBase):
         if policy==None:
             # Create policy instance
             q_initial = self.get_sensors()
-            default_kq = .025*torch.Tensor(self.robot.metadata.default_Kq)
-            default_kqd = .025*torch.Tensor(self.robot.metadata.default_Kqd)
+            default_kq = 0.25*torch.Tensor(self.robot.metadata.default_Kq)
+            default_kqd = 0.25*torch.Tensor(self.robot.metadata.default_Kqd)
             policy = JointPDPolicy(
                 desired_joint_pos=q_initial,
                 kq=default_kq,
@@ -143,9 +143,9 @@ if __name__ == "__main__":
     print(list(q_desired.shape))
 
     for i in range(int(time_to_go * hz)):
-        # q_desired[5] = q_initial[5] + m * np.sin(np.pi * i / (T * hz))
+        q_desired[5] = q_initial[5] + m * np.sin(np.pi * i / (T * hz))
         # q_desired[5] = q_initial[5] + 0.05*np.random.uniform(high=1, low=-1)
-        q_desired = q_initial + 0.01*np.random.uniform(high=1, low=-1, size=7)
+        # q_desired = q_initial + 0.01*np.random.uniform(high=1, low=-1, size=7)
 
         franka.apply_commands(q_desired = q_desired)
         time.sleep(1 / hz)
