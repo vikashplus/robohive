@@ -420,18 +420,19 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             o = self.reset()
             d = False
             t = 0
-            arrs = []
+            imgs = np.zeros((horizon, frame_size[1], frame_size[0], 3), dtype=np.uint8)
             t0 = timer.time()
             while t < horizon and d is False:
                 a = policy.get_action(o)[0] if mode == 'exploration' else policy.get_action(o)[1]['evaluation']
                 o, r, d, _ = self.step(a)
-                t = t+1
                 curr_frame = self.sim.render(width=frame_size[0], height=frame_size[1],
                                              mode='offscreen', camera_name=camera_name, device_id=0)
-                arrs.append(curr_frame[::-1,:,:])
+                imgs[t,:,:,:] = curr_frame[::-1,:,:]
                 print(t, end=', ', flush=True)
+                t = t+1
+
             file_name = save_loc + filename + str(ep) + ".mp4"
-            skvideo.io.vwrite( file_name, np.asarray(arrs))
+            skvideo.io.vwrite( file_name, np.asarray(imgs))
             print("saved", file_name)
             t1 = timer.time()
             print("time taken = %f"% (t1-t0))
