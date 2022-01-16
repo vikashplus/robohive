@@ -56,6 +56,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                obs_range = (-10, 10),
                seed = None,
                rwd_viz = False,
+               device_id = 0, # device id for rendering
                **kwargs,
         ):
 
@@ -66,6 +67,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.input_seed = None
         self.seed(seed)
         self.mujoco_render_frames = False
+        self.device_id = device_id
         self.rwd_viz = rwd_viz
 
         # resolve robot config
@@ -150,6 +152,32 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         # recoved observation vector from the obs_dict
         t, obs = self.obsdict2obsvec(self.obs_dict, self.obs_keys)
         return obs
+
+
+    def get_visual_obs_dict(self, sim, device_id=None):
+        """
+        Recover visual observation dict corresponding to the 'rgba:cam_name:HxW' keys in obs_keys
+        """
+        if device_id is None:
+            device_id = self.device_id
+
+        visual_obs_dict = {}
+        visual_obs_dict['t'] = np.array([self.sim.data.time])
+        for key in self.obs_keys:
+            if key.startswith('rgb'):
+                cam = key.split(':')[1]
+                height = int(key.split(':')[2])
+                width = int(key.split(':')[3])
+                img = self.render_camera_offscreen(
+                                    height=height,
+                                    width=width,
+                                    cameras=[cam],
+                                    device_id=device_id,
+                                    sim=sim,
+                                  )
+                img = img.reshape(-1)
+                visual_obs_dict.update({key:img})
+        return visual_obs_dict
 
 
     # VIK??? Its getting called twice. Once in step and sampler calls it as well
@@ -407,32 +435,52 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.mujoco_render_frames = False
 
 
+    def render_camera_offscreen(self, cameras:list, width:int=640, height:int=480, device_id:int=0, sim=None):
+        """
+        Render images(widthxheight) from a list_of_cameras on the specified device_id.
+        """
+        if sim is None:
+            sim = self.sim_obsd
+        imgs = np.zeros((len(cameras), height, width, 3), dtype=np.uint8)
+        for ind, cam in enumerate(cameras) :
+            img = sim.render(width=width, height=height, mode='offscreen', camera_name=cam, device_id=device_id)
+            img = img[::-1, :, : ] # Image has to be flipped
+            imgs[ind, :, :, :] = img
+        return imgs
+
+
     def visualize_policy_offscreen(self, policy, horizon=1000,
                                    num_episodes=1,
                                    frame_size=(640,480),
                                    mode='exploration',
                                    save_loc='/tmp/',
                                    filename='newvid',
-                                   camera_name=None):
+                                   camera_name=None,
+                                   device_id:int=0):
         import skvideo.io
         for ep in range(num_episodes):
             print("Episode %d: rendering offline " % ep, end='', flush=True)
             o = self.reset()
             d = False
             t = 0
-            imgs = np.zeros((horizon, frame_size[1], frame_size[0], 3), dtype=np.uint8)
+            frames = np.zeros((horizon, frame_size[1], frame_size[0], 3), dtype=np.uint8)
             t0 = timer.time()
             while t < horizon and d is False:
                 a = policy.get_action(o)[0] if mode == 'exploration' else policy.get_action(o)[1]['evaluation']
                 o, r, d, _ = self.step(a)
-                curr_frame = self.sim.render(width=frame_size[0], height=frame_size[1],
-                                             mode='offscreen', camera_name=camera_name, device_id=0)
-                imgs[t,:,:,:] = curr_frame[::-1,:,:]
+                curr_frame = self.render_camera_offscreen(
+                    sim=self.sim,
+                    cameras=[camera_name],
+                    width=frame_size[0],
+                    height=frame_size[1],
+                    device_id=device_id
+                )
+                frames[t,:,:,:] = curr_frame[0]
                 print(t, end=', ', flush=True)
                 t = t+1
 
             file_name = save_loc + filename + str(ep) + ".mp4"
-            skvideo.io.vwrite( file_name, np.asarray(imgs))
+            skvideo.io.vwrite( file_name, np.asarray(frames))
             print("saved", file_name)
             t1 = timer.time()
             print("time taken = %f"% (t1-t0))
@@ -444,6 +492,9 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
         Get observation dictionary
         Implement this in each subclass.
+        If visual keys (rgba:cam_name:HxW) are present use get_visual_obs_dict() to get visual inputs, process it (typically passed through an encoder to reduce dims), and then update the obs_dict. For example
+            > visual_obs_dict = self.get_visual_obs_dict(sim=sim)
+            > obs_dict.update(visual_obs_dict)
         """
         raise NotImplementedError
 
