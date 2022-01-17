@@ -41,7 +41,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "goal": {"microjoint": -1.25},
+        "goal": {"micro0joint": -1.25},
     },
 )
 
@@ -172,7 +172,7 @@ register(
             "knob4_joint": 0,
             "lightswitch_joint": 0,
             "slidedoor_joint": 0,
-            "microjoint": 0,
+            "micro0joint": 0,
             "rightdoorhinge": 0,
             "leftdoorhinge": 0,
         },
@@ -196,7 +196,7 @@ register(
             "knob4_joint": -1.57,
             "lightswitch_joint": -0.7,
             "slidedoor_joint": 0.44,
-            "microjoint": -1.25,
+            "micro0joint": -1.25,
             "rightdoorhinge": 1.57,
             "leftdoorhinge": -1.25,
         },
@@ -212,8 +212,8 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "obj_init": {"microjoint": 0},
-        "goal": {"microjoint": -1.25},
+        "obj_init": {"micro0joint": 0},
+        "goal": {"micro0joint": -1.25},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "microhandle_site",
     },
@@ -225,8 +225,8 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "obj_init": {"microjoint": -1.25},
-        "goal": {"microjoint": 0},
+        "obj_init": {"micro0joint": -1.25},
+        "goal": {"micro0joint": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "microhandle_site",
     },

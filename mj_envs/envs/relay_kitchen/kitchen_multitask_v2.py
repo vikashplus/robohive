@@ -322,7 +322,7 @@ class KitchenFrankaFixed(KitchenBase):
         "slidedoor_joint",
         "leftdoorhinge",
         "rightdoorhinge",
-        "microjoint",
+        "micro0joint",
         "kettle0:Tx",
         "kettle0:Ty",
         "kettle0:Tz",

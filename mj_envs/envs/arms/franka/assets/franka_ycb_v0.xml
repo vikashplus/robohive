@@ -36,7 +36,7 @@
 
         <!-- simple Table -->
         <body pos='0 0.475 0'>
-            <include file="../../../../sims/furniture_sim/simpleTable/simpleTable_body.xml"/>
+            <include file="../../../../sims/furniture_sim/simpleTable/simpleWoodTable_body.xml"/>
         </body>
 
         <!-- tasks details added here via include-->

@@ -75,7 +75,7 @@
                 <include file="../../../sims/furniture_sim/hingecabinet/hingecabinet_body.xml"/>
             </body>
             <body name="microwave" pos="-0.750 -0.025 1.6" euler="0 0 0.3">
-                <include file="../../../sims/furniture_sim/microwave/microwave_body.xml"/>
+                <include file="../../../sims/furniture_sim/microwave/microwave_body0.xml"/>
             </body>
         </body>
         <body name="kettle0" pos="-0.269 0.35 1.626">
