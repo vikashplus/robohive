@@ -20,10 +20,17 @@ class ReorientEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         # ids
         self.target_obj_bid = sim.model.body_name2id("target")
         self.obj_bid = sim.model.body_name2id('Object')
+        self.ctrl1_bid = sim.model.body_name2id('controller1')
         self.obj_t_sid = sim.model.site_name2id('object_top')
         self.obj_b_sid = sim.model.site_name2id('object_bottom')
         self.tar_t_sid = sim.model.site_name2id('target_top')
         self.tar_b_sid = sim.model.site_name2id('target_bottom')
+        self.tool_handle_id = sim.model.geom_name2id('h_handle')
+        self.tool_neck_id = sim.model.geom_name2id('h_neck')
+        self.tool_head_id = sim.model.geom_name2id('h_head')
+        self.tar_handle_sid = sim.model.site_name2id('target_handle')
+        self.tar_neck_sid = sim.model.site_name2id('target_neck')
+        self.tar_head_sid = sim.model.site_name2id('target_head')
         self.tool_length = np.linalg.norm(sim.model.site_pos[self.obj_t_sid] - sim.model.site_pos[self.obj_b_sid])
         self.tar_length = np.linalg.norm(sim.model.site_pos[self.tar_t_sid] - sim.model.site_pos[self.tar_b_sid])
         # scales
@@ -103,8 +110,8 @@ class ReorientEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
     def get_reward_dict(self, obs_dict):
         #pos_err = obs_dict['obj_err_pos']
         #pos_align = np.linalg.norm(pos_err, axis=-1)
-        rot_align = 10*self.calculate_cosine(obs_dict['obj_rot'], obs_dict['obj_des_rot'])
-        print("Rotation reward: ", rot_align)
+        rot_align = self.calculate_cosine(obs_dict['obj_rot'], obs_dict['obj_des_rot'])
+        #print("Rotation reward: ", rot_align)
         #dropped = obs_dict['obj_pos'][:,:,2] < 0.075
 
         rwd_dict = collections.OrderedDict((
@@ -178,11 +185,42 @@ class ReorientEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         desired_orien[0] = self.np_random.uniform(low=self.kwargs['goal'][0][0], high=self.kwargs['goal'][0][1])
         desired_orien[1] = self.np_random.uniform(low=self.kwargs['goal'][1][0], high=self.kwargs['goal'][1][1])
         desired_orien[2] = self.np_random.uniform(low=self.kwargs['goal'][2][0], high=self.kwargs['goal'][2][1])
-        print("Desired Orientation: ", desired_orien[2])
+        #print("Desired Orientation: ", desired_orien[2])
         self.model.body_quat[self.target_obj_bid] = euler2quat(desired_orien)
+        self.model.body_pos[self.ctrl1_bid] = self.np_random.uniform(
+                                                                        low=np.array([self.kwargs["ctrl1"][ind][0] for ind in range(3)]),
+                                                                        high=np.array([self.kwargs["ctrl1"][ind][1] for ind in range(3)])
+                                                                    )
+        if self.kwargs['generate_rd_tools']:
+            #print(self.sim.model.geom_type[handle_id],self.sim.model.geom_type[neck_id],self.sim.model.geom_type[head_id])
+            self.sim.model.geom_type[self.tool_handle_id] = self.np_random.choice([3,5])
+            self.sim.model.geom_type[self.tool_neck_id] = self.np_random.choice([3,5])
+            self.sim.model.geom_type[self.tool_head_id] = self.np_random.choice([3,5])
+            self.sim.model.geom_rgba[self.tool_handle_id] = self.np_random.uniform(low=np.array([0., 0., 0., 1.]), high=np.array([1., 1., 1., 1.]))
+            self.sim.model.geom_rgba[self.tool_neck_id] = self.np_random.uniform(low=np.array([0., 0., 0., 1.]), high=np.array([1., 1., 1., 1.]))
+            self.sim.model.geom_rgba[self.tool_head_id] = self.np_random.uniform(low=np.array([0., 0., 0., 1.]), high=np.array([1., 1., 1., 1.]))
+            #print(self.sim.model.geom_size[self.tool_head_id],self.sim.model.geom_size[self.tool_neck_id],self.sim.model.geom_size[self.tool_handle_id])
+            #[0.02 0.04 0.] [0.007 0.085 0.] [0.025 0.05  0.]
+            self.sim.model.geom_size[self.tool_head_id] = self.np_random.uniform(low=np.array([.01, .03, .0]), high=np.array([.03, .05, .0]))
+            self.sim.model.geom_size[self.tool_neck_id] = self.np_random.uniform(low=np.array([.002, .085, .0]), high=np.array([.012, .135, .0]))
+            self.sim.model.geom_size[self.tool_handle_id] = self.np_random.uniform(low=np.array([.015, .04, .0]), high=np.array([.035, .06, .0]))
+            self.copy_tool2tar()
+
         self.sim.forward()
         return self.get_obs()
 
+    def copy_tool2tar(self):
+        self.sim.model.site_type[self.tar_handle_sid] = self.sim.model.geom_type[self.tool_handle_id]
+        self.sim.model.site_type[self.tar_neck_sid]  = self.sim.model.geom_type[self.tool_neck_id]
+        self.sim.model.site_type[self.tar_head_sid]  = self.sim.model.geom_type[self.tool_head_id]
+
+        self.sim.model.site_rgba[self.tar_handle_sid] = self.sim.model.geom_rgba[self.tool_handle_id]
+        self.sim.model.site_rgba[self.tar_neck_sid]  = self.sim.model.geom_rgba[self.tool_neck_id]
+        self.sim.model.site_rgba[self.tar_head_sid]  = self.sim.model.geom_rgba[self.tool_head_id]
+
+        self.sim.model.site_size[self.tar_handle_sid] = self.sim.model.geom_size[self.tool_handle_id]
+        self.sim.model.site_size[self.tar_neck_sid]  = self.sim.model.geom_size[self.tool_neck_id]
+        self.sim.model.site_size[self.tar_head_sid]  = self.sim.model.geom_size[self.tool_head_id]
 
     def get_env_state(self):
         """

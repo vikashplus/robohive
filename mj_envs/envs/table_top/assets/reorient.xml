@@ -30,21 +30,24 @@
         <light directional='false' castshadow='false' diffuse='.7 .7 .7' specular='0.03 0.03 0.03' pos='-1 -1.0 4.0' dir='1 1.0 -4'/>
         <geom name='ground' size="1.5 1.5 0.25" pos="0 0 -1" type="plane" contype="1" conaffinity="0" material="groundplane" />
         <camera name="fixed" pos="0 -0.7 0.7" quat="0.92388 0.382683 0 0" />
+        <camera name="top_tool" pos="0 0 1.0" euler="0 0 3.14" />
+        <camera name="top_target" pos="0 0.45 1.0" euler="0 0 3.14" />
+        <camera name="top_viz" pos="0 0.25 1.5" euler="0 0 3.14" />
 
         <!-- ======= TABLE ======= -->
         <body name="table">
             <!-- <geom size="0.5 0.5 0.025" type="plane" material="table2d" /> --> <!-- Plane has better contacts -->
-            <geom size="0.45 0.45 0.025" pos="0 0 -0.025" type="box" material="tablecube" />
-            <geom size="0.04 0.5" pos="0.4 0.4 -0.501" quat="0 1 0 0" type="cylinder" contype="0" conaffinity="0" />
-            <geom size="0.04 0.5" pos="-0.4 0.4 -0.501" quat="0 1 0 0" type="cylinder" contype="0" conaffinity="0" />
-            <geom size="0.04 0.5" pos="0.4 -0.4 -0.501" quat="0 1 0 0" type="cylinder" contype="0" conaffinity="0" />
-            <geom size="0.04 0.5" pos="-0.4 -0.4 -0.501" quat="0 1 0 0" type="cylinder" contype="0" conaffinity="0" />
+            <geom size="0.9 0.9 0.025" pos="0 0 -0.025" type="box" material="tablecube" />
+            <geom size="0.04 0.5" pos="0.85 0.85 -0.501" quat="0 1 0 0" type="cylinder" contype="0" conaffinity="0" />
+            <geom size="0.04 0.5" pos="-0.85 0.85 -0.501" quat="0 1 0 0" type="cylinder" contype="0" conaffinity="0" />
+            <geom size="0.04 0.5" pos="0.85 -0.85 -0.501" quat="0 1 0 0" type="cylinder" contype="0" conaffinity="0" />
+            <geom size="0.04 0.5" pos="-0.85 -0.85 -0.501" quat="0 1 0 0" type="cylinder" contype="0" conaffinity="0" />
         </body>
 
         <body name="controller1" pos="0.05 -0.1 0.035">
             <geom size="0.04" pos="0 0 0" type="sphere" rgba="1 0 0 1" />
-            <joint name="crx1" pos="0 0 0" type="slide" axis="1 0 0" range="-.4 .4" damping="20" />
-            <joint name="cry1" pos="0 0 0" type="slide" axis="0 1 0" range="-.4 .4" damping="20" />
+            <joint name="crx1" pos="0 0 0" type="slide" axis="1 0 0" range="-.3 .3" damping="20" />
+            <joint name="cry1" pos="0 0 0" type="slide" axis="0 1 0" range="-.3 .3" damping="20" />
         </body>
 
         <!-- <body name="controller2" pos="-0.2 -0.1 0.035">
@@ -56,15 +59,17 @@
         <!-- ======= Hammer ======= -->
         <body name="Object" pos="0 0 0.035" quat="0.707388 0.706825 0 0">
              <include file="hammer.xml"/>
-             <!-- <joint type="ball" axis="0 0 0" damping="0.01" stiffness="0"/> -->
-             <!-- <joint type="hinge" axis="0 1 0" damping=".05" limited="true" range="0 60" solimplimit="0.95 0.95 0.1"/> -->
-             <joint type="hinge" axis="0 1 0" range="0 360"/>
-             <!-- <freejoint/> -->
+             <joint type="hinge" axis="0 1 0" range="-3.142 3.142"/>
         </body>
 
-        <body name="target" pos="0 0 0">
-            <site name="target_bottom" type="sphere" size="0.01" rgba="0.8 0.2 0.2 1" pos="0 0.2 0" />
-            <site name="target_top" type="sphere" size="0.01" rgba="0.2 0.8 0.2 1" pos="0 -0.2 0" />
+        <body name="target" pos="0 0.45 0.036" quat="0.707388 0.706825 0 0">
+            <!-- <site name="target_bottom" type="sphere" size="0.01" rgba="0.8 0.2 0.2 1" pos="0.2 0 0" />
+            <site name="target_top" type="sphere" size="0.01" rgba="0.2 0.8 0.2 1" pos="-0.2 0 0" /> -->
+            <site name="target_top" pos="-0.26 0 0.0" size="0.01" rgba="0.4 0.8 0.4 0" />
+            <site name="target_bottom" pos="0.07 0 0" size="0.01" rgba="0.8 0.4 0.4 0" />
+            <site name="target_handle" size="0.025 0.05" quat="0.707388 0 0.706825 0" type="capsule" material="MatWood" />
+            <site name="target_neck" size="0.007 0.085" pos="-0.14 0 0" quat="0.707388 0 0.706825 0" type="capsule" rgba="1 1 1 1" />
+            <site name="target_head" size="0.02 0.04" pos="-0.24 0 0" type="cylinder" rgba="0.4 0.4 0.4 1" />
         </body>
 
     </worldbody>
