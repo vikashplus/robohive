@@ -72,7 +72,7 @@ class TestEnvs(unittest.TestCase):
             'FetchReachFixed-v0',
             'FetchReachRandom-v0'
             ]
-        self.check_envs('Arms', env_names, lite=False)
+        self.check_envs('Arms', env_names)
 
     # Hand Manipulation Suite
     def test_hand_manipulation_suite(self):
@@ -87,9 +87,10 @@ class TestEnvs(unittest.TestCase):
 
     def test_fm(self):
         env_names = [
-        'FMReachFixed-v0',
+        'rpFrankaDmanusPoseFixed-v0',
+        'rpFrankaDmanusPoseRandom-v0',
         ]
-        self.check_envs('FM', env_names, lite=True)
+        self.check_envs('FM', env_names)
 
     def test_kitchen(self):
         env_names = [

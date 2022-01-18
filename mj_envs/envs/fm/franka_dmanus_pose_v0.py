@@ -6,13 +6,13 @@ from mj_envs.utils.xml_utils import reassign_parent
 import os
 import collections
 
-class FMBase(env_base.MujocoEnv):
+class FrankaDmanusPose(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS = [
         'qp', 'qv', 'pose_err'
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
-        "reach": -1.0,
+        "pose": -1.0,
         "bonus": 4.0,
         "penalty": -50,
     }
@@ -52,13 +52,17 @@ class FMBase(env_base.MujocoEnv):
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
                **kwargs):
 
-        self.target_pose = target_pose
+        if isinstance(target_pose,np.ndarray):
+            self.target_type = 'fixed'
+            self.target_pose = target_pose
+        elif target_pose is 'random':
+            self.target_type = 'random'
+            self.target_pose = self.sim.data.qpos.copy() # fake target for setup
 
         super()._setup(obs_keys=obs_keys,
                        weighted_reward_keys=weighted_reward_keys,
                        frame_skip=40,
                        **kwargs)
-
 
     def get_obs_dict(self, sim):
         obs_dict = {}
@@ -70,33 +74,30 @@ class FMBase(env_base.MujocoEnv):
 
 
     def get_reward_dict(self, obs_dict):
-        reach_dist = np.linalg.norm(obs_dict['pose_err'], axis=-1)
+        pose_dist = np.linalg.norm(obs_dict['pose_err'], axis=-1)
         far_th = 10
 
         rwd_dict = collections.OrderedDict((
             # Optional Keys
-            ('reach',   reach_dist),
-            ('bonus',   (reach_dist<1) + (reach_dist<2)),
-            ('penalty', (reach_dist>far_th)),
+            ('pose',   pose_dist),
+            ('bonus',   (pose_dist<1) + (pose_dist<2)),
+            ('penalty', (pose_dist>far_th)),
             # Must keys
-            ('sparse',  -1.0*reach_dist),
-            ('solved',  reach_dist<.5),
-            ('done',    reach_dist > far_th),
+            ('sparse',  -1.0*pose_dist),
+            ('solved',  pose_dist<.5),
+            ('done',    pose_dist > far_th),
         ))
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
 
+    def get_target_pose(self):
+        if self.target_type is 'fixed':
+            return self.target_pose
+        elif self.target_type is 'random':
+            return self.np_random.uniform(low=self.sim.model.actuator_ctrlrange[:,0], high=self.sim.model.actuator_ctrlrange[:,1])
 
-class FMReachEnvFixed(FMBase):
-
-    def reset(self):
-        obs = super().reset(self.init_qpos, self.init_qvel)
-        return obs
-
-
-class FMReachEnvRandom(FMBase):
 
     def reset(self):
-        self.target_pose = self.np_random.uniform(low=self.sim.model.actuator_ctrlrange[:,0], high=self.sim.model.actuator_ctrlrange[:,1])
+        self.target_pose = self.get_target_pose()
         obs = super().reset(self.init_qpos, self.init_qvel)
         return obs
