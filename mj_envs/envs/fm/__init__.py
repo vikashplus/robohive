@@ -27,7 +27,7 @@ register(
         }
 )
 
-# Pose to fixed target
+# Pose to random target
 register(
     id='rpFrankaDmanusPoseRandom-v0',
     entry_point='mj_envs.envs.fm.franka_dmanus_pose_v0:FrankaDmanusPose',
@@ -36,5 +36,18 @@ register(
             'model_path': '/assets/franka_dmanus.xml',
             'config_path': curr_dir+'/assets/franka_dmanus.config',
             'target_pose': 'random'
+        }
+)
+
+# Move microwave to fixed target angle
+register(
+    id='rpMicrowaveFixed-v0',
+    entry_point='mj_envs.envs.fm.microwave_v0:rbpMicrowaveFixed',
+    max_episode_steps=50, #50steps*40Skip*2ms = 4s
+    kwargs={
+            'model_path': curr_dir+'/assets/franka_microwave.xml',
+            'config_path': curr_dir+'/assets/franka_microwave.config',
+            'obj_init_pose': np.array([0.0]),
+            'obj_target_pose': np.array([-1.0]),
         }
 )

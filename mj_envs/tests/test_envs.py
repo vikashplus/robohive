@@ -89,6 +89,7 @@ class TestEnvs(unittest.TestCase):
         env_names = [
         'rpFrankaDmanusPoseFixed-v0',
         'rpFrankaDmanusPoseRandom-v0',
+        'rpMicrowaveFixed-v0'
         ]
         self.check_envs('FM', env_names)
 
