@@ -8,7 +8,7 @@
 
 a. Most users -
 ```
-git clone -c submodule.mj_envs/sims/neuromuscular_sim.update=None --branch v1 --recursive https://github.com/vikashplus/mj_envs.git
+git clone -c submodule.mj_envs/sims/neuromuscular_sim.update=none --branch v1 --recursive https://github.com/vikashplus/mj_envs.git
 ```
 b. myoSuite developers: you must have access to neuromuscular_sim(private repo) -
 ```
