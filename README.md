@@ -4,9 +4,15 @@
 ## Getting Started
 `mj_envs` uses git submodules to resolve dependencies. Please follow steps exactly as below to install correctly.
 
-1. Clone this repo with pre-populated submodule dependencies
+1. Clone this repo (branch v1) with pre-populated submodule dependencies
+
+a. Most users -
 ```
-$ git clone --recursive https://github.com/vikashplus/mj_envs.git
+git clone -c submodule.mj_envs/sims/neuromuscular_sim.update=None --branch v1 --recursive https://github.com/vikashplus/mj_envs.git
+```
+b. myoSuite developers: you must have access to neuromuscular_sim(private repo) -
+```
+git clone --branch v1 --recursive https://github.com/vikashplus/mj_envs.git
 ```
 2. Update submodules
 ```
