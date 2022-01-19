@@ -55,7 +55,7 @@ class FrankaDmanusPose(env_base.MujocoEnv):
         if isinstance(target_pose,np.ndarray):
             self.target_type = 'fixed'
             self.target_pose = target_pose
-        elif target_pose is 'random':
+        elif target_pose == 'random':
             self.target_type = 'random'
             self.target_pose = self.sim.data.qpos.copy() # fake target for setup
 
@@ -91,9 +91,9 @@ class FrankaDmanusPose(env_base.MujocoEnv):
         return rwd_dict
 
     def get_target_pose(self):
-        if self.target_type is 'fixed':
+        if self.target_type == 'fixed':
             return self.target_pose
-        elif self.target_type is 'random':
+        elif self.target_type == 'random':
             return self.np_random.uniform(low=self.sim.model.actuator_ctrlrange[:,0], high=self.sim.model.actuator_ctrlrange[:,1])
 
 
