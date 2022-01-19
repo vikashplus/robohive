@@ -416,23 +416,27 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     #     #return None
 
 
-    def visualize_policy(self, policy, horizon=1000, num_episodes=1, mode='exploration'):
-        self.mujoco_render_frames = True
+    def visualize_policy(self, policy, horizon=1000, num_episodes=1, mode='exploration', render=None):
+        if render == 'onscreen':
+            self.mujoco_render_frames = True
+        elif render == None or render =='none':
+            self.mujoco_render_frames = False
+
         for ep in range(num_episodes):
+            print("Rolling episode: %d" % ep, end=":> ")
+
             o = self.reset()
             d = False
             t = 0
             score = 0.0
             while t < horizon and d is False:
-                # o = self._get_obs()
-                # import ipdb; ipdb.set_trace()
-
                 a = policy.get_action(o)[0] if mode == 'exploration' else policy.get_action(o)[1]['evaluation']
                 o, r, d, _ = self.step(a)
                 t = t+1
                 score = score + r
-            print("Total episode reward = %f" % score)
-        self.mujoco_render_frames = False
+            print("total episode reward = %f" % score)
+        if render == 'onscreen':
+            self.mujoco_render_frames = False
 
 
     def render_camera_offscreen(self, cameras:list, width:int=640, height:int=480, device_id:int=0, sim=None):

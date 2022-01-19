@@ -27,7 +27,7 @@ class rand_policy():
 @click.option('-m', '--mode', type=str, help='exploration or evaluation mode for policy', default='evaluation')
 @click.option('-s', '--seed', type=int, help='seed for generating environment instances', default=123)
 @click.option('-n', '--num_episodes', type=int, help='number of episodes to visualize', default=10)
-@click.option('-r', '--render', type=click.Choice(['onscreen', 'offscreen']), help='visualize onscreen or offscreen', default='onscreen')
+@click.option('-r', '--render', type=click.Choice(['onscreen', 'offscreen', 'none']), help='visualize onscreen or offscreen', default='onscreen')
 @click.option('-f', '--filename', type=str, default='newvideo', help=('The name to save the rendered video as.'))
 @click.option('-c', '--camera_name', type=str, default=None, help=('Camera name for rendering'))
 
@@ -46,12 +46,12 @@ def main(env_name, policy, mode, seed, num_episodes, render, filename, camera_na
         mode = 'exploration'
 
     # render policy
-    if render == 'onscreen':
+    if render == 'onscreen' or render == 'none':
         env.visualize_policy(
             policy=pi,
             num_episodes=num_episodes,
             horizon=env.spec.max_episode_steps,
-            mode=mode)
+            mode=mode, render=render)
     elif render == 'offscreen':
         env.visualize_policy_offscreen(
             policy=pi,
