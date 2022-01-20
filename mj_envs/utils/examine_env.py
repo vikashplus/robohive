@@ -5,11 +5,11 @@ import numpy as np
 import pickle
 
 DESC = '''
-Helper script to visualize policy.\n
+Helper script to examine an environment and associated policy for behaviors; \n
+either onscreen, or offscreen, or just rollout without rendering.\n
 USAGE:\n
-    Visualizes policy on the env\n
-    $ python visualize_env.py --env_name door-v0 \n
-    $ python visualize_env.py --env_name door-v0 --policy my_policy.pickle --mode evaluation --episodes 10 \n
+    $ python examine_env.py --env_name door-v0 \n
+    $ python examine_env.py --env_name door-v0 --policy my_policy.pickle --mode evaluation --episodes 10 \n
 '''
 
 # Random policy
@@ -45,22 +45,16 @@ def main(env_name, policy, mode, seed, num_episodes, render, filename, camera_na
         pi = rand_policy(env)
         mode = 'exploration'
 
-    # render policy
-    if render == 'onscreen' or render == 'none':
-        env.visualize_policy(
-            policy=pi,
-            num_episodes=num_episodes,
-            horizon=env.spec.max_episode_steps,
-            mode=mode, render=render)
-    elif render == 'offscreen':
-        env.visualize_policy_offscreen(
-            policy=pi,
-            horizon=env.spec.max_episode_steps,
-            num_episodes=num_episodes,
-            frame_size=(640,480),
-            mode=mode,
-            filename=filename,
-            camera_name=camera_name)
+    # examine policy
+    env.examine_policy(
+        policy=pi,
+        horizon=env.spec.max_episode_steps,
+        num_episodes=num_episodes,
+        frame_size=(640,480),
+        mode=mode,
+        filename=filename,
+        camera_name=camera_name,
+        render=render)
 
 if __name__ == '__main__':
     main()

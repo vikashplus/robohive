@@ -6,7 +6,7 @@ import time as timer
 from mj_envs.utils.obj_vec_dict import ObsVecDict
 from mj_envs.robot.robot import Robot
 from os import path
-from xml.dom import InvalidStateErr
+import skvideo.io
 
 # TODO
 # remove rwd_mode
@@ -61,7 +61,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         ):
 
         if self.sim is None or self.sim_obsd is None:
-            raise InvalidStateErr("sim and sim_obsd must be instantiated for setup to run")
+            raise TypeError("sim and sim_obsd must be instantiated for setup to run")
 
         # seed the random number generator
         self.input_seed = None
@@ -407,38 +407,6 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         if lookat is not None:
             camera.lookat[:] = lookat
 
-    # def render(self, *args, **kwargs):
-    #     pass
-    #     #return self.mj_render()
-
-    # def _get_viewer(self):
-    #     pass
-    #     #return None
-
-
-    def visualize_policy(self, policy, horizon=1000, num_episodes=1, mode='exploration', render=None):
-        if render == 'onscreen':
-            self.mujoco_render_frames = True
-        elif render == None or render =='none':
-            self.mujoco_render_frames = False
-
-        for ep in range(num_episodes):
-            print("Rolling episode: %d" % ep, end=":> ")
-
-            o = self.reset()
-            d = False
-            t = 0
-            score = 0.0
-            while t < horizon and d is False:
-                a = policy.get_action(o)[0] if mode == 'exploration' else policy.get_action(o)[1]['evaluation']
-                o, r, d, _ = self.step(a)
-                t = t+1
-                score = score + r
-            print("total episode reward = %f" % score)
-        if render == 'onscreen':
-            self.mujoco_render_frames = False
-
-
     def render_camera_offscreen(self, cameras:list, width:int=640, height:int=480, device_id:int=0, sim=None):
         """
         Render images(widthxheight) from a list_of_cameras on the specified device_id.
@@ -453,41 +421,68 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         return imgs
 
 
-    def visualize_policy_offscreen(self, policy, horizon=1000,
-                                   num_episodes=1,
-                                   frame_size=(640,480),
-                                   mode='exploration',
-                                   save_loc='/tmp/',
-                                   filename='newvid',
-                                   camera_name=None,
-                                   device_id:int=0):
-        import skvideo.io
+    def examine_policy(self,
+            policy,
+            horizon=1000,
+            num_episodes=1,
+            mode='exploration',
+            render=None,
+            camera_name=None,
+            frame_size=(640,480),
+            save_loc='/tmp/',
+            filename='newvid',
+            device_id:int=0
+            ):
+        """
+            Examine a policy for behaviors; either onscreen, or offscreen, or just rollout without rendering.
+        """
+        exp_t0 = timer.time()
+
+        # configure renderer
+        if render == 'onscreen':
+            self.mujoco_render_frames = True
+        elif render =='offscreen':
+            self.mujoco_render_frames = False
+            frames = np.zeros((horizon, frame_size[1], frame_size[0], 3), dtype=np.uint8)
+        elif render == None:
+            self.mujoco_render_frames = False
+
+        # start rollouts
         for ep in range(num_episodes):
-            print("Episode %d: rendering offline " % ep, end='', flush=True)
+            ep_t0 = timer.time()
+
+            print("Episode %d" % ep, end=":> ")
             o = self.reset()
             d = False
             t = 0
-            frames = np.zeros((horizon, frame_size[1], frame_size[0], 3), dtype=np.uint8)
-            t0 = timer.time()
+            ep_r = 0.0
             while t < horizon and d is False:
                 a = policy.get_action(o)[0] if mode == 'exploration' else policy.get_action(o)[1]['evaluation']
                 o, r, d, _ = self.step(a)
-                curr_frame = self.render_camera_offscreen(
-                    sim=self.sim,
-                    cameras=[camera_name],
-                    width=frame_size[0],
-                    height=frame_size[1],
-                    device_id=device_id
-                )
-                frames[t,:,:,:] = curr_frame[0]
-                print(t, end=', ', flush=True)
+                ep_r += r
+                # render offscreen visuals
+                if render =='offscreen':
+                    curr_frame = self.render_camera_offscreen(
+                        sim=self.sim,
+                        cameras=[camera_name],
+                        width=frame_size[0],
+                        height=frame_size[1],
+                        device_id=device_id
+                    )
+                    frames[t,:,:,:] = curr_frame[0]
+                    print(t, end=', ', flush=True)
                 t = t+1
 
+            print("Total reward = %3.3f, Total time = %2.3f" % (ep_r, ep_t0-timer.time()))
+
+        # save offscreen buffers as video
+        if render =='offscreen':
             file_name = save_loc + filename + str(ep) + ".mp4"
             skvideo.io.vwrite( file_name, np.asarray(frames))
             print("saved", file_name)
-            t1 = timer.time()
-            print("time taken = %f"% (t1-t0))
+
+        self.mujoco_render_frames = False
+        print("Total time taken = %f"% (timer.time()-exp_t0))
 
 
     # methods to override ====================================================
