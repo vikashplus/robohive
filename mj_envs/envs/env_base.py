@@ -4,6 +4,7 @@ import os
 import time as timer
 
 from mj_envs.utils.obj_vec_dict import ObsVecDict
+from mj_envs.utils import tensor_utils
 from mj_envs.robot.robot import Robot
 from os import path
 import skvideo.io
@@ -425,16 +426,18 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             policy,
             horizon=1000,
             num_episodes=1,
-            mode='exploration',
-            render=None,
+            mode='exploration', # options: exploration/evaluation
+            render=None,        # options: onscreen/offscreen/none
             camera_name=None,
             frame_size=(640,480),
-            save_loc='/tmp/',
+            output_dir='/tmp/',
             filename='newvid',
             device_id:int=0
             ):
         """
-            Examine a policy for behaviors; either onscreen, or offscreen, or just rollout without rendering.
+            Examine a policy for behaviors;
+            - either onscreen, or offscreen, or just rollout without rendering.
+            - return resulting paths
         """
         exp_t0 = timer.time()
 
@@ -448,18 +451,24 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             self.mujoco_render_frames = False
 
         # start rollouts
+        paths = []
         for ep in range(num_episodes):
             ep_t0 = timer.time()
+            observations=[]
+            actions=[]
+            rewards=[]
+            agent_infos = []
+            env_infos = []
 
             print("Episode %d" % ep, end=":> ")
             o = self.reset()
-            d = False
+            done = False
             t = 0
-            ep_r = 0.0
-            while t < horizon and d is False:
+            ep_rwd = 0.0
+            while t < horizon and done is False:
                 a = policy.get_action(o)[0] if mode == 'exploration' else policy.get_action(o)[1]['evaluation']
-                o, r, d, _ = self.step(a)
-                ep_r += r
+                next_o, rwd, done, env_info = self.step(a)
+                ep_rwd += rwd
                 # render offscreen visuals
                 if render =='offscreen':
                     curr_frame = self.render_camera_offscreen(
@@ -471,18 +480,34 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                     )
                     frames[t,:,:,:] = curr_frame[0]
                     print(t, end=', ', flush=True)
+                observations.append(o)
+                actions.append(a)
+                rewards.append(rwd)
+                # agent_infos.append(agent_info)
+                env_infos.append(env_info)
+                o = next_o
                 t = t+1
 
-            print("Total reward = %3.3f, Total time = %2.3f" % (ep_r, ep_t0-timer.time()))
+            print("Total reward = %3.3f, Total time = %2.3f" % (ep_rwd, ep_t0-timer.time()))
+            path = dict(
+            observations=np.array(observations),
+            actions=np.array(actions),
+            rewards=np.array(rewards),
+            # agent_infos=tensor_utils.stack_tensor_dict_list(agent_infos),
+            env_infos=tensor_utils.stack_tensor_dict_list(env_infos),
+            terminated=done
+            )
+            paths.append(path)
 
-        # save offscreen buffers as video
-        if render =='offscreen':
-            file_name = save_loc + filename + str(ep) + ".mp4"
-            skvideo.io.vwrite( file_name, np.asarray(frames))
-            print("saved", file_name)
+            # save offscreen buffers as video
+            if render =='offscreen':
+                file_name = output_dir + filename + str(ep) + ".mp4"
+                skvideo.io.vwrite(file_name, np.asarray(frames))
+                print("saved", file_name)
 
         self.mujoco_render_frames = False
         print("Total time taken = %f"% (timer.time()-exp_t0))
+        return paths
 
 
     # methods to override ====================================================
