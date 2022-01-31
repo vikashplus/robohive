@@ -58,6 +58,7 @@ class PenTwirlFixedEnvV0(BaseV0):
                         **kwargs,
                     )
         self.init_qpos[:-6] *= 0 # Use fully open as init pos
+        self.init_qpos[0] = -1.5 # place palm up
 
     def get_obs_vec(self):
         # qpos for hand, xpos for obj, xpos for target
@@ -97,9 +98,9 @@ class PenTwirlFixedEnvV0(BaseV0):
         pos_err = obs_dict['obj_err_pos']
         pos_align = np.linalg.norm(pos_err, axis=-1)
         rot_align = calculate_cosine(obs_dict['obj_rot'], obs_dict['obj_des_rot'])
-        dropped = obs_dict['obj_pos'][:,:,2] < 0.075 if obs_dict['obj_pos'].ndim==3 else obs_dict['obj_pos'][2] < 0.075
+        # dropped = obs_dict['obj_pos'][:,:,2] < 0.075 if obs_dict['obj_pos'].ndim==3 else obs_dict['obj_pos'][2] < 0.075
+        dropped = (pos_align > 0.075)
         act_mag = np.linalg.norm(self.obs_dict['act'], axis=-1)/self.sim.model.na if self.sim.model.na !=0 else 0
-
         rwd_dict = collections.OrderedDict((
             # Optional Keys
             ('pos_align',   -1.*pos_align),

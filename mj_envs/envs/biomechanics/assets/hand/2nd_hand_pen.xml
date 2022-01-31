@@ -1,7 +1,7 @@
 <mujoco model="2nd hand model for pen reorient">
 
     <compiler meshdir='../../../../sims/neuromuscular_sim/hand/'/>
-    <include file="../../../../sims/neuromuscular_sim/hand/2nd_Hand_Model_full_hand_v0.0.2.xml"/>
+    <include file="../../../../sims/neuromuscular_sim/hand/2nd_Hand_Model_full_hand_v0.1.6.xml"/>
 
     <default>
 		<default class="pen">
@@ -12,9 +12,9 @@
 
     <worldbody>
         <!-- ======= PEN ======= -->
-        <site name="eps_ball" type="sphere" pos="-.2 -.22 0.982" size="0.075" rgba="1 1 0 .1" group="4"/>
+        <site name="eps_ball" type="sphere" pos="-.230 -.210 1.045" size="0.075" rgba="1 1 0 .1" group="4"/>
 
-        <body childclass="pen" name="Object" pos="-.2 -.22 0.982" user="1001 0 2003 27 0 0 0.06 0 0" euler="0 1.27 0">
+        <body childclass="pen" name="Object" pos="-.230 -.210 1.045" user="1001 0 2003 27 0 0 0.06 0 0" euler="0 1.27 0">
             <joint name="OBJTx" pos="0 0 0" axis="1 0 0" type="slide" limited="false" damping="0" />
             <joint name="OBJTy" pos="0 0 0" axis="0 1 0" type="slide" limited="false" damping="0" />
             <joint name="OBJTz" pos="0 0 0" axis="0 0 1" type="slide" limited="false" damping="0" />

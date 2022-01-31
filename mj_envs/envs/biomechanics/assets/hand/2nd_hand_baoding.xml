@@ -1,10 +1,9 @@
-<mujoco model="2nd hand model for pen reorient">
+<mujoco model="2nd hand model for baoding balls">
 
     <compiler meshdir='../../../../sims/neuromuscular_sim/hand/'/>
-    <include file="../../../../sims/neuromuscular_sim/hand/2nd_Hand_Model_full_hand_v0.0.2.xml"/>
+    <include file="../../../../sims/neuromuscular_sim/hand/2nd_Hand_Model_full_hand_v0.1.6.xml"/>
 
     <option timestep="0.0025"/>
-
 
     <asset>
         <material name="MatBallY" specular=".1" shininess=".1" reflectance=".1" rgba="1 .8 .31 1.0"/>
@@ -12,12 +11,12 @@
     </asset>
 
     <worldbody>
-        <body name="ball1" pos="-.181 -.20 0.995">
+        <body name="ball1" pos="-.227 -.191 1.052">
             <freejoint/>
             <geom name="ball1" material="MatBallY" type="sphere" size="0.022" group='0' mass='0.043' condim='4'/>
             <site name="ball1_site"  type="sphere" size="0.005" material="MatBallY" group="0"/>
         </body>
-        <body name="ball2" pos="-.22 -.24 0.975">
+        <body name="ball2" pos="-.256 -.232 1.042">
             <freejoint/>
             <geom name="ball2" material="MatBallP" type="sphere" size="0.022" group='0' mass='0.043' condim='4'/>
             <site name="ball2_site"  type="sphere" size="0.005" material="MatBallP" group="0"/>

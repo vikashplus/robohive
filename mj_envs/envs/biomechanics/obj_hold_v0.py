@@ -45,6 +45,7 @@ class ObjHoldFixedEnvV0(BaseV0):
                     **kwargs,
         )
         self.init_qpos[:-7] *= 0 # Use fully open as init pos
+        self.init_qpos[0] = -1.5 # place palm up
 
 
     def get_obs_vec(self):
@@ -95,7 +96,7 @@ class ObjHoldRandomEnvV0(ObjHoldFixedEnvV0):
 
     def reset(self):
         # randomize target pos
-        self.sim.model.site_pos[self.goal_sid] = np.array([-.2, -.2, 1]) + self.np_random.uniform(high=np.array([0.030, 0.030, 0.030]), low=np.array([-.030, -.030, -.030]))
+        self.sim.model.site_pos[self.goal_sid] = np.array([-.235, -.19, 1.050]) + self.np_random.uniform(high=np.array([0.030, 0.030, 0.030]), low=np.array([-.030, -.030, -.030]))
         # randomize object
         size = self.np_random.uniform(high=np.array([0.030, 0.030, 0.030]), low=np.array([.020, .020, .020]))
         self.sim.model.geom_size[-1] = size

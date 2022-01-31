@@ -119,6 +119,7 @@ class BaodingFixedEnvV1(BaseV0):
         # reset position
         # self.init_qpos = self.sim.model.key_qpos[0].copy()
         self.init_qpos[:-14] *= 0 # Use fully open as init pos
+        self.init_qpos[0] = -1.57 # Use fully open as init pos
 
         # V0: Centered the action space around key_qpos[0]. Not sure if it matter.
         # self.act_mid = self.init_qpos[:self.n_jnt].copy()

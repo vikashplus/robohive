@@ -85,11 +85,12 @@ class KeyTurnEnvV0(BaseV0):
         return obs_dict
 
     def get_reward_dict(self, obs_dict):
-        IF_approach_dist = np.abs(np.linalg.norm(self.obs_dict['IFtip_approach'], axis=-1)-0.040)
-        TH_approach_dist = np.abs(np.linalg.norm(self.obs_dict['THtip_approach'], axis=-1)-0.040)
+        IF_approach_dist = np.abs(np.linalg.norm(self.obs_dict['IFtip_approach'], axis=-1)-0.030)
+        TH_approach_dist = np.abs(np.linalg.norm(self.obs_dict['THtip_approach'], axis=-1)-0.030)
         key_pos = obs_dict['key_qpos'][:,:,0] if obs_dict['key_qpos'].ndim==3 else obs_dict['key_qpos'][0]
         act_mag = np.linalg.norm(self.obs_dict['act'], axis=-1)/self.sim.model.na if self.sim.model.na !=0 else 0
-        far_th = .060
+        far_th = 0.065
+        print(IF_approach_dist, TH_approach_dist)
         rwd_dict = collections.OrderedDict((
             # Optional Keys
             ('key_turn', key_pos),
@@ -111,6 +112,6 @@ class KeyTurnEnvV0(BaseV0):
         qvel = self.init_qvel.copy() if reset_qvel is None else reset_qvel
         qpos[-1] = self.np_random.uniform(low=self.key_init_range[0], high=self.key_init_range[1])
         if self.key_init_range[0]!=self.key_init_range[1]: # randomEnv
-            self.sim.model.body_pos[-1] = self.np_random.uniform(low=np.array([-0.24, -0.24, 0.97]), high=np.array([-0.22, -0.22, 0.99]))
+            self.sim.model.body_pos[-1] = np.array([-.15, -.23, 1.025])+self.np_random.uniform(low=np.array([-0.01, -0.01, -.01]), high=np.array([0.01, 0.01, 0.01]))
         self.robot.reset(qpos, qvel)
         return self.get_obs()
