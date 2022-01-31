@@ -1,5 +1,7 @@
+from enum import Flag
 import gym
 import mj_envs #even if unused it is needed to register the environments
+from mj_envs.utils.viz_paths import plot_paths as plotnsave_paths
 import click
 import numpy as np
 import pickle
@@ -8,7 +10,8 @@ import os
 
 DESC = '''
 Helper script to examine an environment and associated policy for behaviors; \n
-either onscreen, or offscreen, or just rollout without rendering.\n
+- either onscreen, or offscreen, or just rollout without rendering.\n
+- save resulting paths as pickle or as 2D plots
 USAGE:\n
     $ python examine_env.py --env_name door-v0 \n
     $ python examine_env.py --env_name door-v0 --policy my_policy.pickle --mode evaluation --episodes 10 \n
@@ -32,48 +35,56 @@ class rand_policy():
 @click.option('-r', '--render', type=click.Choice(['onscreen', 'offscreen', 'none']), help='visualize onscreen or offscreen', default='onscreen')
 @click.option('-c', '--camera_name', type=str, default=None, help=('Camera name for rendering'))
 @click.option('-o', '--output_dir', type=str, default='./', help=('Directory to save the outputs'))
-@click.option('-v', '--video_name', type=str, default='video', help=('The name to save the rendered video as'))
-@click.option('-l', '--log_name', type=str, default=None, help=('The name to save the rollout logs as'))
+@click.option('-on', '--output_name', type=str, default=None, help=('The name to save the outputs as'))
+@click.option('-sp', '--save_paths', type=bool, default=False, help=('Save the rollout paths'))
+@click.option('-pp', '--plot_paths', type=bool, default=False, help=('2D-plot of individual paths'))
 
-def main(env_name, policy_path, mode, seed, num_episodes, render, camera_name, output_dir, video_name, log_name):
+def main(env_name, policy_path, mode, seed, num_episodes, render, camera_name, output_dir, output_name, save_paths, plot_paths):
 
     # seed and load environments
     np.random.seed(seed)
     env = gym.make(env_name)
     env.seed(seed)
 
-    # resolve policy
+    # resolve policy and outputs
     if policy_path is not None:
         pi = pickle.load(open(policy_path, 'rb'))
         if output_dir == './': # overide the default
-           output_dir = policy_path.split('.')[0]+'/'
+           output_dir, pol_name = os.path.split(policy_path)
+           if output_name is None:
+               output_name = os.path.splitext(pol_name)[0]
     else:
         pi = rand_policy(env)
         mode = 'exploration'
+        output_name ='random_policy'
 
     # resolve directory
-    if (os.path.isdir(output_dir) == False) and (render=='offscreen' or log_name is not None):
+    if (os.path.isdir(output_dir) == False) and (render=='offscreen' or save_paths or plot_paths is not None):
         os.mkdir(output_dir)
 
-    # examine policy
+    # examine policy's behavior to recover paths
     paths = env.examine_policy(
         policy=pi,
         horizon=env.spec.max_episode_steps,
         num_episodes=num_episodes,
         frame_size=(640,480),
         mode=mode,
-        output_dir=output_dir,
-        filename=video_name,
+        output_dir=output_dir+'/',
+        filename=output_name,
         camera_name=camera_name,
         render=render)
 
-    if log_name is not None:
-        time_stamp = time.strftime("%Y%m%d-%H%M%S")
-        file_name = output_dir + log_name + '{}.pickle'.format(time_stamp)
+    # save paths
+    time_stamp = time.strftime("%Y%m%d-%H%M%S")
+    if save_paths:
+        file_name = output_dir + '/' + output_name + '{}_paths.pickle'.format(time_stamp)
         pickle.dump(paths, open(file_name, 'wb'))
         print("saved ", file_name)
 
+    # plot paths
+    if plot_paths:
+        file_name = output_dir + '/' + output_name + '{}'.format(time_stamp)
+        plotnsave_paths(paths, env=env, fileName_prefix=file_name)
+
 if __name__ == '__main__':
     main()
-
-
