@@ -377,6 +377,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
     def mj_render(self):
         try:
+            self.viewer.cam.azimuth+=.1 # trick to rotate camera for 360 videos
             self.viewer.render()
         except:
             self.viewer = MjViewer(self.sim)
@@ -395,10 +396,10 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         Updates the given camera to move to the provided settings.
         """
         if not camera:
-            if not self.viewer:
-                return
+            if hasattr(self, 'viewer'):
+                camera = self.viewer.cam
             else:
-                camera = self.viewer
+                return
         if distance is not None:
             camera.distance = distance
         if azimuth is not None:
