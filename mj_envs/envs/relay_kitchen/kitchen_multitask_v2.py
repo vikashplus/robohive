@@ -255,7 +255,7 @@ class KitchenBase(env_base.MujocoEnv):
         elif type(obj_init) is np.ndarray:
             assert len(obj_init) == len(
                 self.obj["dof_adrs"]
-            ), "Check size of provided onj_init"
+            ), "Check size of provided obj_init"
             self.init_qpos[self.obj["dof_adrs"]] = obj_init.copy()
         else:
             raise TypeError(
