@@ -151,8 +151,8 @@ register(
 # In this version of the environment, the observations consist of the
 # distance between end effector and all relevent objects in the scene
 
-obs_keys_wt = {"hand_jnt": 1.0, "objs_jnt": 1.0, "goal": 1.0, "end_effector": 1.0}
-for site in KitchenFrankaFixed.INTERACTION_SITES:
+obs_keys_wt = {"robot_jnt": 1.0, "objs_jnt": 1.0, "goal": 1.0, "end_effector": 1.0}
+for site in KitchenFrankaFixed.OBJ_INTERACTION_SITES:
     obs_keys_wt[site + "_err"] = 1.0
 
 

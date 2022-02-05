@@ -77,7 +77,7 @@ DEMO_RESET_QVEL = np.array(
 class KitchenBase(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS_AND_WEIGHTS = {
-        "hand_jnt": 1.0,
+        "robot_jnt": 1.0,
         "objs_jnt": 1.0,
         "goal": 1.0,
         "goal_err": 1.0,
@@ -191,9 +191,9 @@ class KitchenBase(env_base.MujocoEnv):
     def get_obs_dict(self, sim):
         obs_dict = {}
         obs_dict["t"] = np.array([sim.data.time])
-        obs_dict["hand_jnt"] = sim.data.qpos[self.robot_dofs].copy()
+        obs_dict["robot_jnt"] = sim.data.qpos[self.robot_dofs].copy()
         obs_dict["objs_jnt"] = sim.data.qpos[self.obj["dof_adrs"]].copy()
-        obs_dict["hand_vel"] = sim.data.qvel[self.robot_dofs].copy() * self.dt
+        obs_dict["robot_vel"] = sim.data.qvel[self.robot_dofs].copy() * self.dt
         obs_dict["objs_vel"] = sim.data.qvel[self.obj["dof_adrs"]].copy() * self.dt
         obs_dict["goal"] = self.goal.copy()
         obs_dict["goal_err"] = (
@@ -203,10 +203,10 @@ class KitchenBase(env_base.MujocoEnv):
             self.sim.data.site_xpos[self.interact_sid]
             - self.sim.data.site_xpos[self.grasp_sid]
         )
-        obs_dict["pose_err"] = self.robot_meanpos - obs_dict["hand_jnt"]
+        obs_dict["pose_err"] = self.robot_meanpos - obs_dict["robot_jnt"]
         obs_dict["end_effector"] = self.sim.data.site_xpos[self.grasp_sid]
         obs_dict["qpos"] = self.sim.data.qpos.copy()
-        for site in self.INTERACTION_SITES:
+        for site in self.OBJ_INTERACTION_SITES:
             site_id = self.sim.model.site_name2id(site)
             obs_dict[site + "_err"] = (
                 self.sim.data.site_xpos[site_id]
@@ -295,7 +295,7 @@ class KitchenBase(env_base.MujocoEnv):
 
 class KitchenFrankaFixed(KitchenBase):
 
-    INTERACTION_SITES = (
+    OBJ_INTERACTION_SITES = (
         "knob1_site",
         "knob2_site",
         "knob3_site",
@@ -348,7 +348,7 @@ class KitchenFrankaFixed(KitchenBase):
         model_path,
         robot_jnt_names=ROBOT_JNT_NAMES,
         obj_jnt_names=OBJ_JNT_NAMES,
-        obj_interaction_site=INTERACTION_SITES,
+        obj_interaction_site=OBJ_INTERACTION_SITES,
         goal=None,
         interact_site="end_effector",
         obj_init=None,
