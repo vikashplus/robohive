@@ -89,8 +89,7 @@ class KeyTurnEnvV0(BaseV0):
         TH_approach_dist = np.abs(np.linalg.norm(self.obs_dict['THtip_approach'], axis=-1)-0.030)
         key_pos = obs_dict['key_qpos'][:,:,0] if obs_dict['key_qpos'].ndim==3 else obs_dict['key_qpos'][0]
         act_mag = np.linalg.norm(self.obs_dict['act'], axis=-1)/self.sim.model.na if self.sim.model.na !=0 else 0
-        far_th = 0.065
-        print(IF_approach_dist, TH_approach_dist)
+        far_th = 0.1
         rwd_dict = collections.OrderedDict((
             # Optional Keys
             ('key_turn', key_pos),
