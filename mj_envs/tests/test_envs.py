@@ -1,3 +1,10 @@
+""" =================================================
+Copyright (C) 2018 Vikash Kumar
+Author  :: Vikash Kumar (vikashplus@gmail.com)
+Source  :: https://github.com/vikashplus/mj_envs
+License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+================================================= """
+
 import unittest
 
 import gym
@@ -36,8 +43,8 @@ class TestEnvs(unittest.TestCase):
             observation, _reward, done, _info = env.env.step(np.zeros(env.env.sim.model.nu))
             del(env)
 
-    # Biomechanics
-    def test_biomechanics(self):
+    # Myo
+    def test_myo(self):
         env_names = [
             'FingerReachMotorFixed-v0', 'FingerReachMotorRandom-v0',
             'FingerReachMuscleFixed-v0', 'FingerReachMuscleRandom-v0',
@@ -60,7 +67,7 @@ class TestEnvs(unittest.TestCase):
         ]
         for k in range(10): env_names+=['HandPose'+str(k)+'MuscleFixed-v0']
 
-        self.check_envs('Biomechanics', env_names)
+        self.check_envs('myo', env_names)
 
     # Arms
     def test_arms(self):

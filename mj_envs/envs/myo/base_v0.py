@@ -1,3 +1,8 @@
+""" =================================================
+# Copyright (c) Facebook, Inc. and its affiliates
+Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gmail.com)
+================================================= """
+
 from mj_envs.envs import env_base
 import numpy as np
 import gym

@@ -1,3 +1,10 @@
+""" =================================================
+Copyright (C) 2018 Vikash Kumar
+Author  :: Vikash Kumar (vikashplus@gmail.com)
+Source  :: https://github.com/vikashplus/mj_envs
+License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+================================================= """
+
 from darwin.darwin_robot.hardware_base import hardwareBase
 import numpy as np
 import socket
@@ -14,9 +21,9 @@ class OptiTrack(hardwareBase):
     INPUTS:
         ip:             name/ ip for connection (reciever for UDP and sender for TCP)
         port:           port for connection
-        packet_size:    Bytes of data being exchanged 
+        packet_size:    Bytes of data being exchanged
     """
-    
+
     # Cached client that is shared for the application lifetime.
     _OPTI_CLIENT = None
 
@@ -26,10 +33,10 @@ class OptiTrack(hardwareBase):
             self.port = port
             self.packet_size = packet_size
             self._sensor_cache_maxsize = cache_maxsize
-            
+
             self.data_raw = None
             self.data_float = None
-            if cache_maxsize > 1: 
+            if cache_maxsize > 1:
                 self._sensor_cache = deque([], maxlen=self.sensor_cache_maxsize)
             else:
                 self._sensor_cache = None
@@ -130,7 +137,7 @@ class OptiTrack(hardwareBase):
     def get_sensors(self):
         # sensor_data isn't updated in place ==> it can be easily passed around and cached
         # repeated calls will return the same data_frame ==> no overhead for multiple queries to the same sensor reading
-        return self.sensor_data 
+        return self.sensor_data
 
     # get sensor from cache (helpful when there are >1 sensors)
     def get_sensors_from_cache(self, index=-1):
@@ -142,31 +149,31 @@ class OptiTrack(hardwareBase):
 
     def apply_commands(self):
         raise NotImplementedError
-     
+
 
 # Get inputs from user
 def get_args():
     parser = argparse.ArgumentParser(description="OptiTrack Client: Connects to \
         the server and fetches streaming data")
 
-    parser.add_argument("-s", "--server_name", 
-                        type=str, 
+    parser.add_argument("-s", "--server_name",
+                        type=str,
                         help="IP address or hostname of the streaming server",
                         default="xyz.cs.washington.edu") # 169.254.163.86
-    parser.add_argument("-c", "--client_name", 
-                        type=str, 
+    parser.add_argument("-c", "--client_name",
+                        type=str,
                         help="IP address or hostname of the recieving client",
                         default="zyx.cs.washington.edu") # 169.254.163.96
-    parser.add_argument("-p", "--port", 
+    parser.add_argument("-p", "--port",
                         type=int,
                         help="Port to use (> 1024)",
                         default=5000)
     parser.add_argument("-n", "--nbytes",
-                        type=int, 
+                        type=int,
                         help="Size of packets being exchanged",
                         default=36) # [t, id, x, y, z, q0, q1, q2, q3, q4]
     parser.add_argument("-v", "--verbose",
-                        type=bool, 
+                        type=bool,
                         help="print data stream",
                         default=False)
     return parser.parse_args()
@@ -174,7 +181,7 @@ def get_args():
 
 
 if __name__ == '__main__':
-    
+
     # get args
     args = get_args()
 
@@ -182,7 +189,7 @@ if __name__ == '__main__':
     if _USE_UDP:
         oc = OptiTrack(args.client_name, args.port, args.nbytes)
     else:
-        oc = OptiTrack(args.server_name, args.port, args.nbytes)    
+        oc = OptiTrack(args.server_name, args.port, args.nbytes)
     oc.connect()
 
     print(oc.get_sensor_from_cache(-5))
@@ -193,7 +200,7 @@ if __name__ == '__main__':
         if args.verbose:
             if data is None:
                 print("Data: None")
-            else: 
+            else:
                 print("T:{:03.3f}, id:{:2d}, x:{:+03.3f}, y:{:+03.3f}, z:{:+03.3f}"\
                     .format(data[0], int(data[1]), data[2], data[3], data[4]))
             time.sleep(0.1)
