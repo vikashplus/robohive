@@ -2,7 +2,7 @@ import collections
 import numpy as np
 import gym
 
-from mj_envs.envs.biomechanics.base_v0 import BaseV0
+from mj_envs.envs.myo.base_v0 import BaseV0
 from mj_envs.envs.env_base import get_sim
 from mj_envs.utils.quatmath import euler2quat
 from mj_envs.utils.vectormath import calculate_cosine

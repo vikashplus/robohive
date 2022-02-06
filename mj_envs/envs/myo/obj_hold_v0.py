@@ -2,7 +2,7 @@ import collections
 import numpy as np
 import gym
 
-from mj_envs.envs.biomechanics.base_v0 import BaseV0
+from mj_envs.envs.myo.base_v0 import BaseV0
 
 
 class ObjHoldFixedEnvV0(BaseV0):

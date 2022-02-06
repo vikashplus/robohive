@@ -2,14 +2,13 @@ from gym.envs.registration import register
 import os
 import numpy as np
 
-
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 
-print("RS:> Registering Biomechanics Envs")
+print("RS:> Registering Myo Envs")
 
 # Finger-tip reaching ==============================
 register(id='FingerReachMotorFixed-v0',
-        entry_point='mj_envs.envs.biomechanics.reach_v0:ReachEnvV0',
+        entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/finger/tendon_finger_motorAct_v0.xml',
@@ -19,7 +18,7 @@ register(id='FingerReachMotorFixed-v0',
         }
     )
 register(id='FingerReachMotorRandom-v0',
-        entry_point='mj_envs.envs.biomechanics.reach_v0:ReachEnvV0',
+        entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/finger/tendon_finger_motorAct_v0.xml',
@@ -29,7 +28,7 @@ register(id='FingerReachMotorRandom-v0',
         }
     )
 register(id='FingerReachMuscleFixed-v0',
-        entry_point='mj_envs.envs.biomechanics.reach_v0:ReachEnvV0',
+        entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/finger/tendon_finger_muscleAct_v0.xml',
@@ -39,7 +38,7 @@ register(id='FingerReachMuscleFixed-v0',
     )
 
 register(id='FingerReachMuscleRandom-v0',
-        entry_point='mj_envs.envs.biomechanics.reach_v0:ReachEnvV0',
+        entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/finger/tendon_finger_muscleAct_v0.xml',
@@ -50,7 +49,7 @@ register(id='FingerReachMuscleRandom-v0',
 
 # Elbow posing ==============================
 register(id='ElbowPose1D1MRandom-v0',
-        entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/arm/elbow_1dof1muscle.xml',
@@ -62,7 +61,7 @@ register(id='ElbowPose1D1MRandom-v0',
         }
     )
 register(id='ElbowPose1D6MRandom-v0',
-        entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/arm/elbow_1dof6muscles.xml',
@@ -74,7 +73,7 @@ register(id='ElbowPose1D6MRandom-v0',
         }
     )
 register(id='ElbowPose1D6MExoRandom-v0',
-        entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/arm/elbow_1dof6muscles_1dofexo.xml',
@@ -92,7 +91,7 @@ register(id='ElbowPose1D6MExoRandom-v0',
         }
     )
 register(id='ElbowPose1D6M_SoftExo_Random-v0',
-        entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/arm/elbow_1dof6muscles_1dofsoftexo.xml',
@@ -110,7 +109,7 @@ register(id='ElbowPose1D6M_SoftExo_Random-v0',
         }
     )
 register(id='ElbowPose1D6MExoRandom_1kg-v0',
-        entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/arm/elbow_1dof6muscles_1dofexo_1kg.xml',
@@ -129,7 +128,7 @@ register(id='ElbowPose1D6MExoRandom_1kg-v0',
     )
 
 register(id='ElbowPose1D6MExoRandom_2kg-v0',
-        entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/arm/elbow_1dof6muscles_1dofexo_2kg.xml',
@@ -148,7 +147,7 @@ register(id='ElbowPose1D6MExoRandom_2kg-v0',
     )
 # Finger-Joint posing ==============================
 register(id='FingerPoseMotorFixed-v0',
-        entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/finger/tendon_finger_motorAct_v0.xml',
@@ -163,7 +162,7 @@ register(id='FingerPoseMotorFixed-v0',
         }
 )
 register(id='FingerPoseMotorRandom-v0',
-        entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/finger/tendon_finger_motorAct_v0.xml',
@@ -178,7 +177,7 @@ register(id='FingerPoseMotorRandom-v0',
         }
     )
 register(id='FingerPoseMuscleFixed-v0',
-        entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/finger/tendon_finger_muscleAct_v0.xml',
@@ -192,7 +191,7 @@ register(id='FingerPoseMuscleFixed-v0',
         }
     )
 register(id='FingerPoseMuscleRandom-v0',
-        entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/finger/tendon_finger_muscleAct_v0.xml',
@@ -210,7 +209,7 @@ register(id='FingerPoseMuscleRandom-v0',
 
 # Remove this when the ASL envs stablizes
 register(id='HandPoseMuscleFixed-v0',
-        entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/hand/2nd_hand_pose.xml',
@@ -241,7 +240,7 @@ ASL_qpos[9]='0 0 0 0.5624 0.28272 -0.75573 -1.309 1.30045 -0.006982 1.45492 0.99
 # ASl Eval envs for each numerals
 for k in ASL_qpos.keys():
     register(id='HandPose'+str(k)+'MuscleFixed-v0',
-            entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+            entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
             max_episode_steps=100,
             kwargs={
                 'model_path': curr_dir+'/assets/hand/2nd_hand_pose.xml',
@@ -261,7 +260,7 @@ for i_n, n  in enumerate(jnt_namesHand):
     Rpos[n]=(np.min(m[:,i_n]), np.max(m[:,i_n]))
 
 register(id='HandPoseMuscleRandom-v0',
-        entry_point='mj_envs.envs.biomechanics.pose_v0:PoseEnvV0',
+        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/hand/2nd_hand_pose.xml',
@@ -276,7 +275,7 @@ register(id='HandPoseMuscleRandom-v0',
 
 # Hand-Joint Reaching ==============================
 register(id='HandReachMuscleFixed-v0',
-        entry_point='mj_envs.envs.biomechanics.reach_v0:ReachEnvV0',
+        entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/hand/2nd_hand_pose.xml',
@@ -298,7 +297,7 @@ register(id='HandReachMuscleFixed-v0',
     )
 
 register(id='HandReachMuscleRandom-v0',
-    entry_point='mj_envs.envs.biomechanics.reach_v0:ReachEnvV0',
+    entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
     max_episode_steps=100,
     kwargs={
         'model_path': curr_dir+'/assets/hand/2nd_hand_pose.xml',
@@ -322,7 +321,7 @@ register(id='HandReachMuscleRandom-v0',
 
 # Hand-Joint key turn ==============================
 register(id='HandKeyTurnFixed-v0',
-        entry_point='mj_envs.envs.biomechanics.key_turn_v0:KeyTurnEnvV0',
+        entry_point='mj_envs.envs.myo.key_turn_v0:KeyTurnEnvV0',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/hand/2nd_hand_Index_Thumb_keyturn.xml',
@@ -331,7 +330,7 @@ register(id='HandKeyTurnFixed-v0',
     )
 
 register(id='HandKeyTurnRandom-v0',
-        entry_point='mj_envs.envs.biomechanics.key_turn_v0:KeyTurnEnvV0',
+        entry_point='mj_envs.envs.myo.key_turn_v0:KeyTurnEnvV0',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/hand/2nd_hand_Index_Thumb_keyturn.xml',
@@ -344,7 +343,7 @@ register(id='HandKeyTurnRandom-v0',
 
 # Hold objects ==============================
 register(id='HandObjHoldFixed-v0',
-        entry_point='mj_envs.envs.biomechanics.obj_hold_v0:ObjHoldFixedEnvV0',
+        entry_point='mj_envs.envs.myo.obj_hold_v0:ObjHoldFixedEnvV0',
         max_episode_steps=75,
         kwargs={
             'model_path': curr_dir+'/assets/hand/2nd_hand_hold.xml',
@@ -353,7 +352,7 @@ register(id='HandObjHoldFixed-v0',
     )
 
 register(id='HandObjHoldRandom-v0',
-        entry_point='mj_envs.envs.biomechanics.obj_hold_v0:ObjHoldRandomEnvV0',
+        entry_point='mj_envs.envs.myo.obj_hold_v0:ObjHoldRandomEnvV0',
         max_episode_steps=75,
         kwargs={
             'model_path': curr_dir+'/assets/hand/2nd_hand_hold.xml',
@@ -364,7 +363,7 @@ register(id='HandObjHoldRandom-v0',
 
 # Pen twirl ==============================
 register(id='HandPenTwirlFixed-v0',
-            entry_point='mj_envs.envs.biomechanics.pen_v0:PenTwirlFixedEnvV0',
+            entry_point='mj_envs.envs.myo.pen_v0:PenTwirlFixedEnvV0',
             max_episode_steps=50,
             kwargs={
                 'model_path': curr_dir+'/assets/hand/2nd_hand_pen.xml',
@@ -374,7 +373,7 @@ register(id='HandPenTwirlFixed-v0',
     )
 
 register(id='HandPenTwirlRandom-v0',
-        entry_point='mj_envs.envs.biomechanics.pen_v0:PenTwirlRandomEnvV0',
+        entry_point='mj_envs.envs.myo.pen_v0:PenTwirlRandomEnvV0',
         max_episode_steps=50,
         kwargs={
             'model_path': curr_dir+'/assets/hand/2nd_hand_pen.xml',
@@ -385,7 +384,7 @@ register(id='HandPenTwirlRandom-v0',
 
 # Baoding ==============================
 register(id='BaodingFixed-v1',
-        entry_point='mj_envs.envs.biomechanics.baoding_v1:BaodingFixedEnvV1',
+        entry_point='mj_envs.envs.myo.baoding_v1:BaodingFixedEnvV1',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
@@ -394,7 +393,7 @@ register(id='BaodingFixed-v1',
         }
     )
 register(id='BaodingRandom-v1',
-        entry_point='mj_envs.envs.biomechanics.baoding_v1:BaodingRandomEnvV1',
+        entry_point='mj_envs.envs.myo.baoding_v1:BaodingRandomEnvV1',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
@@ -403,7 +402,7 @@ register(id='BaodingRandom-v1',
         }
     )
 register(id='BaodingFixed4th-v1',
-        entry_point='mj_envs.envs.biomechanics.baoding_v1:BaodingFixedEnvV1',
+        entry_point='mj_envs.envs.myo.baoding_v1:BaodingFixedEnvV1',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
@@ -412,7 +411,7 @@ register(id='BaodingFixed4th-v1',
         }
     )
 register(id='BaodingFixed8th-v1',
-        entry_point='mj_envs.envs.biomechanics.baoding_v1:BaodingFixedEnvV1',
+        entry_point='mj_envs.envs.myo.baoding_v1:BaodingFixedEnvV1',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',

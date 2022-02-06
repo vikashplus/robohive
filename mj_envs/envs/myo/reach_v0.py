@@ -2,7 +2,7 @@ import collections
 import gym
 import numpy as np
 
-from mj_envs.envs.biomechanics.base_v0 import BaseV0
+from mj_envs.envs.myo.base_v0 import BaseV0
 
 
 
