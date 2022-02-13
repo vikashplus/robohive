@@ -86,12 +86,12 @@ class KitchenBase(env_base.MujocoEnv):
     DEFAULT_OBS_KEYS_AND_WEIGHTS = {
         "robot_jnt": 1.0,
         "objs_jnt": 1.0,
-        "goal": 1.0,
+        "obj_goal": 1.0,
         "goal_err": 1.0,
         "approach_err": 1.0,
     }
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
-        "goal": 1.0,
+        "obj_goal": 1.0,
         "bonus": 0.5,
         "pose": 0.0,  # 0.01
         "approach": 0.5,
@@ -120,7 +120,7 @@ class KitchenBase(env_base.MujocoEnv):
                robot_jnt_names,
                obj_jnt_names,
                obj_interaction_site,
-               goal,
+               obj_goal,
                interact_site,
                obj_init,
                obs_keys_wt=list(DEFAULT_OBS_KEYS_AND_WEIGHTS.keys()),
@@ -175,13 +175,13 @@ class KitchenBase(env_base.MujocoEnv):
             self.obj["dof_ranges"][:, 1] - self.obj["dof_ranges"][:, 0]
         )
 
-        # configure env-goal
+        # configure env-obj_goal
         if interact_site == "end_effector":
             print(
                 "WARNING: Using the default interaction site of end-effector. \
                   If you wish to evaluate on specific tasks, you should set the interaction site correctly."
             )
-        self.set_goal(goal=goal, interact_site=interact_site)
+        self.set_goal(obj_goal=obj_goal, interact_site=interact_site)
 
         super()._setup(obs_keys=obs_keys_wt,
                        weighted_reward_keys=weighted_reward_keys,
@@ -202,9 +202,9 @@ class KitchenBase(env_base.MujocoEnv):
         obs_dict["objs_jnt"] = sim.data.qpos[self.obj["dof_adrs"]].copy()
         obs_dict["robot_vel"] = sim.data.qvel[self.robot_dofs].copy() * self.dt
         obs_dict["objs_vel"] = sim.data.qvel[self.obj["dof_adrs"]].copy() * self.dt
-        obs_dict["goal"] = self.goal.copy()
+        obs_dict["obj_goal"] = self.obj_goal.copy()
         obs_dict["goal_err"] = (
-            obs_dict["goal"] - obs_dict["objs_jnt"]
+            obs_dict["obj_goal"] - obs_dict["objs_jnt"]
         )  # mix of translational and rotational erros
         obs_dict["approach_err"] = (
             self.sim.data.site_xpos[self.interact_sid]
@@ -227,7 +227,7 @@ class KitchenBase(env_base.MujocoEnv):
         rwd_dict = collections.OrderedDict(
             (
                 # Optional Keys
-                ("goal", -np.sum(goal_dist, axis=-1)),
+                ("obj_goal", -np.sum(goal_dist, axis=-1)),
                 (
                     "bonus",
                     np.product(goal_dist < 0.75 * self.obj["dof_ranges"], axis=-1)
@@ -269,26 +269,26 @@ class KitchenBase(env_base.MujocoEnv):
                 "obj_init must be either a dict<obj_name, obb_init>, or a vector of all obj_init"
             )
 
-    def set_goal(self, goal=None, interact_site=None):
+    def set_goal(self, obj_goal=None, interact_site=None):
 
         # resolve goals
-        if type(goal) is dict:
-            # treat current sim as goal
-            self.goal = self.sim.data.qpos[self.obj["dof_adrs"]].copy()
+        if type(obj_goal) is dict:
+            # treat current sim as obj_goal
+            self.obj_goal = self.sim.data.qpos[self.obj["dof_adrs"]].copy()
             # overwrite explicit requests
-            for obj_name, obj_goal in goal.items():
-                self.goal[self.obj[obj_name]["goal_adr"]] = obj_goal
-        elif type(goal) is np.ndarray:
-            assert len(goal) == len(self.obj["dof_adrs"]), "Check size of provided goal"
-            self.goal = goal
+            for obj_name, obj_val in obj_goal.items():
+                self.obj_goal[self.obj[obj_name]["goal_adr"]] = obj_val
+        elif type(obj_goal) is np.ndarray:
+            assert len(obj_goal) == len(self.obj["dof_adrs"]), "Check size of provided obj_goal"
+            self.obj_goal = obj_goal
         else:
             raise TypeError(
-                "goals must be either a dict<obj_name, obb_goal>, or a vector of all obj_goals"
+                "goals must be either a dict<obj_name, obj_goal>, or a vector of all obj_goals"
             )
 
         # resolve interaction site
         if interact_site is None:  # automatically infer
-            goal_err = np.abs(self.sim.data.qpos[self.obj["dof_adrs"]] - self.goal)
+            goal_err = np.abs(self.sim.data.qpos[self.obj["dof_adrs"]] - self.obj_goal)
             max_goal_err_obj = np.argmax(goal_err)
             for _, obj in self.obj.items():
                 if obj["goal_adr"] == max_goal_err_obj:
@@ -356,7 +356,7 @@ class KitchenFrankaFixed(KitchenBase):
         robot_jnt_names=ROBOT_JNT_NAMES,
         obj_jnt_names=OBJ_JNT_NAMES,
         obj_interaction_site=OBJ_INTERACTION_SITES,
-        goal=None,
+        obj_goal=None,
         interact_site="end_effector",
         obj_init=None,
         **kwargs,
@@ -367,7 +367,7 @@ class KitchenFrankaFixed(KitchenBase):
             robot_jnt_names=robot_jnt_names,
             obj_jnt_names=obj_jnt_names,
             obj_interaction_site=obj_interaction_site,
-            goal=goal,
+            obj_goal=obj_goal,
             interact_site=interact_site,
             obj_init=obj_init,
             **kwargs,
@@ -376,7 +376,12 @@ class KitchenFrankaFixed(KitchenBase):
 
 class KitchenFrankaDemo(KitchenFrankaFixed):
     def reset(self, reset_qpos=None, reset_qvel=None):
-        return super().reset(reset_qpos=DEMO_RESET_QPOS, reset_qvel=DEMO_RESET_QVEL)
+        if reset_qpos is None:
+            reset_qpos = self.init_qpos.copy()
+            reset_qvel = self.init_qvel.copy()
+            reset_qpos[self.robot_dofs] = DEMO_RESET_QPOS[self.robot_dofs]
+            reset_qvel[self.robot_dofs] = DEMO_RESET_QVEL[self.robot_dofs]
+        return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel)
 
 
 class KitchenFrankaRandom(KitchenFrankaFixed):

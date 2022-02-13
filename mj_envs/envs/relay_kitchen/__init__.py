@@ -10,6 +10,7 @@ import os
 from gym.envs.registration import register
 from mj_envs.envs.relay_kitchen.kitchen_multitask_v1 import KitchenTasksV0
 from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import KitchenFrankaFixed, KitchenFrankaRandom, KitchenFrankaDemo
+# from mj_envs.envs.relay_kitchen.franka_kitchen_v1 import KitchenFrankaFixed, KitchenFrankaRandom, KitchenFrankaDemo
 
 print("RS:> Registering Kitchen Envs")
 
@@ -25,11 +26,10 @@ register(
     max_episode_steps=280,
 )
 
-
 DEMO_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFrankaDemo"
 RANDOM_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFrankaRandom"
 FIXED_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFrankaFixed"
-ENTRY_POINT = RANDOM_ENTRY_POINT
+ENTRY_POINT = DEMO_ENTRY_POINT
 
 # Kitchen
 register(
@@ -39,7 +39,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "goal": {},
+        "obj_goal": {},
     },
 )
 
@@ -51,7 +51,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "goal": {"micro0joint": -1.25},
+        "obj_goal": {"micro0joint": -1.25},
     },
 )
 
@@ -63,7 +63,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "goal": {"rightdoorhinge": 1.57},
+        "obj_goal": {"rightdoorhinge": 1.57},
     },
 )
 
@@ -75,7 +75,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "goal": {"leftdoorhinge": -1.25},
+        "obj_goal": {"leftdoorhinge": -1.25},
     },
 )
 
@@ -87,7 +87,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "goal": {"slidedoor_joint": 0.44},
+        "obj_goal": {"slidedoor_joint": 0.44},
     },
 )
 
@@ -99,7 +99,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "goal": {"lightswitch_joint": -0.7},
+        "obj_goal": {"lightswitch_joint": -0.7},
     },
 )
 
@@ -111,7 +111,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "goal": {"knob4_joint": -1.57},
+        "obj_goal": {"knob4_joint": -1.57},
     },
 )
 
@@ -123,7 +123,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "goal": {"knob3_joint": -1.57},
+        "obj_goal": {"knob3_joint": -1.57},
     },
 )
 
@@ -135,7 +135,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "goal": {"knob2_joint": -1.57},
+        "obj_goal": {"knob2_joint": -1.57},
     },
 )
 
@@ -147,7 +147,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "goal": {"knob1_joint": -1.57},
+        "obj_goal": {"knob1_joint": -1.57},
     },
 )
 
@@ -158,7 +158,7 @@ register(
 # In this version of the environment, the observations consist of the
 # distance between end effector and all relevent objects in the scene
 
-obs_keys_wt = {"robot_jnt": 1.0, "objs_jnt": 1.0, "goal": 1.0, "end_effector": 1.0}
+obs_keys_wt = {"robot_jnt": 1.0, "objs_jnt": 1.0, "obj_goal": 1.0, "end_effector": 1.0}
 for site in KitchenFrankaFixed.OBJ_INTERACTION_SITES:
     obs_keys_wt[site + "_err"] = 1.0
 
@@ -171,7 +171,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "goal": {},
+        "obj_goal": {},
         "obj_init": {
             "knob1_joint": 0,
             "knob2_joint": 0,
@@ -195,7 +195,7 @@ register(
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
-        "goal": {},
+        "obj_goal": {},
         "obj_init": {
             "knob1_joint": -1.57,
             "knob2_joint": -1.57,
@@ -220,7 +220,7 @@ register(
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
         "obj_init": {"micro0joint": 0},
-        "goal": {"micro0joint": -1.25},
+        "obj_goal": {"micro0joint": -1.25},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "microhandle_site",
     },
@@ -233,7 +233,7 @@ register(
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
         "obj_init": {"micro0joint": -1.25},
-        "goal": {"micro0joint": 0},
+        "obj_goal": {"micro0joint": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "microhandle_site",
     },
@@ -248,7 +248,7 @@ register(
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
         "obj_init": {"rightdoorhinge": 0},
-        "goal": {"rightdoorhinge": 1.57},
+        "obj_goal": {"rightdoorhinge": 1.57},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "rightdoor_site",
     },
@@ -261,7 +261,7 @@ register(
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
         "obj_init": {"rightdoorhinge": 1.57},
-        "goal": {"rightdoorhinge": 0},
+        "obj_goal": {"rightdoorhinge": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "rightdoor_site",
     },
@@ -276,7 +276,7 @@ register(
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
         "obj_init": {"leftdoorhinge": 0},
-        "goal": {"leftdoorhinge": -1.25},
+        "obj_goal": {"leftdoorhinge": -1.25},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "leftdoor_site",
     },
@@ -289,7 +289,7 @@ register(
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
         "obj_init": {"leftdoorhinge": -1.25},
-        "goal": {"leftdoorhinge": 0},
+        "obj_goal": {"leftdoorhinge": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "leftdoor_site",
     },
@@ -304,7 +304,7 @@ register(
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
         "obj_init": {"slidedoor_joint": 0},
-        "goal": {"slidedoor_joint": 0.44},
+        "obj_goal": {"slidedoor_joint": 0.44},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "slide_site",
     },
@@ -317,7 +317,7 @@ register(
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
         "obj_init": {"slidedoor_joint": 0.44},
-        "goal": {"slidedoor_joint": 0},
+        "obj_goal": {"slidedoor_joint": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "slide_site",
     },
@@ -332,7 +332,7 @@ register(
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
         "obj_init": {"lightswitch_joint": 0},
-        "goal": {"lightswitch_joint": -0.7},
+        "obj_goal": {"lightswitch_joint": -0.7},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "light_site",
     },
@@ -345,7 +345,7 @@ register(
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
         "obj_init": {"lightswitch_joint": -0.7},
-        "goal": {"lightswitch_joint": 0},
+        "obj_goal": {"lightswitch_joint": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "light_site",
     },
@@ -360,7 +360,7 @@ register(
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
         "obj_init": {"knob4_joint": 0},
-        "goal": {"knob4_joint": -1.57},
+        "obj_goal": {"knob4_joint": -1.57},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "knob4_site",
     },
@@ -373,7 +373,7 @@ register(
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
         "obj_init": {"knob4_joint": -1.57},
-        "goal": {"knob4_joint": 0},
+        "obj_goal": {"knob4_joint": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "knob4_site",
     },
@@ -388,7 +388,7 @@ register(
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
         "obj_init": {"knob3_joint": 0},
-        "goal": {"knob3_joint": -1.57},
+        "obj_goal": {"knob3_joint": -1.57},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "knob3_site",
     },
@@ -401,7 +401,7 @@ register(
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
         "obj_init": {"knob3_joint": -1.57},
-        "goal": {"knob3_joint": 0},
+        "obj_goal": {"knob3_joint": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "knob3_site",
     },
@@ -416,7 +416,7 @@ register(
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
         "obj_init": {"knob2_joint": 0},
-        "goal": {"knob2_joint": -1.57},
+        "obj_goal": {"knob2_joint": -1.57},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "knob2_site",
     },
@@ -429,7 +429,7 @@ register(
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
         "obj_init": {"knob2_joint": -1.57},
-        "goal": {"knob2_joint": 0},
+        "obj_goal": {"knob2_joint": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "knob2_site",
     },
@@ -444,7 +444,7 @@ register(
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
         "obj_init": {"knob1_joint": 0},
-        "goal": {"knob1_joint": -1.57},
+        "obj_goal": {"knob1_joint": -1.57},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "knob1_site",
     },
@@ -457,7 +457,7 @@ register(
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
         "obj_init": {"knob1_joint": -1.57},
-        "goal": {"knob1_joint": 0},
+        "obj_goal": {"knob1_joint": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "knob1_site",
     },
