@@ -51,6 +51,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     """
 
     def __init__(self, model_path):
+
+        # Get a random number generator incase its needed in pre_setup phase
+        self.input_seed = None
+        self.seed(0)
+
         self.sim = get_sim(model_path)
         self.sim_obsd = get_sim(model_path)
         ObsVecDict.__init__(self)
