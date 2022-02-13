@@ -13,74 +13,6 @@ from mj_envs.envs import env_base
 
 VIZ = False
 
-DEMO_RESET_QPOS = np.array(
-    [
-        1.01020992e-01,
-        -1.76349747e00,
-        1.88974607e00,
-        -2.47661710e00,
-        3.25189114e-01,
-        8.29094410e-01,
-        1.62463629e00,
-        3.99760380e-02,
-        3.99791002e-02,
-        2.45778156e-05,
-        2.95590127e-07,
-        2.45777410e-05,
-        2.95589217e-07,
-        2.45777410e-05,
-        2.95589217e-07,
-        2.45777410e-05,
-        2.95589217e-07,
-        2.16196258e-05,
-        5.08073663e-06,
-        0.00000000e00,
-        0.00000000e00,
-        0.00000000e00,
-        0.00000000e00,
-        -2.68999994e-01,
-        3.49999994e-01,
-        1.61928391e00,
-        6.89039584e-19,
-        -2.26122120e-05,
-        -8.87580375e-19,
-    ]
-)
-DEMO_RESET_QVEL = np.array(
-    [
-        -1.24094905e-02,
-        3.07730486e-04,
-        2.10558046e-02,
-        -2.11170651e-02,
-        1.28676305e-02,
-        2.64535546e-02,
-        -7.49515183e-03,
-        -1.34369839e-04,
-        2.50969693e-04,
-        1.06229627e-13,
-        7.14243539e-16,
-        1.06224762e-13,
-        7.19794728e-16,
-        1.06224762e-13,
-        7.21644648e-16,
-        1.06224762e-13,
-        7.14243539e-16,
-        -1.19464428e-16,
-        -1.47079926e-17,
-        0.00000000e00,
-        0.00000000e00,
-        0.00000000e00,
-        0.00000000e00,
-        2.93530267e-09,
-        -1.99505748e-18,
-        3.42031125e-14,
-        -4.39396125e-17,
-        6.64174740e-06,
-        3.52969879e-18,
-    ]
-)
-
-
 class KitchenBase(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS_AND_WEIGHTS = {
@@ -140,6 +72,7 @@ class KitchenBase(env_base.MujocoEnv):
 
         # configure env-site
         self.grasp_sid = self.sim.model.site_name2id("end_effector")
+        self.obj_interaction_site = obj_interaction_site
 
         # configure env-robot
         self.robot_dofs = []
@@ -151,9 +84,6 @@ class KitchenBase(env_base.MujocoEnv):
         self.robot_dofs = np.array(self.robot_dofs)
         self.robot_ranges = np.array(self.robot_ranges)
         self.robot_meanpos = np.mean(self.robot_ranges, axis=1)
-
-        # increase simulation timestep for faster experiments
-        # self.sim.model.opt.timestep = 0.008
 
         # configure env-objs
         self.obj = {}
@@ -181,7 +111,9 @@ class KitchenBase(env_base.MujocoEnv):
                 "WARNING: Using the default interaction site of end-effector. \
                   If you wish to evaluate on specific tasks, you should set the interaction site correctly."
             )
-        self.set_goal(obj_goal=obj_goal, interact_site=interact_site)
+        self.input_obj_goal = obj_goal
+        self.input_obj_init = obj_init
+        self.set_obj_goal(obj_goal=self.input_obj_goal, interact_site=interact_site)
 
         super()._setup(obs_keys=obs_keys_wt,
                        weighted_reward_keys=weighted_reward_keys,
@@ -191,9 +123,10 @@ class KitchenBase(env_base.MujocoEnv):
                        robot_name=robot_name,
                        **kwargs)
 
+
         self.init_qpos[:] = self.sim.model.key_qpos[0].copy()
         if obj_init:
-            self.set_obj_init(obj_init)
+            self.set_obj_init(self.input_obj_init)
 
     def get_obs_dict(self, sim):
         obs_dict = {}
@@ -213,7 +146,7 @@ class KitchenBase(env_base.MujocoEnv):
         obs_dict["pose_err"] = self.robot_meanpos - obs_dict["robot_jnt"]
         obs_dict["end_effector"] = self.sim.data.site_xpos[self.grasp_sid]
         obs_dict["qpos"] = self.sim.data.qpos.copy()
-        for site in self.OBJ_INTERACTION_SITES:
+        for site in self.obj_interaction_site:
             site_id = self.sim.model.site_name2id(site)
             obs_dict[site + "_err"] = (
                 self.sim.data.site_xpos[site_id]
@@ -258,7 +191,8 @@ class KitchenBase(env_base.MujocoEnv):
         if type(obj_init) is dict:
             # overwrite explicit requests
             for obj_name, obj_val in obj_init.items():
-                self.init_qpos[self.obj[obj_name]["dof_adr"]] = obj_val
+                val = self.np_random.uniform(low=obj_val[0], high=obj_val[1]) if type(obj_val)==tuple else obj_val
+                self.init_qpos[self.obj[obj_name]["dof_adr"]] = val
         elif type(obj_init) is np.ndarray:
             assert len(obj_init) == len(
                 self.obj["dof_adrs"]
@@ -269,7 +203,7 @@ class KitchenBase(env_base.MujocoEnv):
                 "obj_init must be either a dict<obj_name, obb_init>, or a vector of all obj_init"
             )
 
-    def set_goal(self, obj_goal=None, interact_site=None):
+    def set_obj_goal(self, obj_goal=None, interact_site=None):
 
         # resolve goals
         if type(obj_goal) is dict:
@@ -277,13 +211,15 @@ class KitchenBase(env_base.MujocoEnv):
             self.obj_goal = self.sim.data.qpos[self.obj["dof_adrs"]].copy()
             # overwrite explicit requests
             for obj_name, obj_val in obj_goal.items():
-                self.obj_goal[self.obj[obj_name]["goal_adr"]] = obj_val
+                # import ipdb; ipdb.set_trace()
+                val = self.np_random.uniform(low=obj_val[0], high=obj_val[1]) if type(obj_val)==tuple else obj_val
+                self.obj_goal[self.obj[obj_name]["goal_adr"]] = val
         elif type(obj_goal) is np.ndarray:
             assert len(obj_goal) == len(self.obj["dof_adrs"]), "Check size of provided obj_goal"
             self.obj_goal = obj_goal
         else:
             raise TypeError(
-                "goals must be either a dict<obj_name, obj_goal>, or a vector of all obj_goals"
+                "goals must be either a dict<obj_name, obb_goal>, or a vector of all obj_goals"
             )
 
         # resolve interaction site
@@ -298,99 +234,3 @@ class KitchenBase(env_base.MujocoEnv):
             self.interact_sid = self.sim.model.site_name2id(interact_site)
         elif type(interact_site) is int:  # overwrite using id
             self.interact_sid = interact_site
-
-
-class KitchenFrankaFixed(KitchenBase):
-
-    OBJ_INTERACTION_SITES = (
-        "knob1_site",
-        "knob2_site",
-        "knob3_site",
-        "knob4_site",
-        "light_site",
-        "slide_site",
-        "leftdoor_site",
-        "rightdoor_site",
-        "microhandle_site",
-        "kettle_site0",
-        "kettle_site0",
-        "kettle_site0",
-        "kettle_site0",
-        "kettle_site0",
-        "kettle_site0",
-    )
-
-    OBJ_JNT_NAMES = (
-        "knob1_joint",
-        "knob2_joint",
-        "knob3_joint",
-        "knob4_joint",
-        "lightswitch_joint",
-        "slidedoor_joint",
-        "leftdoorhinge",
-        "rightdoorhinge",
-        "micro0joint",
-        "kettle0:Tx",
-        "kettle0:Ty",
-        "kettle0:Tz",
-        "kettle0:Rx",
-        "kettle0:Ry",
-        "kettle0:Rz",
-    )
-
-    ROBOT_JNT_NAMES = (
-        "panda0_joint1",
-        "panda0_joint2",
-        "panda0_joint3",
-        "panda0_joint4",
-        "panda0_joint5",
-        "panda0_joint6",
-        "panda0_joint7",
-        "panda0_finger_joint1",
-        "panda0_finger_joint2",
-    )
-
-    def __init__(
-        self,
-        model_path,
-        robot_jnt_names=ROBOT_JNT_NAMES,
-        obj_jnt_names=OBJ_JNT_NAMES,
-        obj_interaction_site=OBJ_INTERACTION_SITES,
-        obj_goal=None,
-        interact_site="end_effector",
-        obj_init=None,
-        **kwargs,
-    ):
-        KitchenBase.__init__(
-            self,
-            model_path=model_path,
-            robot_jnt_names=robot_jnt_names,
-            obj_jnt_names=obj_jnt_names,
-            obj_interaction_site=obj_interaction_site,
-            obj_goal=obj_goal,
-            interact_site=interact_site,
-            obj_init=obj_init,
-            **kwargs,
-        )
-
-
-class KitchenFrankaDemo(KitchenFrankaFixed):
-    def reset(self, reset_qpos=None, reset_qvel=None):
-        if reset_qpos is None:
-            reset_qpos = self.init_qpos.copy()
-            reset_qvel = self.init_qvel.copy()
-            reset_qpos[self.robot_dofs] = DEMO_RESET_QPOS[self.robot_dofs]
-            reset_qvel[self.robot_dofs] = DEMO_RESET_QVEL[self.robot_dofs]
-        return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel)
-
-
-class KitchenFrankaRandom(KitchenFrankaFixed):
-    def reset(self, reset_qpos=None, reset_qvel=None):
-        if reset_qpos is None:
-            reset_qpos = self.init_qpos.copy()
-            reset_qpos[self.robot_dofs] += (
-                0.05
-                * (self.np_random.uniform(size=len(self.robot_dofs)) - 0.5)
-                * (self.robot_ranges[:, 1] - self.robot_ranges[:, 0])
-            )
-        return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel)

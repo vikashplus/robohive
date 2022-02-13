@@ -47,4 +47,8 @@
 
     </worldbody>
 
+    <keyframe>
+        <key qpos='0.16 -1.5 1.84 -2.51 0.36 0.79 1.55 0.00 0.0 0'/>
+    </keyframe>
+
 </mujoco>

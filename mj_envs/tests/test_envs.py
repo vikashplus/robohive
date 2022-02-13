@@ -67,7 +67,7 @@ class TestEnvs(unittest.TestCase):
         ]
         for k in range(10): env_names+=['HandPose'+str(k)+'MuscleFixed-v0']
 
-        self.check_envs('myo', env_names)
+        self.check_envs('Myo', env_names)
 
     # Arms
     def test_arms(self):
@@ -121,7 +121,9 @@ class TestEnvs(unittest.TestCase):
         'kitchen_knob2_on-v3',
         'kitchen_knob2_off-v3',
         'kitchen_knob1_on-v3',
-        'kitchen_knob1_off-v3'
+        'kitchen_knob1_off-v3',
+        'franka_micro_open-v3','franka_micro_close-v3','franka_micro_random-v3',
+        'franka_slide_open-v3','franka_slide_close-v3','franka_slide_random-v3',
         ]
         self.check_envs('Kitchen', env_names, lite=False)
 

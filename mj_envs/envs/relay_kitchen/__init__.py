@@ -9,8 +9,7 @@ import os
 
 from gym.envs.registration import register
 from mj_envs.envs.relay_kitchen.kitchen_multitask_v1 import KitchenTasksV0
-from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import KitchenFrankaFixed, KitchenFrankaRandom, KitchenFrankaDemo
-# from mj_envs.envs.relay_kitchen.franka_kitchen_v1 import KitchenFrankaFixed, KitchenFrankaRandom, KitchenFrankaDemo
+from mj_envs.envs.relay_kitchen.franka_kitchen_v1 import KitchenFrankaFixed, KitchenFrankaRandom, KitchenFrankaDemo
 
 print("RS:> Registering Kitchen Envs")
 
@@ -460,5 +459,105 @@ register(
         "obj_goal": {"knob1_joint": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "knob1_site",
+    },
+)
+
+
+# Franka Appliance ======================================================================
+from mj_envs.envs.relay_kitchen.franka_appliance_v1 import FrankaApplianceFixed, FrankaApplianceRandom
+
+# MICROWAVE
+obs_keys_wt = {"robot_jnt": 1.0, "objs_jnt": 1.0, "obj_goal": 1.0, "end_effector": 1.0, "microhandle_site_err":1}
+register(
+    id="franka_micro_open-v3",
+    entry_point="mj_envs.envs.relay_kitchen:FrankaApplianceFixed",
+    max_episode_steps=50,
+    kwargs={
+        "model_path": CURR_DIR + "/assets/franka_microwave.xml",
+        "config_path": CURR_DIR + "/assets/franka_microwave.config",
+        "obj_init": {"micro0joint": 0},
+        "obj_goal": {"micro0joint": -1.25},
+        "obj_interaction_site": ("microhandle_site",),
+        "obj_jnt_names": ("micro0joint",),
+        "obj_body_names": ("microwave",),
+        "interact_site": "microhandle_site",
+    },
+)
+register(
+    id="franka_micro_close-v3",
+    entry_point="mj_envs.envs.relay_kitchen:FrankaApplianceFixed",
+    max_episode_steps=50,
+    kwargs={
+        "model_path": CURR_DIR + "/assets/franka_microwave.xml",
+        "config_path": CURR_DIR + "/assets/franka_microwave.config",
+        "obj_init": {"micro0joint": -1.25},
+        "obj_goal": {"micro0joint": 0},
+        "obj_interaction_site": ("microhandle_site",),
+        "obj_jnt_names": ("micro0joint",),
+        "obj_body_names": ("microwave",),
+        "interact_site": "microhandle_site",
+    },
+)
+register(
+    id="franka_micro_random-v3",
+    entry_point="mj_envs.envs.relay_kitchen:FrankaApplianceRandom",
+    max_episode_steps=50,
+    kwargs={
+        "model_path": CURR_DIR + "/assets/franka_microwave.xml",
+        "config_path": CURR_DIR + "/assets/franka_microwave.config",
+        "obj_init": {"micro0joint": (-1.25, 0)},
+        "obj_goal": {"micro0joint": (-1.25, 0)},
+        "obj_interaction_site": ("microhandle_site",),
+        "obj_jnt_names": ("micro0joint",),
+        "obj_body_names": ("microwave",),
+        "interact_site": "microhandle_site",
+    },
+)
+
+# SLIDE-CABINET
+obs_keys_wt = {"robot_jnt": 1.0, "objs_jnt": 1.0, "obj_goal": 1.0, "end_effector": 1.0, "slide_site_err":1}
+register(
+    id="franka_slide_open-v3",
+    entry_point="mj_envs.envs.relay_kitchen:FrankaApplianceFixed",
+    max_episode_steps=50,
+    kwargs={
+        "model_path": CURR_DIR + "/assets/franka_slidecabinet.xml",
+        "config_path": CURR_DIR + "/assets/franka_slidecabinet.config",
+        "obj_init": {"slidedoor_joint": 0},
+        "obj_goal": {"slidedoor_joint": .44},
+        "obj_interaction_site": ("slide_site",),
+        "obj_jnt_names": ("slidedoor_joint",),
+        "obj_body_names": ("slidecabinet",),
+        "interact_site": "slide_site",
+    },
+)
+register(
+    id="franka_slide_close-v3",
+    entry_point="mj_envs.envs.relay_kitchen:FrankaApplianceFixed",
+    max_episode_steps=50,
+    kwargs={
+        "model_path": CURR_DIR + "/assets/franka_slidecabinet.xml",
+        "config_path": CURR_DIR + "/assets/franka_slidecabinet.config",
+        "obj_init": {"slidedoor_joint": .44},
+        "obj_goal": {"slidedoor_joint": 0},
+        "obj_interaction_site": ("slide_site",),
+        "obj_jnt_names": ("slidedoor_joint",),
+        "obj_body_names": ("slidecabinet",),
+        "interact_site": "slide_site",
+    },
+)
+register(
+    id="franka_slide_random-v3",
+    entry_point="mj_envs.envs.relay_kitchen:FrankaApplianceRandom",
+    max_episode_steps=50,
+    kwargs={
+        "model_path": CURR_DIR + "/assets/franka_slidecabinet.xml",
+        "config_path": CURR_DIR + "/assets/franka_slidecabinet.config",
+        "obj_init": {"slidedoor_joint": (0, .44)},
+        "obj_goal": {"slidedoor_joint": (0, .44)},
+        "obj_interaction_site": ("slide_site",),
+        "obj_jnt_names": ("slidedoor_joint",),
+        "obj_body_names": ("slidecabinet",),
+        "interact_site": "slide_site",
     },
 )

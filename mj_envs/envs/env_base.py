@@ -19,6 +19,8 @@ import skvideo.io
 # TODO
 # remove rwd_mode
 # convet obs_keys to obs_keys_wt
+# Seed the random number generator in the __init__
+# Pass model_path and model_obsd_path to the __init__ so the use has a choice to make partially observed envs
 
 try:
     import mujoco_py
@@ -51,11 +53,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     """
 
     def __init__(self, model_path):
-
         # Get a random number generator incase its needed in pre_setup phase
         self.input_seed = None
         self.seed(0)
 
+        # sims
         self.sim = get_sim(model_path)
         self.sim_obsd = get_sim(model_path)
         ObsVecDict.__init__(self)
@@ -389,7 +391,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
     def mj_render(self):
         try:
-            self.viewer.cam.azimuth+=.1 # trick to rotate camera for 360 videos
+            # self.viewer.cam.azimuth+=.1 # trick to rotate camera for 360 videos
             self.viewer.render()
         except:
             self.viewer = MjViewer(self.sim)
