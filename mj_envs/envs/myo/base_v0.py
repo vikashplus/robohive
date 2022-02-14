@@ -70,7 +70,6 @@ class BaseV0(env_base.MujocoEnv):
 
     # step the simulation forward
     def step(self, a):
-        # a = -1 + a*0
         # Explicitely project normalized space (-1,1) to actuator space (0,1) if muscles
         if self.sim.model.na:
             # find muscle actuators

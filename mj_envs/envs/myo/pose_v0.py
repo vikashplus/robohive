@@ -46,11 +46,15 @@ class PoseEnvV0(BaseV0):
             obs_keys:list = DEFAULT_OBS_KEYS,
             weighted_reward_keys:dict = DEFAULT_RWD_KEYS_AND_WEIGHTS,
             pose_thd = 0.35,
+            weight_bodyname = None,
+            weight_range = None,
             **kwargs,
         ):
         self.reset_type = reset_type
         self.target_type = target_type
         self.pose_thd = pose_thd
+        self.weight_bodyname = weight_bodyname
+        self.weight_range = weight_range
 
         # resolve joint demands
         if target_jnt_range:
@@ -140,6 +144,19 @@ class PoseEnvV0(BaseV0):
     # reset_type = none; init; random
     # target_type = generate; switch
     def reset(self):
+
+        # udpate wegith
+        if self.weight_bodyname is not None:
+            bid = self.sim.model.body_name2id(self.weight_bodyname)
+            gid = self.sim.model.body_geomadr[bid]
+            weight = self.np_random.uniform(low=self.weight_range[0], high=self.weight_range[1])
+            self.sim.model.body_mass[bid] = weight
+            self.sim_obsd.model.body_mass[bid] = weight
+            # self.sim_obsd.model.geom_size[gid] = self.sim.model.geom_size[gid] * weight/10
+            self.sim.model.geom_size[gid][0] = 0.01 + 2.5*weight/100
+            # self.sim_obsd.model.geom_size[gid][0] = weight/10
+
+
 
         # update target
         if self.target_type == "generate":

@@ -92,7 +92,7 @@ class ReachEnvV0(BaseV0):
         reach_dist = np.linalg.norm(obs_dict['reach_err'], axis=-1)
         act_mag = np.linalg.norm(self.obs_dict['act'], axis=-1)/self.sim.model.na if self.sim.model.na !=0 else 0
         far_th = self.far_th*len(self.tip_sids) if np.squeeze(obs_dict['t'])>2*self.dt else np.inf
-        near_th = len(self.tip_sids)*.005
+        near_th = len(self.tip_sids)*.0125
         rwd_dict = collections.OrderedDict((
             # Optional Keys
             ('reach',   -1.*reach_dist),

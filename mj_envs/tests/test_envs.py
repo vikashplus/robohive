@@ -46,26 +46,25 @@ class TestEnvs(unittest.TestCase):
     # Myo
     def test_myo(self):
         env_names = [
-            'FingerReachMotorFixed-v0', 'FingerReachMotorRandom-v0',
-            'FingerReachMuscleFixed-v0', 'FingerReachMuscleRandom-v0',
-            'HandReachMuscleFixed-v0', 'HandReachMuscleRandom-v0',
+            'motorFingerReachFixed-v0', 'motorFingerReachRandom-v0',
+            'myoFingerReachFixed-v0', 'myoFingerReachRandom-v0',
+            'myoHandReachFixed-v0', 'myoHandReachRandom-v0',
 
-            'FingerPoseMotorFixed-v0', 'FingerPoseMotorRandom-v0',
-            'FingerPoseMuscleFixed-v0', 'FingerPoseMuscleRandom-v0',
+            'motorFingerPoseFixed-v0', 'motorFingerPoseRandom-v0',
+            'myoFingerPoseFixed-v0', 'myoFingerPoseRandom-v0',
 
-            'ElbowPose1D1MRandom-v0', 'ElbowPose1D6MRandom-v0',
-            'ElbowPose1D6MExoRandom-v0', 'ElbowPose1D6M_SoftExo_Random-v0',
-            'ElbowPose1D6MExoRandom_1kg-v0', 'ElbowPose1D6MExoRandom_2kg-v0',
-            'HandPoseMuscleFixed-v0', 'HandPoseMuscleRandom-v0',
+            'myoElbowPose1D1MRandom-v0', 'myoElbowPose1D6MRandom-v0',
+            'myoElbowPose1D6MExoRandom-v0', 'myoElbowPose1D6M_SoftExo_Random-v0',
+            'myoHandPoseFixed-v0', 'myoHandPoseRandom-v0',
 
-            'HandKeyTurnFixed-v0', 'HandKeyTurnRandom-v0',
-            'HandObjHoldFixed-v0', 'HandObjHoldRandom-v0',
-            'HandPenTwirlFixed-v0', 'HandPenTwirlRandom-v0',
+            'myoHandKeyTurnFixed-v0', 'myoHandKeyTurnRandom-v0',
+            'myoHandObjHoldFixed-v0', 'myoHandObjHoldRandom-v0',
+            'myoHandPenTwirlFixed-v0', 'myoHandPenTwirlRandom-v0',
 
-            'BaodingFixed-v1', 'BaodingRandom-v1',
-            'BaodingFixed4th-v1','BaodingFixed8th-v1',
+            'myoHandBaodingFixed-v1', 'myoHandBaodingRandom-v1',
+            'myoHandBaodingFixed4th-v1','myoHandBaodingFixed8th-v1',
         ]
-        for k in range(10): env_names+=['HandPose'+str(k)+'MuscleFixed-v0']
+        for k in range(10): env_names+=['myoHandPose'+str(k)+'Fixed-v0']
 
         self.check_envs('Myo', env_names)
 
@@ -96,7 +95,6 @@ class TestEnvs(unittest.TestCase):
         env_names = [
         'rpFrankaDmanusPoseFixed-v0',
         'rpFrankaDmanusPoseRandom-v0',
-        'rpMicrowaveFixed-v0'
         ]
         self.check_envs('FM', env_names)
 
