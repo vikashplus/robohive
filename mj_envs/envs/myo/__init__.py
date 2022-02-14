@@ -182,7 +182,7 @@ register(id='myoFingerPoseRandom-v0',
 # Hand-Joint posing ==============================
 
 # Remove this when the ASL envs stablizes
-register(id='myoHandPoseFixed-v0', #kill
+register(id='myoHandPoseFixed-v0', # revisit
         entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
@@ -289,7 +289,7 @@ register(id='myoHandKeyTurnFixed-v0',
         entry_point='mj_envs.envs.myo.key_turn_v0:KeyTurnEnvV0',
         max_episode_steps=200,
         kwargs={
-            'model_path': curr_dir+'/assets/hand/2nd_hand_Index_Thumb_keyturn.xml',
+            'model_path': curr_dir+'/assets/hand/2nd_hand_keyturn.xml',
             'normalize_act': True
         }
     )
@@ -297,7 +297,7 @@ register(id='myoHandKeyTurnRandom-v0',
         entry_point='mj_envs.envs.myo.key_turn_v0:KeyTurnEnvV0',
         max_episode_steps=200,
         kwargs={
-            'model_path': curr_dir+'/assets/hand/2nd_hand_Index_Thumb_keyturn.xml',
+            'model_path': curr_dir+'/assets/hand/2nd_hand_keyturn.xml',
             'normalize_act': True,
             'key_init_range':(-np.pi/2, np.pi/2),
             'goal_th': 2*np.pi
@@ -334,7 +334,6 @@ register(id='myoHandPenTwirlFixed-v0',
                 'frame_skip': 5,
             }
     )
-
 register(id='myoHandPenTwirlRandom-v0',
         entry_point='mj_envs.envs.myo.pen_v0:PenTwirlRandomEnvV0',
         max_episode_steps=50,

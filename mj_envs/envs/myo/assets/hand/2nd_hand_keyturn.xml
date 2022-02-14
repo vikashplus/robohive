@@ -1,6 +1,5 @@
 <mujoco model="2nd hand model - Index Thumb Model for turning key task">
     <compiler meshdir='../../../../sims/neuromuscular_sim/hand/'/>
-    <!-- <include file="../../../../sims/neuromuscular_sim/hand/2nd_Hand_Model_index_thumb_v0.1.3.xml"/> -->
     <include file="../../../../sims/neuromuscular_sim/hand/2nd_Hand_Model_full_hand_v0.1.6.xml"/>
 
     <default>
