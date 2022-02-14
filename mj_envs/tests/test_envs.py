@@ -53,8 +53,8 @@ class TestEnvs(unittest.TestCase):
             'motorFingerPoseFixed-v0', 'motorFingerPoseRandom-v0',
             'myoFingerPoseFixed-v0', 'myoFingerPoseRandom-v0',
 
-            'myoElbowPose1D1MRandom-v0', 'myoElbowPose1D6MRandom-v0',
-            'myoElbowPose1D6MExoRandom-v0', 'myoElbowPose1D6M_SoftExo_Random-v0',
+            'myoElbowPose1D6MFixed-v0', 'myoElbowPose1D6MRandom-v0',
+            'myoElbowPose1D6MExoRandom-v0', 'myoElbowPose1D6MExoRandom-v0',
             'myoHandPoseFixed-v0', 'myoHandPoseRandom-v0',
 
             'myoHandKeyTurnFixed-v0', 'myoHandKeyTurnRandom-v0',

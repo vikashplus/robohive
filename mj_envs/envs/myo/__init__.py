@@ -41,7 +41,6 @@ register(id='myoFingerReachFixed-v0',
             'normalize_act': True,
         }
     )
-
 register(id='myoFingerReachRandom-v0',
         entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
         max_episode_steps=100,
@@ -53,19 +52,6 @@ register(id='myoFingerReachRandom-v0',
     )
 
 # Elbow posing ==============================
-register(id='myoElbowPose1D1MRandom-v0', # remove
-        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
-        max_episode_steps=100,
-        kwargs={
-            'model_path': curr_dir+'/assets/arm/elbow_1dof1muscle.xml',
-            'target_jnt_range': {'r_elbow_flex':(0, 2.27),},
-            'viz_site_targets': ('wrist',),
-            'normalize_act': True,
-            'pose_thd': .175,
-            'reset_type': 'random'
-        }
-    )
-
 register(id='myoElbowPose1D6MFixed-v0',
         entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
@@ -91,7 +77,9 @@ register(id='myoElbowPose1D6MRandom-v0',
         }
     )
 
-register(id='myoElbowPose1D6MExoFixeds-v0',
+
+# Elbow Exo posing ==============================
+register(id='myoElbowPose1D6MExoFixed-v0',
         entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
@@ -130,25 +118,6 @@ register(id='myoElbowPose1D6MExoRandom-v0',
         }
     )
 
-
-register(id='myoElbowPose1D6M_SoftExo_Random-v0', # Kill
-        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
-        max_episode_steps=100,
-        kwargs={
-            'model_path': curr_dir+'/assets/arm/elbow_1dof6muscles_1dofsoftexo.xml',
-            'target_jnt_range': {'r_elbow_flex':(0, 2.27),},
-            'viz_site_targets': ('wrist',),
-            'normalize_act': True,
-            'pose_thd': .175,
-            'reset_type': 'random',
-            'weighted_reward_keys':{
-                                "pose": 1.0,
-                                "bonus": 4.0,
-                                "act_reg": 5.0,
-                                "penalty": 50,
-            }
-        }
-    )
 
 # Finger-Joint posing ==============================
 register(id='motorFingerPoseFixed-v0',
@@ -278,6 +247,7 @@ register(id='myoHandPoseRandom-v0',  #reconsider
         }
     )
 
+
 # Hand-Joint Reaching ==============================
 register(id='myoHandReachFixed-v0',
         entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
@@ -295,7 +265,6 @@ register(id='myoHandReachFixed-v0',
             'far_th': 0.044
         }
     )
-
 register(id='myoHandReachRandom-v0',
     entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
     max_episode_steps=100,
@@ -314,6 +283,7 @@ register(id='myoHandReachRandom-v0',
     }
 )
 
+
 # Hand-Joint key turn ==============================
 register(id='myoHandKeyTurnFixed-v0',
         entry_point='mj_envs.envs.myo.key_turn_v0:KeyTurnEnvV0',
@@ -323,7 +293,6 @@ register(id='myoHandKeyTurnFixed-v0',
             'normalize_act': True
         }
     )
-
 register(id='myoHandKeyTurnRandom-v0',
         entry_point='mj_envs.envs.myo.key_turn_v0:KeyTurnEnvV0',
         max_episode_steps=200,
@@ -345,7 +314,6 @@ register(id='myoHandObjHoldFixed-v0',
             'normalize_act': True
         }
     )
-
 register(id='myoHandObjHoldRandom-v0', # revisit
         entry_point='mj_envs.envs.myo.obj_hold_v0:ObjHoldRandomEnvV0',
         max_episode_steps=75,
@@ -376,6 +344,7 @@ register(id='myoHandPenTwirlRandom-v0',
             'frame_skip': 5,
         }
     )
+
 
 # Baoding ==============================
 register(id='myoHandBaodingFixed-v1',
