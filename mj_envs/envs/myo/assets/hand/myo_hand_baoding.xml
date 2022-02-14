@@ -1,7 +1,7 @@
 <mujoco model="2nd hand model for baoding balls">
 
     <compiler meshdir='../../../../sims/neuromuscular_sim/hand/'/>
-    <include file="../../../../sims/neuromuscular_sim/hand/2nd_Hand_Model_full_hand_v0.1.6.xml"/>
+    <include file="../../../../sims/neuromuscular_sim/hand/myo_Hand_v0.1.6.xml"/>
 
     <option timestep="0.0025"/>
 

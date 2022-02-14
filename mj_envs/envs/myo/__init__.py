@@ -16,7 +16,7 @@ register(id='motorFingerReachFixed-v0',
         entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
         max_episode_steps=200,
         kwargs={
-            'model_path': curr_dir+'/assets/finger/tendon_finger_motorAct_v0.xml',
+            'model_path': curr_dir+'/assets/finger/motor_finger_v0.xml',
             'target_reach_range': {'IFtip': ((0.2, 0.05, 0.20), (0.2, 0.05, 0.20)),},
             'normalize_act': True,
             'frame_skip': 5,
@@ -26,7 +26,7 @@ register(id='motorFingerReachRandom-v0',
         entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
         max_episode_steps=200,
         kwargs={
-            'model_path': curr_dir+'/assets/finger/tendon_finger_motorAct_v0.xml',
+            'model_path': curr_dir+'/assets/finger/motor_finger_v0.xml',
             'target_reach_range': {'IFtip': ((0.27, .1, .3), (.1, -.1, .1)),},
             'normalize_act': True,
             'frame_skip': 5,
@@ -36,7 +36,7 @@ register(id='myoFingerReachFixed-v0',
         entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
         max_episode_steps=100,
         kwargs={
-            'model_path': curr_dir+'/assets/finger/tendon_finger_muscleAct_v0.xml',
+            'model_path': curr_dir+'/assets/finger/myo_finger_v0.xml',
             'target_reach_range': {'IFtip': ((0.2, 0.05, 0.20), (0.2, 0.05, 0.20)),},
             'normalize_act': True,
         }
@@ -45,7 +45,7 @@ register(id='myoFingerReachRandom-v0',
         entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
         max_episode_steps=100,
         kwargs={
-            'model_path': curr_dir+'/assets/finger/tendon_finger_muscleAct_v0.xml',
+            'model_path': curr_dir+'/assets/finger/myo_finger_v0.xml',
             'target_reach_range': {'IFtip': ((0.27, .1, .3), (.1, -.1, .1)),},
             'normalize_act': True,
         }
@@ -56,7 +56,7 @@ register(id='myoElbowPose1D6MFixed-v0',
         entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
-            'model_path': curr_dir+'/assets/arm/elbow_1dof6muscles.xml',
+            'model_path': curr_dir+'/assets/arm/myo_elbow_1dof6muscles.xml',
             'target_jnt_range': {'r_elbow_flex':(2, 2),},
             'viz_site_targets': ('wrist',),
             'normalize_act': True,
@@ -68,7 +68,7 @@ register(id='myoElbowPose1D6MRandom-v0',
         entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
-            'model_path': curr_dir+'/assets/arm/elbow_1dof6muscles.xml',
+            'model_path': curr_dir+'/assets/arm/myo_elbow_1dof6muscles.xml',
             'target_jnt_range': {'r_elbow_flex':(0, 2.27),},
             'viz_site_targets': ('wrist',),
             'normalize_act': True,
@@ -83,7 +83,7 @@ register(id='myoElbowPose1D6MExoFixed-v0',
         entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
-            'model_path': curr_dir+'/assets/arm/elbow_1dof6muscles_1dofexo.xml',
+            'model_path': curr_dir+'/assets/arm/myo_elbow_1dof6muscles_1dofexo.xml',
             'target_jnt_range': {'r_elbow_flex':(2, 2),},
             'viz_site_targets': ('wrist',),
             'normalize_act': True,
@@ -101,7 +101,7 @@ register(id='myoElbowPose1D6MExoRandom-v0',
         entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
-            'model_path': curr_dir+'/assets/arm/elbow_1dof6muscles_1dofexo.xml',
+            'model_path': curr_dir+'/assets/arm/myo_elbow_1dof6muscles_1dofexo.xml',
             'target_jnt_range': {'r_elbow_flex':(0, 2.27),},
             'viz_site_targets': ('wrist',),
             'normalize_act': True,
@@ -124,7 +124,7 @@ register(id='motorFingerPoseFixed-v0',
         entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=200,
         kwargs={
-            'model_path': curr_dir+'/assets/finger/tendon_finger_motorAct_v0.xml',
+            'model_path': curr_dir+'/assets/finger/motor_finger_v0.xml',
             'target_jnt_range': {'IFadb':(0, 0),
                                 'IFmcp':(0, 0),
                                 'IFpip':(.75, .75),
@@ -139,7 +139,7 @@ register(id='motorFingerPoseRandom-v0',
         entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=200,
         kwargs={
-            'model_path': curr_dir+'/assets/finger/tendon_finger_motorAct_v0.xml',
+            'model_path': curr_dir+'/assets/finger/motor_finger_v0.xml',
             'target_jnt_range': {'IFadb':(-.2, .2),
                                 'IFmcp':(-.4, 1),
                                 'IFpip':(.1, 1),
@@ -154,7 +154,7 @@ register(id='myoFingerPoseFixed-v0',
         entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
-            'model_path': curr_dir+'/assets/finger/tendon_finger_muscleAct_v0.xml',
+            'model_path': curr_dir+'/assets/finger/myo_finger_v0.xml',
             'target_jnt_range': {'IFadb':(0, 0),
                                 'IFmcp':(0, 0),
                                 'IFpip':(.75, .75),
@@ -168,7 +168,7 @@ register(id='myoFingerPoseRandom-v0',
         entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
-            'model_path': curr_dir+'/assets/finger/tendon_finger_muscleAct_v0.xml',
+            'model_path': curr_dir+'/assets/finger/myo_finger_v0.xml',
             'target_jnt_range': {'IFadb':(-.2, .2),
                                 'IFmcp':(-.4, 1),
                                 'IFpip':(.1, 1),
@@ -186,7 +186,7 @@ register(id='myoHandPoseFixed-v0', # revisit
         entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
-            'model_path': curr_dir+'/assets/hand/2nd_hand_pose.xml',
+            'model_path': curr_dir+'/assets/hand/myo_hand_pose.xml',
             'viz_site_targets': ('THtip','IFtip','MFtip','RFtip','LFtip'),
             'target_jnt_value': np.array([0, 0, 0, -0.0904, 0.0824475, -0.681555, -0.514888, 0, -0.013964, -0.0458132, 0, 0.67553, -0.020944, 0.76979, 0.65982, 0, 0, 0, 0, 0.479155, -0.099484, 0.95831, 0]),
             'normalize_act': True,
@@ -217,7 +217,7 @@ for k in ASL_qpos.keys():
             entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
             max_episode_steps=100,
             kwargs={
-                'model_path': curr_dir+'/assets/hand/2nd_hand_pose.xml',
+                'model_path': curr_dir+'/assets/hand/myo_hand_pose.xml',
                 'viz_site_targets': ('THtip','IFtip','MFtip','RFtip','LFtip'),
                 'target_jnt_value': np.array(ASL_qpos[k],'float'),
                 'normalize_act': True,
@@ -237,7 +237,7 @@ register(id='myoHandPoseRandom-v0',  #reconsider
         entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
-            'model_path': curr_dir+'/assets/hand/2nd_hand_pose.xml',
+            'model_path': curr_dir+'/assets/hand/myo_hand_pose.xml',
             'viz_site_targets': ('THtip','IFtip','MFtip','RFtip','LFtip'),
             'target_jnt_range': Rpos,
             'normalize_act': True,
@@ -253,7 +253,7 @@ register(id='myoHandReachFixed-v0',
         entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
         max_episode_steps=100,
         kwargs={
-            'model_path': curr_dir+'/assets/hand/2nd_hand_pose.xml',
+            'model_path': curr_dir+'/assets/hand/myo_hand_pose.xml',
             'target_reach_range': {
                 'THtip': ((-0.165, -0.217, 1.095), (-0.165, -0.217, 1.095)),
                 'IFtip': ((-0.151, -0.227, 1.055), (-0.151, -0.227, 1.055)),
@@ -269,7 +269,7 @@ register(id='myoHandReachRandom-v0',
     entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
     max_episode_steps=100,
     kwargs={
-        'model_path': curr_dir+'/assets/hand/2nd_hand_pose.xml',
+        'model_path': curr_dir+'/assets/hand/myo_hand_pose.xml',
         'target_reach_range': {
             'THtip': ((-0.165-0.020, -0.217-0.040, 1.095-0.040), (-0.165+0.040, -0.217+0.020, 1.095+0.040)),
             'IFtip': ((-0.151-0.040, -0.227-0.020, 1.055-0.010), (-0.151+0.040, -0.227+0.020, 1.055+0.010)),
@@ -289,7 +289,7 @@ register(id='myoHandKeyTurnFixed-v0',
         entry_point='mj_envs.envs.myo.key_turn_v0:KeyTurnEnvV0',
         max_episode_steps=200,
         kwargs={
-            'model_path': curr_dir+'/assets/hand/2nd_hand_keyturn.xml',
+            'model_path': curr_dir+'/assets/hand/myo_hand_keyturn.xml',
             'normalize_act': True
         }
     )
@@ -297,7 +297,7 @@ register(id='myoHandKeyTurnRandom-v0',
         entry_point='mj_envs.envs.myo.key_turn_v0:KeyTurnEnvV0',
         max_episode_steps=200,
         kwargs={
-            'model_path': curr_dir+'/assets/hand/2nd_hand_keyturn.xml',
+            'model_path': curr_dir+'/assets/hand/myo_hand_keyturn.xml',
             'normalize_act': True,
             'key_init_range':(-np.pi/2, np.pi/2),
             'goal_th': 2*np.pi
@@ -310,7 +310,7 @@ register(id='myoHandObjHoldFixed-v0',
         entry_point='mj_envs.envs.myo.obj_hold_v0:ObjHoldFixedEnvV0',
         max_episode_steps=75,
         kwargs={
-            'model_path': curr_dir+'/assets/hand/2nd_hand_hold.xml',
+            'model_path': curr_dir+'/assets/hand/myo_hand_hold.xml',
             'normalize_act': True
         }
     )
@@ -318,7 +318,7 @@ register(id='myoHandObjHoldRandom-v0', # revisit
         entry_point='mj_envs.envs.myo.obj_hold_v0:ObjHoldRandomEnvV0',
         max_episode_steps=75,
         kwargs={
-            'model_path': curr_dir+'/assets/hand/2nd_hand_hold.xml',
+            'model_path': curr_dir+'/assets/hand/myo_hand_hold.xml',
             'normalize_act': True
         }
     )
@@ -329,7 +329,7 @@ register(id='myoHandPenTwirlFixed-v0',
             entry_point='mj_envs.envs.myo.pen_v0:PenTwirlFixedEnvV0',
             max_episode_steps=50,
             kwargs={
-                'model_path': curr_dir+'/assets/hand/2nd_hand_pen.xml',
+                'model_path': curr_dir+'/assets/hand/myo_hand_pen.xml',
                 'normalize_act': True,
                 'frame_skip': 5,
             }
@@ -338,7 +338,7 @@ register(id='myoHandPenTwirlRandom-v0',
         entry_point='mj_envs.envs.myo.pen_v0:PenTwirlRandomEnvV0',
         max_episode_steps=50,
         kwargs={
-            'model_path': curr_dir+'/assets/hand/2nd_hand_pen.xml',
+            'model_path': curr_dir+'/assets/hand/myo_hand_pen.xml',
             'normalize_act': True,
             'frame_skip': 5,
         }
@@ -350,7 +350,7 @@ register(id='myoHandBaodingFixed-v1',
         entry_point='mj_envs.envs.myo.baoding_v1:BaodingFixedEnvV1',
         max_episode_steps=200,
         kwargs={
-            'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
+            'model_path': curr_dir+'/assets/hand/myo_hand_baoding.xml',
             'normalize_act': True,
             'reward_option': 0,
         }
@@ -359,7 +359,7 @@ register(id='myoHandBaodingRandom-v1',
         entry_point='mj_envs.envs.myo.baoding_v1:BaodingRandomEnvV1',
         max_episode_steps=200,
         kwargs={
-            'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
+            'model_path': curr_dir+'/assets/hand/myo_hand_baoding.xml',
             'normalize_act': True,
             'reward_option': 0,
         }
@@ -368,7 +368,7 @@ register(id='myoHandBaodingFixed4th-v1',
         entry_point='mj_envs.envs.myo.baoding_v1:BaodingFixedEnvV1',
         max_episode_steps=200,
         kwargs={
-            'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
+            'model_path': curr_dir+'/assets/hand/myo_hand_baoding.xml',
             'normalize_act': True,
             'n_shifts_per_period':4,
         }
@@ -377,7 +377,7 @@ register(id='myoHandBaodingFixed8th-v1',
         entry_point='mj_envs.envs.myo.baoding_v1:BaodingFixedEnvV1',
         max_episode_steps=200,
         kwargs={
-            'model_path': curr_dir+'/assets/hand/2nd_hand_baoding.xml',
+            'model_path': curr_dir+'/assets/hand/myo_hand_baoding.xml',
             'normalize_act': True,
             'n_shifts_per_period':8,
         }
