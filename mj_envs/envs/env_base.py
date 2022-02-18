@@ -45,6 +45,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     def __init__(self, model_path):
         self.sim = get_sim(model_path)
         self.sim_obsd = get_sim(model_path)
+        self.real_step = True
+        self.env_timestep = 0
         ObsVecDict.__init__(self)
 
     def _setup(self,
@@ -86,6 +88,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.rwd_keys_wt = weighted_reward_keys
 
         # resolve obs
+        self.env_state_dict = self.get_env_state().copy()
         self.obs_dict = {}
         self.obs_keys = obs_keys
         observation, _reward, done, _info = self.step(np.zeros(self.sim.model.nu))
@@ -117,6 +120,9 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                                         realTimeSim=self.mujoco_render_frames,
                                         render_cbk=self.mj_render if self.mujoco_render_frames else None)
 
+        # increment environment timestep
+        self.env_timestep += 1
+
         # observation
         obs = self.get_obs()
 
@@ -128,6 +134,9 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         # finalize step
         env_info = self.get_env_infos()
+
+        # update the env state tracking
+        self.env_state_dict = self.get_env_state().copy()
 
         # returns obs(t+1), rew(t), done(t), info(t+1)
         return obs, env_info['rwd_'+self.rwd_mode], bool(env_info['done']), env_info
@@ -168,6 +177,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             'done': self.rwd_dict['done'][()],          # MDP(t-1)
             'obs_dict': self.obs_dict,                  # MDP(t)
             'rwd_dict': self.rwd_dict,                  # MDP(t-1)
+            'env_state': self.env_state_dict.copy()     # MDP(t-1)
         }
         return env_info
 
@@ -257,6 +267,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         qpos = self.init_qpos.copy() if reset_qpos is None else reset_qpos
         qvel = self.init_qvel.copy() if reset_qvel is None else reset_qvel
         self.robot.reset(qpos, qvel)
+        self.env_timestep = 0
+        self.env_state_dict = self.get_env_state().copy()
         return self.get_obs()
 
 
@@ -300,6 +312,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         mocap_quat = self.sim.data.mocap_quat.copy()
         site_pos = self.sim.model.site_pos[:].copy()
         body_pos = self.sim.model.body_pos[:].copy()
+        env_timestep = self.env_timestep
         return dict(qpos=qp,
                     qvel=qv,
                     mocap_pos=mocap_pos,
@@ -307,7 +320,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                     site_pos=site_pos,
                     site_quat=self.sim.model.site_quat[:].copy(),
                     body_pos=body_pos,
-                    body_quat=self.sim.model.body_quat[:].copy())
+                    body_quat=self.sim.model.body_quat[:].copy(),
+                    env_timestep=self.env_timestep)
 
 
     def set_env_state(self, state_dict):
