@@ -8,7 +8,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 import collections
 import gym
 import numpy as np
-from mj_envs.utils.quatmath import euler2quat
+from mj_envs.utils.quat_math import euler2quat
 
 from mj_envs.envs.relay_kitchen.multi_task_base_v1 import KitchenBase
 

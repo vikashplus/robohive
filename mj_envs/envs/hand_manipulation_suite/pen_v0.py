@@ -10,7 +10,7 @@ import numpy as np
 import collections
 from gym import utils
 from mjrl.envs import mujoco_env
-from mj_envs.utils.quatmath import euler2quat
+from mj_envs.utils.quat_math import euler2quat
 from mj_envs.utils.obj_vec_dict import ObsVecDict
 from mujoco_py import MjViewer
 
