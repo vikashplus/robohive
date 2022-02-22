@@ -52,6 +52,6 @@ HMS contains a collection of environements centered around dexterous manipulatio
 
 Hand-Manipulation-Suite Tasks [(video)](https://youtu.be/jJtBll8l_OM)
 :-------------------------:
-![Alt text](mj_envs/hand_manipulation_suite/assets/tasks.jpg?raw=false "Fetch Pole")
+![Alt text](mj_envs/envs/hand_manipulation_suite/assets/tasks.jpg?raw=false "Adroit Tasks")
 
 ## 2. More coming soon
