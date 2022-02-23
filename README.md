@@ -6,15 +6,11 @@
 
 1. Clone this repo with pre-populated submodule dependencies
 ```
-$ git clone --recursive https://github.com/vikashplus/mj_envs.git
+$ git clone --branch stable_clean --recursive https://github.com/vikashplus/mj_envs.git
 ```
-2. Update submodules
+2. Install package using `pip`
 ```
-$ cd mj_envs  
-$ git submodule update --remote
-```
-3. Install package using `pip`
-```
+$ cd mj_envs
 $ pip install -e .
 ```
 **OR**
@@ -22,7 +18,7 @@ Add repo to pythonpath by updating `~/.bashrc` or `~/.bash_profile`
 ```
 export PYTHONPATH="<path/to/mj_envs>:$PYTHONPATH"
 ```
-4. You can visualize the environments with random controls using the below command
+3. You can visualize the environments with random controls using the command below
 ```
 $ python utils/visualize_env.py --env_name hammer-v0
 ```
@@ -38,4 +34,4 @@ Hand-Manipulation-Suite Tasks [(video)](https://youtu.be/jJtBll8l_OM)
 :-------------------------:
 ![Alt text](mj_envs/hand_manipulation_suite/assets/tasks.jpg?raw=false "Fetch Pole")
 
-## 2. More coming soon 
+## 2. More coming soon
