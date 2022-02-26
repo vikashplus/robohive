@@ -69,17 +69,28 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         env_info = self.get_env_infos()
         return obs, env_info['rwd_'+RWD_MODE], bool(env_info['done']), env_info
 
-    def get_obs(self):
+    def get_obs_dict(self, sim):
         # qpos for hand, xpos for obj, xpos for target
-        self.obs_dict['t'] = np.array([self.sim.data.time])
-        self.obs_dict['hand_jnt'] = self.data.qpos[1:-2].copy()
-        self.obs_dict['hand_vel'] = self.data.qvel[:-2].copy()
-        self.obs_dict['handle_pos'] = self.data.site_xpos[self.handle_sid].copy()
-        self.obs_dict['palm_pos'] = self.data.site_xpos[self.grasp_sid].copy()
-        self.obs_dict['reach_err'] = self.obs_dict['palm_pos']-self.obs_dict['handle_pos']
-        self.obs_dict['door_pos'] = np.array([self.data.qpos[self.door_hinge_did]])
-        self.obs_dict['latch_pos'] = np.array([self.data.qpos[-1]])
-        self.obs_dict['door_open'] = 2.0*(self.obs_dict['door_pos'] > 1.0) -1.0
+        obs_dict = {}
+        obs_dict['t'] = np.array([sim.data.time])
+        obs_dict['hand_jnt'] = sim.data.qpos[1:-2].copy()
+        obs_dict['hand_vel'] = sim.data.qvel[:-2].copy()
+        obs_dict['handle_pos'] = sim.data.site_xpos[self.handle_sid].copy()
+        obs_dict['palm_pos'] = sim.data.site_xpos[self.grasp_sid].copy()
+        obs_dict['reach_err'] = obs_dict['palm_pos']-obs_dict['handle_pos']
+        obs_dict['door_pos'] = np.array([sim.data.qpos[self.door_hinge_did]])
+        obs_dict['latch_pos'] = np.array([sim.data.qpos[-1]])
+        obs_dict['door_open'] = 2.0*(obs_dict['door_pos'] > 1.0) -1.0
+        return obs_dict
+
+    def get_obs(self):
+        """
+        Get observations from the environemnt.
+        """
+        # get obs_dict using the observed information
+        self.obs_dict = self.get_obs_dict(self.sim)
+
+        # recoved observation vector from the obs_dict
         t, obs = self.obsdict2obsvec(self.obs_dict, OBS_KEYS)
         return obs
 

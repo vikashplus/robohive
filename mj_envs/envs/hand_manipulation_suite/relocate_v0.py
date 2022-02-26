@@ -124,16 +124,26 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         target_pos = self.data.site_xpos[self.target_obj_sid].ravel()
         return np.concatenate([qp[:-6], palm_pos-obj_pos, palm_pos-target_pos, obj_pos-target_pos])
 
-    def get_obs(self):
+    def get_obs_dict(self, sim):
         # qpos for hand, xpos for obj, xpos for target
-        self.obs_dict['t'] = np.array([self.sim.data.time])
-        self.obs_dict['hand_jnt'] = self.data.qpos[:-6].copy()
-        self.obs_dict['palm_obj_err'] = self.data.site_xpos[self.S_grasp_sid] - self.data.body_xpos[self.obj_bid]
-        self.obs_dict['palm_tar_err'] = self.data.site_xpos[self.S_grasp_sid] - self.data.site_xpos[self.target_obj_sid]
-        self.obs_dict['obj_tar_err'] = self.data.body_xpos[self.obj_bid] - self.data.site_xpos[self.target_obj_sid]
+        obs_dict = {}
+        obs_dict['t'] = np.array([sim.data.time])
+        obs_dict['hand_jnt'] = sim.data.qpos[:-6].copy()
+        obs_dict['palm_obj_err'] = sim.data.site_xpos[self.S_grasp_sid] - sim.data.body_xpos[self.obj_bid]
+        obs_dict['palm_tar_err'] = sim.data.site_xpos[self.S_grasp_sid] - sim.data.site_xpos[self.target_obj_sid]
+        obs_dict['obj_tar_err'] = sim.data.body_xpos[self.obj_bid] - sim.data.site_xpos[self.target_obj_sid]
         # keys missing from DAPG-env but needed for rewards calculations
-        self.obs_dict['obj_pos']  = self.data.body_xpos[self.obj_bid].copy()
+        obs_dict['obj_pos']  = sim.data.body_xpos[self.obj_bid].copy()
+        return obs_dict
 
+    def get_obs(self):
+        """
+        Get observations from the environemnt.
+        """
+        # get obs_dict using the observed information
+        self.obs_dict = self.get_obs_dict(self.sim)
+
+        # recoved observation vector from the obs_dict
         t, obs = self.obsdict2obsvec(self.obs_dict, OBS_KEYS)
         return obs
 

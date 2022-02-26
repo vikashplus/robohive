@@ -71,18 +71,28 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         return obs, env_info['rwd_'+RWD_MODE], bool(env_info['done']), env_info
 
 
-    def get_obs(self):
+    def get_obs_dict(self, sim):
         # qpos for hand, xpos for obj, xpos for target
-        self.obs_dict['t'] = np.array([self.sim.data.time])
-        self.obs_dict['hand_jnt'] = self.data.qpos[:-6].copy()
-        self.obs_dict['obj_pos'] = self.data.body_xpos[self.obj_bid].copy()
-        self.obs_dict['obj_des_pos'] = self.data.site_xpos[self.eps_ball_sid].ravel()
-        self.obs_dict['obj_vel'] = self.data.qvel[-6:].copy()
-        self.obs_dict['obj_rot'] = (self.data.site_xpos[self.obj_t_sid] - self.data.site_xpos[self.obj_b_sid])/self.pen_length
-        self.obs_dict['obj_des_rot'] = (self.data.site_xpos[self.tar_t_sid] - self.data.site_xpos[self.tar_b_sid])/self.tar_length
-        self.obs_dict['obj_err_pos'] = self.obs_dict['obj_pos']-self.obs_dict['obj_des_pos']
-        self.obs_dict['obj_err_rot'] = self.obs_dict['obj_rot']-self.obs_dict['obj_des_rot']
+        obs_dict = {}
+        obs_dict['t'] = np.array([sim.data.time])
+        obs_dict['hand_jnt'] = sim.data.qpos[:-6].copy()
+        obs_dict['obj_pos'] = sim.data.body_xpos[self.obj_bid].copy()
+        obs_dict['obj_des_pos'] = sim.data.site_xpos[self.eps_ball_sid].ravel()
+        obs_dict['obj_vel'] = sim.data.qvel[-6:].copy()
+        obs_dict['obj_rot'] = (sim.data.site_xpos[self.obj_t_sid] - sim.data.site_xpos[self.obj_b_sid])/self.pen_length
+        obs_dict['obj_des_rot'] = (sim.data.site_xpos[self.tar_t_sid] - sim.data.site_xpos[self.tar_b_sid])/self.tar_length
+        obs_dict['obj_err_pos'] = obs_dict['obj_pos']-obs_dict['obj_des_pos']
+        obs_dict['obj_err_rot'] = obs_dict['obj_rot']-obs_dict['obj_des_rot']
+        return obs_dict
 
+    def get_obs(self):
+        """
+        Get observations from the environemnt.
+        """
+        # get obs_dict using the observed information
+        self.obs_dict = self.get_obs_dict(self.sim)
+
+        # recoved observation vector from the obs_dict
         t, obs = self.obsdict2obsvec(self.obs_dict, OBS_KEYS)
         return obs
 
@@ -116,7 +126,8 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         pos_err = obs_dict['obj_err_pos']
         pos_align = np.linalg.norm(pos_err, axis=-1)
         rot_align = self.calculate_cosine(obs_dict['obj_rot'], obs_dict['obj_des_rot'])
-        dropped = obs_dict['obj_pos'][:,:,2] < 0.075
+        # dropped = obs_dict['obj_pos'][:,:,2] < 0.075
+        dropped = obs_dict['obj_pos'][:,:,2] < 0.075 if obs_dict['obj_pos'].ndim==3 else obs_dict['obj_pos'][2] < 0.075
 
         rwd_dict = collections.OrderedDict((
             # Optional Keys

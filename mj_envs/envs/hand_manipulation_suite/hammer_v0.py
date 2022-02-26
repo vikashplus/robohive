@@ -98,22 +98,32 @@ class HammerEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         rwd_dict['dense'] = np.sum([rwd_dict[key] for key in RWD_KEYS], axis=0)
         return rwd_dict
 
-    def get_obs(self):
+    def get_obs_dict(self, sim):
         # qpos for hand, xpos for obj, xpos for target
-        self.obs_dict['t'] = np.array([self.sim.data.time])
-        self.obs_dict['hand_jnt'] = self.data.qpos[:-6].copy()
-        self.obs_dict['obj_vel'] = np.clip(self.data.qvel[-6:].copy(), -1.0, 1.0)
-        self.obs_dict['palm_pos'] = self.data.site_xpos[self.S_grasp_sid].copy()
-        self.obs_dict['obj_pos'] = self.data.body_xpos[self.obj_bid].copy()
-        self.obs_dict['obj_rot'] = quat2euler(self.data.body_xquat[self.obj_bid].copy())
-        self.obs_dict['target_pos'] = self.data.site_xpos[self.target_obj_sid].copy()
-        self.obs_dict['nail_impact'] = np.clip(self.sim.data.sensordata[self.nail_rid], [-1.0], [1.0])
+        obs_dict = {}
+        obs_dict['t'] = np.array([sim.data.time])
+        obs_dict['hand_jnt'] = sim.data.qpos[:-6].copy()
+        obs_dict['obj_vel'] = np.clip(sim.data.qvel[-6:].copy(), -1.0, 1.0)
+        obs_dict['palm_pos'] = sim.data.site_xpos[self.S_grasp_sid].copy()
+        obs_dict['obj_pos'] = sim.data.body_xpos[self.obj_bid].copy()
+        obs_dict['obj_rot'] = quat2euler(sim.data.body_xquat[self.obj_bid].copy())
+        obs_dict['target_pos'] = sim.data.site_xpos[self.target_obj_sid].copy()
+        obs_dict['nail_impact'] = np.clip(sim.data.sensordata[self.nail_rid], [-1.0], [1.0])
 
         # keys missing from DAPG-env but needed for rewards calculations
-        self.obs_dict['tool_pos'] = self.data.site_xpos[self.tool_sid].copy()
-        self.obs_dict['goal_pos'] = self.data.site_xpos[self.goal_sid].copy()
-        self.obs_dict['hand_vel'] = np.clip(self.data.qvel[:-6].copy(), -1.0, 1.0)
+        obs_dict['tool_pos'] = sim.data.site_xpos[self.tool_sid].copy()
+        obs_dict['goal_pos'] = sim.data.site_xpos[self.goal_sid].copy()
+        obs_dict['hand_vel'] = np.clip(sim.data.qvel[:-6].copy(), -1.0, 1.0)
+        return obs_dict
 
+    def get_obs(self):
+        """
+        Get observations from the environemnt.
+        """
+        # get obs_dict using the observed information
+        self.obs_dict = self.get_obs_dict(self.sim)
+
+        # recoved observation vector from the obs_dict
         t, obs = self.obsdict2obsvec(self.obs_dict, OBS_KEYS)
         return obs
 
