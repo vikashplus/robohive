@@ -11,7 +11,7 @@ class TestHMS(TestEnvs):
         'relocate-v0',
         'baoding-v1', 'baoding4th-v1', 'baoding8th-v1'
         ]
-        self.check_envs('Hand Manipulation', env_names, lite=True)
+        self.check_old_envs('Hand Manipulation', env_names, lite=True)
 
 if __name__ == '__main__':
     unittest.main()

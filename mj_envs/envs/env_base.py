@@ -52,14 +52,23 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     Superclass for all MuJoCo environments.
     """
 
-    def __init__(self, model_path):
-        # Get a random number generator incase its needed in pre_setup phase
-        self.input_seed = None
-        self.seed(0)
+    def __init__(self, model_path, obsd_model_path=None, seed=None):
+        """
+        Create a gym env
+        INPUTS:
+            model_path: ground truth model
+            obsd_model_path : observed model (useful for partially observed envs)
+                            : observed model (useful to propagate noisy sensor through env)
+                            : use model_path; if None
+            seed: Random number generator seed
+        """
+
+        # Seed and initialize the random number generator
+        self.seed(seed)
 
         # sims
         self.sim = get_sim(model_path)
-        self.sim_obsd = get_sim(model_path)
+        self.sim_obsd = get_sim(obsd_model_path) if obsd_model_path else get_sim(model_path)
         ObsVecDict.__init__(self)
 
     def _setup(self,
@@ -69,7 +78,6 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                frame_skip = 1,
                normalize_act = True,
                obs_range = (-10, 10),
-               seed = None,
                rwd_viz = False,
                device_id = 0, # device id for rendering
                **kwargs,
@@ -78,9 +86,6 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         if self.sim is None or self.sim_obsd is None:
             raise TypeError("sim and sim_obsd must be instantiated for setup to run")
 
-        # seed the random number generator
-        self.input_seed = None
-        self.seed(seed)
         self.mujoco_render_frames = False
         self.device_id = device_id
         self.rwd_viz = rwd_viz

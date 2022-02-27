@@ -22,11 +22,11 @@ class FrankaDmanusPose(env_base.MujocoEnv):
         "bonus": 4.0,
         "penalty": -50,
     }
-    def __init__(self, model_path, **kwargs):
+    def __init__(self, model_path, obsd_model_path=None, seed=None, **kwargs):
 
         curr_dir = os.path.dirname(os.path.abspath(__file__))
 
-        # Process model to ues DManus as end effector
+        # Process model to use DManus as end effector
         raw_sim = env_base.get_sim(model_path=curr_dir+model_path)
         raw_xml = raw_sim.model.get_xml()
         processed_xml = reassign_parent(xml_str=raw_xml, receiver_node="panda0_link7", donor_node="DManus_mount")
@@ -34,20 +34,35 @@ class FrankaDmanusPose(env_base.MujocoEnv):
         with open(processed_model_path, 'w') as file:
             file.write(processed_xml)
 
+        # Process model to use DManus as end effector
+        if obsd_model_path == model_path:
+            processed_obsd_model_path = processed_model_path
+        elif obsd_model_path:
+            raw_sim = env_base.get_sim(model_path=curr_dir+obsd_model_path)
+            raw_xml = raw_sim.model.get_xml()
+            processed_xml = reassign_parent(xml_str=raw_xml, receiver_node="panda0_link7", donor_node="DManus_mount")
+            processed_obsd_model_path = curr_dir+obsd_model_path[:-4]+"_processed.xml"
+            with open(processed_obsd_model_path, 'w') as file:
+                file.write(processed_xml)
+        else:
+            processed_obsd_model_path = None
+
         # EzPickle.__init__(**locals()) is capturing the input dictionary of the init method of this class.
         # In order to successfully capture all arguments we need to call gym.utils.EzPickle.__init__(**locals())
         # at the leaf level, when we do inheritance like we do here.
         # kwargs is needed at the top level to account for injection of __class__ keyword.
         # Also see: https://github.com/openai/gym/pull/1497
-        gym.utils.EzPickle.__init__(self, processed_model_path, **kwargs)
+        gym.utils.EzPickle.__init__(self, model_path, obsd_model_path, seed, **kwargs)
 
         # This two step construction is required for pickling to work correctly. All arguments to all __init__
         # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we
         # first construct the inheritance chain, which is just __init__ calls all the way down, with env_base
         # creating the sim / sim_obsd instances. Next we run through "setup"  which relies on sim / sim_obsd
         # created in __init__ to complete the setup.
-        super().__init__(model_path=processed_model_path)
+        super().__init__(model_path=processed_model_path, obsd_model_path=processed_obsd_model_path, seed=seed)
         os.remove(processed_model_path)
+        if processed_obsd_model_path and processed_obsd_model_path!=processed_model_path:
+            os.remove(processed_model_path)
 
         self._setup(**kwargs)
 

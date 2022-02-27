@@ -12,7 +12,7 @@ from mj_envs.utils.quat_math import euler2quat
 
 from mj_envs.envs.relay_kitchen.multi_task_base_v1 import KitchenBase
 
-class FrankaApplianceFixed(KitchenBase):
+class FrankaAppliance(KitchenBase):
 
     ROBOT_JNT_NAMES = (
         "panda0_joint1",
@@ -26,35 +26,50 @@ class FrankaApplianceFixed(KitchenBase):
         "panda0_finger_joint2",
     )
 
-    def __init__(
+    def __init__(self, model_path, obsd_model_path=None, seed=None, **kwargs):
+        # EzPickle.__init__(**locals()) is capturing the input dictionary of the init method of this class.
+        # In order to successfully capture all arguments we need to call gym.utils.EzPickle.__init__(**locals())
+        # at the leaf level, when we do inheritance like we do here.
+        # kwargs is needed at the top level to account for injection of __class__ keyword.
+        # Also see: https://github.com/openai/gym/pull/1497
+        gym.utils.EzPickle.__init__(self, model_path, obsd_model_path, seed, **kwargs)
+
+        # This two step construction is required for pickling to work correctly. All arguments to all __init__
+        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we
+        # first construct the inheritance chain, which is just __init__ calls all the way down, with env_base
+        # creating the sim / sim_obsd instances. Next we run through "setup"  which relies on sim / sim_obsd
+        # created in __init__ to complete the setup.
+        super().__init__(model_path=model_path, obsd_model_path=obsd_model_path, seed=seed)
+        self._setup(**kwargs)
+
+    def _setup(
         self,
-        obj_body_names,
+        obj_body_randomize=None,
         robot_jnt_names=ROBOT_JNT_NAMES,
         **kwargs,
     ):
-        self.obj_body_names = obj_body_names
-        KitchenBase.__init__(
-            self,
+        self.obj_body_randomize = obj_body_randomize
+        super()._setup(
             robot_jnt_names=robot_jnt_names,
             **kwargs,
         )
 
-class FrankaApplianceRandom(FrankaApplianceFixed):
     def reset(self, reset_qpos=None, reset_qvel=None):
-
-        for body_name in self.obj_body_names:
-            bid = self.sim.model.body_name2id(body_name)
-            r = self.np_random.uniform(low=.4, high=.7)
-            theta = self.np_random.uniform(low=-1.57, high=1.57)
-            self.sim.model.body_pos[bid][0] = r*np.sin(theta)
-            self.sim.model.body_pos[bid][1] = 0.5 + r*np.cos(theta)
-            self.sim.model.body_quat[bid] = euler2quat([0, 0, -theta])
+        # randomize object bodies, if requested
+        if self.obj_body_randomize:
+            for body_name in self.obj_body_randomize:
+                bid = self.sim.model.body_name2id(body_name)
+                r = self.np_random.uniform(low=.4, high=.7)
+                theta = self.np_random.uniform(low=-1.57, high=1.57)
+                self.sim.model.body_pos[bid][0] = r*np.sin(theta)
+                self.sim.model.body_pos[bid][1] = 0.5 + r*np.cos(theta)
+                self.sim.model.body_quat[bid] = euler2quat([0, 0, -theta])
 
         # resample init and goal state
         self.set_obj_init(self.input_obj_init)
         self.set_obj_goal(obj_goal=self.input_obj_goal, interact_site=self.interact_sid)
 
-        # random robot pose
+        # Noisy robot reset
         if reset_qpos is None:
             reset_qpos = self.init_qpos.copy()
             reset_qpos[self.robot_dofs] += (

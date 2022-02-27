@@ -11,6 +11,7 @@ import numpy as np
 
 from mj_envs.envs.relay_kitchen.multi_task_base_v1 import KitchenBase
 
+# ToDo: Get these details from key_frame
 DEMO_RESET_QPOS = np.array(
     [
         1.01020992e-01,
@@ -128,30 +129,39 @@ class KitchenFrankaFixed(KitchenBase):
         "panda0_finger_joint2",
     )
 
-    def __init__(
+    def _setup(
         self,
-        model_path,
         robot_jnt_names=ROBOT_JNT_NAMES,
         obj_jnt_names=OBJ_JNT_NAMES,
         obj_interaction_site=OBJ_INTERACTION_SITES,
-        goal=None,
-        interact_site="end_effector",
-        obj_init=None,
         **kwargs,
     ):
-        KitchenBase.__init__(
-            self,
-            model_path=model_path,
+        super()._setup(
             robot_jnt_names=robot_jnt_names,
             obj_jnt_names=obj_jnt_names,
             obj_interaction_site=obj_interaction_site,
-            goal=goal,
-            interact_site=interact_site,
-            obj_init=obj_init,
             **kwargs,
         )
 
 class KitchenFrankaDemo(KitchenFrankaFixed):
+
+    def __init__(self, model_path, obsd_model_path=None, seed=None, **kwargs):
+        # EzPickle.__init__(**locals()) is capturing the input dictionary of the init method of this class.
+        # In order to successfully capture all arguments we need to call gym.utils.EzPickle.__init__(**locals())
+        # at the leaf level, when we do inheritance like we do here.
+        # kwargs is needed at the top level to account for injection of __class__ keyword.
+        # Also see: https://github.com/openai/gym/pull/1497
+        gym.utils.EzPickle.__init__(self, model_path, obsd_model_path, seed, **kwargs)
+
+        # This two step construction is required for pickling to work correctly. All arguments to all __init__
+        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we
+        # first construct the inheritance chain, which is just __init__ calls all the way down, with env_base
+        # creating the sim / sim_obsd instances. Next we run through "setup"  which relies on sim / sim_obsd
+        # created in __init__ to complete the setup.
+        super().__init__(model_path=model_path, obsd_model_path=obsd_model_path, seed=seed)
+
+        super()._setup(**kwargs)
+
     def reset(self, reset_qpos=None, reset_qvel=None):
         if reset_qpos is None:
             reset_qpos = self.init_qpos.copy()
@@ -162,6 +172,24 @@ class KitchenFrankaDemo(KitchenFrankaFixed):
 
 
 class KitchenFrankaRandom(KitchenFrankaFixed):
+
+    def __init__(self, model_path, obsd_model_path=None, seed=None, **kwargs):
+        # EzPickle.__init__(**locals()) is capturing the input dictionary of the init method of this class.
+        # In order to successfully capture all arguments we need to call gym.utils.EzPickle.__init__(**locals())
+        # at the leaf level, when we do inheritance like we do here.
+        # kwargs is needed at the top level to account for injection of __class__ keyword.
+        # Also see: https://github.com/openai/gym/pull/1497
+        gym.utils.EzPickle.__init__(self, model_path, obsd_model_path, seed, **kwargs)
+
+        # This two step construction is required for pickling to work correctly. All arguments to all __init__
+        # calls must be pickle friendly. Things like sim / sim_obsd are NOT pickle friendly. Therefore we
+        # first construct the inheritance chain, which is just __init__ calls all the way down, with env_base
+        # creating the sim / sim_obsd instances. Next we run through "setup"  which relies on sim / sim_obsd
+        # created in __init__ to complete the setup.
+        super().__init__(model_path=model_path, obsd_model_path=obsd_model_path, seed=seed)
+
+        super()._setup(**kwargs)
+
     def reset(self, reset_qpos=None, reset_qvel=None):
         if reset_qpos is None:
             reset_qpos = self.init_qpos.copy()
