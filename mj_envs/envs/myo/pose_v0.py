@@ -174,7 +174,7 @@ class PoseEnvV0(BaseV0):
                 self.target_jnt_value = np.array([-0.12756566, 0.06741454, 1.51352705, 0.91777418, -0.63884237, 0.22452487, 0.42103326, 0.4139465])
                 self.sim.model.site_pos[self.target_sids[0]] = np.array([-0.11647777, -0.05180014, 0.19044284])
                 self.sim.model.site_pos[self.target_sids[1]] = np.array([-0.17728016, 0.01489491, 0.17953786])
-        elif self.target_type is "fixed":
+        elif self.target_type == "fixed":
             self.update_target(restore_sim=True)
         else:
             print("{} Target Type not found ".format(self.target_type))
