@@ -14,7 +14,7 @@ import torch
 
 from polymetis import RobotInterface
 import torchcontrol as toco
-from .hardware_base import hardwareBase
+from mj_envs.robot.hardware_base import hardwareBase
 import argparse
 
 class JointPDPolicy(toco.PolicyModule):
@@ -58,6 +58,7 @@ class FrankaArm(hardwareBase):
         # Initialize self.robot interface
         self.robot = RobotInterface(
             ip_address=ip_address,
+            #enforce_version=False
         )
         # self.reset()
 
@@ -88,20 +89,22 @@ class FrankaArm(hardwareBase):
 
     def close(self):
         """Close hardware connection"""
-        print("Terminating PD policy...")
         state_log = True
         if self.robot:
-            self.reset()
+            print("Terminating PD policy: ", end="")
             state_log = self.robot.terminate_current_policy()
+            self.reset()
+            self.robot = None
+            print("Done")
         return state_log
 
-    def reset(self):
+    def reset(self, time_to_go=5):
         """Reset hardware"""
-        self.robot.go_home()
+        self.robot.go_home(time_to_go=time_to_go)
 
     def get_sensors(self):
         """Get hardware sensors"""
-        joint_angel = self.robot.get_joint_angles()
+        joint_angel = self.robot.get_joint_positions()
         return joint_angel
 
     def apply_commands(self, q_desired):
