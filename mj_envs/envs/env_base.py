@@ -113,6 +113,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         Step the simulation forward (t => t+1)
         Uses robot interface to safely step the forward respecting pos/ vel limits
         """
+        env_state = self.get_env_state()
         a = np.clip(a, self.action_space.low, self.action_space.high)
         self.last_ctrl = self.robot.step(ctrl_desired=a,
                                         ctrl_normalized=self.normalize_act,
@@ -134,6 +135,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         # finalize step
         env_info = self.get_env_infos()
+        env_info['env_state'] = env_state.copy()
 
         # update the env state tracking
         self.env_state_dict = self.get_env_state().copy()

@@ -155,6 +155,7 @@ for site in KitchenFranka.INTERACTION_SITES:
 DEMO_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFrankaDemo"
 RANDOM_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFrankaRandom"
 FIXED_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFranka"
+RANDOM_DESK_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFrankaRandomDesk"
 
 # Kitchen
 register(
