@@ -43,12 +43,13 @@ class rand_policy():
 @click.option('-on', '--output_name', type=str, default=None, help=('The name to save the outputs as'))
 @click.option('-sp', '--save_paths', type=bool, default=False, help=('Save the rollout paths'))
 @click.option('-pp', '--plot_paths', type=bool, default=False, help=('2D-plot of individual paths'))
+@click.option('-ea', '--env_args', type=str, default=None, help=('env args. E.g. --env_args "{\'is_hardware\':True}"'))
 
-def main(env_name, policy_path, mode, seed, num_episodes, render, camera_name, output_dir, output_name, save_paths, plot_paths):
+def main(env_name, policy_path, mode, seed, num_episodes, render, camera_name, output_dir, output_name, save_paths, plot_paths, env_args):
 
     # seed and load environments
     np.random.seed(seed)
-    env = gym.make(env_name)
+    env = gym.make(env_name) if env_args==None else gym.make(env_name, **(eval(env_args)))
     env.seed(seed)
 
     # resolve policy and outputs
