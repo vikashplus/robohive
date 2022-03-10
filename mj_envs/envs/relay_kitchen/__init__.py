@@ -161,7 +161,7 @@ RANDOM_DESK_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFrankaRandomDesk"
 # Kitchen
 register(
     id="kitchen-v3",
-    entry_point=RANDOM_DESK_ENTRY_POINT,
+    entry_point=FIXED_ENTRY_POINT,
     max_episode_steps=20,
     kwargs={
         "model_path": MODEL_PATH,
