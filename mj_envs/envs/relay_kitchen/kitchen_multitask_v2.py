@@ -318,3 +318,20 @@ class KitchenFrankaRandom(KitchenFrankaFixed):
                 * (self.robot_ranges[:, 1] - self.robot_ranges[:, 0])
             )
         return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel)
+
+
+class KitchenFrankaRandomDesk(KitchenFrankaFixed):
+    def reset(self, reset_qpos=None, reset_qvel=None):
+        if reset_qpos is None:
+            reset_qpos = self.init_qpos.copy()
+            reset_qpos[self.robot_dofs] += (
+                0.05
+                * (self.np_random.uniform(size=len(self.robot_dofs)) - 0.5)
+                * (self.robot_ranges[:, 1] - self.robot_ranges[:, 0])
+            )
+            ncon = 10
+            while ncon > 4:
+                self.sim.model.body_pos[14] = np.array([-0.1, 0.75, 0.0]) + np.random.uniform(-0.1, 0.1, (3,))
+                self.sim.step()
+                ncon = self.sim.data.ncon
+        return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel)

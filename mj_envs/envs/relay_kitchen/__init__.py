@@ -5,6 +5,7 @@ from mj_envs.envs.relay_kitchen.kitchen_multitask_v1 import KitchenTasksV0
 from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import KitchenFrankaFixed as KitchenFranka
 from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import KitchenFrankaRandom
 from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import KitchenFrankaDemo
+from mj_envs.envs.relay_kitchen.kitchen_multitask_v2 import KitchenFrankaRandomDesk
 
 print("RS:> Registering Kitchen Envs")
 
@@ -155,12 +156,13 @@ for site in KitchenFranka.INTERACTION_SITES:
 DEMO_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFrankaDemo"
 RANDOM_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFrankaRandom"
 FIXED_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFranka"
+RANDOM_DESK_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFrankaRandomDesk"
 
 # Kitchen
 register(
     id="kitchen-v3",
-    entry_point=FIXED_ENTRY_POINT,
-    max_episode_steps=280,
+    entry_point=RANDOM_DESK_ENTRY_POINT,
+    max_episode_steps=20,
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
