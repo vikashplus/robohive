@@ -1,7 +1,7 @@
 <mujoco model="2nd hand model for object grasps">
 
     <compiler meshdir='../../../../sims/neuromuscular_sim/hand/'/>
-    <include file="../../../../sims/neuromuscular_sim/hand/myo_Hand_v0.1.6.xml"/>
+    <include file="../../../../sims/neuromuscular_sim/hand/myo_hand_v0.1.6.xml"/>
 
     <worldbody>
         <site name="THtip_target" pos="0 0 0.002" size="0.005" rgba="0.8 0 0 .8"/>
