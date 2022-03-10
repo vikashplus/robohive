@@ -6,7 +6,7 @@
 
 1. Clone this repo with pre-populated submodule dependencies
 ```
-$ git clone --branch stable_clean --recursive https://github.com/vikashplus/mj_envs.git
+$ git clone --branch stable --recursive https://github.com/vikashplus/mj_envs.git
 ```
 2. Install package using `pip`
 ```
