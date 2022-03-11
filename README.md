@@ -15,11 +15,11 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 a. Most users -
 ```
-git clone -c submodule.mj_envs/sims/neuromuscular_sim.update=none --branch v1 --recursive https://github.com/vikashplus/mj_envs.git
+git clone -c submodule.mj_envs/sims/neuromuscular_sim.update=none --branch <branch/tag name> --recursive https://github.com/vikashplus/mj_envs.git
 ```
 b. myoSuite developers: you must have access to neuromuscular_sim(private repo) -
 ```
-git clone --branch v1 --recursive https://github.com/vikashplus/mj_envs.git
+git clone --branch <branch/tag name> --recursive https://github.com/vikashplus/mj_envs.git
 ```
 2. Update submodules
 ```
