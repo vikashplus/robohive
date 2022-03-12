@@ -24,10 +24,12 @@ USAGE:\n
 
 # Random policy
 class rand_policy():
-    def __init__(self, env):
+    def __init__(self, env, seed):
         self.env = env
+        self.env.action_space.np_random.seed(seed) # requires exlicit seeding
 
     def get_action(self, obs):
+        # return self.env.np_random.uniform(high=self.env.action_space.high, low=self.env.action_space.low)
         return self.env.action_space.sample(), {'mode': 'random samples'}
 
 # MAIN =========================================================
@@ -60,7 +62,7 @@ def main(env_name, policy_path, mode, seed, num_episodes, render, camera_name, o
            if output_name is None:
                output_name = os.path.splitext(pol_name)[0]
     else:
-        pi = rand_policy(env)
+        pi = rand_policy(env, seed)
         mode = 'exploration'
         output_name ='random_policy'
 
