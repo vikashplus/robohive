@@ -102,6 +102,16 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         act_high = np.ones(self.sim.model.nu) if self.normalize_act else self.sim.model.actuator_ctrlrange[:,1].copy()
         self.action_space = gym.spaces.Box(act_low, act_high, dtype=np.float32)
 
+        # resolve initial state
+        self.init_qvel = self.sim.data.qvel.ravel().copy()
+        self.init_qpos = self.sim.data.qpos.ravel().copy() # has issues with initial jump during reset
+        # self.init_qpos = np.mean(self.sim.model.actuator_ctrlrange, axis=1) if self.normalize_act else self.sim.data.qpos.ravel().copy() # has issues when nq!=nu
+        # self.init_qpos[self.sim.model.jnt_dofadr] = np.mean(self.sim.model.jnt_range, axis=1) if self.normalize_act else self.sim.data.qpos.ravel().copy()
+        if self.normalize_act:
+            linear_jnt_qposids = self.sim.model.jnt_qposadr[self.sim.model.jnt_type>1] #hinge and slides
+            linear_jnt_ids = self.sim.model.jnt_type>1
+            self.init_qpos[linear_jnt_qposids] = np.mean(self.sim.model.jnt_range[linear_jnt_ids], axis=1)
+
         # resolve rewards
         self.rwd_dict = {}
         self.rwd_mode = reward_mode
@@ -114,16 +124,6 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         assert not done, "Check initialization. Simulation starts in a done state."
         self.obs_dim = observation.size
         self.observation_space = gym.spaces.Box(obs_range[0]*np.ones(self.obs_dim), obs_range[1]*np.ones(self.obs_dim), dtype=np.float32)
-
-        # resolve initial state
-        self.init_qvel = self.sim.data.qvel.ravel().copy()
-        self.init_qpos = self.sim.data.qpos.ravel().copy() # has issues with initial jump during reset
-        # self.init_qpos = np.mean(self.sim.model.actuator_ctrlrange, axis=1) if self.normalize_act else self.sim.data.qpos.ravel().copy() # has issues when nq!=nu
-        # self.init_qpos[self.sim.model.jnt_dofadr] = np.mean(self.sim.model.jnt_range, axis=1) if self.normalize_act else self.sim.data.qpos.ravel().copy()
-        if self.normalize_act:
-            linear_jnt_qposids = self.sim.model.jnt_qposadr[self.sim.model.jnt_type>1] #hinge and slides
-            linear_jnt_ids = self.sim.model.jnt_type>1
-            self.init_qpos[linear_jnt_qposids] = np.mean(self.sim.model.jnt_range[linear_jnt_ids], axis=1)
 
         return
 
