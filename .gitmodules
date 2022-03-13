@@ -27,3 +27,6 @@
 [submodule "mj_envs/sims/neuromuscular_sim"]
 	path = mj_envs/sims/neuromuscular_sim
 	url = https://github.com/vikashplus/neuromuscular_sim.git
+[submodule "mj_envs/sims/object_sim"]
+	path = mj_envs/sims/object_sim
+	url = https://github.com/vikashplus/object_sim.git
