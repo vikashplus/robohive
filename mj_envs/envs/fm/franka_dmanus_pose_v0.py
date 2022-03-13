@@ -62,7 +62,7 @@ class FrankaDmanusPose(env_base.MujocoEnv):
         super().__init__(model_path=processed_model_path, obsd_model_path=processed_obsd_model_path, seed=seed)
         os.remove(processed_model_path)
         if processed_obsd_model_path and processed_obsd_model_path!=processed_model_path:
-            os.remove(processed_model_path)
+            os.remove(processed_obsd_model_path)
 
         self._setup(**kwargs)
 
