@@ -337,7 +337,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             qvel = old_state.qvel
         if act is None:
             act = old_state.act
-        new_state = mujoco_py.MjSimState(old_state.time, qpos, qvel, act)
+        new_state = mujoco_py.MjSimState(old_state.time, qpos=qpos, qvel=qvel, act=act, udd_state={})
         self.sim.set_state(new_state)
         self.sim.forward()
 
