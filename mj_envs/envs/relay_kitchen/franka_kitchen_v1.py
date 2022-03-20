@@ -133,13 +133,13 @@ class KitchenFrankaFixed(KitchenBase):
         self,
         robot_jnt_names=ROBOT_JNT_NAMES,
         obj_jnt_names=OBJ_JNT_NAMES,
-        obj_interaction_site=OBJ_INTERACTION_SITES,
+        obj_interaction_sites=OBJ_INTERACTION_SITES,
         **kwargs,
     ):
         super()._setup(
             robot_jnt_names=robot_jnt_names,
             obj_jnt_names=obj_jnt_names,
-            obj_interaction_site=obj_interaction_site,
+            obj_interaction_sites=obj_interaction_sites,
             **kwargs,
         )
 
