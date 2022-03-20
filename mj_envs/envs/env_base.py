@@ -9,6 +9,8 @@ import gym
 import numpy as np
 import os
 import time as timer
+import torch
+import torchvision.transforms as T
 
 from mj_envs.utils.obj_vec_dict import ObsVecDict
 from mj_envs.utils import tensor_utils
@@ -16,7 +18,6 @@ from mj_envs.robot.robot import Robot
 from os import path
 import skvideo.io
 
-import torch
 from r3m import load_r3m
 
 # TODO
@@ -146,19 +147,23 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         else:
             self.device_encoder=device
 
-        # ensure that all keys use the same encoder
+        # ensure that all keys use the same encoder and image sizes
         id_encoders = []
         for key in obs_keys:
             if key.startswith('rgb'):
-                id_encoder = key.split(':')[-1]
+                id_encoder = key.split(':')[-2]+":"+key.split(':')[-1] # HxW:encoder
                 id_encoders.append(id_encoder)
         if len(id_encoders) > 1 :
             unique_encoder = all(elem == id_encoders[0] for elem in id_encoders)
             assert unique_encoder, "Env only supports single encoder. Multiple in use ({})".format(id_encoders)
 
-        # load encoder
+        # prepare encoder and transforms
+        self.rgb_encoder = None
+        self.rgb_transform = None
         if len(id_encoders) > 0:
-            id_encoder = id_encoders[0]
+            wxh, id_encoder = id_encoders[0].split(':')
+
+            # Load encoder
             if id_encoder == "flat":
                 self.rgb_encoder = lambda x: x
             elif id_encoder == "r3m18":
@@ -171,14 +176,16 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 raise ValueError("Unsupported visual encoder: {}".format(id_encoder))
             self.rgb_encoder.eval()
             self.rgb_encoder.to(self.device_encoder)
-        else:
-            self.rgb_encoder = None
 
-            # Is it better to render in size, or should we use the transform?
-            # import torchvision.transforms as T
-            # self.transform_r3m = T.Compose([T.Resize(256),
-            #                         T.CenterCrop(224),
-            #                         T.ToTensor()]) # ToTensor() divides by 255
+            # Load tranfsormms
+            if id_encoder[:3] == 'r3m':
+                if wxh == "224x224":
+                    self.rgb_transform = T.Compose([T.ToTensor()]) # ToTensor() divides by 255
+                else:
+                    print("HxW = 224x224 recommended")
+                    self.rgb_transform = T.Compose([T.Resize(256),
+                                        T.CenterCrop(224),
+                                        T.ToTensor()]) # ToTensor() divides by 255
 
 
     def step(self, a):
@@ -263,10 +270,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 if rgb_encoder_id == 'flat':
                     rgb_encoded = img.reshape(-1)
                 elif rgb_encoder_id[:3] == 'r3m':
-                    rgb_encoded = torch.from_numpy(img).reshape(-1, 3, 224, 224) # Todo: verify reshaping, resizing, cropping etc
-                    rgb_encoded.to(self.device_encoder)
-                    rgb_encoded = self.rgb_encoder(rgb_encoded).detach().numpy()
-                    rgb_encoded = np.squeeze(rgb_encoded)
+                    with torch.no_grad():
+                        rgb_encoded = 255.0 * self.rgb_transform(img[0]).reshape(-1, 3, 224, 224)
+                        rgb_encoded.to(self.device_encoder)
+                        rgb_encoded = self.rgb_encoder(rgb_encoded).cpu().numpy()
+                        rgb_encoded = np.squeeze(rgb_encoded)
                 else:
                     raise ValueError("Unsupported visual encoder: {}".format(rgb_encoder_id))
                 visual_obs_dict.update({key:rgb_encoded})

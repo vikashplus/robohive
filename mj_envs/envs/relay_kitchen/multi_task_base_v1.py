@@ -95,7 +95,6 @@ class KitchenBase(env_base.MujocoEnv):
         self.input_obj_goal = obj_goal
         self.input_obj_init = obj_init
         self.set_obj_goal(obj_goal=self.input_obj_goal, interact_site=interact_site)
-        print(interact_site, obj_interaction_sites)
 
         super()._setup(obs_keys=obs_keys_wt,
                        weighted_reward_keys=weighted_reward_keys,
