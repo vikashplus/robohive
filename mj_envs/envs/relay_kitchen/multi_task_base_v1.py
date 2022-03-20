@@ -32,9 +32,9 @@ class KitchenBase(env_base.MujocoEnv):
     def _setup(self,
                robot_jnt_names,
                obj_jnt_names,
-               obj_interaction_site,
+               obj_interaction_sites,           # all object interaction sites
                obj_goal,
-               interact_site="end_effector",
+               interact_site="end_effector",    # task relevant interaction sites
                obj_init=None,
                obs_keys_wt=list(DEFAULT_OBS_KEYS_AND_WEIGHTS.keys()),
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
@@ -53,7 +53,7 @@ class KitchenBase(env_base.MujocoEnv):
 
         # configure env-site
         self.grasp_sid = self.sim.model.site_name2id("end_effector")
-        self.obj_interaction_site = obj_interaction_site
+        self.obj_interaction_sites = obj_interaction_sites
 
         # configure env-robot
         self.robot_dofs = []
@@ -75,7 +75,7 @@ class KitchenBase(env_base.MujocoEnv):
             self.obj[jnt_name] = {}
             self.obj[jnt_name]["goal_adr"] = goal_adr
             self.obj[jnt_name]["interact_sid"] = self.sim.model.site_name2id(
-                obj_interaction_site[goal_adr]
+                obj_interaction_sites[goal_adr]
             )
             self.obj[jnt_name]["dof_adr"] = self.sim.model.jnt_dofadr[jnt_id]
             obj_dof_adrs.append(self.sim.model.jnt_dofadr[jnt_id])
@@ -95,6 +95,7 @@ class KitchenBase(env_base.MujocoEnv):
         self.input_obj_goal = obj_goal
         self.input_obj_init = obj_init
         self.set_obj_goal(obj_goal=self.input_obj_goal, interact_site=interact_site)
+        print(interact_site, obj_interaction_sites)
 
         super()._setup(obs_keys=obs_keys_wt,
                        weighted_reward_keys=weighted_reward_keys,
@@ -127,7 +128,7 @@ class KitchenBase(env_base.MujocoEnv):
         obs_dict["pose_err"] = self.robot_meanpos - obs_dict["robot_jnt"]
         obs_dict["end_effector"] = self.sim.data.site_xpos[self.grasp_sid]
         obs_dict["qpos"] = self.sim.data.qpos.copy()
-        for site in self.obj_interaction_site:
+        for site in self.obj_interaction_sites:
             site_id = self.sim.model.site_name2id(site)
             obs_dict[site + "_err"] = (
                 self.sim.data.site_xpos[site_id]
