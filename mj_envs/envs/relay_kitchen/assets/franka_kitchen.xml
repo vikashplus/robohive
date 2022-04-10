@@ -57,18 +57,19 @@
             <include file="../../../sims/franka_sim/assets/chain0.xml"/>
         </body>
 
-        <body name='desk' pos='-0.1 0.75 0'>
+        <body name='kitchen1' pos='-0.1 0.75 0'>
 
-            <body name="counters1" pos="0 0 0" >
-                <include file="../../../sims/furniture_sim/counters/counters_body.xml"/>
+            <body name="counters" pos="0 0 0" >
+                <include file="../../../sims/furniture_sim/counters/sink_counter_body.xml"/>
+                <include file="../../../sims/furniture_sim/counters/box_counter_body.xml"/>
             </body>
             <body name="oven" pos="0 0 0" >
                 <include file="../../../sims/furniture_sim/oven/oven_body.xml"/>
             </body>
-            <body name="backwall" pos="0 0 0" >
+            <!-- <body name="backwall" pos="0 0 0" >
                 <include file="../../../sims/furniture_sim/backwall/backwall_body.xml"/>
-            </body>
-            <body name="slidecabinet" pos="0.4 0.3 2.6" >
+            </body> -->
+            <body name="slidecabinet" pos="0.4 0.28 2.6" >
                 <include file="../../../sims/furniture_sim/slidecabinet/slidecabinet_body.xml"/>
             </body>
             <body name="hingecabinet" pos="-0.504 0.28 2.6" >
