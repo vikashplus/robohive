@@ -158,16 +158,17 @@ register(
 # distance between end effector and all relevent objects in the scene
 
 state_obs_keys_wt = {"robot_jnt": 1.0, "objs_jnt": 1.0, "obj_goal": 1.0, "end_effector": 1.0}
+visual_obs_keys_wt = {"robot_jnt": 1.0,
+            "end_effector": 1.0,
+            # "rgb:right_cam:224x224:r3m18": 1.0,
+            # "rgb:left_cam:224x224:r3m18": 1.0,
+            "rgb:right_cam:224x224:flat": 1.0,
+            "rgb:left_cam:224x224:flat": 1.0,
+            }
+obs_keys_wt = visual_obs_keys_wt
 for site in KitchenFrankaFixed.OBJ_INTERACTION_SITES:
     obs_keys_wt[site + "_err"] = 1.0
 
-visual_obs_keys_wt = {"robot_jnt": 1.0,
-            "end_effector": 1.0,
-            "rgb:right_cam:224x224:r3m18": 1.0,
-            "rgb:left_cam:224x224:r3m18": 1.0,
-            }
-
-obs_keys_wt = state_obs_keys_wt
 
 # Kitchen
 register(

@@ -50,6 +50,13 @@ def get_sim(model_path:str=None, model_xmlstr=None):
 
     return MjSim(model)
 
+class IdentityEncoder(torch.nn.Module):
+    def __init__(self):
+        super(IdentityEncoder, self).__init__()
+
+    def forward(self, x):
+        return x
+
 class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     """
     Superclass for all MuJoCo environments.
@@ -164,8 +171,9 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             wxh, id_encoder = id_encoders[0].split(':')
 
             # Load encoder
+            print("Using {} visual inputs with {} encoder".format(wxh, id_encoder))
             if id_encoder == "flat":
-                self.rgb_encoder = lambda x: x
+                self.rgb_encoder = IdentityEncoder()
             elif id_encoder == "r3m18":
                 self.rgb_encoder = load_r3m("resnet18")
             elif id_encoder == "r3m34":
