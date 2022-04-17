@@ -9,7 +9,9 @@ class TestArms(TestEnvs):
             'FrankaPushFixed-v0',
             'FrankaPushRandom-v0',
             'FetchReachFixed-v0',
-            'FetchReachRandom-v0'
+            'FetchReachRandom-v0',
+            'FrankaPickPlaceFixed-v0',
+            'FrankaPickPlaceRandom-v0'
             ]
         self.check_envs('Arms', env_names)
 
