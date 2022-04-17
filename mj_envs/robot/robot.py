@@ -52,6 +52,8 @@ class Robot():
                 **kwargs,
             ):
 
+        if kwargs != {}:
+            print("Warning: Unused kwargs found: {}".format(kwargs))
         self.name = robot_name+'(sim)' if is_hardware is None else robot_name+'(hdr)'
         self._act_mode = act_mode
         self.is_hardware = is_hardware
@@ -383,8 +385,6 @@ class Robot():
             # VIK???: Propagating sensors back to sim can create trouble with contact stability in presence of noise
             # self.sensor2sim(current_sen, self.sim)
 
-        # import ipdb; ipdb.set_trace()
-
         # cache sensors
         self._sensor_cache.append(current_sen)
 
@@ -441,6 +441,50 @@ class Robot():
                 destination_sim.model.body_quat[:] = source_sim.model.body_quat[:].copy()
 
         destination_sim.forward()
+
+
+    # Normalize actions from absolute space to unit space
+    def normalize_actions(self, controls, out_space='sim'):
+        """
+        Normalize actions from absolute space to unit space
+        """
+        act_id = -1
+        normalized_controls = controls.copy()
+        for name, device in self.robot_config.items():
+            if name == "default_robot":
+                if self._act_mode == "pos":
+                    act_mid = np.mean(self.sim.model.actuator_ctrlrange, axis=-1)
+                    act_rng = (self.sim.model.actuator_ctrlrange[:,1]-self.sim.model.actuator_ctrlrange[:,0])/2.0
+                    normalized_controls = (controls-act_mid)/act_rng
+                else:
+                    raise TypeError("only pos act supported")
+            else:
+                # import ipdb; ipdb.set_trace()
+
+                for actuator in device['actuator']:
+                    act_id += 1
+                    in_id = actuator['sim_id']
+                    # output ordering is as per the config order for hdr
+                    out_id = actuator['sim_id'] if out_space == 'sim' else act_id
+
+                    if self._act_mode == "pos":
+                        act_mid = (actuator['pos_range'][1]+actuator['pos_range'][0])/2.0
+                        act_rng = (actuator['pos_range'][1]-actuator['pos_range'][0])/2.0
+                    elif self._act_mode == "vel":
+                        act_mid = (actuator['vel_range'][1]+actuator['vel_range'][0])/2.0
+                        act_rng = (actuator['vel_range'][1]-actuator['pos_range'][0])/2.0
+                    else:
+                        raise TypeError("Unknown act mode: {}".format(self._act_mode))
+
+                    # normalize and enforce position limits
+                    control = controls[in_id]
+                    control =  (control-act_mid)/act_rng
+                    control = np.clip(control, -1, 1)
+
+                    # remap to desired space
+                    normalized_controls[out_id] = control
+        return normalized_controls
+
 
 
     # enfoce limits
