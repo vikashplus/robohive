@@ -26,12 +26,7 @@ b. myoSuite developers: you must have access to neuromuscular_sim(private repo) 
 ```
 git clone --branch v1 --recursive https://github.com/vikashplus/mj_envs.git
 ```
-2. Update submodules
-```
-$ cd mj_envs
-$ git submodule update --remote
-```
-3. Install package using `pip`
+2. Install package using `pip`
 ```
 $ pip install -e .
 ```
@@ -40,9 +35,9 @@ Add repo to pythonpath by updating `~/.bashrc` or `~/.bash_profile`
 ```
 export PYTHONPATH="<path/to/mj_envs>:$PYTHONPATH"
 ```
-4. You can visualize the environments with random controls using the below command
+3. You can visualize the environments with random controls using the below command
 ```
-$ python utils/visualize_env.py --env_name hammer-v0
+$ python utils/examine_env.py -e FrankaReachRandom-v0
 ```
 **FAQ:**
 1. If the visualization results in a GLFW error, this is because `mujoco-py` does not see some graphics drivers correctly. This can usually be fixed by explicitly loading the correct drivers before running the python script. See [this page](https://github.com/aravindr93/mjrl/tree/master/setup#known-issues) for details.
