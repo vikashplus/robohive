@@ -8,7 +8,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 import os
 
 from gym.envs.registration import register
-from mj_envs.envs.relay_kitchen.kitchen_multitask_v1 import KitchenTasksV0
+# from mj_envs.envs.relay_kitchen.kitchen_multitask_v1 import KitchenTasksV0  #??? uses mjrl, remove dependency
 from mj_envs.envs.relay_kitchen.franka_kitchen_v1 import KitchenFrankaFixed, KitchenFrankaRandom, KitchenFrankaDemo
 
 print("RS:> Registering Kitchen Envs")

@@ -8,7 +8,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 import mj_envs.envs.arms # noqa
 import mj_envs.envs.myo # noqa
 import mj_envs.envs.fm # noqa
-import mj_envs.envs.hand_manipulation_suite # noqa
+# import mj_envs.envs.hand_manipulation_suite # noqa #??? uses mjrl, remove dependency
 import mj_envs.envs.relay_kitchen # noqa
 import mj_envs.envs.dexman # noqa
 
