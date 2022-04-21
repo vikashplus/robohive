@@ -11,11 +11,16 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ## Getting Started
 `mj_envs` uses git submodules to resolve dependencies. Please follow steps exactly as below to install correctly.
 
-1. Clone this repo (branch v1) with pre-populated submodule dependencies
+0. We recommend installaition within a conda environement. If you don't have one yet, create one using
+```
+conda create -n robohive python=3
+```
+
+1. Clone this repo on branch `branch_name` with pre-populated submodule dependencies
 
 a. Most users -
 ```
-git clone -c submodule.mj_envs/sims/neuromuscular_sim.update=none --branch v1 --recursive https://github.com/vikashplus/mj_envs.git
+git clone -c submodule.mj_envs/sims/neuromuscular_sim.update=none --branch <branch_name> --recursive https://github.com/vikashplus/mj_envs.git
 ```
 b. myoSuite developers: you must have access to neuromuscular_sim(private repo) -
 ```
