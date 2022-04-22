@@ -28,7 +28,7 @@ git clone --branch v1 --recursive https://github.com/vikashplus/mj_envs.git
 ```
 2. Install package using `pip`
 ```
-cd mj_envs
+$ cd mj_envs
 $ pip install -e .
 ```
 **OR**

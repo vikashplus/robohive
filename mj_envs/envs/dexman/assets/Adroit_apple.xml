@@ -8,8 +8,8 @@
 ====================================================== -->
 
     <include file="Adroit_tabletop.xml"/>
-    <include file="../../../sims/grab_sim/common.xml"/>
-    <include file="../../../sims/grab_sim/apple/assets.xml"/>
+    <include file="../../../sims/object_sim/common.xml"/>
+    <include file="../../../sims/object_sim/apple/assets.xml"/>
 
     <worldbody>
         <body name="object1" pos="0.00 0.0 .805" childclass="grab">
@@ -19,7 +19,7 @@
             <joint name="OBJRx" pos="0 0 0" axis="1 0 0"/>
             <joint name="OBJRy" pos="0 0 0" axis="0 1 0"/>
             <joint name="OBJRz" pos="0 0 0" axis="0 0 1"/>
-            <include file="../../../sims/grab_sim/apple/body.xml"/>
+            <include file="../../../sims/object_sim/apple/body.xml"/>
         </body>
     </worldbody>
 
