@@ -152,6 +152,7 @@ class KitchenBase(env_base.MujocoEnv):
         self.obj = {}
         obj_dof_adrs = []
         obj_dof_ranges = []
+        self.obj_jnt_names = obj_jnt_names
         for goal_adr, jnt_name in enumerate(obj_jnt_names):
             jnt_id = self.sim.model.joint_name2id(jnt_name)
             self.obj[jnt_name] = {}
@@ -168,12 +169,8 @@ class KitchenBase(env_base.MujocoEnv):
             self.obj["dof_ranges"][:, 1] - self.obj["dof_ranges"][:, 0]
         )
 
+        self.real_step = True
         # configure env-goal
-        if interact_site == "end_effector":
-            print(
-                "WARNING: Using the default interaction site of end-effector. \
-                  If you wish to evaluate on specific tasks, you should set the interaction site correctly."
-            )
         self.set_goal(goal=goal, interact_site=interact_site)
 
         super()._setup(obs_keys=obs_keys_wt,
@@ -186,6 +183,7 @@ class KitchenBase(env_base.MujocoEnv):
 
         self.init_qpos[:] = self.sim.model.key_qpos[0].copy()
         if obj_init:
+            self.perm_obj_init = obj_init
             self.set_obj_init(obj_init)
 
     def get_obs_dict(self, sim):
@@ -382,3 +380,145 @@ class KitchenFrankaRandom(KitchenFrankaFixed):
                 * (self.robot_ranges[:, 1] - self.robot_ranges[:, 0])
             )
         return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel)
+
+
+CONTINUAL_GOALS = {
+    "microjoint": (0, -1.25),
+    "knob1_joint": (0, -1.57),
+    "knob2_joint": (0, -1.57),
+    "knob3_joint": (0, -1.57),
+    "knob4_joint": (0, -1.57),
+    "lightswitch_joint": (0, -0.7),
+    "rightdoorhinge": (0, 1.57),
+    "leftdoorhinge": (0, -1.25),
+    "slidedoor_joint": (0, 0.44),
+}
+
+
+class KitchenFrankaContinual(KitchenFrankaFixed):
+
+    def __init__(self, *args, subtasks=None, num_subtasks=4, seq_subgoals=False, **kwargs):
+        """
+        Args:
+          subtasks (List[str]): Optional list of subtasks. Ex: ["microjoint", "knob2_joint"].
+          num_subtasks (int): Number of subtasks per episode. If `subtasks` is specified, the
+            subtasks of each episode are sampled from that list. Otherwise, they are sampled
+            from the list of all possible Kitchen subtasks.
+          seq_subgoals (bool): If True, specify subtasks one at a time in the goal, which is useful
+            for Trajopt planning. If False, specify the subtasks all at once. Suppose our episode
+            subtasks are ["open micro", "turn knob2"]. If `seq_subgoals=False`, the goal vector will
+            simply specify both subtasks. If `seq_subgoals=True`, the goal vector will only say "open
+            micro" initially. Once that is accomplished (or 50 timesteps have passed) it will then
+            switch to saying "turn knob 2."
+        """
+        # subtask_idcs: List of indices identifying the subtasks for the current episode.
+        # self.curr_subtask: Only applicable when `seq_subgoals=True`. Integer identifying which
+        # subtask in `subtask_idcs` we are currently specifying in the goal vector.
+        # self.subtask_steps: Only applicable when `seq_subgoals=True`. How many timesteps we've
+        # spent on `curr_subtask`.
+        self.subtask_idcs, self.curr_subtask, self.subtask_steps = None, None, None
+        self.perm_obj_init = None
+        super().__init__(*args, **kwargs)
+        self.num_subtasks = num_subtasks
+        self.perm_subtask_idcs = None
+        if subtasks is not None:
+            self.num_subtasks = len(subtasks)
+            self.perm_subtask_idcs = []
+            for joint in subtasks:
+                subtask_idx = self.obj_jnt_names.index(joint)
+                self.perm_subtask_idcs.append(subtask_idx)
+        self.seq_subgoals = seq_subgoals
+
+    def reset(self):
+        if not self.perm_obj_init:
+            obj_init = {}
+            for key in CONTINUAL_GOALS:
+                obj_init[key] = CONTINUAL_GOALS[key][int(self.np_random.uniform() > 0.5)]
+            self.set_obj_init(obj_init)
+        reset_qpos = self.init_qpos.copy()
+        reset_qpos[self.robot_dofs] += (
+            0.05
+            * (self.np_random.uniform(size=len(self.robot_dofs)) - 0.5)
+            * (self.robot_ranges[:, 1] - self.robot_ranges[:, 0])
+        )
+        obs = super().reset(reset_qpos=reset_qpos)
+        if self.real_step:
+            self.set_goal({})
+            self.subtask_idcs = self.perm_subtask_idcs or self.np_random.choice(9, self.num_subtasks).tolist()
+            print("New goal joints:", [self.INTERACTION_SITES[jnt_idx] for jnt_idx in self.subtask_idcs])
+            if self.seq_subgoals:  # Specify subtasks in goal one at a time, sequentially.
+                self.curr_subtask = 0
+                self.subtask_steps = 0
+                self._set_next_goal()
+            else:  # Specify all the subtasks in the goal vector.
+                goal_dict = {}
+                for jnt_idx in self.subtask_idcs:
+                    jnt_name = self.obj_jnt_names[jnt_idx]
+                    close_goal, open_goal = CONTINUAL_GOALS[jnt_name]
+                    curr_goal = self.goal[self.obj[jnt_name]["goal_adr"]]
+                    if np.abs(curr_goal - close_goal) > np.abs(curr_goal - open_goal):
+                        goal_dict[jnt_name] = close_goal
+                    else:
+                        goal_dict[jnt_name] = open_goal
+                self.set_goal(goal_dict, "end_effector")
+        return obs
+
+    def _set_next_goal(self):
+        """For seq_subgoals=True. Move on to the next subtask."""
+        new_goal_dict = {}
+        jnt_idx = self.subtask_idcs[self.curr_subtask]
+        jnt_name = self.obj_jnt_names[jnt_idx]
+        close_goal, open_goal = CONTINUAL_GOALS[jnt_name]
+        curr_goal = self.goal[self.obj[jnt_name]["goal_adr"]]
+        if np.abs(curr_goal - close_goal) > np.abs(curr_goal - open_goal):
+            new_goal_dict[jnt_name] = close_goal
+        else:
+            new_goal_dict[jnt_name] = open_goal
+        interact_site = self.INTERACTION_SITES[self.subtask_idcs[self.curr_subtask]]
+        print("Next goal and interaction site:", new_goal_dict, interact_site)
+        self.set_goal(new_goal_dict, interact_site)
+
+    def step(self, a):
+        obs, rew, done, info = super().step(a)
+        if self.subtask_steps is not None and self.real_step:
+            # For seq_subgoals=True. Check if we've solved the current subtask (or we've spent 50
+            # steps on it), and move on to the next subtask if so. `real_step` means we are in the
+            # actual env, not a "fake" env used by trajopt for planning only.
+            self.subtask_steps += 1
+            info["solved"] = info["solved"] and self.curr_subtask == 3
+            if (info["rwd_dict"]["solved"] or self.subtask_steps == 50) and self.curr_subtask < 3:
+                self.curr_subtask += 1
+                self._set_next_goal()
+                self.subtask_steps = 0
+        return obs, rew, done, info
+
+    def get_env_state(self):
+        """Get full state of the environment. """
+        qp = self.sim.data.qpos.ravel().copy()
+        qv = self.sim.data.qvel.ravel().copy()
+        mocap_pos = self.sim.data.mocap_pos.copy()
+        mocap_quat = self.sim.data.mocap_quat.copy()
+        site_pos = self.sim.model.site_pos[:].copy()
+        body_pos = self.sim.model.body_pos[:].copy()
+        return dict(qpos=qp,
+                    qvel=qv,
+                    mocap_pos=mocap_pos,
+                    mocap_quat=mocap_quat,
+                    site_pos=site_pos,
+                    site_quat=self.sim.model.site_quat[:].copy(),
+                    body_pos=body_pos,
+                    body_quat=self.sim.model.body_quat[:].copy(),
+                    goal=self.goal.copy(),
+                    interact_sid=self.interact_sid)
+
+    def set_env_state(self, state_dict):
+        """Set full state of the environment. """
+        qp = state_dict['qpos']
+        qv = state_dict['qvel']
+        self.set_state(qp, qv)
+        self.sim.model.site_pos[:] = state_dict['site_pos']
+        self.sim.model.site_quat[:] = state_dict['site_quat']
+        self.sim.model.body_pos[:] = state_dict['body_pos']
+        self.sim.model.body_quat[:] = state_dict['body_quat']
+        self.sim.forward()
+        self.set_goal(state_dict['goal'], state_dict['interact_sid'])
