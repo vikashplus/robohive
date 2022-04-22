@@ -398,6 +398,24 @@ CONTINUAL_GOALS = {
 class KitchenFrankaContinual(KitchenFrankaFixed):
 
     def __init__(self, *args, subtasks=None, num_subtasks=4, seq_subgoals=False, **kwargs):
+        """
+        Args:
+          subtasks (List[str]): Optional list of subtasks. Ex: ["microjoint", "knob2_joint"].
+          num_subtasks (int): Number of subtasks per episode. If `subtasks` is specified, the
+            subtasks of each episode are sampled from that list. Otherwise, they are sampled
+            from the list of all possible Kitchen subtasks.
+          seq_subgoals (bool): If True, specify subtasks one at a time in the goal, which is useful
+            for Trajopt planning. If False, specify the subtasks all at once. Suppose our episode
+            subtasks are ["open micro", "turn knob2"]. If `seq_subgoals=False`, the goal vector will
+            simply specify both subtasks. If `seq_subgoals=True`, the goal vector will only say "open
+            micro" initially. Once that is accomplished (or 50 timesteps have passed) it will then
+            switch to saying "turn knob 2."
+        """
+        # subtask_idcs: List of indices identifying the subtasks for the current episode.
+        # self.curr_subtask: Only applicable when `seq_subgoals=True`. Integer identifying which
+        # subtask in `subtask_idcs` we are currently specifying in the goal vector.
+        # self.subtask_steps: Only applicable when `seq_subgoals=True`. How many timesteps we've
+        # spent on `curr_subtask`.
         self.subtask_idcs, self.curr_subtask, self.subtask_steps = None, None, None
         self.perm_obj_init = None
         super().__init__(*args, **kwargs)
@@ -428,11 +446,11 @@ class KitchenFrankaContinual(KitchenFrankaFixed):
             self.set_goal({})
             self.subtask_idcs = self.perm_subtask_idcs or self.np_random.choice(9, self.num_subtasks).tolist()
             print("New goal joints:", [self.INTERACTION_SITES[jnt_idx] for jnt_idx in self.subtask_idcs])
-            if self.seq_subgoals:
+            if self.seq_subgoals:  # Specify subtasks in goal one at a time, sequentially.
                 self.curr_subtask = 0
                 self.subtask_steps = 0
                 self._set_next_goal()
-            else:
+            else:  # Specify all the subtasks in the goal vector.
                 goal_dict = {}
                 for jnt_idx in self.subtask_idcs:
                     jnt_name = self.obj_jnt_names[jnt_idx]
@@ -446,6 +464,7 @@ class KitchenFrankaContinual(KitchenFrankaFixed):
         return obs
 
     def _set_next_goal(self):
+        """For seq_subgoals=True. Move on to the next subtask."""
         new_goal_dict = {}
         jnt_idx = self.subtask_idcs[self.curr_subtask]
         jnt_name = self.obj_jnt_names[jnt_idx]
@@ -462,6 +481,9 @@ class KitchenFrankaContinual(KitchenFrankaFixed):
     def step(self, a):
         obs, rew, done, info = super().step(a)
         if self.subtask_steps is not None and self.real_step:
+            # For seq_subgoals=True. Check if we've solved the current subtask (or we've spent 50
+            # steps on it), and move on to the next subtask if so. `real_step` means we are in the
+            # actual env, not a "fake" env used by trajopt for planning only.
             self.subtask_steps += 1
             info["solved"] = info["solved"] and self.curr_subtask == 3
             if (info["rwd_dict"]["solved"] or self.subtask_steps == 50) and self.curr_subtask < 3:
@@ -471,10 +493,7 @@ class KitchenFrankaContinual(KitchenFrankaFixed):
         return obs, rew, done, info
 
     def get_env_state(self):
-        """
-        Get full state of the environemnt
-        Default implemention provided. Override if env has custom state
-        """
+        """Get full state of the environment. """
         qp = self.sim.data.qpos.ravel().copy()
         qv = self.sim.data.qvel.ravel().copy()
         mocap_pos = self.sim.data.mocap_pos.copy()
@@ -493,10 +512,7 @@ class KitchenFrankaContinual(KitchenFrankaFixed):
                     interact_sid=self.interact_sid)
 
     def set_env_state(self, state_dict):
-        """
-        Set full state of the environemnt
-        Default implemention provided. Override if env has custom state
-        """
+        """Set full state of the environment. """
         qp = state_dict['qpos']
         qv = state_dict['qvel']
         self.set_state(qp, qv)

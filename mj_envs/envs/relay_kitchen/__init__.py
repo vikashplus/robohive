@@ -459,6 +459,10 @@ register(
 )
 
 for maybe_plan in ["", "plan_"]:
+    """The 'plan' version of each env sets `seq_subgoals=True`. This means the env's goal specifies
+      each subtask sequentially, switching automatically to the next subtask once the current one
+      is completed. This is useful for Trajopt planners. See KitchenFrankaContinual documentation.
+    """
     register(
         id=f"kitchen_{maybe_plan}continual-v4",
         entry_point=CONTINUAL_ENTRY_POINT,
