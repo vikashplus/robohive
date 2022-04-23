@@ -108,9 +108,14 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         # self.init_qpos = np.mean(self.sim.model.actuator_ctrlrange, axis=1) if self.normalize_act else self.sim.data.qpos.ravel().copy() # has issues when nq!=nu
         # self.init_qpos[self.sim.model.jnt_dofadr] = np.mean(self.sim.model.jnt_range, axis=1) if self.normalize_act else self.sim.data.qpos.ravel().copy()
         if self.normalize_act:
-            linear_jnt_qposids = self.sim.model.jnt_qposadr[self.sim.model.jnt_type>1] #hinge and slides
-            linear_jnt_ids = self.sim.model.jnt_type>1
-            self.init_qpos[linear_jnt_qposids] = np.mean(self.sim.model.jnt_range[linear_jnt_ids], axis=1)
+            # find all linear+actuated joints. Use mean(jnt_range) as init position
+            actuated_jnt_ids = self.sim.model.actuator_trnid[self.sim.model.actuator_trntype==mujoco_py.generated.const.TRN_JOINT, 0]
+            linear_jnt_ids = np.logical_or(self.sim.model.jnt_type==mujoco_py.generated.const.JNT_SLIDE, self.sim.model.jnt_type==mujoco_py.generated.const.JNT_HINGE)
+            linear_jnt_ids = np.where(linear_jnt_ids==True)[0]
+            linear_actuated_jnt_ids = np.intersect1d(actuated_jnt_ids, linear_jnt_ids)
+            assert np.any(actuated_jnt_ids==linear_actuated_jnt_ids), "Wooho: Great evidence that it was important to check for actuated_jnt_ids as well as linear_actuated_jnt_ids"
+            linear_actuated_jnt_qposids = self.sim.model.jnt_qposadr[linear_actuated_jnt_ids]
+            self.init_qpos[linear_actuated_jnt_qposids] = np.mean(self.sim.model.jnt_range[linear_actuated_jnt_ids], axis=1)
 
         # resolve rewards
         self.rwd_dict = {}
