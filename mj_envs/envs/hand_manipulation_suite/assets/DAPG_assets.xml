@@ -1,5 +1,5 @@
  <mujocoinclude>
- 	<compiler angle="radian" meshdir='../../../sims/Adroit/resources/meshes/' texturedir='../../../sims/Adroit/resources/textures/' />
+ 	<compiler angle="radian" meshdir='../../../sims/Adroit/' texturedir='../../../sims/Adroit/' />
     <option apirate="200" iterations="20" noslip_iterations="20"/>
     <size njmax="500" nconmax="100" nstack="600000" nuser_body="9" nuser_jnt="1" nuser_site="1" nuser_tendon="1" nuser_actuator="16" nuser_sensor="1" />
     <visual>
@@ -33,14 +33,14 @@
     </default>
     <asset>
         <texture type="cube" name="texgeom" builtin="flat" mark="cross" rgb1="0.3 0.6 0.5" rgb2="0.3 0.6 0.5" width="127" height="762" />
-        <texture type="cube" name="wood" file="wood.png" />
-        <texture type="2d" name="wood2d" file="wood.png" />
-        <texture type="cube" name="square" file="square.png" />
-        <texture type="cube" name="foil" file="silverRaw.png" />
-        <texture type="cube" name="woodb" file="woodb.png" />
+        <texture type="cube" name="wood" file="../Adroit/resources/textures/wood.png" />
+        <texture type="2d" name="wood2d" file="../Adroit/resources/textures/wood.png" />
+        <texture type="cube" name="square" file="../Adroit/resources/textures/square.png" />
+        <texture type="cube" name="foil" file="../Adroit/resources/textures/silverRaw.png" />
+        <texture type="cube" name="woodb" file="../Adroit/resources/textures/woodb.png" />
         <texture type="2d" name="groundplane" builtin="checker" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" width="100" height="100" />
-        <texture type="2d" name="marble2d" file="marble.png" />
-        <texture type="cube" name="marblecube" file="marble.png" />
+        <texture type="2d" name="marble2d" file="../Adroit/resources/textures/marble.png" />
+        <texture type="cube" name="marblecube" file="../Adroit/resources/textures/marble.png" />
         <material name="MatColl" specular="1" shininess="0.3" reflectance="0.5" rgba="0.4 0.5 0.6 1" />
         <material name="MatViz" specular="0.75" shininess="0.1" reflectance="0.5" rgba="0.9 0.7 0.5 1" />
         <material name="MatGnd" specular="0.3" shininess="0.3" reflectance="0.3" rgba="0.5 0.55 0.5 1" />
@@ -55,17 +55,19 @@
         <material name="MatWoodR" texture="wood" specular="1" shininess="0.3" rgba="1 0.5 0.5 1" />
         <material name="MatWoodG" texture="wood" specular="1" shininess="0.3" rgba="0.2 1 0.2 1" />
         <material name="MatWoodB" texture="woodb" specular="1" shininess="0.3" />
-        <mesh name="forearm_simple" file="forearm_simple.stl" scale="1 1 1"/>
-        <mesh name="wrist" file="wrist.stl" />
-        <mesh name="palm" file="palm.stl" />
-        <mesh name="lfmetacarpal" file="lfmetacarpal.stl" />
-        <mesh name="knuckle" file="knuckle.stl" />
-        <mesh name="F3" file="F3.stl" />
-        <mesh name="F2" file="F2.stl" />
-        <mesh name="F1" file="F1.stl" />
-        <mesh name="TH3_z" file="TH3_z.stl" />
-        <mesh name="TH2_z" file="TH2_z.stl" />
-        <mesh name="TH1_z" file="TH1_z.stl" />
+        <mesh name="forearm_simple" file="../Adroit/resources/meshes/forearm_simple.stl" scale="1 1 1"/>
+        <mesh name="wrist" file="../Adroit/resources/meshes/wrist.stl" />
+        <mesh name="palm" file="../Adroit/resources/meshes/palm.stl" />
+        <mesh name="lfmetacarpal" file="../Adroit/resources/meshes/lfmetacarpal.stl" />
+        <mesh name="knuckle" file="../Adroit/resources/meshes/knuckle.stl" />
+        <mesh name="F3" file="../Adroit/resources/meshes/F3.stl" />
+        <mesh name="F2" file="../Adroit/resources/meshes/F2.stl" />
+        <mesh name="F1" file="../Adroit/resources/meshes/F1.stl" />
+        <mesh name="TH3_z" file="../Adroit/resources/meshes/TH3_z.stl" />
+        <mesh name="TH2_z" file="../Adroit/resources/meshes/TH2_z.stl" />
+        <mesh name="TH1_z" file="../Adroit/resources/meshes/TH1_z.stl" />
+        <mesh name="robohive" file="../scene_sim/meshes/robohive.stl" scale="1 1 1"/>
+
     </asset>
 
     <contact>
@@ -238,7 +240,7 @@
             <joint joint="THJ0" coef="-0.009" />
         </fixed>
     </tendon>
-   
+
    <actuator>
         <general name="A_WRJ1" joint="WRJ1" ctrlrange="-0.524 0.175" biastype="affine" gainprm="10 0 0" biasprm="0 -10 0" user="1002 0 2001 -0.02 0.02 0 0 0 0 0 0 0 0 0 0 0" />
         <general name="A_WRJ0" joint="WRJ0" ctrlrange="-0.79 0.61" biastype="affine" gainprm="10 0 0" biasprm="0 -10 0" user="1002 0 2001 -0.02 0.02 0 0 0 0 0 0 0 0 0 0 0" />
@@ -287,7 +289,7 @@
         <actuatorfrc actuator="A_THJ2" name="Saf_A_THJ2" />
         <actuatorfrc actuator="A_THJ1" name="Saf_A_THJ1" />
         <actuatorfrc actuator="A_THJ0" name="Saf_A_THJ0" />
-        
+
         <!-- ======= Touch Sensors ======= -->
         <touch name="ST_Tch_fftip"  site="Tch_fftip"/>
         <touch name="ST_Tch_mftip"  site="Tch_mftip"/>
@@ -312,9 +314,9 @@
         <touch name="ST_Tch_rfmetacarpal"   site="Tch_rfmetacarpal"/>
         <touch name="ST_Tch_lfmetacarpal"   site="Tch_lfmetacarpal"/>
         <touch name="ST_Tch_thmetacarpal"   site="Tch_thmetacarpal"/>
-        
+
         <touch name="ST_Tch_palm"   site="Tch_palm"/>
-        
+
         <jointpos joint="WRJ1" name="Sjp_WRJ1" />
         <jointpos joint="WRJ0" name="Sjp_WRJ0" />
         <jointpos joint="FFJ3" name="Sjp_FFJ3" />
