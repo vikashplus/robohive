@@ -11,23 +11,24 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ## Getting Started
 `mj_envs` uses git submodules to resolve dependencies. Please follow steps exactly as below to install correctly.
 
-1. Clone this repo (branch v1) with pre-populated submodule dependencies
+0. We recommend installaition within a conda environement. If you don't have one yet, create one using
+```
+conda create -n robohive python=3
+```
+
+1. Clone this repo on branch `branch_name` with pre-populated submodule dependencies
 
 a. Most users -
 ```
-git clone -c submodule.mj_envs/sims/neuromuscular_sim.update=none --branch v1 --recursive https://github.com/vikashplus/mj_envs.git
+git clone -c submodule.mj_envs/sims/neuromuscular_sim.update=none --branch <branch_name> --recursive https://github.com/vikashplus/mj_envs.git
 ```
 b. myoSuite developers: you must have access to neuromuscular_sim(private repo) -
 ```
-git clone --branch v1 --recursive https://github.com/vikashplus/mj_envs.git
+git clone --branch <branch_name> --recursive https://github.com/vikashplus/mj_envs.git
 ```
-2. Update submodules
+2. Install package using `pip`
 ```
 $ cd mj_envs
-$ git submodule update --remote
-```
-3. Install package using `pip`
-```
 $ pip install -e .
 ```
 **OR**
@@ -35,13 +36,13 @@ Add repo to pythonpath by updating `~/.bashrc` or `~/.bash_profile`
 ```
 export PYTHONPATH="<path/to/mj_envs>:$PYTHONPATH"
 ```
-4. You can visualize the environments with random controls using the below command
+3. You can visualize the environments with random controls using the below command
 ```
-$ python utils/visualize_env.py --env_name hammer-v0
+$ python mj_envs/utils/examine_env.py -e FrankaReachRandom-v0
 ```
 **FAQ:**
 1. If the visualization results in a GLFW error, this is because `mujoco-py` does not see some graphics drivers correctly. This can usually be fixed by explicitly loading the correct drivers before running the python script. See [this page](https://github.com/aravindr93/mjrl/tree/master/setup#known-issues) for details.
-2. If FFmpeg isn't found then run `apt-get install ffmpeg` (`conda install FFmpeg` causes some issues)
+2. If FFmpeg isn't found then run `apt-get install ffmpeg` on linux and `brew install ffmpeg` on osx (`conda install FFmpeg` causes some issues)
 
 
 # modules
