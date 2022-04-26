@@ -151,30 +151,6 @@ register(
     },
 )
 
-# Kitchen (close everything)
-register(
-    id="kitchen_close-v3",
-    entry_point=ENTRY_POINT,
-    max_episode_steps=50,
-    kwargs={
-        "model_path": MODEL_PATH,
-        "config_path": CONFIG_PATH,
-        "obj_goal": {},
-        "obj_init": {
-            "knob1_joint": -1.57,
-            "knob2_joint": -1.57,
-            "knob3_joint": -1.57,
-            "knob4_joint": -1.57,
-            "lightswitch_joint": -0.7,
-            "slidedoor_joint": 0.44,
-            "micro0joint": -1.25,
-            "rightdoorhinge": 1.57,
-            "leftdoorhinge": -1.25,
-        },
-        "obs_keys_wt": obs_keys_wt,
-    },
-)
-
 # Microwave door
 register(
     id="kitchen_micro_open-v3",
