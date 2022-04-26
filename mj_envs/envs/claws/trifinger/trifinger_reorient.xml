@@ -1,0 +1,51 @@
+<mujoco model="Trifinger Reorient">
+<!-- =================================================
+    Copyright 2020 Vikash Kumar
+    Model   :: Trifinger Reorient (MuJoCoV2.0)
+    Author  :: Vikash Kumar (vikashplus@gmail.com)
+    source  :: https://github.com/vikashplus/mj_envs
+    License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+====================================================== -->
+    <compiler angle="radian" meshdir="../../../sims/trifinger_sim" texturedir="../../../sims/trifinger_sim"/>
+
+    <size njmax='1000' nconmax='1000'/>
+
+    <include file="../../../sims/scene_sim/topfloor_scene.xml"/>
+    <include file="../../../sims/trifinger_sim/trifinger_assets.xml"/>
+    <include file="../../../sims/furniture_sim/ventionTable/ventionTable_asset.xml"/>
+    <include file="../../../sims/furniture_sim/bin/bin_asset.xml"/>
+
+
+    <worldbody>
+
+        <camera name='center_cam' pos='0 0 1.75' euler="0 0 3.14"/>
+
+        <!-- Robot -->
+        <body pos='0 0 .8'>
+            <include file="../../../sims/trifinger_sim/trifinger_body.xml"/>
+        </body>
+
+        <!-- tasks details added here via include-->
+
+        <!-- Tables -->
+        <body name="ventiontable" pos='0 0 0'>
+            <include file="../../../sims/furniture_sim/ventionTable/ventionTable_body.xml"/>
+        </body>
+
+        <!-- Bin -->
+        <body name="bin" pos='0 0 .8'>
+            <include file="../../../sims/furniture_sim/bin/busbin1_body.xml"/>
+        </body>
+
+        <body name="object" pos="0 0 0.9">
+            <geom type="box" size="0.025 0.025 0.025" contype="0" conaffinity="0" rgba=".4 .6 .8 1" />
+            <geom type="box" size="0.025 0.025 0.025" mass=".200" group="4"/>
+            <site name='object' type="box" size="0.025 0.025 0.025" group="4"/>
+            <freejoint/>
+        </body>
+
+        <site name='target' type='box' size="0.025 0.025 0.025" pos=".01 .03 0.95" euler=".2 .3 .1" group='1' rgba='.1 .8 .2 .4'/>
+
+    </worldbody>
+
+</mujoco>

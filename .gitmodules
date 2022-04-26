@@ -30,3 +30,6 @@
 [submodule "mj_envs/sims/object_sim"]
 	path = mj_envs/sims/object_sim
 	url = https://github.com/vikashplus/object_sim.git
+[submodule "mj_envs/sims/trifinger_sim"]
+	path = mj_envs/sims/trifinger_sim
+	url = https://github.com/vikashplus/trifinger_sim.git
