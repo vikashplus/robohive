@@ -18,7 +18,11 @@ from mj_envs.robot.robot import Robot
 from os import path
 import skvideo.io
 
-from r3m import load_r3m
+import warnings
+try:
+    from r3m import load_r3m
+except ModuleNotFoundError:
+    warnings.warn("r3m module not found. The module is used by some encoders.", UserWarning)
 
 # TODO
 # remove rwd_mode
