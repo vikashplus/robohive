@@ -47,7 +47,7 @@ class PushBaseV0(env_base.MujocoEnv):
                object_site_name,
                target_site_name,
                target_xyz_range,
-               frame_skip=4,
+               frame_skip=40,
                reward_mode="dense",
                obs_keys=DEFAULT_OBS_KEYS,
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
