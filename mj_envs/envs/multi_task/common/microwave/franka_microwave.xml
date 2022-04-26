@@ -9,17 +9,16 @@
 
     <size njmax='1000' nconmax='1000'/>
 
-    <include file="../../../sims/scene_sim/topfloor_scene.xml"/>
-    <include file="../../../sims/furniture_sim/simpleTable/simpleTable_asset.xml"/>
-    <include file="../../../sims/furniture_sim/ventionTable/ventionTable_asset.xml"/>
-    <include file="../../../sims/franka_sim/assets/assets.xml"/>
-    <include file="../../../sims/franka_sim/assets/actuator0.xml"/>
-    <include file="../../../sims/franka_sim/assets/gripper_actuator0.xml"/>
-    <include file="../../../sims/franka_sim/assets/gripper_assets.xml"/>
-    <include file="../../../sims/furniture_sim/slidecabinet/slidecabinet_asset.xml"/>
+    <include file="../../../../sims/scene_sim/topfloor_scene.xml"/>
+    <include file="../../../../sims/furniture_sim/simpleTable/simpleTable_asset.xml"/>
+    <include file="../../../../sims/furniture_sim/ventionTable/ventionTable_asset.xml"/>
+    <include file="../../../../sims/franka_sim/assets/assets.xml"/>
+    <include file="../../../../sims/franka_sim/assets/actuator0.xml"/>
+    <include file="../../../../sims/franka_sim/assets/gripper_actuator0.xml"/>
+    <include file="../../../../sims/franka_sim/assets/gripper_assets.xml"/>
+    <include file="../../../../sims/furniture_sim/microwave/microwave_asset.xml"/>
 
-
-    <compiler inertiafromgeom="auto" inertiagrouprange="3 4" angle="radian" meshdir="../../../sims/franka_sim" texturedir="../../../sims/franka_sim"/>
+    <compiler inertiafromgeom="auto" inertiagrouprange="3 4" angle="radian" meshdir="../../../../sims/franka_sim" texturedir="../../../../sims/franka_sim"/>
 
     <worldbody>
 
@@ -30,20 +29,20 @@
 
         <!-- Franka Arm-->
         <body pos='0 0 .823' euler='0 0 1.57'>
-            <include file="../../../sims/franka_sim/assets/chain0.xml"/>
+            <include file="../../../../sims/franka_sim/assets/chain0.xml"/>
         </body>
 
         <!-- Tables -->
         <body name="ventiontable" pos='0 -.3 0'>
-            <include file="../../../sims/furniture_sim/ventionTable/ventionTable_body.xml"/>
+            <include file="../../../../sims/furniture_sim/ventionTable/ventionTable_body.xml"/>
         </body>
         <body name="scenetable" pos='0 0.49 0.065'>
-            <include file="../../../sims/furniture_sim/simpleTable/simpleMarbleTable_body.xml"/>
+            <include file="../../../../sims/furniture_sim/simpleTable/simpleMarbleTable_body.xml"/>
         </body>
 
         <!-- tasks details added here via include-->
-        <body name="slidecabinet" pos='0.6 0.5 1.03' euler="0 0 -1.2">
-            <include file="../../../sims/furniture_sim/slidecabinet/slidecabinet_body.xml"/>
+        <body name="microwave" pos='0.6 0.5 0.825' euler="0 0 -1.57">
+            <include file="../../../../sims/furniture_sim/microwave/microwave_body0.xml"/>
         </body>
 
     </worldbody>

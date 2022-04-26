@@ -10,7 +10,7 @@ import gym
 import numpy as np
 from mj_envs.utils.quat_math import euler2quat
 
-from mj_envs.envs.relay_kitchen.multi_task_base_v1 import KitchenBase
+from mj_envs.envs.multi_task.multi_task_base_v1 import KitchenBase
 
 class FrankaAppliance(KitchenBase):
 

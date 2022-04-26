@@ -2,13 +2,13 @@
 
     <size njmax="1000" nconmax="1000"/>
 
-    <include file="../../../sims/scene_sim/topfloor_scene.xml"/>
-    <include file="../../../sims/franka_sim/assets/assets.xml"/>
-    <include file="../../../sims/franka_sim/assets/gripper_assets.xml"/>
-    <include file="../../../sims/franka_sim/assets/actuator0.xml"/>
-    <include file="../../../sims/franka_sim/assets/gripper_actuator0.xml"/>
-    <include file="../../../sims/furniture_sim/studyTable/studyTable_asset.xml"/>
-    <include file="../../../sims/furniture_sim/lightButtons/lightButtons_assets.xml"/>
+    <include file="../../../../sims/scene_sim/topfloor_scene.xml"/>
+    <include file="../../../../sims/franka_sim/assets/assets.xml"/>
+    <include file="../../../../sims/franka_sim/assets/gripper_assets.xml"/>
+    <include file="../../../../sims/franka_sim/assets/actuator0.xml"/>
+    <include file="../../../../sims/franka_sim/assets/gripper_actuator0.xml"/>
+    <include file="../../../../sims/furniture_sim/studyTable/studyTable_asset.xml"/>
+    <include file="../../../../sims/furniture_sim/lightButtons/lightButtons_assets.xml"/>
 
     <visual>
         <global offwidth="2560" offheight="1920" />
@@ -17,8 +17,8 @@
     </visual>
 
     <compiler inertiafromgeom='auto' inertiagrouprange='3 5' angle="radian"
-              meshdir="../../../sims/franka_sim"
-              texturedir="../../../sims/franka_sim"/>
+              meshdir="../../../../sims/franka_sim"
+              texturedir="../../../../sims/franka_sim"/>
 
     <equality>
         <weld body1="vive_controller" body2="world" solref="0.02 1" solimp=".7 .95 0.050"/>
@@ -39,23 +39,23 @@
         <!-- Robot -->
         <body pos="0 0 .775" euler="0 0 1.57">
             <geom type="cylinder" size=".120 .4" pos="-.04 0 -.4"/>
-            <include file="../../../sims/franka_sim/assets/chain0.xml"/>
+            <include file="../../../../sims/franka_sim/assets/chain0.xml"/>
         </body>
 
         <body name="desk" pos="-.375 -.4 0">
             <!-- Study Table -->
             <body pos="0 0.85 0">
-                <include file="../../../sims/furniture_sim/studyTable/studyTable_body.xml"/>
+                <include file="../../../../sims/furniture_sim/studyTable/studyTable_body.xml"/>
             </body>
 
             <!-- Buttons -->
             <body pos="-.25 0.625 .76">
-                <include file="../../../sims/furniture_sim/lightButtons/buttons_body.xml"/>
+                <include file="../../../../sims/furniture_sim/lightButtons/buttons_body.xml"/>
             </body>
 
             <!-- Lights -->
             <body pos="-.25 0.85 1.1">
-                <include file="../../../sims/furniture_sim/lightButtons/lights_body.xml"/>
+                <include file="../../../../sims/furniture_sim/lightButtons/lights_body.xml"/>
             </body>
         </body>
 
