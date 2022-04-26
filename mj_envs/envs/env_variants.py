@@ -40,20 +40,20 @@ def register_env_variant(env_id, variants, variant_id=None, silent=False):
         del variants['max_episode_steps']
 
     # merge specs._kwargs with variants
-    env_variant_specs._kwargs, variants_update_keyval_str = update_dict(env_variant_specs._kwargs, variants)
+    env_variant_specs._kwargs, variants_update_keyval_str = update_dict(env_variant_specs.kwargs, variants)
     env_variant_id += variants_update_keyval_str
 
     # finalize name and register env
-    env_variant_specs.id = env_variant_id+env_variant_specs.id[-3:] if variant_id is None else variant_id
+    env_variant_specs_id = env_variant_id+env_variant_specs.id[-3:] if variant_id is None else variant_id
     register(
-        id=env_variant_specs.id,
-        entry_point=env_variant_specs._entry_point,
+        id=env_variant_specs_id,
+        entry_point=env_variant_specs.entry_point,
         max_episode_steps=env_variant_specs.max_episode_steps,
         kwargs=env_variant_specs._kwargs
     )
     if not silent:
-        print("Registered a new env-variant:", env_variant_specs.id)
-    return env_variant_specs.id
+        print("Registered a new env-variant:", env_variant_specs_id)
+    return env_variant_specs_id
 
 
 # Example usage
