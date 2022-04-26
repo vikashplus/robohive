@@ -8,4 +8,5 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 import os
 import mj_envs.envs.multi_task
 import mj_envs.envs.multi_task.substeps1
-# import mj_envs.envs.multi_task.substeps2 # noqa
+import mj_envs.envs.multi_task.substeps2
+import mj_envs.envs.multi_task.substeps9

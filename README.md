@@ -24,7 +24,7 @@ git clone -c submodule.mj_envs/sims/neuromuscular_sim.update=none --branch <bran
 ```
 b. myoSuite developers: you must have access to neuromuscular_sim(private repo) -
 ```
-git clone --branch v1 --recursive https://github.com/vikashplus/mj_envs.git
+git clone --branch <branch_name> --recursive https://github.com/vikashplus/mj_envs.git
 ```
 2. Install package using `pip`
 ```
