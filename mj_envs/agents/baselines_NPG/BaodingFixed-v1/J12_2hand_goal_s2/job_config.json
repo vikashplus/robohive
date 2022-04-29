@@ -1,0 +1,28 @@
+job_name: J12_2hand_goal_s2
+env: BaodingFixed-v1
+algorithm: NPG
+seed: 2
+sample_mode: trajectories
+rl_num_samples: 0
+rl_num_traj: 120
+rl_num_iter: 10000
+num_cpu: 24
+save_freq: 500
+eval_rollouts: 25
+exp_notes: 'J1c:velbnd3, J2: Original model.mjb, J3b: increment goal in 8ths. J4:
+  Baoding with new env and 2ndHand model, J5> wrist reward bugfix, J6> lower wrist
+  penalty, J7> activation penalty + slowing down trajectories, J8> slowing targets,
+  lowering target radius, init target has a headstart. J9> Making traj faster, Lowering
+  proximity threshold, Bumping act_reg t0 1, Action remapped to sigmoid, J10> Shifted
+  center pos, more wrist penalty, traj a bit faster, J11:> xyz dist and obs,lower
+  act_pen, wtd_wrist_pen, J12: H200, wtd_wrst, center forward.'
+policy_size: (64, 64)
+init_log_std: -0.5
+vf_hidden_size: (128, 128)
+vf_batch_size: 64
+vf_epochs: 2
+vf_learn_rate: 0.001
+rl_step_size: 0.05
+rl_gamma: 0.995
+rl_gae: 0.97
+alg_hyper_params: {}

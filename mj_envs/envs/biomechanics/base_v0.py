@@ -56,6 +56,8 @@ class BaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         ObsVecDict.__init__(self)
         self.obs_dict = {}
         self.rwd_dict = {}
+        # self.action_space = spaces.Box(low, high, dtype=np.float32)
+
         mujoco_env.MujocoEnv.__init__(self, sim=sim, frame_skip=frame_skip)
         if self.normalize_act:
             self.action_space.high = np.ones_like(sim.model.actuator_ctrlrange[:,1])
@@ -64,7 +66,11 @@ class BaseV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
     # step the simulation forward
     def step(self, a):
         # apply action and step
-        a = np.clip(a, a_min=self.action_space.low, a_max=self.action_space.high)
+        try:
+            a = np.clip(a, a_min=self.action_space.low, a_max=self.action_space.high)
+        except:
+            print("skipping clip for the first timestep")
+
         if self.normalize_act:
             a = 1.0/(1.0+np.exp(-5.0*(a-0.5)))
         self.do_simulation(a, self.frame_skip)
