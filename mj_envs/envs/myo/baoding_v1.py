@@ -70,7 +70,7 @@ class BaodingFixedEnvV1(BaseV0):
 
         # user parameters
         self.which_task = Task(WHICH_TASK)
-        self.drop_height_threshold = 0.85 # 0.06
+        self.drop_height_threshold = 1.25 # 0.06
         self.proximity_threshold = 0.015
         self.n_shifts_per_period = n_shifts_per_period
 

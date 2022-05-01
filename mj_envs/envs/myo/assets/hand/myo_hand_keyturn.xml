@@ -1,6 +1,7 @@
 <mujoco model="2nd hand model - Index Thumb Model for turning key task">
 
-    <include file="../../../../sims/neuromuscular_sim/hand/myo_hand_v0.1.6.xml"/>
+    <include file="../../../../sims/neuromuscular_sim/hand/assets/myo_hand_assets.xml"/>
+    <include file="../../../../sims/neuromuscular_sim/hand/assets/myo_hand_body.xml"/>
     <include file="../../../../sims/neuromuscular_sim/scene/myosuite_scene.xml"/>
     <compiler meshdir='../../../../sims/neuromuscular_sim/' texturedir='../../../../sims/neuromuscular_sim/'/>
 
@@ -12,7 +13,7 @@
     </default>
 
     <worldbody>
-        <body name="key" pos="-.15 -.23 1.025" childclass="key" euler="0 0 2.2">
+        <body name="key" pos="-.15 -.55 1.425" childclass="key" euler="0 0 2.2">
             <geom type="ellipsoid" size=".030 .030 .004" name="keyhead"/>
             <site type="sphere" size=".03" rgba=".5 .7 .8 .3"/>
             <geom type="capsule" size="0.005 0.070" pos="-.045 0 0" euler="0 1.57 0"/>

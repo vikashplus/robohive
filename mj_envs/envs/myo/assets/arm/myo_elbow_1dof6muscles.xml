@@ -1,7 +1,10 @@
 <mujoco model="Elbow joint with six muscle">
 
-    <compiler meshdir='../../../../sims/neuromuscular_sim/elbow/'/>
-    <include file="../../../../sims/neuromuscular_sim/elbow/myo_elbow_1dof6muscles.xml"/>
+    <include file="../../../../sims/neuromuscular_sim/elbow/assets/myo_elbow_assets.xml"/>
+    <include file="../../../../sims/neuromuscular_sim/elbow/assets/myo_elbow_1dof6muscles_body.xml"/>
+    <include file="../../../../sims/neuromuscular_sim/scene/myosuite_scene.xml"/>
+    <compiler meshdir='../../../../sims/neuromuscular_sim/' texturedir='../../../../sims/neuromuscular_sim/'/>
+
 
     <worldbody>
         <site name="wrist_target" pos="0.001 0.001 0.001" size=".02" rgba="0 1 0 .2"></site>

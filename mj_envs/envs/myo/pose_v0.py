@@ -157,8 +157,6 @@ class PoseEnvV0(BaseV0):
             self.sim.model.geom_size[gid][0] = 0.01 + 2.5*weight/100
             # self.sim_obsd.model.geom_size[gid][0] = weight/10
 
-
-
         # update target
         if self.target_type == "generate":
             # use target_jnt_range to generate targets

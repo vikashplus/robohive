@@ -45,6 +45,7 @@ class ObjHoldFixedEnvV0(BaseV0):
         ):
         self.object_sid = self.sim.model.site_name2id("object")
         self.goal_sid = self.sim.model.site_name2id("goal")
+        self.object_init_pos = self.sim.data.site_xpos[self.object_sid].copy()
 
         super()._setup(obs_keys=obs_keys,
                     weighted_reward_keys=weighted_reward_keys,
@@ -102,7 +103,7 @@ class ObjHoldRandomEnvV0(ObjHoldFixedEnvV0):
 
     def reset(self):
         # randomize target pos
-        self.sim.model.site_pos[self.goal_sid] = np.array([-.235, -.19, 1.050]) + self.np_random.uniform(high=np.array([0.030, 0.030, 0.030]), low=np.array([-.030, -.030, -.030]))
+        self.sim.model.site_pos[self.goal_sid] = self.object_init_pos + self.np_random.uniform(high=np.array([0.030, 0.030, 0.030]), low=np.array([-.030, -.030, -.030]))
         # randomize object
         size = self.np_random.uniform(high=np.array([0.030, 0.030, 0.030]), low=np.array([.020, .020, .020]))
         self.sim.model.geom_size[-1] = size

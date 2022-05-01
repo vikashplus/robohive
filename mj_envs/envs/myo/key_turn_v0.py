@@ -52,6 +52,7 @@ class KeyTurnEnvV0(BaseV0):
         self.IF_sid = self.sim.model.site_name2id("IFtip")
         self.TH_sid = self.sim.model.site_name2id("THtip")
         self.key_init_range = key_init_range
+        self.key_init_pos = self.sim.data.site_xpos[self.keyhead_sid].copy()
 
         super()._setup(obs_keys=obs_keys,
                     weighted_reward_keys=weighted_reward_keys,
@@ -114,6 +115,6 @@ class KeyTurnEnvV0(BaseV0):
         qvel = self.init_qvel.copy() if reset_qvel is None else reset_qvel
         qpos[-1] = self.np_random.uniform(low=self.key_init_range[0], high=self.key_init_range[1])
         if self.key_init_range[0]!=self.key_init_range[1]: # randomEnv
-            self.sim.model.body_pos[-1] = np.array([-.15, -.23, 1.025])+self.np_random.uniform(low=np.array([-0.01, -0.01, -.01]), high=np.array([0.01, 0.01, 0.01]))
+            self.sim.model.body_pos[-1] = self.key_init_pos+self.np_random.uniform(low=np.array([-0.01, -0.01, -.01]), high=np.array([0.01, 0.01, 0.01]))
         self.robot.reset(qpos, qvel)
         return self.get_obs()

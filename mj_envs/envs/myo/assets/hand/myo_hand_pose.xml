@@ -1,11 +1,13 @@
 <mujoco model="2nd hand model for object grasps">
 
-    <include file="../../../../sims/neuromuscular_sim/hand/myo_hand_v0.1.6.xml"/>
+    <include file="../../../../sims/neuromuscular_sim/hand/assets/myo_hand_assets.xml"/>
+    <include file="../../../../sims/neuromuscular_sim/hand/assets/myo_hand_body.xml"/>
     <include file="../../../../sims/neuromuscular_sim/scene/myosuite_scene.xml"/>
     <compiler meshdir='../../../../sims/neuromuscular_sim/' texturedir='../../../../sims/neuromuscular_sim/'/>
 
 
     <worldbody>
+
         <site name="THtip_target" pos="0 0 0.002" size="0.005" rgba="0.8 0 0 .8"/>
         <site name="IFtip_target" pos="0 0 0.002" size="0.005" rgba="0 0.8 0 .8"/>
         <site name="MFtip_target" pos="0 0 0.002" size="0.005" rgba="0 0 0.8 .8"/>

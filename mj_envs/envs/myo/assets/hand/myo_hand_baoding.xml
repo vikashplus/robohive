@@ -1,6 +1,7 @@
 <mujoco model="2nd hand model for baoding balls">
 
-    <include file="../../../../sims/neuromuscular_sim/hand/myo_hand_v0.1.6.xml"/>
+    <include file="../../../../sims/neuromuscular_sim/hand/assets/myo_hand_assets.xml"/>
+    <include file="../../../../sims/neuromuscular_sim/hand/assets/myo_hand_body.xml"/>
     <include file="../../../../sims/neuromuscular_sim/scene/myosuite_scene.xml"/>
     <compiler meshdir='../../../../sims/neuromuscular_sim/' texturedir='../../../../sims/neuromuscular_sim/'/>
 
@@ -12,12 +13,12 @@
     </asset>
 
     <worldbody>
-        <body name="ball1" pos="-.227 -.191 1.052">
+        <body name="ball1" pos="-.227 -.511 1.452">
             <freejoint/>
             <geom name="ball1" material="MatBallY" type="sphere" size="0.022" group='0' mass='0.043' condim='4'/>
             <site name="ball1_site"  type="sphere" size="0.005" material="MatBallY" group="0"/>
         </body>
-        <body name="ball2" pos="-.256 -.232 1.042">
+        <body name="ball2" pos="-.256 -.552 1.442">
             <freejoint/>
             <geom name="ball2" material="MatBallP" type="sphere" size="0.022" group='0' mass='0.043' condim='4'/>
             <site name="ball2_site"  type="sphere" size="0.005" material="MatBallP" group="0"/>
