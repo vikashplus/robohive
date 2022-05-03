@@ -22,7 +22,6 @@ def main(sim_path, qpos, ctrl, horizon):
     model = load_model_from_path(sim_path)
     sim = MjSim(model)
     viewer = MjViewer(sim)
-    sim_state = sim.get_state()
 
     while sim.data.time<horizon:
         if qpos is not None:
