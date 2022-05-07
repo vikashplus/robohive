@@ -6,6 +6,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= """
 
 from gym.envs.registration import register
+from mj_envs.envs.env_variants import register_env_variant
 import os
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -41,6 +42,24 @@ register(
         'target_xyz_range': {'high':[0.3, .5, 1.2], 'low':[-.3, .1, .8]}
     }
 )
+
+# Reach to random target using visual inputs
+def register_visual_envs(encoder_type):
+    register_env_variant(
+        env_id='FrankaReachRandom-v0',
+        variant_id='FrankaReachRandom_v{}-v0'.format(encoder_type),
+        variants={'obs_keys':
+                    ['qp', 'qv',
+                    "rgb:left_cam:224x224:{}".format(encoder_type),
+                    "rgb:right_cam:224x224:{}".format(encoder_type),
+                    "rgb:center_cam:224x224:{}".format(encoder_type)]
+        },
+        silent=True
+    )
+for enc in ["r3m18", "r3m34", "r3m50", "flat"]:
+    register_visual_envs(enc)
+
+
 
 # FRANKA PUSH =======================================================================
 from mj_envs.envs.arms.push_base_v0 import PushBaseV0
