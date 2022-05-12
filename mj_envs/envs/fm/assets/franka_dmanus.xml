@@ -14,7 +14,7 @@
     <include file="../../../sims/furniture_sim/ventionTable/ventionTable_asset.xml"/>
     <include file="../../../sims/franka_sim/assets/assets.xml"/>
     <include file="../../../sims/franka_sim/assets/actuator0.xml"/>
-    <include file="../../../sims/dmanus_sim/assets/dmanus_assets.xml"/>
+    <include file="../../../sims/robel_sim/dmanus/assets/dmanus_dependencies.xml"/>
 
     <compiler inertiafromgeom="auto" inertiagrouprange="3 4" angle="radian" meshdir="../../../sims/franka_sim" texturedir="../../../sims/franka_sim"/>
 
@@ -39,8 +39,8 @@
         </body>
 
         <!-- D'Manus Hand-->
-        <body name="DManus_mount" pos="0 0 .12" euler="0 0 -.785398">
-            <include file="../../../sims/dmanus_sim/assets/dmanus_chain.xml"/>
+        <body name="DManus_mount" pos="0 0 .11" euler="0 0 -2.356">
+            <include file="../../../sims/robel_sim/dmanus/assets/dmanus_chain.xml"/>
         </body>
 
     </worldbody>
