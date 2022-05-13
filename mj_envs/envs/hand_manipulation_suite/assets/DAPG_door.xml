@@ -84,6 +84,7 @@
                 </body>
             </body>
         </body>
+        <geom type="mesh" mesh="robohive" conaffinity="0" contype="0" rgba=".5 .5 .5 1" pos="0 0.075 -1"/>
 
     </worldbody>
 

@@ -105,7 +105,7 @@
             <geom name="head" size="0.02 0.04" pos="-0.24 0 0" type="cylinder" condim="4" rgba="0.4 0.4 0.4 1" />
             <site name="tool" pos="-0.2 0 -0.04" size="0.01" group="4" rgba="0.4 0.8 0.4 1" />
         </body>
-
+        <geom type="mesh" mesh="robohive" conaffinity="0" contype="0" rgba=".5 .5 .5 1" pos="0 0.075 -1"/>
     </worldbody>
 
 
