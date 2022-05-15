@@ -14,7 +14,6 @@ CURR_DIR = os.path.dirname(os.path.abspath(__file__))
 print("RS:> Registering Appliances Envs")
 
 from mj_envs.envs.multi_task.common.franka_appliance_v1 import FrankaAppliance
-obs_keys_wt = {"robot_jnt": 1.0, "objs_jnt": 1.0, "obj_goal": 1.0, "end_effector": 1.0, "microhandle_site_err":1}
 # MICROWAVE
 register(
     id="franka_micro_open-v3",
@@ -62,7 +61,6 @@ register(
 )
 
 # SLIDE-CABINET
-obs_keys_wt = {"robot_jnt": 1.0, "objs_jnt": 1.0, "obj_goal": 1.0, "end_effector": 1.0, "slide_site_err":1}
 register(
     id="franka_slide_open-v3",
     entry_point="mj_envs.envs.multi_task.common.franka_appliance_v1:FrankaAppliance",
