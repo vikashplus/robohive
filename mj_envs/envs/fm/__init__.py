@@ -23,7 +23,7 @@ register(
     kwargs={
             'model_path': '/assets/franka_dmanus.xml',
             'config_path': curr_dir+'/assets/franka_dmanus.config',
-            'target_pose': np.array([0, 0, 0, -1.57, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1]),
+            'target_pose': np.array([0, 0, 0, -1.57, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1]),
         }
 )
 
