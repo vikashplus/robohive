@@ -88,8 +88,12 @@ class BaseV0(env_base.MujocoEnv):
                 else:
                     self.f_load[mus_idx].append(self.sim.data.actuator_moment[mus_idx,1].copy())
 
-                f_int = np.sum(self.f_load[mus_idx]-np.max(self.f_load[mus_idx],0),0)/self.MVC_rest[mus_idx]
-                f_cem = self.MVC_rest[mus_idx]*np.exp(self.k_fatigue*f_int)
+                if self.MVC_rest[mus_idx] != 0:
+                    f_int = np.sum(self.f_load[mus_idx]-np.max(self.f_load[mus_idx],0),0)/self.MVC_rest[mus_idx]
+                    f_cem = self.MVC_rest[mus_idx]*np.exp(self.k_fatigue*f_int)
+                else:
+                    f_cem = 0
+                    
                 self.sim.model.actuator_gainprm[mus_idx,2] = f_cem
                 self.sim_obsd.model.actuator_gainprm[mus_idx,2] = f_cem
         elif self.muscle_condition == 'reafferentation':
