@@ -308,9 +308,9 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
         qp = self.sim.data.qpos.ravel().copy()
         qv = self.sim.data.qvel.ravel().copy()
-        mocap_pos = self.sim.data.mocap_pos.copy()
-        mocap_quat = self.sim.data.mocap_quat.copy()
-        site_pos = self.sim.model.site_pos[:].copy()
+        mocap_pos = self.sim.data.mocap_pos.copy() if self.sim.model.nmocap>0 else None
+        mocap_quat = self.sim.data.mocap_quat.copy() if self.sim.model.nmocap>0 else None
+        site_pos = self.sim.model.site_pos[:].copy() if self.sim.model.nsite>0 else None
         body_pos = self.sim.model.body_pos[:].copy()
         env_timestep = self.env_timestep
         return dict(qpos=qp,
