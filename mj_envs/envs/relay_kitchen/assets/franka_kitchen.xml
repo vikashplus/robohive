@@ -22,7 +22,7 @@
     <include file="../../../sims/furniture_sim/kettle/kettle_asset.xml"/>
 
     <asset>
-        <mesh file="../robohive.stl" scale="1.5 1.5 2"/>
+        <mesh name="logo" file="../robohive.stl" scale="1.5 1.5 2"/>
     </asset>
 
     <visual>
@@ -93,7 +93,7 @@
             <joint class="kettle" name="kettle0:Rz" axis="0 0 1" type="hinge" range="-3.14 3.14"/>
             <include file="../../../sims/furniture_sim/kettle/kettle_body0.xml"/>
         </body>
-        <geom type="mesh" mesh="robohive" conaffinity="0" contype="0" rgba=".3 .3 .3 1" pos=".35 -.6 0.005"/>
+        <geom type="mesh" mesh="logo" conaffinity="0" contype="0" rgba=".3 .3 .3 1" pos=".35 -.6 0.005"/>
     </worldbody>
 
     <keyframe>
