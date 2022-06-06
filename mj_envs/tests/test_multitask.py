@@ -5,7 +5,7 @@ class TestKitchen(TestEnvs):
     def test_kitchen(self):
         env_names = [
         'kitchen-v3',
-        'kitchen_close-v3',
+        #substeps1
         'kitchen_micro_open-v3',
         'kitchen_micro_close-v3',
         'kitchen_rdoor_open-v3',
@@ -26,6 +26,10 @@ class TestKitchen(TestEnvs):
         'kitchen_knob1_off-v3',
         'franka_micro_open-v3','franka_micro_close-v3','franka_micro_random-v3',
         'franka_slide_open-v3','franka_slide_close-v3','franka_slide_random-v3',
+        #substeps2
+        'kitchen_micro_slide_close-v3',''
+        #substeps9
+        'kitchen_openall-v3', 'kitchen_closeall-v3',
         ]
         self.check_envs('Kitchen', env_names, lite=False)
 

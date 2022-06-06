@@ -163,6 +163,15 @@ register(
         "interact_site": "microhandle_site",
     },
 )
+
+from mj_envs.envs.env_variants import register_env_variant
+register_env_variant(
+            env_id='kitchen_micro_open-v3',
+            variants={'obs_keys_wt':obs_keys_wt},
+            variant_id='visual_kitchen_micro_open-v3',
+            silent=False
+        )
+
 register(
     id="kitchen_micro_close-v3",
     entry_point=ENTRY_POINT,
@@ -398,127 +407,5 @@ register(
         "obj_goal": {"knob1_joint": 0},
         "obs_keys_wt": obs_keys_wt,
         "interact_site": "knob1_site",
-    },
-)
-
-
-
-# (DEPRICATED) Kitchen-V2  ============================================================================
-register(
-    id="kitchen-v2",
-    entry_point=ENTRY_POINT,
-    max_episode_steps=280,
-    kwargs={
-        "model_path": MODEL_PATH,
-        "config_path": CONFIG_PATH,
-        "obj_goal": {},
-    },
-)
-
-# Open Microwave door
-register(
-    id="kitchen_micro_open-v2",
-    entry_point=ENTRY_POINT,
-    max_episode_steps=50,
-    kwargs={
-        "model_path": MODEL_PATH,
-        "config_path": CONFIG_PATH,
-        "obj_goal": {"micro0joint": -1.25},
-    },
-)
-
-# Open right hinge cabinet
-register(
-    id="kitchen_rdoor_open-v2",
-    entry_point=ENTRY_POINT,
-    max_episode_steps=50,
-    kwargs={
-        "model_path": MODEL_PATH,
-        "config_path": CONFIG_PATH,
-        "obj_goal": {"rightdoorhinge": 1.57},
-    },
-)
-
-# Open left hinge cabinet
-register(
-    id="kitchen_ldoor_open-v2",
-    entry_point=ENTRY_POINT,
-    max_episode_steps=50,
-    kwargs={
-        "model_path": MODEL_PATH,
-        "config_path": CONFIG_PATH,
-        "obj_goal": {"leftdoorhinge": -1.25},
-    },
-)
-
-# Open slide cabinet
-register(
-    id="kitchen_sdoor_open-v2",
-    entry_point=ENTRY_POINT,
-    max_episode_steps=50,
-    kwargs={
-        "model_path": MODEL_PATH,
-        "config_path": CONFIG_PATH,
-        "obj_goal": {"slidedoor_joint": 0.44},
-    },
-)
-
-# Lights on (left)
-register(
-    id="kitchen_light_on-v2",
-    entry_point=ENTRY_POINT,
-    max_episode_steps=50,
-    kwargs={
-        "model_path": MODEL_PATH,
-        "config_path": CONFIG_PATH,
-        "obj_goal": {"lightswitch_joint": -0.7},
-    },
-)
-
-# Knob4 on
-register(
-    id="kitchen_knob4_on-v2",
-    entry_point=ENTRY_POINT,
-    max_episode_steps=50,
-    kwargs={
-        "model_path": MODEL_PATH,
-        "config_path": CONFIG_PATH,
-        "obj_goal": {"knob4_joint": -1.57},
-    },
-)
-
-# Knob3 on
-register(
-    id="kitchen_knob3_on-v2",
-    entry_point=ENTRY_POINT,
-    max_episode_steps=50,
-    kwargs={
-        "model_path": MODEL_PATH,
-        "config_path": CONFIG_PATH,
-        "obj_goal": {"knob3_joint": -1.57},
-    },
-)
-
-# Knob2 on
-register(
-    id="kitchen_knob2_on-v2",
-    entry_point=ENTRY_POINT,
-    max_episode_steps=50,
-    kwargs={
-        "model_path": MODEL_PATH,
-        "config_path": CONFIG_PATH,
-        "obj_goal": {"knob2_joint": -1.57},
-    },
-)
-
-# Knob1 on
-register(
-    id="kitchen_knob1_on-v2",
-    entry_point=ENTRY_POINT,
-    max_episode_steps=50,
-    kwargs={
-        "model_path": MODEL_PATH,
-        "config_path": CONFIG_PATH,
-        "obj_goal": {"knob1_joint": -1.57},
     },
 )
