@@ -13,7 +13,10 @@ from flatten_dict import flatten, unflatten
 
 
 # Update base_dict using update_dict
-def update_dict(base_dict, update_dict):
+def update_dict(base_dict, update_dict, override=None):
+    if override:
+        base_dict = {key: item for key, item in base_dict.items() if key not in override}
+
     base_dict_flat = flatten(base_dict, reducer='dot')
     update_dict_flat = flatten(update_dict, reducer='dot')
     update_keyval_str = ""
@@ -25,7 +28,7 @@ def update_dict(base_dict, update_dict):
 
 
 # Register a variant of pre-registered environment
-def register_env_variant(env_id, variants, variant_id=None, silent=False):
+def register_env_variant(env_id, variants, variant_id=None, silent=False, override=None):
     # check if the base env is registered
     assert env_id in gym.envs.registry.env_specs.keys(), "ERROR: {} not found in env registry".format(env_id)
 
@@ -40,7 +43,7 @@ def register_env_variant(env_id, variants, variant_id=None, silent=False):
         del variants['max_episode_steps']
 
     # merge specs._kwargs with variants
-    env_variant_specs._kwargs, variants_update_keyval_str = update_dict(env_variant_specs._kwargs, variants)
+    env_variant_specs._kwargs, variants_update_keyval_str = update_dict(env_variant_specs._kwargs, variants, override=override)
     env_variant_id += variants_update_keyval_str
 
     # finalize name and register env
