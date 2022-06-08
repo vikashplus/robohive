@@ -24,7 +24,7 @@ BIN_DIM = np.array([.2, .3, 0])
 ARM_nJnt = 7
 
 @click.command(help=DESC)
-@click.option('-s', '--sim_path', type=str, help='environment to load', required= True)
+@click.option('-s', '--sim_path', type=str, help='environment to load', required= True, default='envs/arms/franka/assets/franka_busbin_v0.xml')
 @click.option('-h', '--horizon', type=int, help='time (s) to simulate', default=2)
 def main(sim_path, horizon):
     # Prep
