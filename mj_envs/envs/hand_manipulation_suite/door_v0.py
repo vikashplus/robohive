@@ -208,6 +208,6 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
             rwd_dense = np.mean([np.sum(p['env_infos']['rwd_dense'])/horizon for p in paths]) # return rwd/step
             logger.log_kv('rwd_sparse', rwd_sparse)
             logger.log_kv('rwd_dense', rwd_dense)
-            logger.log_kv('success_rate', success_percentage)
+            logger.log_kv('success_percentage', success_percentage)
 
         return success_percentage
