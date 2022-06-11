@@ -164,14 +164,6 @@ register(
     },
 )
 
-from mj_envs.envs.env_variants import register_env_variant
-register_env_variant(
-            env_id='kitchen_micro_open-v3',
-            variants={'obs_keys_wt':obs_keys_wt},
-            variant_id='visual_kitchen_micro_open-v3',
-            silent=False
-        )
-
 register(
     id="kitchen_micro_close-v3",
     entry_point=ENTRY_POINT,
