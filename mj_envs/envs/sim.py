@@ -267,43 +267,43 @@ class Camera:
         return np.flipud(image)
 
 
-class Sim:
-    def __init__(self, model, data, frame_skip=1, width=244, height=244):
-        self.model = model
-        self.data = data
-        self.frame_skip = frame_skip
-        self.gl_context = None
-        self._width = width
-        self._height = height
-        self._rgb_buffer = np.empty((self._height, self._width, 3),
-                                    dtype=np.uint8)
-        self.camera = dict()
-
-    def step(self, action):
-        mj_step(self.model, self.data, nsteps=self.frame_skip)
-
-    def reset(self):
-        mj_resetData(self.model, self.data)
-
-    def forward(self):
-        mj_forward(self.model, self.data)
-
-    def render(self, width, height, mode, camera_name, device_id=0,
-               overlays=(), depth=False, scene_option=None,
-               render_flag_overrides=None, segmentation=False):
-        if not camera_name in self.camera:
-            self.camera[camera_name] = Camera(
-                physics=self, height=height, width=width, camera_id=camera_name)
-        image = self.camera[camera_name].render(
-            overlays=overlays, depth=depth, segmentation=segmentation,
-            scene_option=scene_option,
-            render_flag_overrides=render_flag_overrides)
-        # no ops: https://github.com/deepmind/dm_control/blob/4e1a35595124742015ae0c7a829e099a5aa100f5/dm_control/mujoco/wrapper/core.py#L721
-        # camera._scene.free()  # pylint: disable=protected-access
-        return image
-
-    def __del__(self):
-        del self.gl_context
+# class Sim:
+#     def __init__(self, model, data, frame_skip=1, width=244, height=244):
+#         self.model = model
+#         self.data = data
+#         self.frame_skip = frame_skip
+#         self.gl_context = None
+#         self._width = width
+#         self._height = height
+#         self._rgb_buffer = np.empty((self._height, self._width, 3),
+#                                     dtype=np.uint8)
+#         self.camera = dict()
+#
+#     def step(self, action):
+#         mj_step(self.model, self.data, nsteps=self.frame_skip)
+#
+#     def reset(self):
+#         mj_resetData(self.model, self.data)
+#
+#     def forward(self):
+#         mj_forward(self.model, self.data)
+#
+#     def render(self, width, height, mode, camera_name, device_id=0,
+#                overlays=(), depth=False, scene_option=None,
+#                render_flag_overrides=None, segmentation=False):
+#         if not camera_name in self.camera:
+#             self.camera[camera_name] = Camera(
+#                 physics=self, height=height, width=width, camera_id=camera_name)
+#         image = self.camera[camera_name].render(
+#             overlays=overlays, depth=depth, segmentation=segmentation,
+#             scene_option=scene_option,
+#             render_flag_overrides=render_flag_overrides)
+#         # no ops: https://github.com/deepmind/dm_control/blob/4e1a35595124742015ae0c7a829e099a5aa100f5/dm_control/mujoco/wrapper/core.py#L721
+#         # camera._scene.free()  # pylint: disable=protected-access
+#         return image
+#
+#     def __del__(self):
+#         del self.gl_context
 
 
 def get_model_and_data(model_path):
