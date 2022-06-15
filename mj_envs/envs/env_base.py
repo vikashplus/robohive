@@ -27,11 +27,11 @@ from r3m import load_r3m
 
 try:
     import mujoco_py
-    from mujoco_py import load_model_from_path, MjSim, MjViewer, load_model_from_xml, ignore_mujoco_warnings
+    from mujoco_py import load_model_from_path, MjSim, MjViewer, load_model_from_xml, ignore_mujoco_warnings, MjRenderContext, MjRenderPool
 except ImportError as e:
     raise gym.error.DependencyNotInstalled("{}. (HINT: you need to install mujoco_py, and also perform the setup instructions here: https://github.com/openai/mujoco-py/.)".format(e))
 
-def get_sim(model_path:str=None, model_xmlstr=None):
+def get_sim(model_path:str=None, model_xmlstr=None, render=False):
     """
     Get sim using model_path or model_xmlstr.
     """
@@ -48,6 +48,8 @@ def get_sim(model_path:str=None, model_xmlstr=None):
     else:
         raise TypeError("Both model_path and model_xmlstr can't be None")
 
+    # if render:
+    #     return MjRenderPool(model, device_ids=4, n_workers=4)
     return MjSim(model)
 
 class IdentityEncoder(torch.nn.Module):
@@ -62,7 +64,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     Superclass for all MuJoCo environments.
     """
 
-    def __init__(self, model_path, obsd_model_path=None, seed=None):
+    def __init__(self, model_path, obsd_model_path=None, seed=None, device_id=0):
         """
         Create a gym env
         INPUTS:
@@ -78,7 +80,9 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         # sims
         self.sim = get_sim(model_path)
+        self.device_id = device_id
         self.sim_obsd = get_sim(obsd_model_path) if obsd_model_path else get_sim(model_path)
+        # self.sim_obsd_render = get_sim(obsd_model_path, render=True) if obsd_model_path else get_sim(model_path, render=True)
         ObsVecDict.__init__(self)
 
     def _setup(self,
@@ -98,6 +102,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         self.mujoco_render_frames = False
         self.device_id = device_id
+        MjRenderContext(self.sim, device_id=self.device_id)
+        MjRenderContext(self.sim_obsd, device_id=self.device_id)
         self.rwd_viz = rwd_viz
 
         # resolve robot config
@@ -511,9 +517,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
         if sim is None:
             sim = self.sim_obsd
+            # sim = self.sim_obsd_render
         imgs = np.zeros((len(cameras), height, width, 3), dtype=np.uint8)
         for ind, cam in enumerate(cameras) :
-            img = sim.render(width=width, height=height, mode='offscreen', camera_name=cam, device_id=device_id)
+            # img = sim.render(width=width, height=height, mode='offscreen', camera_name=cam, device_id=device_id)
+            img = sim.render(width=width, height=height, camera_name=cam)
             img = img[::-1, :, : ] # Image has to be flipped
             imgs[ind, :, :, :] = img
         return imgs
