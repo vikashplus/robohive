@@ -56,7 +56,8 @@ def register_visual_envs(encoder_type):
         },
         silent=True
     )
-for enc in ["r3m18", "r3m34", "r3m50", "flat"]:
+# for enc in ["r3m18", "r3m34", "r3m50", "flat"]:
+for enc in ["flat"]:
     register_visual_envs(enc)
 
 

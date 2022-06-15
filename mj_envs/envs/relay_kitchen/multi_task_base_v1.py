@@ -10,11 +10,12 @@ import gym
 import numpy as np
 
 from mj_envs.envs import env_base
+import mujoco
 
 VIZ = False
 
-class KitchenBase(env_base.MujocoEnv):
 
+class KitchenBase(env_base.MujocoEnv):
     DEFAULT_OBS_KEYS_AND_WEIGHTS = {
         "robot_jnt": 1.0,
         "objs_jnt": 1.0,
@@ -32,9 +33,9 @@ class KitchenBase(env_base.MujocoEnv):
     def _setup(self,
                robot_jnt_names,
                obj_jnt_names,
-               obj_interaction_sites,           # all object interaction sites
+               obj_interaction_sites,  # all object interaction sites
                obj_goal,
-               interact_site="end_effector",    # task relevant interaction sites
+               interact_site="end_effector",  # task relevant interaction sites
                obj_init=None,
                obs_keys_wt=list(DEFAULT_OBS_KEYS_AND_WEIGHTS.keys()),
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
@@ -44,7 +45,7 @@ class KitchenBase(env_base.MujocoEnv):
                act_mode="vel",
                robot_name="Franka_kitchen_sim",
                **kwargs,
-    ):
+               ):
 
         if VIZ:
             from vtils.plotting.srv_dict import srv_dict
@@ -52,14 +53,19 @@ class KitchenBase(env_base.MujocoEnv):
             self.dict_plot = srv_dict()
 
         # configure env-site
-        self.grasp_sid = self.sim.model.site_name2id("end_effector")
+        # self.grasp_sid = self.sim.model.site_name2id("end_effector")
+        # https://mujoco.readthedocs.io/en/latest/APIreference.html#mjtobj
+        self.grasp_sid = mujoco.mj_name2id(self.sim.model.ptr, 6,
+                                           "end_effector")
         self.obj_interaction_sites = obj_interaction_sites
 
         # configure env-robot
         self.robot_dofs = []
         self.robot_ranges = []
         for jnt_name in robot_jnt_names:
-            jnt_id = self.sim.model.joint_name2id(jnt_name)
+            jnt_id = mujoco.mj_name2id(self.sim.model.ptr, 3,
+                                       jnt_name)
+            # jnt_id = self.sim.model.joint_name2id(jnt_name)
             self.robot_dofs.append(self.sim.model.jnt_dofadr[jnt_id])
             self.robot_ranges.append(self.sim.model.jnt_range[jnt_id])
         self.robot_dofs = np.array(self.robot_dofs)
@@ -71,12 +77,13 @@ class KitchenBase(env_base.MujocoEnv):
         obj_dof_adrs = []
         obj_dof_ranges = []
         for goal_adr, jnt_name in enumerate(obj_jnt_names):
-            jnt_id = self.sim.model.joint_name2id(jnt_name)
+            # jnt_id = self.sim.model.joint_name2id(jnt_name)
+            jnt_id = mujoco.mj_name2id(self.sim.model.ptr, 3,
+                                       jnt_name)
             self.obj[jnt_name] = {}
             self.obj[jnt_name]["goal_adr"] = goal_adr
-            self.obj[jnt_name]["interact_sid"] = self.sim.model.site_name2id(
-                obj_interaction_sites[goal_adr]
-            )
+            self.obj[jnt_name]["interact_sid"] = mujoco.mj_name2id(
+                self.sim.model.ptr, 6, obj_interaction_sites[goal_adr])
             self.obj[jnt_name]["dof_adr"] = self.sim.model.jnt_dofadr[jnt_id]
             obj_dof_adrs.append(self.sim.model.jnt_dofadr[jnt_id])
             obj_dof_ranges.append(self.sim.model.jnt_range[jnt_id])
@@ -94,7 +101,8 @@ class KitchenBase(env_base.MujocoEnv):
             )
         self.input_obj_goal = obj_goal
         self.input_obj_init = obj_init
-        self.set_obj_goal(obj_goal=self.input_obj_goal, interact_site=interact_site)
+        self.set_obj_goal(obj_goal=self.input_obj_goal,
+                          interact_site=interact_site)
 
         super()._setup(obs_keys=obs_keys_wt,
                        weighted_reward_keys=weighted_reward_keys,
@@ -103,7 +111,6 @@ class KitchenBase(env_base.MujocoEnv):
                        obs_range=obs_range,
                        robot_name=robot_name,
                        **kwargs)
-
 
         self.init_qpos[:] = self.sim.model.key_qpos[0].copy()
         if obj_init:
@@ -115,7 +122,8 @@ class KitchenBase(env_base.MujocoEnv):
         obs_dict["robot_jnt"] = sim.data.qpos[self.robot_dofs].copy()
         obs_dict["objs_jnt"] = sim.data.qpos[self.obj["dof_adrs"]].copy()
         obs_dict["robot_vel"] = sim.data.qvel[self.robot_dofs].copy() * self.dt
-        obs_dict["objs_vel"] = sim.data.qvel[self.obj["dof_adrs"]].copy() * self.dt
+        obs_dict["objs_vel"] = sim.data.qvel[
+                                   self.obj["dof_adrs"]].copy() * self.dt
         obs_dict["obj_goal"] = self.obj_goal.copy()
         obs_dict["goal_err"] = (
             obs_dict["obj_goal"] - obs_dict["objs_jnt"]
@@ -128,7 +136,7 @@ class KitchenBase(env_base.MujocoEnv):
         obs_dict["end_effector"] = self.sim.data.site_xpos[self.grasp_sid]
         obs_dict["qpos"] = self.sim.data.qpos.copy()
         for site in self.obj_interaction_sites:
-            site_id = self.sim.model.site_name2id(site)
+            site_id = mujoco.mj_name2id(self.sim.model.ptr, 6, site)
             obs_dict[site + "_err"] = (
                 self.sim.data.site_xpos[site_id]
                 - self.sim.data.site_xpos[self.grasp_sid]
@@ -144,11 +152,14 @@ class KitchenBase(env_base.MujocoEnv):
                 ("obj_goal", -np.sum(goal_dist, axis=-1)),
                 (
                     "bonus",
-                    np.product(goal_dist < 0.75 * self.obj["dof_ranges"], axis=-1)
-                    + np.product(goal_dist < 0.25 * self.obj["dof_ranges"], axis=-1),
+                    np.product(goal_dist < 0.75 * self.obj["dof_ranges"],
+                               axis=-1)
+                    + np.product(goal_dist < 0.25 * self.obj["dof_ranges"],
+                                 axis=-1),
                 ),
                 ("pose", -np.sum(np.abs(obs_dict["pose_err"]), axis=-1)),
-                ("approach", -np.linalg.norm(obs_dict["approach_err"], axis=-1)),
+                ("approach",
+                 -np.linalg.norm(obs_dict["approach_err"], axis=-1)),
                 # Must keys
                 ("sparse", -np.sum(goal_dist, axis=-1)),
                 ("solved", np.all(goal_dist < 0.15 * self.obj["dof_ranges"])),
@@ -156,7 +167,8 @@ class KitchenBase(env_base.MujocoEnv):
             )
         )
         rwd_dict["dense"] = np.sum(
-            [wt * rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0
+            [wt * rwd_dict[key] for key, wt in self.rwd_keys_wt.items()],
+            axis=0
         )
 
         if self.mujoco_render_frames and VIZ:
@@ -172,7 +184,9 @@ class KitchenBase(env_base.MujocoEnv):
         if type(obj_init) is dict:
             # overwrite explicit requests
             for obj_name, obj_val in obj_init.items():
-                val = self.np_random.uniform(low=obj_val[0], high=obj_val[1]) if type(obj_val)==tuple else obj_val
+                val = self.np_random.uniform(low=obj_val[0],
+                                             high=obj_val[1]) if type(
+                    obj_val) == tuple else obj_val
                 self.init_qpos[self.obj[obj_name]["dof_adr"]] = val
         elif type(obj_init) is np.ndarray:
             assert len(obj_init) == len(
@@ -193,10 +207,13 @@ class KitchenBase(env_base.MujocoEnv):
             # overwrite explicit requests
             for obj_name, obj_val in obj_goal.items():
                 # import ipdb; ipdb.set_trace()
-                val = self.np_random.uniform(low=obj_val[0], high=obj_val[1]) if type(obj_val)==tuple else obj_val
+                val = self.np_random.uniform(low=obj_val[0],
+                                             high=obj_val[1]) if type(
+                    obj_val) == tuple else obj_val
                 self.obj_goal[self.obj[obj_name]["goal_adr"]] = val
         elif type(obj_goal) is np.ndarray:
-            assert len(obj_goal) == len(self.obj["dof_adrs"]), "Check size of provided obj_goal"
+            assert len(obj_goal) == len(
+                self.obj["dof_adrs"]), "Check size of provided obj_goal"
             self.obj_goal = obj_goal
         else:
             raise TypeError(
@@ -205,13 +222,15 @@ class KitchenBase(env_base.MujocoEnv):
 
         # resolve interaction site
         if interact_site is None:  # automatically infer
-            goal_err = np.abs(self.sim.data.qpos[self.obj["dof_adrs"]] - self.obj_goal)
+            goal_err = np.abs(
+                self.sim.data.qpos[self.obj["dof_adrs"]] - self.obj_goal)
             max_goal_err_obj = np.argmax(goal_err)
             for _, obj in self.obj.items():
                 if obj["goal_adr"] == max_goal_err_obj:
                     self.interact_sid = obj["interact_sid"]
                     break
         elif type(interact_site) is str:  # overwrite using name
-            self.interact_sid = self.sim.model.site_name2id(interact_site)
+            self.interact_sid = mujoco.mj_name2id(self.sim.model.ptr, 6,
+                                                  interact_site)
         elif type(interact_site) is int:  # overwrite using id
             self.interact_sid = interact_site

@@ -9,8 +9,10 @@ import time
 from termcolor import cprint
 import numpy as np
 from collections import deque
-from mujoco_py import load_model_from_path, MjSim, functions, ignore_mujoco_warnings
+# from mujoco_py import load_model_from_path, MjSim, functions, ignore_mujoco_warnings
 import os
+import mujoco
+from mujoco import mj_step1, mj_step2
 from mj_envs.utils.quat_math import quat2euler
 np.set_printoptions(precision=4)
 
@@ -69,6 +71,7 @@ class Robot():
 
         # create robot sim
         if mj_sim is None:
+            raise RuntimeError
             # (creates new robot everytime to facilitate parallelization)
             prompt("Preparing robot-sim from %s" % model_path)
             self.sim = MjSim(load_model_from_path(model_path))
@@ -94,8 +97,8 @@ class Robot():
             self.hardware_okay(self.robot_config)
 
             # disable all collisions
-            self.sim.model.geom_conaffinity[:] = 0
-            self.sim.model.geom_contype[:] = 0
+            self.sim.model.ptr.geom_conaffinity[:] = 0
+            self.sim.model.ptr.geom_contype[:] = 0
 
         # Robot's time
         self.time_start = time.time()
@@ -301,7 +304,8 @@ class Robot():
             for sensor in device['sensor']:
                 device['sensor_names'].append(sensor['name']) # list of all ids
                 device['sensor_ids'].append(sensor['hdr_id']) # list of all ids
-                sensor['sim_id'] = sim.model.sensor_name2id(sensor['name'])
+                # sensor['sim_id'] = sim.model.sensor_name2id(sensor['name'])
+                sensor['sim_id'] = mujoco.mj_name2id(sim.model.ptr, 19, sensor['name'])
                 sensor_type = sim.model.sensor_type[sensor['sim_id']]
                 sensor_objid = sim.model.sensor_objid[sensor['sim_id']]
                 if sensor_type == 8:  # mjSENS_JOINTPOS,// scalar joint position (hinge and slide only)
@@ -319,7 +323,8 @@ class Robot():
             for actuator in device['actuator']:
                 device['actuator_names'].append(actuator['name']) # list of all ids
                 device['actuator_ids'].append(actuator['hdr_id']) # list of all ids
-                actuator['sim_id'] = sim.model.actuator_name2id(actuator['name'])
+                # actuator['sim_id'] = sim.model.actuator_name2id(actuator['name'])
+                actuator['sim_id'] = mujoco.mj_name2id(sim.model.ptr, 18, actuator['name'])
                 actuator_trntype = sim.model.actuator_trntype[actuator['sim_id']]
                 actuator_trnid = sim.model.actuator_trnid[actuator['sim_id'], 0]
                 if actuator_trntype == 0:  # mjTRN_JOINT // force on joint
@@ -576,12 +581,12 @@ class Robot():
         else:
             n_frames=int(step_duration/self.sim.model.opt.timestep)
             self.sim.data.ctrl[:] = ctrl_feasible
-            with ignore_mujoco_warnings():
-                for _ in range(n_frames):
-                    functions.mj_step2(self.sim.model, self.sim.data)
-                    functions.mj_step1(self.sim.model, self.sim.data)
-                    if render_cbk:
-                        render_cbk()
+            # with ignore_mujoco_warnings():
+            for _ in range(n_frames):
+                mj_step2(self.sim.model.ptr, self.sim.data.ptr)
+                mj_step1(self.sim.model.ptr, self.sim.data.ptr)
+                if render_cbk:
+                    render_cbk()
 
         # update viz
         if _ROBOT_VIZ:

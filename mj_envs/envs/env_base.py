@@ -4,6 +4,7 @@ Author  :: Vikash Kumar (vikashplus@gmail.com)
 Source  :: https://github.com/vikashplus/mj_envs
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
+from typing import NamedTuple
 
 import gym
 import numpy as np
@@ -17,38 +18,50 @@ from mj_envs.utils import tensor_utils
 from mj_envs.robot.robot import Robot
 from os import path
 import skvideo.io
+from .sim import Sim
 
-from r3m import load_r3m
+
+import threading
+import collections
+import concurrent
+
+# from r3m import load_r3m
 
 # TODO
 # remove rwd_mode
 # convet obs_keys to obs_keys_wt
 # batch images before passing them through the encoder
 
-try:
-    import mujoco_py
-    from mujoco_py import load_model_from_path, MjSim, MjViewer, load_model_from_xml, ignore_mujoco_warnings
-except ImportError as e:
-    raise gym.error.DependencyNotInstalled("{}. (HINT: you need to install mujoco_py, and also perform the setup instructions here: https://github.com/openai/mujoco-py/.)".format(e))
+# try:
+# import mujoco_py
+# from mujoco_py import load_model_from_path, MjSim, MjViewer, load_model_from_xml, ignore_mujoco_warnings
+import mujoco
+from mujoco import MjModel, MjData, mj_resetData, mj_step, GLContext, \
+    mjr_render, mj_forward, MjvScene, MjrRect, MjvCamera, MjvOption, MjvPerturb
 
-def get_sim(model_path:str=None, model_xmlstr=None):
-    """
-    Get sim using model_path or model_xmlstr.
-    """
-    if model_path:
-        if model_path.startswith("/"):
-            fullpath = model_path
-        else:
-            fullpath = os.path.join(os.path.dirname(__file__), "assets", model_path)
-        if not path.exists(fullpath):
-            raise IOError("File %s does not exist" % fullpath)
-        model = load_model_from_path(fullpath)
-    elif model_xmlstr:
-        model = load_model_from_xml(model_xmlstr)
-    else:
-        raise TypeError("Both model_path and model_xmlstr can't be None")
 
-    return MjSim(model)
+# except ImportError as e:
+#     raise gym.error.DependencyNotInstalled("{}. (HINT: you need to install mujoco_py, and also perform the setup instructions here: https://github.com/openai/mujoco-py/.)".format(e))
+
+# def get_sim(model_path:str=None, model_xmlstr=None):
+#     """
+#     Get sim using model_path or model_xmlstr.
+#     """
+#     if model_path:
+#         if model_path.startswith("/"):
+#             fullpath = model_path
+#         else:
+#             fullpath = os.path.join(os.path.dirname(__file__), "assets", model_path)
+#         if not path.exists(fullpath):
+#             raise IOError("File %s does not exist" % fullpath)
+#         model = load_model_from_path(fullpath)
+#     elif model_xmlstr:
+#         model = MjModel.from_xml_(model_xmlstr)
+#     else:
+#         raise TypeError("Both model_path and model_xmlstr can't be None")
+#
+#     return MjSim(model)
+
 
 class IdentityEncoder(torch.nn.Module):
     def __init__(self):
@@ -57,12 +70,13 @@ class IdentityEncoder(torch.nn.Module):
     def forward(self, x):
         return x
 
+
 class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     """
     Superclass for all MuJoCo environments.
     """
 
-    def __init__(self, model_path, obsd_model_path=None, seed=None):
+    def __init__(self, model_path, obsd_model_path=None, seed=None, render_prefetch=False):
         """
         Create a gym env
         INPUTS:
@@ -77,24 +91,33 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.seed(seed)
 
         # sims
-        self.sim = get_sim(model_path)
-        self.sim_obsd = get_sim(obsd_model_path) if obsd_model_path else get_sim(model_path)
+        self.sim = Sim.from_xml_path(model_path)
+        self.sim_obsd = Sim.from_xml_path(model_path)  # get_sim(obsd_model_path) if obsd_model_path else get_sim(model_path)
         ObsVecDict.__init__(self)
+
+        self.render_prefetch = render_prefetch
+        if self.render_prefetch:
+            self._render_lock = threading.RLock()
+            self._prefetch_fut = collections.deque()
+            self._prefetch_executor = concurrent.futures.ThreadPoolExecutor(
+                max_workers=3,
+            )
 
     def _setup(self,
                obs_keys,
                weighted_reward_keys,
-               reward_mode = "dense",
-               frame_skip = 1,
-               normalize_act = True,
-               obs_range = (-10, 10),
-               rwd_viz = False,
-               device_id = 0, # device id for rendering
+               reward_mode="dense",
+               frame_skip=1,
+               normalize_act=True,
+               obs_range=(-10, 10),
+               rwd_viz=False,
+               device_id=0,  # device id for rendering
                **kwargs,
-        ):
+               ):
 
         if self.sim is None or self.sim_obsd is None:
-            raise TypeError("sim and sim_obsd must be instantiated for setup to run")
+            raise TypeError(
+                "sim and sim_obsd must be instantiated for setup to run")
 
         self.mujoco_render_frames = False
         self.device_id = device_id
@@ -105,22 +128,28 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                            random_generator=self.np_random,
                            **kwargs)
 
-        #resolve action space
+        # resolve action space
         self.frame_skip = frame_skip
         self.normalize_act = normalize_act
-        act_low = -np.ones(self.sim.model.nu) if self.normalize_act else self.sim.model.actuator_ctrlrange[:,0].copy()
-        act_high = np.ones(self.sim.model.nu) if self.normalize_act else self.sim.model.actuator_ctrlrange[:,1].copy()
+        act_low = -np.ones(
+            self.sim.model.nu) if self.normalize_act else self.sim.model.actuator_ctrlrange[
+                                                          :, 0].copy()
+        act_high = np.ones(
+            self.sim.model.nu) if self.normalize_act else self.sim.model.actuator_ctrlrange[
+                                                          :, 1].copy()
         self.action_space = gym.spaces.Box(act_low, act_high, dtype=np.float32)
 
         # resolve initial state
         self.init_qvel = self.sim.data.qvel.ravel().copy()
-        self.init_qpos = self.sim.data.qpos.ravel().copy() # has issues with initial jump during reset
+        self.init_qpos = self.sim.data.qpos.ravel().copy()  # has issues with initial jump during reset
         # self.init_qpos = np.mean(self.sim.model.actuator_ctrlrange, axis=1) if self.normalize_act else self.sim.data.qpos.ravel().copy() # has issues when nq!=nu
         # self.init_qpos[self.sim.model.jnt_dofadr] = np.mean(self.sim.model.jnt_range, axis=1) if self.normalize_act else self.sim.data.qpos.ravel().copy()
         if self.normalize_act:
-            linear_jnt_qposids = self.sim.model.jnt_qposadr[self.sim.model.jnt_type>1] #hinge and slides
-            linear_jnt_ids = self.sim.model.jnt_type>1
-            self.init_qpos[linear_jnt_qposids] = np.mean(self.sim.model.jnt_range[linear_jnt_ids], axis=1)
+            linear_jnt_qposids = self.sim.model.jnt_qposadr[
+                self.sim.model.jnt_type > 1]  # hinge and slides
+            linear_jnt_ids = self.sim.model.jnt_type > 1
+            self.init_qpos[linear_jnt_qposids] = np.mean(
+                self.sim.model.jnt_range[linear_jnt_ids], axis=1)
 
         # resolve rewards
         self.rwd_dict = {}
@@ -131,10 +160,13 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.obs_dict = {}
         self.obs_keys = obs_keys
         self._setup_rgb_encoders(obs_keys, device=None)
-        observation, _reward, done, _info = self.step(np.zeros(self.sim.model.nu))
+        observation, _reward, done, _info = self.step(
+            np.zeros(self.sim.model.nu))
         assert not done, "Check initialization. Simulation starts in a done state."
         self.obs_dim = observation.size
-        self.observation_space = gym.spaces.Box(obs_range[0]*np.ones(self.obs_dim), obs_range[1]*np.ones(self.obs_dim), dtype=np.float32)
+        self.observation_space = gym.spaces.Box(
+            obs_range[0] * np.ones(self.obs_dim),
+            obs_range[1] * np.ones(self.obs_dim), dtype=np.float32)
 
         return
 
@@ -145,17 +177,20 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         if device is None:
             self.device_encoder = "cuda" if torch.cuda.is_available() else "cpu"
         else:
-            self.device_encoder=device
+            self.device_encoder = device
 
         # ensure that all keys use the same encoder and image sizes
         id_encoders = []
         for key in obs_keys:
             if key.startswith('rgb'):
-                id_encoder = key.split(':')[-2]+":"+key.split(':')[-1] # HxW:encoder
+                id_encoder = key.split(':')[-2] + ":" + key.split(':')[
+                    -1]  # HxW:encoder
                 id_encoders.append(id_encoder)
-        if len(id_encoders) > 1 :
-            unique_encoder = all(elem == id_encoders[0] for elem in id_encoders)
-            assert unique_encoder, "Env only supports single encoder. Multiple in use ({})".format(id_encoders)
+        if len(id_encoders) > 1:
+            unique_encoder = all(
+                elem == id_encoders[0] for elem in id_encoders)
+            assert unique_encoder, "Env only supports single encoder. Multiple in use ({})".format(
+                id_encoders)
 
         # prepare encoder and transforms
         self.rgb_encoder = None
@@ -164,30 +199,32 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             wxh, id_encoder = id_encoders[0].split(':')
 
             # Load encoder
-            print("Using {} visual inputs with {} encoder".format(wxh, id_encoder))
+            print("Using {} visual inputs with {} encoder".format(wxh,
+                                                                  id_encoder))
             if id_encoder == "flat":
                 self.rgb_encoder = IdentityEncoder()
-            elif id_encoder == "r3m18":
-                self.rgb_encoder = load_r3m("resnet18")
-            elif id_encoder == "r3m34":
-                self.rgb_encoder = load_r3m("resnet34")
-            elif id_encoder == "r3m50":
-                self.rgb_encoder = load_r3m("resnet50")
+            # elif id_encoder == "r3m18":
+            #     self.rgb_encoder = load_r3m("resnet18")
+            # elif id_encoder == "r3m34":
+            #     self.rgb_encoder = load_r3m("resnet34")
+            # elif id_encoder == "r3m50":
+            #     self.rgb_encoder = load_r3m("resnet50")
             else:
-                raise ValueError("Unsupported visual encoder: {}".format(id_encoder))
+                raise ValueError(
+                    "Unsupported visual encoder: {}".format(id_encoder))
             self.rgb_encoder.eval()
             self.rgb_encoder.to(self.device_encoder)
 
             # Load tranfsormms
             if id_encoder[:3] == 'r3m':
                 if wxh == "224x224":
-                    self.rgb_transform = T.Compose([T.ToTensor()]) # ToTensor() divides by 255
+                    self.rgb_transform = T.Compose(
+                        [T.ToTensor()])  # ToTensor() divides by 255
                 else:
                     print("HxW = 224x224 recommended")
                     self.rgb_transform = T.Compose([T.Resize(256),
-                                        T.CenterCrop(224),
-                                        T.ToTensor()]) # ToTensor() divides by 255
-
+                                                    T.CenterCrop(224),
+                                                    T.ToTensor()])  # ToTensor() divides by 255
 
     def step(self, a):
         """
@@ -196,16 +233,17 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
         a = np.clip(a, self.action_space.low, self.action_space.high)
         self.last_ctrl = self.robot.step(ctrl_desired=a,
-                                        ctrl_normalized=self.normalize_act,
-                                        step_duration=self.dt,
-                                        realTimeSim=self.mujoco_render_frames,
-                                        render_cbk=self.mj_render if self.mujoco_render_frames else None)
+                                         ctrl_normalized=self.normalize_act,
+                                         step_duration=self.dt,
+                                         realTimeSim=self.mujoco_render_frames,
+                                         render_cbk=self.mj_render if self.mujoco_render_frames else None)
 
         # observation
         obs = self.get_obs()
 
         # rewards
-        self.expand_dims(self.obs_dict) # required for vectorized rewards calculations
+        self.expand_dims(
+            self.obs_dict)  # required for vectorized rewards calculations
         self.rwd_dict = self.get_reward_dict(self.obs_dict)
         self.squeeze_dims(self.rwd_dict)
         self.squeeze_dims(self.obs_dict)
@@ -214,8 +252,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         env_info = self.get_env_infos()
 
         # returns obs(t+1), rew(t), done(t), info(t+1)
-        return obs, env_info['rwd_'+self.rwd_mode], bool(env_info['done']), env_info
-
+        return obs, env_info['rwd_' + self.rwd_mode], bool(
+            env_info['done']), env_info
 
     def get_obs(self):
         """
@@ -237,7 +275,6 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         # recoved observation vector from the obs_dict
         t, obs = self.obsdict2obsvec(self.obs_dict, self.obs_keys)
         return obs
-
 
     def get_visual_obs_dict(self, sim, device_id=None):
         """
@@ -261,26 +298,28 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 width = int(wxh.split('x')[1])
                 # render images ==> returns (ncams, height, width, 3)
                 img = self.render_camera_offscreen(
-                                    height=height,
-                                    width=width,
-                                    cameras=[cam],
-                                    device_id=device_id,
-                                    sim=sim,
-                                  )
+                    height=height,
+                    width=width,
+                    cameras=[cam],
+                    device_id=device_id,
+                    sim=sim,
+                )
                 # encode images
                 if rgb_encoder_id == 'flat':
                     rgb_encoded = img.reshape(-1)
                 elif rgb_encoder_id[:3] == 'r3m':
                     with torch.no_grad():
-                        rgb_encoded = 255.0 * self.rgb_transform(img[0]).reshape(-1, 3, 224, 224)
+                        rgb_encoded = 255.0 * self.rgb_transform(
+                            img[0]).reshape(-1, 3, 224, 224)
                         rgb_encoded.to(self.device_encoder)
-                        rgb_encoded = self.rgb_encoder(rgb_encoded).cpu().numpy()
+                        rgb_encoded = self.rgb_encoder(
+                            rgb_encoded).cpu().numpy()
                         rgb_encoded = np.squeeze(rgb_encoded)
                 else:
-                    raise ValueError("Unsupported visual encoder: {}".format(rgb_encoder_id))
-                visual_obs_dict.update({key:rgb_encoded})
+                    raise ValueError("Unsupported visual encoder: {}".format(
+                        rgb_encoder_id))
+                visual_obs_dict.update({key: rgb_encoded})
         return visual_obs_dict
-
 
     # VIK??? Its getting called twice. Once in step and sampler calls it as well
     def get_env_infos(self):
@@ -291,16 +330,15 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         - Note that entries belongs to different MDP steps
         """
         env_info = {
-            'time': self.obs_dict['t'][()],             # MDP(t)
-            'rwd_dense': self.rwd_dict['dense'][()],    # MDP(t-1)
+            'time': self.obs_dict['t'][()],  # MDP(t)
+            'rwd_dense': self.rwd_dict['dense'][()],  # MDP(t-1)
             'rwd_sparse': self.rwd_dict['sparse'][()],  # MDP(t-1)
-            'solved': self.rwd_dict['solved'][()],      # MDP(t-1)
-            'done': self.rwd_dict['done'][()],          # MDP(t-1)
-            'obs_dict': self.obs_dict,                  # MDP(t)
-            'rwd_dict': self.rwd_dict,                  # MDP(t-1)
+            'solved': self.rwd_dict['solved'][()],  # MDP(t-1)
+            'done': self.rwd_dict['done'][()],  # MDP(t-1)
+            'obs_dict': self.obs_dict,  # MDP(t)
+            'rwd_dict': self.rwd_dict,  # MDP(t-1)
         }
         return env_info
-
 
     # Methods on paths =======================================================
 
@@ -317,12 +355,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         rewards = rwd_dict[self.rwd_mode]
         done = rwd_dict['done']
         # time align rewards. last step is redundant
-        done[...,:-1] = done[...,1:]
-        rewards[...,:-1] = rewards[...,1:]
+        done[..., :-1] = done[..., 1:]
+        rewards[..., :-1] = rewards[..., 1:]
         paths["done"] = done if done.shape[0] > 1 else done.ravel()
         paths["rewards"] = rewards if rewards.shape[0] > 1 else rewards.ravel()
         return paths
-
 
     def truncate_paths(self, paths):
         """
@@ -334,12 +371,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 path['terminated'] = False
                 terminated_idx = hor
             elif path['done'][0] == False:
-                terminated_idx = sum(~path['done'])+1
+                terminated_idx = sum(~path['done']) + 1
                 for key in path.keys():
-                    path[key] = path[key][:terminated_idx+1, ...]
+                    path[key] = path[key][:terminated_idx + 1, ...]
                 path['terminated'] = True
         return paths
-
 
     def evaluate_success(self, paths, logger=None, successful_steps=5):
         """
@@ -353,18 +389,21 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             if np.sum(path['env_infos']['solved'] * 1.0) > successful_steps:
                 # sum of truth values may not work correctly if dtype=object, need to * 1.0
                 num_success += 1
-        success_percentage = num_success*100.0/num_paths
+        success_percentage = num_success * 100.0 / num_paths
 
         # log stats
         if logger:
-            rwd_sparse = np.mean([np.mean(p['env_infos']['rwd_sparse']) for p in paths]) # return rwd/step
-            rwd_dense = np.mean([np.sum(p['env_infos']['rwd_dense'])/self.horizon for p in paths]) # return rwd/step
+            rwd_sparse = np.mean(
+                [np.mean(p['env_infos']['rwd_sparse']) for p in
+                 paths])  # return rwd/step
+            rwd_dense = np.mean(
+                [np.sum(p['env_infos']['rwd_dense']) / self.horizon for p in
+                 paths])  # return rwd/step
             logger.log_kv('rwd_sparse', rwd_sparse)
             logger.log_kv('rwd_dense', rwd_dense)
             logger.log_kv('success_percentage', success_percentage)
 
         return success_percentage
-
 
     def seed(self, seed=None):
         """
@@ -374,10 +413,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.np_random, seed = gym.utils.seeding.np_random(seed)
         return [seed]
 
-
     def get_input_seed(self):
         return self.input_seed
-
 
     def reset(self, reset_qpos=None, reset_qvel=None):
         """
@@ -389,21 +426,17 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.robot.reset(qpos, qvel)
         return self.get_obs()
 
-
     @property
     def _step(self, a):
         return self.step(a)
-
 
     @property
     def dt(self):
         return self.sim.model.opt.timestep * self.frame_skip
 
-
     @property
     def horizon(self):
-        return self.spec.max_episode_steps # paths could have early termination before horizon
-
+        return self.spec.max_episode_steps  # paths could have early termination before horizon
 
     # state utilities ========================================================
 
@@ -411,7 +444,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
         Set MuJoCo sim state
         """
-        assert qpos.shape == (self.sim.model.nq,) and qvel.shape == (self.sim.model.nv,)
+        assert qpos.shape == (self.sim.model.nq,) and qvel.shape == (
+        self.sim.model.nv,)
         old_state = self.sim.get_state()
         if qpos is None:
             qpos = old_state.qpos
@@ -419,10 +453,10 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             qvel = old_state.qvel
         if act is None:
             act = old_state.act
-        new_state = mujoco_py.MjSimState(old_state.time, qpos=qpos, qvel=qvel, act=act, udd_state={})
+        new_state = mujoco_py.MjSimState(old_state.time, qpos=qpos, qvel=qvel,
+                                         act=act, udd_state={})
         self.sim.set_state(new_state)
         self.sim.forward()
-
 
     def get_env_state(self):
         """
@@ -431,11 +465,13 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
         qp = self.sim.data.qpos.ravel().copy()
         qv = self.sim.data.qvel.ravel().copy()
-        act = self.sim.data.act.ravel().copy() if self.sim.model.na>0 else None
-        mocap_pos = self.sim.data.mocap_pos.copy() if self.sim.model.nmocap>0 else None
-        mocap_quat = self.sim.data.mocap_quat.copy() if self.sim.model.nmocap>0 else None
-        site_pos = self.sim.model.site_pos[:].copy() if self.sim.model.nsite>0 else None
-        site_quat = self.sim.model.site_quat[:].copy() if self.sim.model.nsite>0 else None
+        act = self.sim.data.act.ravel().copy() if self.sim.model.na > 0 else None
+        mocap_pos = self.sim.data.mocap_pos.copy() if self.sim.model.nmocap > 0 else None
+        mocap_quat = self.sim.data.mocap_quat.copy() if self.sim.model.nmocap > 0 else None
+        site_pos = self.sim.model.site_pos[
+                   :].copy() if self.sim.model.nsite > 0 else None
+        site_quat = self.sim.model.site_quat[
+                    :].copy() if self.sim.model.nsite > 0 else None
         body_pos = self.sim.model.body_pos[:].copy()
         body_quat = self.sim.model.body_quat[:].copy()
         return dict(qpos=qp,
@@ -448,7 +484,6 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                     body_pos=body_pos,
                     body_quat=body_quat)
 
-
     def set_env_state(self, state_dict):
         """
         Set full state of the environemnt
@@ -458,16 +493,15 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         qv = state_dict['qvel']
         act = state_dict['act']
         self.set_state(qp, qv, act)
-        if self.sim.model.nmocap>0:
+        if self.sim.model.nmocap > 0:
             self.sim.model.mocap_pos[:] = state_dict['mocap_pos']
             self.sim.model.mocap_quat[:] = state_dict['mocap_quat']
-        if self.sim.model.nsite>0:
+        if self.sim.model.nsite > 0:
             self.sim.model.site_pos[:] = state_dict['site_pos']
             self.sim.model.site_quat[:] = state_dict['site_quat']
         self.sim.model.body_pos[:] = state_dict['body_pos']
         self.sim.model.body_quat[:] = state_dict['body_quat']
         self.sim.forward()
-
 
     # Vizualization utilities ================================================
 
@@ -481,12 +515,12 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             self.viewer.cam.elevation = -30
             self.viewer.cam.azimuth = 90
             self.viewer.cam.distance = 2.5
-            #self.viewer._run_speed /= self.frame_skip
+            # self.viewer._run_speed /= self.frame_skip
             self.viewer_setup()
             self.viewer.render()
 
-
-    def update_camera(self, camera=None, distance=None, azimuth=None, elevation=None, lookat=None):
+    def update_camera(self, camera=None, distance=None, azimuth=None,
+                      elevation=None, lookat=None):
         """
         Updates the given camera to move to the provided settings.
         """
@@ -504,33 +538,55 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         if lookat is not None:
             camera.lookat[:] = lookat
 
-
-    def render_camera_offscreen(self, cameras:list, width:int=640, height:int=480, device_id:int=0, sim=None):
+    def render_camera_offscreen(self, cameras: list, width: int = 640,
+                                height: int = 480, device_id: int = 0,
+                                sim=None):
         """
         Render images(widthxheight) from a list_of_cameras on the specified device_id.
         """
         if sim is None:
             sim = self.sim_obsd
         imgs = np.zeros((len(cameras), height, width, 3), dtype=np.uint8)
-        for ind, cam in enumerate(cameras) :
-            img = sim.render(width=width, height=height, mode='offscreen', camera_name=cam, device_id=device_id)
-            img = img[::-1, :, : ] # Image has to be flipped
-            imgs[ind, :, :, :] = img
+        if self.render_prefetch:
+            cameras_itr = ((ind, cam) for ind, cam in enumerate(cameras))
+            ret = dict()
+            with self._render_lock:
+
+                while len(self._prefetch_fut) < len(cameras):
+                    ind, cam = next(cameras_itr)
+                    fut = self._prefetch_executor.submit(sim.render,
+                                                         width=width,
+                                                         height=height,
+                                                         camera_id=cam)
+                    self._prefetch_fut.append(fut)
+
+                for _ in range(len(cameras)):
+                    if len(self._prefetch_fut) == 0:
+                        raise RuntimeError
+                        ret[ind] = sim.render(width=width, height=height, camera_id=cam)
+                    else:
+                        ret[ind] = self._prefetch_fut.popleft().result()
+            for i in range(len(cameras)):
+                imgs[i] = ret[ind]
+        else:
+            for ind, cam in enumerate(cameras):
+                img = sim.render(width=width, height=height,
+                             camera_id=cam)
+                imgs[ind, :, :, :] = img
         return imgs
 
-
     def examine_policy(self,
-            policy,
-            horizon=1000,
-            num_episodes=1,
-            mode='exploration', # options: exploration/evaluation
-            render=None,        # options: onscreen/offscreen/none
-            camera_name=None,
-            frame_size=(640,480),
-            output_dir='/tmp/',
-            filename='newvid',
-            device_id:int=0
-            ):
+                       policy,
+                       horizon=1000,
+                       num_episodes=1,
+                       mode='exploration',  # options: exploration/evaluation
+                       render=None,  # options: onscreen/offscreen/none
+                       camera_name=None,
+                       frame_size=(640, 480),
+                       output_dir='/tmp/',
+                       filename='newvid',
+                       device_id: int = 0
+                       ):
         """
             Examine a policy for behaviors;
             - either onscreen, or offscreen, or just rollout without rendering.
@@ -541,9 +597,10 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         # configure renderer
         if render == 'onscreen':
             self.mujoco_render_frames = True
-        elif render =='offscreen':
+        elif render == 'offscreen':
             self.mujoco_render_frames = False
-            frames = np.zeros((horizon, frame_size[1], frame_size[0], 3), dtype=np.uint8)
+            frames = np.zeros((horizon, frame_size[1], frame_size[0], 3),
+                              dtype=np.uint8)
         elif render == None:
             self.mujoco_render_frames = False
 
@@ -551,9 +608,9 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         paths = []
         for ep in range(num_episodes):
             ep_t0 = timer.time()
-            observations=[]
-            actions=[]
-            rewards=[]
+            observations = []
+            actions = []
+            rewards = []
             agent_infos = []
             env_infos = []
 
@@ -563,11 +620,12 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             t = 0
             ep_rwd = 0.0
             while t < horizon and done is False:
-                a = policy.get_action(o)[0] if mode == 'exploration' else policy.get_action(o)[1]['evaluation']
+                a = policy.get_action(o)[0] if mode == 'exploration' else \
+                policy.get_action(o)[1]['evaluation']
                 next_o, rwd, done, env_info = self.step(a)
                 ep_rwd += rwd
                 # render offscreen visuals
-                if render =='offscreen':
+                if render == 'offscreen':
                     curr_frame = self.render_camera_offscreen(
                         sim=self.sim,
                         cameras=[camera_name],
@@ -575,7 +633,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                         height=frame_size[1],
                         device_id=device_id
                     )
-                    frames[t,:,:,:] = curr_frame[0]
+                    frames[t, :, :, :] = curr_frame[0]
                     print(t, end=', ', flush=True)
                 observations.append(o)
                 actions.append(a)
@@ -583,29 +641,29 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 # agent_infos.append(agent_info)
                 env_infos.append(env_info)
                 o = next_o
-                t = t+1
+                t = t + 1
 
-            print("Total reward = %3.3f, Total time = %2.3f" % (ep_rwd, ep_t0-timer.time()))
+            print("Total reward = %3.3f, Total time = %2.3f" % (
+            ep_rwd, ep_t0 - timer.time()))
             path = dict(
-            observations=np.array(observations),
-            actions=np.array(actions),
-            rewards=np.array(rewards),
-            # agent_infos=tensor_utils.stack_tensor_dict_list(agent_infos),
-            env_infos=tensor_utils.stack_tensor_dict_list(env_infos),
-            terminated=done
+                observations=np.array(observations),
+                actions=np.array(actions),
+                rewards=np.array(rewards),
+                # agent_infos=tensor_utils.stack_tensor_dict_list(agent_infos),
+                env_infos=tensor_utils.stack_tensor_dict_list(env_infos),
+                terminated=done
             )
             paths.append(path)
 
             # save offscreen buffers as video
-            if render =='offscreen':
+            if render == 'offscreen':
                 file_name = output_dir + filename + str(ep) + ".mp4"
                 skvideo.io.vwrite(file_name, np.asarray(frames))
                 print("saved", file_name)
 
         self.mujoco_render_frames = False
-        print("Total time taken = %f"% (timer.time()-exp_t0))
+        print("Total time taken = %f" % (timer.time() - exp_t0))
         return paths
-
 
     # methods to override ====================================================
 
@@ -620,7 +678,6 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             > obs_dict.update(visual_obs_dict)
         """
         raise NotImplementedError
-
 
     def get_reward_dict(self, obs_dict):
         """

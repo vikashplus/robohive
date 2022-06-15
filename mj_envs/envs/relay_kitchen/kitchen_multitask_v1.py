@@ -12,7 +12,7 @@ from gym import utils
 from mjrl.envs import mujoco_env
 from mj_envs.robot.robot import Robot
 
-from mujoco_py import MjViewer
+# from mujoco_py import MjViewer
 import os
 from mj_envs.utils.obj_vec_dict import ObsVecDict
 import collections
@@ -91,6 +91,7 @@ class KitchenV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.observation_space = spaces.Box(obs_lower, obs_upper)
 
     def mj_viewer_setup(self):
+        raise NotImplementedError
         self.viewer = MjViewer(self.sim)
         self.viewer.cam.azimuth = -66
         self.viewer.cam.elevation = -65

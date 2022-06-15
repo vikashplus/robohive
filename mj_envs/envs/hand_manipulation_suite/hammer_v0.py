@@ -8,7 +8,6 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 import numpy as np
 from gym import utils
 from mjrl.envs import mujoco_env
-from mujoco_py import MjViewer
 from mj_envs.utils.quat_math import *
 import os
 from mj_envs.utils.obj_vec_dict import ObsVecDict
@@ -199,6 +198,7 @@ class HammerEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.sim.forward()
 
     def mj_viewer_setup(self):
+        raise NotImplementedError
         self.viewer = MjViewer(self.sim)
         self.viewer.cam.azimuth = 45
         self.viewer.cam.distance = 2.0

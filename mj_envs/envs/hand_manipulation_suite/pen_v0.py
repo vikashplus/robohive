@@ -12,7 +12,6 @@ from gym import utils
 from mjrl.envs import mujoco_env
 from mj_envs.utils.quat_math import euler2quat
 from mj_envs.utils.obj_vec_dict import ObsVecDict
-from mujoco_py import MjViewer
 
 OBS_KEYS = ['hand_jnt', 'obj_pos', 'obj_vel', 'obj_rot', 'obj_des_rot', 'obj_err_pos', 'obj_err_rot']
 RWD_KEYS = ['pos_align', 'rot_align', 'drop', 'bonus']
@@ -227,6 +226,7 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
 
 
     def mj_viewer_setup(self):
+        raise NotImplementedError
         self.viewer = MjViewer(self.sim)
         self.viewer.cam.azimuth = -45
         self.sim.forward()
