@@ -27,9 +27,8 @@ setup(
     install_requires=[
         'click',
         'gym>=0.13',
-        # 'mujoco-py<2.1,>=2.0',
         'termcolor',
-        # 'sk-video',
+        'dm_control',
         'absl-py',
         'flatten_dict',
     ],
