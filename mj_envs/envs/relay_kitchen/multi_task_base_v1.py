@@ -55,6 +55,32 @@ class KitchenBase(env_base.MujocoEnv):
         # configure env-site
         # self.grasp_sid = self.sim.model.site_name2id("end_effector")
         # https://mujoco.readthedocs.io/en/latest/APIreference.html#mjtobj
+        #     mjOBJ_UNKNOWN       = 0,        // unknown object type
+        #     mjOBJ_BODY,         = 1,        // body
+        #     mjOBJ_XBODY,        = 2,        // body, used to access regular frame instead of i-frame
+        #     mjOBJ_JOINT,        = 3,        // joint
+        #     mjOBJ_DOF,          = 4,        // dof
+        #     mjOBJ_GEOM,         = 5,        // geom
+        #     mjOBJ_SITE,         = 6,        // site
+        #     mjOBJ_CAMERA,       = 7,        // camera
+        #     mjOBJ_LIGHT,        = 8,        // light
+        #     mjOBJ_MESH,         = 9,        // mesh
+        #     mjOBJ_SKIN,         = 10,       // skin
+        #     mjOBJ_HFIELD,       = 11,       // heightfield
+        #     mjOBJ_TEXTURE,      = 12,       // texture
+        #     mjOBJ_MATERIAL,     = 13,       // material for rendering
+        #     mjOBJ_PAIR,         = 14,       // geom pair to include
+        #     mjOBJ_EXCLUDE,      = 15,       // body pair to exclude
+        #     mjOBJ_EQUALITY,     = 16,       // equality constraint
+        #     mjOBJ_TENDON,       = 17,       // tendon
+        #     mjOBJ_ACTUATOR,     = 18,       // actuator
+        #     mjOBJ_SENSOR,       = 19,       // sensor
+        #     mjOBJ_NUMERIC,      = 20,       // numeric
+        #     mjOBJ_TEXT,         = 21,       // text
+        #     mjOBJ_TUPLE,        = 22,       // tuple
+        #     mjOBJ_KEY           = 23,       // keyframe
+
+
         self.grasp_sid = mujoco.mj_name2id(self.sim.model.ptr, 6,
                                            "end_effector")
         self.obj_interaction_sites = obj_interaction_sites
