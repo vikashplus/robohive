@@ -236,7 +236,9 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
 
-    def reset(self, reset_pose=None, reset_vel=None, reset_goal=None, time_period=6):
+    def reset(self, reset_pose=None, reset_vel=None, reset_goal=None, time_period=6, seed=None):
+        if seed is not None:
+            self.seed(seed)
         # reset counters
         self.counter=0
 
@@ -305,6 +307,6 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
 
 class BaodingRandomEnvV1(BaodingFixedEnvV1):
 
-    def reset(self):
-        obs = super().reset(time_period = self.np_random.uniform(high=5, low=7))
+    def reset(self, seed=None):
+        obs = super().reset(time_period = self.np_random.uniform(high=5, low=7), seed=seed)
         return obs

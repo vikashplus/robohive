@@ -17,7 +17,7 @@ from mj_envs.utils.obj_vec_dict import ObsVecDict
 from mj_envs.utils import tensor_utils
 from mj_envs.robot.robot import Robot
 from os import path
-import skvideo.io
+# import skvideo.io
 from .sim import Sim
 
 
@@ -416,11 +416,13 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     def get_input_seed(self):
         return self.input_seed
 
-    def reset(self, reset_qpos=None, reset_qvel=None):
+    def reset(self, reset_qpos=None, reset_qvel=None, seed=None):
         """
         Reset the environment
         Default implemention provided. Override if env needs custom reset
         """
+        if seed is not None:
+            self.seed(seed)
         qpos = self.init_qpos.copy() if reset_qpos is None else reset_qpos
         qvel = self.init_qvel.copy() if reset_qvel is None else reset_qvel
         self.robot.reset(qpos, qvel)

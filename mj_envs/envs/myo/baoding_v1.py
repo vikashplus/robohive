@@ -237,7 +237,7 @@ class BaodingFixedEnvV1(BaseV0):
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
 
-    def reset(self, reset_pose=None, reset_vel=None, reset_goal=None, time_period=6):
+    def reset(self, reset_pose=None, reset_vel=None, reset_goal=None, time_period=6, seed=None):
         # reset counters
         self.counter=0
 
@@ -245,7 +245,7 @@ class BaodingFixedEnvV1(BaseV0):
         self.goal = self.create_goal_trajectory(time_period=time_period) if reset_goal is None else reset_goal.copy()
 
         # reset scene
-        obs = super().reset(reset_qpos=reset_pose, reset_qvel=reset_vel)
+        obs = super().reset(reset_qpos=reset_pose, reset_qvel=reset_vel, seed=seed)
         return obs
 
     def create_goal_trajectory(self, time_step=.1, time_period=6):
@@ -306,6 +306,6 @@ class BaodingFixedEnvV1(BaseV0):
 
 class BaodingRandomEnvV1(BaodingFixedEnvV1):
 
-    def reset(self):
-        obs = super().reset(time_period = self.np_random.uniform(low=5, high=7))
+    def reset(self, seed=None):
+        obs = super().reset(time_period = self.np_random.uniform(low=5, high=7), seed=seed)
         return obs

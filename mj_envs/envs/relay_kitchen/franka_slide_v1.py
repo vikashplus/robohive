@@ -58,7 +58,9 @@ class FrankaSlideFixed(KitchenBase):
         )
 
 class FrankaSlideRandom(FrankaSlideFixed):
-    def reset(self, reset_qpos=None, reset_qvel=None):
+    def reset(self, reset_qpos=None, reset_qvel=None, seed=None, **kwargs):
+        if seed is not None:
+            self.seed(seed)
 
         bid = self.sim.model.body_name2id('slidecabinet')
         r = self.np_random.uniform(low=.4, high=.7)
@@ -74,4 +76,4 @@ class FrankaSlideRandom(FrankaSlideFixed):
                 * (self.np_random.uniform(size=len(self.robot_dofs)) - 0.5)
                 * (self.robot_ranges[:, 1] - self.robot_ranges[:, 0])
             )
-        return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel)
+        return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel, **kwargs)

@@ -122,7 +122,10 @@ class TrackEnv(env_base.MujocoEnv):
         elif self.target_type == 'track':
             return self.target_pose # ToDo: Update the target pose as per the tracking trajectory
 
-    def reset(self):
+    def reset(self, seed=None):
+        if seed is not None:
+            self.seed(seed)
+
         self.target_pose = self.get_target_pose()
         obs = super().reset(self.init_qpos, self.init_qvel)
         return obs

@@ -58,7 +58,9 @@ class FrankaMicroFixed(KitchenBase):
         )
 
 class FrankaMicroRandom(FrankaMicroFixed):
-    def reset(self, reset_qpos=None, reset_qvel=None):
+    def reset(self, reset_qpos=None, reset_qvel=None, seed=None, **kwargs):
+        if seed is not None:
+            self.seed(seed)
 
         # import ipdb; ipdb.set_trace()
         bid = self.sim.model.body_name2id('microwave')
@@ -77,4 +79,4 @@ class FrankaMicroRandom(FrankaMicroFixed):
                 * (self.np_random.uniform(size=len(self.robot_dofs)) - 0.5)
                 * (self.robot_ranges[:, 1] - self.robot_ranges[:, 0])
             )
-        return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel)
+        return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel, **kwargs)

@@ -100,7 +100,9 @@ class ObjHoldFixedEnvV0(BaseV0):
 
 class ObjHoldRandomEnvV0(ObjHoldFixedEnvV0):
 
-    def reset(self):
+    def reset(self, seed=None, **kwargs):
+        if seed is not None:
+            self.seed(seed)
         # randomize target pos
         self.sim.model.site_pos[self.goal_sid] = np.array([-.235, -.19, 1.050]) + self.np_random.uniform(high=np.array([0.030, 0.030, 0.030]), low=np.array([-.030, -.030, -.030]))
         # randomize object
@@ -108,5 +110,5 @@ class ObjHoldRandomEnvV0(ObjHoldFixedEnvV0):
         self.sim.model.geom_size[-1] = size
         self.sim.model.site_size[self.goal_sid] = size
         self.robot.sync_sims(self.sim, self.sim_obsd)
-        obs = super().reset()
+        obs = super().reset(**kwargs)
         return obs

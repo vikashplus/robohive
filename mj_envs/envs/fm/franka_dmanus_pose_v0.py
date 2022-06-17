@@ -118,7 +118,9 @@ class FrankaDmanusPose(env_base.MujocoEnv):
             return self.np_random.uniform(low=self.sim.model.actuator_ctrlrange[:,0], high=self.sim.model.actuator_ctrlrange[:,1])
 
 
-    def reset(self):
+    def reset(self, seed=None):
+        if seed is not None:
+            self.seed(seed)
         self.target_pose = self.get_target_pose()
         obs = super().reset(self.init_qpos, self.init_qvel)
         return obs

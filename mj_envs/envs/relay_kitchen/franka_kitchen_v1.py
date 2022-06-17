@@ -162,7 +162,9 @@ class KitchenFrankaDemo(KitchenFrankaFixed):
 
         super()._setup(**kwargs)
 
-    def reset(self, reset_qpos=None, reset_qvel=None):
+    def reset(self, reset_qpos=None, reset_qvel=None, seed=None):
+        if seed is not None:
+            self.seed(seed)
         if reset_qpos is None:
             reset_qpos = self.init_qpos.copy()
             reset_qvel = self.init_qvel.copy()
@@ -190,7 +192,10 @@ class KitchenFrankaRandom(KitchenFrankaFixed):
 
         super()._setup(**kwargs)
 
-    def reset(self, reset_qpos=None, reset_qvel=None):
+    def reset(self, reset_qpos=None, reset_qvel=None, seed=None, **kwargs):
+        if seed is not None:
+            self.seed(seed)
+
         if reset_qpos is None:
             reset_qpos = self.init_qpos.copy()
             reset_qpos[self.robot_dofs] += (
@@ -198,4 +203,4 @@ class KitchenFrankaRandom(KitchenFrankaFixed):
                 * (self.np_random.uniform(size=len(self.robot_dofs)) - 0.5)
                 * (self.robot_ranges[:, 1] - self.robot_ranges[:, 0])
             )
-        return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel)
+        return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel, **kwargs)
