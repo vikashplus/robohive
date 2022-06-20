@@ -193,6 +193,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
         Step the simulation forward (t => t+1)
         Uses robot interface to safely step the forward respecting pos/ vel limits
+        Accepts a(t) returns obs(t+1), rwd(t+1), done(t+1), info(t+1)
         """
         a = np.clip(a, self.action_space.low, self.action_space.high)
         self.last_ctrl = self.robot.step(ctrl_desired=a,
@@ -213,7 +214,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         # finalize step
         env_info = self.get_env_infos()
 
-        # returns obs(t+1), rew(t), done(t), info(t+1)
+        # returns obs(t+1), rwd(t+1), done(t+1), info(t+1)
         return obs, env_info['rwd_'+self.rwd_mode], bool(env_info['done']), env_info
 
 
@@ -292,13 +293,13 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
         env_info = {
             'time': self.obs_dict['t'][()],             # MDP(t)
-            'rwd_dense': self.rwd_dict['dense'][()],    # MDP(t-1)
-            'rwd_sparse': self.rwd_dict['sparse'][()],  # MDP(t-1)
-            'solved': self.rwd_dict['solved'][()],      # MDP(t-1)
-            'done': self.rwd_dict['done'][()],          # MDP(t-1)
+            'rwd_dense': self.rwd_dict['dense'][()],    # MDP(t)
+            'rwd_sparse': self.rwd_dict['sparse'][()],  # MDP(t)
+            'solved': self.rwd_dict['solved'][()],      # MDP(t)
+            'done': self.rwd_dict['done'][()],          # MDP(t)
             'obs_dict': self.obs_dict,                  # MDP(t)
-            'rwd_dict': self.rwd_dict,                  # MDP(t-1)
-            'states': self.get_env_state(),             # MDP(t-1)
+            'rwd_dict': self.rwd_dict,                  # MDP(t)
+            'state': self.get_env_state(),              # MDP(t)
         }
         return env_info
 
