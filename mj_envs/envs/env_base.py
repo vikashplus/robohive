@@ -298,6 +298,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             'done': self.rwd_dict['done'][()],          # MDP(t-1)
             'obs_dict': self.obs_dict,                  # MDP(t)
             'rwd_dict': self.rwd_dict,                  # MDP(t-1)
+            'states': self.get_env_state(),             # MDP(t-1)
         }
         return env_info
 
