@@ -25,10 +25,6 @@ setup(
     url='https://github.com/vikashplus/mj_envs.git',
     author='Movement Control Lab, UW',
     install_requires=[
-<<<<<<< HEAD
         'click', 'gym==0.13', 'mujoco-py<2.1,>=2.0', 'termcolor', 'sk-video', 'flatten_dict', 'matplotlib', 'ffmpeg', 'absl-py'
-=======
-        'click', 'gym==0.13', 'mujoco-py<2.2,>=2.1', 'termcolor', 'sk-video','absl-py'
->>>>>>> 6685a47 (MAJOR: Adjusting dependencies versions)
     ],
 )
