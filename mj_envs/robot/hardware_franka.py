@@ -16,6 +16,7 @@ from polymetis import RobotInterface
 import torchcontrol as toco
 from mj_envs.robot.hardware_base import hardwareBase
 import argparse
+import grpc
 
 class JointPDPolicy(toco.PolicyModule):
     """
@@ -53,66 +54,124 @@ class JointPDPolicy(toco.PolicyModule):
 class FrankaArm(hardwareBase):
     def __init__(self, name, ip_address, **kwargs):
         self.name = name
+        self.ip_address = ip_address
         self.robot = None
-
-        # Initialize self.robot interface
-        self.robot = RobotInterface(
-            ip_address=ip_address,
-            #enforce_version=False
-        )
-        # self.reset()
 
     def connect(self, policy=None):
         """Establish hardware connection"""
-
-        if policy==None:
-            # Create policy instance
-            q_initial = self.get_sensors()
-            default_kq = 0.25*torch.Tensor(self.robot.metadata.default_Kq)
-            default_kqd = 0.25*torch.Tensor(self.robot.metadata.default_Kqd)
-            policy = JointPDPolicy(
-                desired_joint_pos=q_initial,
-                kq=default_kq,
-                kqd=default_kqd,
+        connection = False
+        # Initialize self.robot interface
+        print("Connecting to {}: ".format(self.name), end="")
+        try:
+            self.robot = RobotInterface(
+                ip_address=self.ip_address,
+                enforce_version=False
             )
+            print("Success")
+        except Exception as e:
+            self.robot = None # declare dead
+            print("Failed with exception: ", e)
+            return connection
 
-        # Send policy
-        print("\nRunning PD policy...")
-        self.robot.send_torch_policy(policy, blocking=False)
+        print("Testing {} connection: ".format(self.name), end="")
+        connection = self.okay()
+        if connection:
+            print("okay")
+            # import ipdb; ipdb.set_trace()
+            state = self.robot.get_robot_state()
+            if policy==None:
+                # Create policy instance
+                s_initial = self.get_sensors()
+                default_kq = 0.10*torch.Tensor(self.robot.metadata.default_Kq)
+                default_kqd = 0.10*torch.Tensor(self.robot.metadata.default_Kqd)
+                policy = JointPDPolicy(
+                    desired_joint_pos=s_initial['joint_pos'],
+                    kq=default_kq,
+                    kqd=default_kqd,
+                )
+
+            # Send policy
+            print("\nRunning PD policy...")
+            self.robot.send_torch_policy(policy, blocking=False)
+        else:
+            print("Not ready. Please retry connection")
+
+        return connection
 
     def okay(self):
         """Return hardware health"""
+        okay = False
         if self.robot:
-            return True
-        else:
-            return False
+            try:
+                state = self.robot.get_robot_state()
+                delay = time.time() - (state.timestamp.seconds + 1e-9 * state.timestamp.nanos)
+                assert delay < 5, "Acquired state is stale by {} seconds".format(delay)
+                okay = True
+            except:
+                self.robot = None # declare dead
+                okay = False
+        return okay
 
     def close(self):
         """Close hardware connection"""
-        state_log = True
         if self.robot:
             print("Terminating PD policy: ", end="")
-            state_log = self.robot.terminate_current_policy()
+            try:
+                state_log = self.robot.terminate_current_policy()
+                print("Success")
+            except:
+                print("Failed. Resetting directly to home: ", end="")
             self.reset()
             self.robot = None
             print("Done")
-        return state_log
+        return True
+
+
+    def reconnect(self):
+        print("Attempting re-connection")
+        self.connect()
+        while not self.okay():
+            self.connect()
+            time.sleep(2)
+        print("Re-connection success")
+
 
     def reset(self, time_to_go=5):
         """Reset hardware"""
         self.robot.go_home(time_to_go=time_to_go)
 
+
     def get_sensors(self):
         """Get hardware sensors"""
-        joint_angel = self.robot.get_joint_positions()
-        return joint_angel
+        try:
+            joint_pos = self.robot.get_joint_positions()
+            joint_vel = self.robot.get_joint_velocities()
+        except:
+            print("Failed to get current sensors: ", end="")
+            self.reconnect()
+            return self.get_sensors()
+        return {'joint_pos': joint_pos, 'joint_vel':joint_pos}
+
 
     def apply_commands(self, q_desired):
         """Apply hardware commands"""
-        q_initial = self.get_sensors()
         q_des_tensor = torch.tensor(q_desired)
-        # print(q_initial, q_des_tensor)
-        self.robot.update_current_policy({"q_desired": q_des_tensor})
+        try:
+            self.robot.update_current_policy({"q_desired": q_des_tensor})
+        except Exception as e:
+            print("1> Failed to udpate policy with exception", e)
+            self.reconnect()
+
+        # except grpc.RpcError as e:
+        #     import ipdb; ipdb.set_trace()
+        #     if "Connection reset by peer" in e.args[0]:
+        #         print("Custom controller not running")
+        #     elif "Tried to perform a controller update with no controller running" in e.args[0]:
+        #         print("Custom controller not running")
+        #     self.reconnect()
+        # except Exception as e2:
+        #     print("2> Failed to udpate policy with unknown exception", e2)
+        #     exit()
 
     def __del__(self):
         self.close()
@@ -135,7 +194,7 @@ if __name__ == "__main__":
     args = get_args()
 
     # user inputs
-    time_to_go = 2*np.pi
+    time_to_go = 20*np.pi
     m = 0.5  # magnitude of sine wave (rad)
     T = 2.0  # period of sine wave
     hz = 50  # update frequency
@@ -144,12 +203,12 @@ if __name__ == "__main__":
     franka = FrankaArm(name="Franka-Demo", ip_address=args.server_ip)
 
     # connect to robot with default policy
-    franka.connect(policy=None)
+    assert franka.connect(policy=None), "Connection to robot failed."
 
     # Update policy to execute a sine trajectory on joint 6 for 5 seconds
     print("Starting sine motion updates...")
-    q_initial = franka.get_sensors()
-    q_desired = q_initial.clone()
+    s_initial = franka.get_sensors()
+    q_desired = s_initial['get_sensors'].clone()
     print(list(q_desired.shape))
 
     for i in range(int(time_to_go * hz)):
