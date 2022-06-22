@@ -15,7 +15,7 @@ from mj_envs.utils.quat_math import quat2euler
 np.set_printoptions(precision=4)
 
 
-_VERBOSE = False
+_VERBOSE = True
 _ROBOT_VIZ = False
 
 # TODO ===========================================
@@ -27,9 +27,9 @@ _ROBOT_VIZ = False
 # nq should be nv
 # Order of sensors and actuators in config should follow XML order
 
-def prompt(data, color=None, on_color=None, flush=False):
+def prompt(data, color=None, on_color=None, flush=False, end="\n"):
     if _VERBOSE:
-        cprint(data, color=color, on_color=on_color, flush=flush)
+        cprint(data, color=color, on_color=on_color, flush=flush, end=end)
 
 
 class Robot():
@@ -196,8 +196,9 @@ class Robot():
                 # current_sensor_value[name] = np.array([x, y, z, -(a+np.pi/2), -c, -b])
 
             elif device['interface']['type'] == 'franka':
-                current_sensor_value[name] = device['robot'].get_sensors()
-
+                sensors = device['robot'].get_sensors()
+                # current_sensor_value[name] = sensors['joint_pos']
+                current_sensor_value[name] = np.concatenate([sensors['joint_pos'], sensors['joint_vel']])
             else:
                 print("ERROR: interface not found")
                 raise NotImplemented
@@ -567,9 +568,6 @@ class Robot():
     def reset(self,
               reset_pos,
               reset_vel):
-
-        prompt("Resetting {}".format(self.name), 'white', 'on_grey', flush=True)
-
         # Enforce specs on the request
         #   for actuated dofs => actoator specs
         #   for passive dofs => sensor specs
@@ -591,16 +589,18 @@ class Robot():
                             feasibe_vel[sensor['data_id']] = np.clip(reset_vel[sensor['data_id']], sensor['range'][0], sensor['range'][1])
 
         if self.is_hardware:
-            prompt("Rollout took:{}".format(time.time() - self.time_start))
-            prompt("Reset> Started", 'white', 'on_grey', flush=True)
-            result = os.system("paplay /usr/share/sounds/ubuntu/stereo/bell.ogg &")
+            t_reset_start = time.time()
+            prompt("\nRollout took:{}".format(t_reset_start- self.time_start))
+            prompt("\aResetting {}: ".format(self.name), 'white', 'on_grey', flush=True, end="")
             # send request to the actuated dofs
             self.hardware_apply_controls(ctrl_feasible)
 
             # engage other reset mechanisms for passive dofs
             # TODO raise NotImplementedError
 
-            input("press a key to start rollout")
+            #input("press a key to start rollout")
+            time.sleep(4)
+            prompt(" Done in {}".format(time.time()-t_reset_start), 'white', 'on_grey', flush=True)
         else:
             # Ideally we should use actuator/ reset mechanism as in the real world
             # but choosing to directly resetting sim for efficiency
