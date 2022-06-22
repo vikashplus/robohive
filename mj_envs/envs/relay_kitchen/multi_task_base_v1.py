@@ -10,8 +10,9 @@ import gym
 import numpy as np
 
 from mj_envs.envs import env_base
-
+from mj_envs.utils.quat_math import euler2quat
 VIZ = False
+from mujoco_py.modder import TextureModder, LightModder
 
 class KitchenBase(env_base.MujocoEnv):
 
@@ -45,6 +46,9 @@ class KitchenBase(env_base.MujocoEnv):
                robot_name="Franka_kitchen_sim",
                **kwargs,
     ):
+
+        self.tex_modder = TextureModder(self.sim)
+        self.light_modder = TextureModder(self.sim)
 
         if VIZ:
             from vtils.plotting.srv_dict import srv_dict
@@ -215,3 +219,66 @@ class KitchenBase(env_base.MujocoEnv):
             self.interact_sid = self.sim.model.site_name2id(interact_site)
         elif type(interact_site) is int:  # overwrite using id
             self.interact_sid = interact_site
+
+    def reset(self, reset_qpos=None, reset_qvel=None):
+
+        def body_rand(name, pos, pos_rand, euler, euler_rand):
+            pos = np.array(pos) + self.np_random.uniform(*pos_rand)
+            euler = np.array(euler) + self.np_random.uniform(*euler_rand)
+
+            bid = self.sim.model.body_name2id(name)
+            self.sim.model.body_pos[bid] = pos
+            self.sim.model.body_quat[bid] = euler2quat(euler)
+            return pos, euler
+
+
+        dk_pos, dk_euler = body_rand('desk',
+                pos=[-0.1, 0.75, 0], pos_rand=([-.1, -.1, -.1],[.1, .1, .1]),
+                euler=[0, 0, 0], euler_rand=([0, 0, -.15],[0, 0, .15]))
+
+        mw_pos, mw_euler = body_rand('microwave',
+                pos=[-0.750, -0.025, 1.6], pos_rand=([-.1, -.1, 0],[.1, .1, .1]),
+                euler=[0, 0, .785], euler_rand=([0, 0, -.15],[0, 0, .15]))
+
+        hc_pos, hc_euler = body_rand('hingecabinet',
+                pos=[-0.504, 0.28, 2.6], pos_rand=([-.1, -.1, 0],[.1, .1, .1]),
+                euler=[0, 0, 0], euler_rand=([0, 0, 0],[0, 0, 0]))
+
+        body_rand('slidecabinet',
+                pos=hc_pos, pos_rand=([.904, 0, 0],[1.1, 0, 0]),
+                euler=[0, 0, 0], euler_rand=([0, 0, 0],[0, 0, 0]))
+
+        body_rand('kettle0',
+                pos=dk_pos, pos_rand=([-.2, -.3, 1.626],[.4, 0.3, 1.626]),
+                euler=[0, 0, 0], euler_rand=([0, 0, 0],[0, 0, 0]))
+
+        # for name in self.sim.model.geom_names:
+        #     try:
+        #         self.tex_modder.rand_all(name)
+        #     except:
+        #         print("{} has no texture".format(name))
+
+        # for name in self.sim.model.light_names:
+        #     try:
+        #         self.light_modder.rand_all(name)
+        #     except:
+        #         print("{} has no texture".format(name))
+
+        self.sim.model.geom_rgba[:,:] =np.random.uniform(size=self.sim.model.geom_rgba.shape, low=0.4, high=.8)
+        self.sim.model.geom_rgba[:,3] =1
+
+        # desk_pos_range = np.array([-0.1, 0.75, 0]) + self.np_random.uniform([-.1, -.1, -.1],[.1, .1, .1])
+        # desk_euler_range = np.array([0, 0, 0]) + self.np_random.uniform([0, 0, -.15],[0, 0, .15])
+
+        # desk_bid = self.sim.model.body_name2id('desk')
+        # self.sim.model.body_pos[desk_bid] = desk_pos_range
+        # self.sim.model.body_quat[desk_bid] = euler2quat(desk_euler_range)
+
+        # desk_pos_range = np.array([-0.1, 0.75, 0]) + self.np_random.uniform([-.1, -.1, -.1],[.1, .1, .1])
+        # desk_euler_range = np.array([0, 0, 0]) + self.np_random.uniform([0, 0, -.15],[0, 0, .15])
+
+        # body_rand()
+        # desk_bid = self.sim.model.body_name2id('desk')
+        # self.sim.model.body_pos[desk_bid] = desk_pos_range
+        # self.sim.model.body_quat[desk_bid] = euler2quat(desk_euler_range)
+        return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel)

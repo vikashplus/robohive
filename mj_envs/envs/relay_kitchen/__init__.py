@@ -165,7 +165,7 @@ visual_obs_keys_wt = {"robot_jnt": 1.0,
             "rgb:right_cam:224x224:flat": 1.0,
             "rgb:left_cam:224x224:flat": 1.0,
             }
-obs_keys_wt = visual_obs_keys_wt
+obs_keys_wt = state_obs_keys_wt
 for site in KitchenFrankaFixed.OBJ_INTERACTION_SITES:
     obs_keys_wt[site + "_err"] = 1.0
 
@@ -174,7 +174,7 @@ for site in KitchenFrankaFixed.OBJ_INTERACTION_SITES:
 register(
     id="kitchen-v3",
     entry_point=ENTRY_POINT,
-    max_episode_steps=280,
+    max_episode_steps=5,
     kwargs={
         "model_path": MODEL_PATH,
         "config_path": CONFIG_PATH,
