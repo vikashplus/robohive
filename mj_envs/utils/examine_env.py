@@ -55,9 +55,11 @@ def main(env_name, policy_path, mode, seed, num_episodes, render, camera_name, o
     if policy_path is not None:
         pi = pickle.load(open(policy_path, 'rb'))
         if output_dir == './': # overide the default
-           output_dir, pol_name = os.path.split(policy_path)
-           if output_name is None:
-               output_name = os.path.splitext(pol_name)[0]
+            output_dir, pol_name = os.path.split(policy_path)
+            output_name = os.path.splitext(pol_name)[0]
+        if output_name is None:
+            pol_name = os.path.split(policy_path)[1]
+            output_name = os.path.splitext(pol_name)[0]
     else:
         pi = rand_policy(env)
         mode = 'exploration'
