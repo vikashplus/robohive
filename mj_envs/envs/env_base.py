@@ -503,7 +503,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 o = next_o
                 t = t+1
 
-            print("Total reward = %3.3f, Total time = %2.3f" % (ep_rwd, ep_t0-timer.time()))
+            print("Total reward = %3.3f, Total time = %2.3f" % (ep_rwd, timer.time()-ep_t0))
             path = dict(
             observations=np.array(observations),
             actions=np.array(actions),
