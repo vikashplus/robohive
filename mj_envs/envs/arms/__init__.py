@@ -24,7 +24,8 @@ register(
         'config_path': curr_dir+'/franka/assets/franka_reach_v0.config',
         'robot_site_name': "end_effector",
         'target_site_name': "target",
-        'target_xyz_range': {'high':[0.2, 0.3, 1.2], 'low':[0.2, 0.3, 1.2]}
+        'target_xyz_range': {'high':[0.2, 0.3, 1.2], 'low':[0.2, 0.3, 1.2]},
+        'is_hardware': True
     }
 )
 
@@ -32,13 +33,14 @@ register(
 register(
     id='FrankaReachRandom-v0',
     entry_point='mj_envs.envs.arms.reach_base_v0:ReachBaseV0',
-    max_episode_steps=50, #50steps*40Skip*2ms = 4s
+    max_episode_steps=75, #50steps*40Skip*2ms = 4s
     kwargs={
         'model_path': curr_dir+'/franka/assets/franka_reach_v0.xml',
         'config_path': curr_dir+'/franka/assets/franka_reach_v0.config',
         'robot_site_name': "end_effector",
         'target_site_name': "target",
-        'target_xyz_range': {'high':[0.3, .5, 1.2], 'low':[-.3, .1, .8]}
+        'target_xyz_range': {'high':[0.3, .5, 1.2], 'low':[-.3, .1, .8]},
+        'is_hardware': True
     }
 )
 
