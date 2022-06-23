@@ -27,9 +27,9 @@ _ROBOT_VIZ = False
 # nq should be nv
 # Order of sensors and actuators in config should follow XML order
 
-def prompt(data, color=None, on_color=None, flush=False):
+def prompt(data, color=None, on_color=None, flush=False, end="\n"):
     if _VERBOSE:
-        cprint(data, color=color, on_color=on_color, flush=flush)
+        cprint(data, color=color, on_color=on_color, flush=flush, end=end)
 
 
 class Robot():
@@ -198,7 +198,8 @@ class Robot():
                 # current_sensor_value[name] = np.array([x, y, z, -(a+np.pi/2), -c, -b])
 
             elif device['interface']['type'] == 'franka':
-                current_sensor_value[name] = device['robot'].get_sensors()
+                sensors = device['robot'].get_sensors()
+                current_sensor_value[name] = np.concatenate([sensors['joint_pos'], sensors['joint_vel']])
 
             else:
                 print("ERROR: interface not found")
@@ -635,9 +636,9 @@ class Robot():
                             feasibe_vel[sensor['data_id']] = np.clip(reset_vel[sensor['data_id']], sensor['range'][0], sensor['range'][1])
 
         if self.is_hardware:
-            prompt("Rollout took:{}".format(time.time() - self.time_start))
-            prompt("Reset> Started", 'white', 'on_grey', flush=True)
-            result = os.system("paplay /usr/share/sounds/ubuntu/stereo/bell.ogg &")
+            t_reset_start = time.time()
+            prompt("\nRollout took:{}".format(t_reset_start- self.time_start))
+            prompt("\aResetting {}: ".format(self.name), 'white', 'on_grey', flush=True, end="")
             # send request to the actuated dofs
             self.hardware_apply_controls(ctrl_feasible)
 
@@ -645,6 +646,7 @@ class Robot():
             # TODO raise NotImplementedError
 
             input("press a key to start rollout")
+            prompt(" Done in {}".format(time.time()-t_reset_start), 'white', 'on_grey', flush=True)
         else:
             # Ideally we should use actuator/ reset mechanism as in the real world
             # but choosing to directly resetting sim for efficiency
