@@ -1,6 +1,7 @@
 DESC = '''
-Helper script to examine a rollout's openloop effects (render/ playback/ recover) on an environment\n
+Helper script to record/examine a rollout's openloop effects (render/ playback/ recover) on an environment\n
   > Examine options:\n
+    - Record:   Record an execution. (Useful for kinesthetic demonstrations on hardware)\n
     - Render:   Render back the execution. (sim.forward)\n
     - Playback: Playback the rollout action sequence in openloop (sim.step(a))\n
     - Recover:  Plyaback actions recovered from the observations \n
@@ -13,7 +14,6 @@ USAGE:\n
     $ python examine_rollout.py --env_name door-v0 --rollout_path my_rollouts.pickle --repeat 10 \n
 '''
 
-from statistics import mode
 import gym
 from mj_envs.utils.viz_paths import plot_paths as plotnsave_paths
 from mj_envs.utils import tensor_utils
@@ -26,9 +26,10 @@ import skvideo.io
 
 
 @click.command(help=DESC)
-@click.option('-e', '--env_name', type=str, help='environment to load', required= True)
-@click.option('-p', '--rollout_path', type=str, help='absolute path of the rollout', required= True)
-@click.option('-m', '--mode', type=click.Choice(['render', 'playback', 'recover']), help='How to examine rollout', default='playback')
+@click.option('-e', '--env_name', type=str, help='environment to load', required=True)
+@click.option('-p', '--rollout_path', type=str, help='absolute path of the rollout', default=None)
+@click.option('-m', '--mode', type=click.Choice(['record', 'render', 'playback', 'recover']), help='How to examine rollout', default='playback')
+@click.option('-h', '--horizon', type=int, help='Rollout horizon, when mode is record', default=-1)
 @click.option('-s', '--seed', type=int, help='seed for generating environment instances', default=123)
 @click.option('-n', '--num_repeat', type=int, help='number of repeats for the rollouts', default=1)
 @click.option('-r', '--render', type=click.Choice(['onscreen', 'offscreen', 'none']), help='visualize onscreen or offscreen', default='onscreen')
@@ -39,7 +40,7 @@ import skvideo.io
 @click.option('-pp', '--plot_paths', type=bool, default=False, help=('2D-plot of individual paths'))
 @click.option('-ea', '--env_args', type=str, default=None, help=('env args. E.g. --env_args "{\'is_hardware\':True}"'))
 
-def main(env_name, rollout_path, mode, seed, num_repeat, render, camera_name, output_dir, output_name, save_paths, plot_paths, env_args):
+def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera_name, output_dir, output_name, save_paths, plot_paths, env_args):
 
     # seed and load environments
     np.random.seed(seed)
@@ -47,11 +48,19 @@ def main(env_name, rollout_path, mode, seed, num_repeat, render, camera_name, ou
     env.seed(seed)
 
     # load paths
-    paths = pickle.load(open(rollout_path, 'rb'))
-    if output_dir == './': # overide the default
-        output_dir, rollout_name = os.path.split(rollout_path)
-        if output_name is None:
-            output_name = os.path.splitext(rollout_name)[0]
+    if mode is 'record':
+        assert horizon>0, "Rollout horizon must be specified when recording rollout"
+        assert output_name is not None, "Specify the name of the recording"
+        if save_paths is False:
+            print("Warning: Recording is not being saved. Enable save_paths=True to log the recorded path")
+        paths = [None,]*num_repeat # empty paths for recordings
+    else:
+        assert rollout_path is not None, "Rollout path is required for mode:{} ".format(mode)
+        paths = pickle.load(open(rollout_path, 'rb'))
+        if output_dir == './': # overide the default
+            output_dir, rollout_name = os.path.split(rollout_path)
+            if output_name is None:
+                output_name = os.path.splitext(rollout_name)[0]
 
     # resolve rendering
     if render == 'onscreen':
@@ -79,18 +88,23 @@ def main(env_name, rollout_path, mode, seed, num_repeat, render, camera_name, ou
             states = []
 
             # initialize env to the starting position
-            if "state" in path['env_infos'].keys():
+            if path and "state" in path['env_infos'].keys():
                 env.reset(reset_qpos=path['env_infos']['state']['qpos'][0], reset_qvel=path['env_infos']['state']['qpos'][0])
             else:
                 env.reset()
 
             # Rollout
             o = env.get_obs()
-            path_horizon = path['actions'].shape[0]
+            path_horizon = horizon if mode is 'record' else path['actions'].shape[0]
             for i_step in range(path_horizon):
 
+                # Record Execution. Useful for kinesthetic demonstrations on hardware
+                if mode=='record':
+                    a = env.action_space.sample() # dummy random sample
+                    onext, r, d, info = env.step(a) # t ==> t+1
+
                 # Directly create the scene
-                if mode=='render':
+                elif mode=='render':
                     env.sim.data.qpos[:]= path['env_infos']['state']['qpos'][i_step]
                     env.sim.data.qvel[:]= path['env_infos']['state']['qvel'][i_step]
                     env.sim.forward()
@@ -103,10 +117,12 @@ def main(env_name, rollout_path, mode, seed, num_repeat, render, camera_name, ou
                         r = path['rewards'][i_step+1]
                         info = {}
 
-                # Recover and apply actions
+                # Apply actions in open loop
                 elif mode=='playback':
                     a = path['actions'][i_step]
                     onext, r, d, info = env.step(a) # t ==> t+1
+
+                # Recover actions from states
                 elif mode=='recover':
                     # assumes position controls
                     a = path['env_infos']['obs_dict']['qp'][i_step]
