@@ -114,7 +114,7 @@ class HammerEnvV1(env_base.MujocoEnv):
 
     def reset_model(self):
         self.sim.reset()
-        self.model.body_pos[self.target_bid,2] = self.np_random.uniform(low=0.1, high=0.25)
+        self.sim.model.body_pos[self.target_bid,2] = self.np_random.uniform(low=0.1, high=0.25)
         self.sim.forward()
         return self.get_obs()
 
@@ -122,10 +122,10 @@ class HammerEnvV1(env_base.MujocoEnv):
         """
         Get state of hand as well as objects and targets in the scene
         """
-        qpos = self.data.qpos.ravel().copy()
-        qvel = self.data.qvel.ravel().copy()
-        board_pos = self.model.body_pos[self.model.body_name2id('nail_board')].copy()
-        target_pos = self.data.site_xpos[self.target_obj_sid].ravel().copy()
+        qpos = self.sim.data.qpos.ravel().copy()
+        qvel = self.sim.data.qvel.ravel().copy()
+        board_pos = self.sim.model.body_pos[self.sim.model.body_name2id('nail_board')].copy()
+        target_pos = self.sim.data.site_xpos[self.target_obj_sid].ravel().copy()
         return dict(qpos=qpos, qvel=qvel, board_pos=board_pos, target_pos=target_pos)
 
     def set_env_state(self, state_dict):
@@ -136,5 +136,5 @@ class HammerEnvV1(env_base.MujocoEnv):
         qv = state_dict['qvel']
         board_pos = state_dict['board_pos']
         self.set_state(qp, qv)
-        self.model.body_pos[self.model.body_name2id('nail_board')] = board_pos
+        self.sim.model.body_pos[self.sim.model.body_name2id('nail_board')] = board_pos
         self.sim.forward()

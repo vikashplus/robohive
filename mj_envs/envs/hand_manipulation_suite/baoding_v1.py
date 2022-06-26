@@ -127,8 +127,8 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
 
         # V0: Centered the action space around key_qpos[0]. Not sure if it matter.
         # self.act_mid = self.init_qpos[:self.n_jnt].copy()
-        # self.upper_rng = 0.9*(self.model.actuator_ctrlrange[:,1]-self.act_mid)
-        # self.lower_rng = 0.9*(self.act_mid-self.model.actuator_ctrlrange[:,0])
+        # self.upper_rng = 0.9*(self.sim.model.actuator_ctrlrange[:,1]-self.act_mid)
+        # self.lower_rng = 0.9*(self.act_mid-self.sim.model.actuator_ctrlrange[:,0])
 
         # V0: Used strict pos and velocity bounds (This matter and needs to implemented ???)
         # pos_bounds=[[-40, 40]] * self.n_dofs, #dummy

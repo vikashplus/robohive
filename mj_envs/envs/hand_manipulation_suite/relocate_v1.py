@@ -62,9 +62,9 @@ class RelocateEnvV1(env_base.MujocoEnv):
 
 
     def get_rewards_old(self):
-        obj_pos  = self.data.body_xpos[self.obj_bid].ravel()
-        palm_pos = self.data.site_xpos[self.S_grasp_sid].ravel()
-        target_pos = self.data.site_xpos[self.target_obj_sid].ravel()
+        obj_pos  = self.sim.data.body_xpos[self.obj_bid].ravel()
+        palm_pos = self.sim.data.site_xpos[self.S_grasp_sid].ravel()
+        target_pos = self.sim.data.site_xpos[self.target_obj_sid].ravel()
 
         reward = -0.1*np.linalg.norm(palm_pos-obj_pos)              # take hand to object
         if obj_pos[2] > 0.04:                                       # if object off the table
@@ -132,11 +132,11 @@ class RelocateEnvV1(env_base.MujocoEnv):
         qp = self.init_qpos.copy()
         qv = self.init_qvel.copy()
         self.set_state(qp, qv)
-        self.model.body_pos[self.obj_bid,0] = self.np_random.uniform(low=-0.15, high=0.15)
-        self.model.body_pos[self.obj_bid,1] = self.np_random.uniform(low=-0.15, high=0.3)
-        self.model.site_pos[self.target_obj_sid, 0] = self.np_random.uniform(low=-0.2, high=0.2)
-        self.model.site_pos[self.target_obj_sid,1] = self.np_random.uniform(low=-0.2, high=0.2)
-        self.model.site_pos[self.target_obj_sid,2] = self.np_random.uniform(low=0.15, high=0.35)
+        self.sim.model.body_pos[self.obj_bid,0] = self.np_random.uniform(low=-0.15, high=0.15)
+        self.sim.model.body_pos[self.obj_bid,1] = self.np_random.uniform(low=-0.15, high=0.3)
+        self.sim.model.site_pos[self.target_obj_sid, 0] = self.np_random.uniform(low=-0.2, high=0.2)
+        self.sim.model.site_pos[self.target_obj_sid,1] = self.np_random.uniform(low=-0.2, high=0.2)
+        self.sim.model.site_pos[self.target_obj_sid,2] = self.np_random.uniform(low=0.15, high=0.35)
         self.sim.forward()
         return self.get_obs()
 
@@ -144,12 +144,12 @@ class RelocateEnvV1(env_base.MujocoEnv):
         """
         Get state of hand as well as objects and targets in the scene
         """
-        qp = self.data.qpos.ravel().copy()
-        qv = self.data.qvel.ravel().copy()
+        qp = self.sim.data.qpos.ravel().copy()
+        qv = self.sim.data.qvel.ravel().copy()
         hand_qpos = qp[:30]
-        obj_pos  = self.data.body_xpos[self.obj_bid].ravel()
-        palm_pos = self.data.site_xpos[self.S_grasp_sid].ravel()
-        target_pos = self.data.site_xpos[self.target_obj_sid].ravel()
+        obj_pos  = self.sim.data.body_xpos[self.obj_bid].ravel()
+        palm_pos = self.sim.data.site_xpos[self.S_grasp_sid].ravel()
+        target_pos = self.sim.data.site_xpos[self.target_obj_sid].ravel()
         return dict(hand_qpos=hand_qpos, obj_pos=obj_pos, target_pos=target_pos, palm_pos=palm_pos,
             qpos=qp, qvel=qv)
 
@@ -162,6 +162,6 @@ class RelocateEnvV1(env_base.MujocoEnv):
         obj_pos = state_dict['obj_pos']
         target_pos = state_dict['target_pos']
         self.set_state(qp, qv)
-        self.model.body_pos[self.obj_bid] = obj_pos
-        self.model.site_pos[self.target_obj_sid] = target_pos
+        self.sim.model.body_pos[self.obj_bid] = obj_pos
+        self.sim.model.site_pos[self.target_obj_sid] = target_pos
         self.sim.forward()

@@ -107,7 +107,7 @@ class PenEnvV1(env_base.MujocoEnv):
         desired_orien = np.zeros(3)
         desired_orien[0] = self.np_random.uniform(low=-1, high=1)
         desired_orien[1] = self.np_random.uniform(low=-1, high=1)
-        self.model.body_quat[self.target_obj_bid] = euler2quat(desired_orien)
+        self.sim.model.body_quat[self.target_obj_bid] = euler2quat(desired_orien)
         self.sim.forward()
         return self.get_obs()
 
@@ -116,9 +116,9 @@ class PenEnvV1(env_base.MujocoEnv):
         """
         Get state of hand as well as objects and targets in the scene
         """
-        qp = self.data.qpos.ravel().copy()
-        qv = self.data.qvel.ravel().copy()
-        desired_orien = self.model.body_quat[self.target_obj_bid].ravel().copy()
+        qp = self.sim.data.qpos.ravel().copy()
+        qv = self.sim.data.qvel.ravel().copy()
+        desired_orien = self.sim.model.body_quat[self.target_obj_bid].ravel().copy()
         return dict(qpos=qp, qvel=qv, desired_orien=desired_orien)
 
 
@@ -130,5 +130,5 @@ class PenEnvV1(env_base.MujocoEnv):
         qv = state_dict['qvel']
         desired_orien = state_dict['desired_orien']
         self.set_state(qp, qv)
-        self.model.body_quat[self.target_obj_bid] = desired_orien
+        self.sim.model.body_quat[self.target_obj_bid] = desired_orien
         self.sim.forward()

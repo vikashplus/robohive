@@ -93,9 +93,9 @@ class DoorEnvV1(env_base.MujocoEnv):
         qv = self.init_qvel.copy()
         self.set_state(qp, qv)
 
-        self.model.body_pos[self.door_bid,0] = self.np_random.uniform(low=-0.3, high=-0.2)
-        self.model.body_pos[self.door_bid, 1] = self.np_random.uniform(low=0.25, high=0.35)
-        self.model.body_pos[self.door_bid,2] = self.np_random.uniform(low=0.252, high=0.35)
+        self.sim.model.body_pos[self.door_bid,0] = self.np_random.uniform(low=-0.3, high=-0.2)
+        self.sim.model.body_pos[self.door_bid, 1] = self.np_random.uniform(low=0.25, high=0.35)
+        self.sim.model.body_pos[self.door_bid,2] = self.np_random.uniform(low=0.252, high=0.35)
         self.sim.forward()
         return self.get_obs()
 
@@ -104,9 +104,9 @@ class DoorEnvV1(env_base.MujocoEnv):
         """
         Get state of hand as well as objects and targets in the scene
         """
-        qp = self.data.qpos.ravel().copy()
-        qv = self.data.qvel.ravel().copy()
-        door_body_pos = self.model.body_pos[self.door_bid].ravel().copy()
+        qp = self.sim.data.qpos.ravel().copy()
+        qv = self.sim.data.qvel.ravel().copy()
+        door_body_pos = self.sim.model.body_pos[self.door_bid].ravel().copy()
         return dict(qpos=qp, qvel=qv, door_body_pos=door_body_pos)
 
 
@@ -117,6 +117,6 @@ class DoorEnvV1(env_base.MujocoEnv):
         qp = state_dict['qpos']
         qv = state_dict['qvel']
         self.set_state(qp, qv)
-        self.model.body_pos[self.door_bid] = state_dict['door_body_pos']
+        self.sim.model.body_pos[self.door_bid] = state_dict['door_body_pos']
         self.sim.forward()
 
