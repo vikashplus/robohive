@@ -395,6 +395,20 @@ class Robot():
         return current_sen
 
 
+    # get sensor data and update robot time accordingly
+    def get_visual_sensors(self, height:int, width:int, cameras:list, device_id:int, sim):
+
+        if self.is_hardware:
+            raise NotImplementedError("hardware_realsense not implemented yet")
+        else:
+            imgs = np.zeros((len(cameras), height, width, 3), dtype=np.uint8)
+            for ind, cam in enumerate(cameras):
+                img = sim.render(width=width, height=height, mode='offscreen', camera_name=cam, device_id=device_id)
+                img = img[::-1, :, : ] # Image has to be flipped
+                imgs[ind, :, :, :] = img
+        return imgs
+
+
     # Propagate sensor values back through the sim.
     def sensor2sim(self, sensor, sim):
         """

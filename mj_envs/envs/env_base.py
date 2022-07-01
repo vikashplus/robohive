@@ -27,7 +27,7 @@ from r3m import load_r3m
 
 try:
     import mujoco_py
-    from mujoco_py import load_model_from_path, MjSim, MjViewer, load_model_from_xml, ignore_mujoco_warnings
+    from mujoco_py import load_model_from_path, MjSim, MjViewer, load_model_from_xml
 except ImportError as e:
     raise gym.error.DependencyNotInstalled("{}. (HINT: you need to install mujoco_py, and also perform the setup instructions here: https://github.com/openai/mujoco-py/.)".format(e))
 
@@ -268,7 +268,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 height = int(wxh.split('x')[0])
                 width = int(wxh.split('x')[1])
                 # render images ==> returns (ncams, height, width, 3)
-                img = self.render_camera_offscreen(
+                img = self.robot.get_visual_sensors(
                                     height=height,
                                     width=width,
                                     cameras=[cam],
@@ -521,7 +521,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         if sim is None:
             sim = self.sim_obsd
         imgs = np.zeros((len(cameras), height, width, 3), dtype=np.uint8)
-        for ind, cam in enumerate(cameras) :
+        for ind, cam in enumerate(cameras):
             img = sim.render(width=width, height=height, mode='offscreen', camera_name=cam, device_id=device_id)
             img = img[::-1, :, : ] # Image has to be flipped
             imgs[ind, :, :, :] = img

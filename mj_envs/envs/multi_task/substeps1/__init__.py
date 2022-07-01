@@ -125,6 +125,14 @@ obs_keys_wt = {"robot_jnt": 1.0, "objs_jnt": 1.0, "obj_goal": 1.0, "end_effector
 for site in KitchenFrankaFixed.OBJ_INTERACTION_SITES:
     obs_keys_wt[site + "_err"] = 1.0
 
+visual_obs_keys_wt = {"robot_jnt": 1.0,
+            "end_effector": 1.0,
+            # "rgb:right_cam:224x224:r3m18": 1.0,
+            # "rgb:left_cam:224x224:r3m18": 1.0,
+            "rgb:right_cam:224x224:flat": 1.0,
+            "rgb:left_cam:224x224:flat": 1.0,
+            }
+
 # Kitchen (base-env; obj_init==obj_goal => do nothing in the env)
 register(
     id="kitchen-v3",
@@ -146,6 +154,29 @@ register(
             "leftdoorhinge": 0,
         },
         "obs_keys_wt": obs_keys_wt,
+    },
+)
+
+register(
+    id="kitchen_rgb-v3",
+    entry_point=ENTRY_POINT,
+    max_episode_steps=280,
+    kwargs={
+        "model_path": MODEL_PATH,
+        "config_path": CONFIG_PATH,
+        "obj_goal": {},
+        "obj_init": {
+            "knob1_joint": 0,
+            "knob2_joint": 0,
+            "knob3_joint": 0,
+            "knob4_joint": 0,
+            "lightswitch_joint": 0,
+            "slidedoor_joint": 0,
+            "micro0joint": 0,
+            "rightdoorhinge": 0,
+            "leftdoorhinge": 0,
+        },
+        "obs_keys_wt": visual_obs_keys_wt,
     },
 )
 
