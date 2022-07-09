@@ -158,6 +158,11 @@ RANDOM_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFrankaRandom"
 FIXED_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFranka"
 RANDOM_DESK_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFrankaRandomDesk"
 
+# *** R3M Overide ***
+# This changes the default behavior of the environment from a fixed kitchen to one
+# where the kitchen randomly moves around, making the task visually more challenging.
+FIXED_ENTRY_POINT = RANDOM_DESK_ENTRY_POINT
+
 # Kitchen
 register(
     id="kitchen-v3",
