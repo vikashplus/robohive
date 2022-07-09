@@ -8,6 +8,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 from gym.envs.registration import register
 import os
 curr_dir = os.path.dirname(os.path.abspath(__file__))
+from mj_envs.envs.env_variants import register_env_variant
 
 print("RS:> Registering Claw Envs")
 
@@ -41,3 +42,18 @@ register(
         'target_euler_range': {'high':[1, 1, 1], 'low':[-1, -1, -1]}
     }
 )
+
+# Reach to random target using visual inputs
+def register_visual_envs(env_id, encoder_type):
+    register_env_variant(
+        env_id=env_id,
+        variant_id=env_id[:-3]+'_v'+encoder_type+env_id[-3:],
+        variants={'obs_keys':
+                    ['qp', 'qv',
+                    "rgb:center_cam:224x224:{}".format(encoder_type)]
+        },
+        silent=True
+    )
+for env in ['TrifingerReachFixed-v0', 'TrifingerReachRandom-v0']:
+    for enc in ["r3m18", "r3m34", "r3m50", "flat"]:
+        register_visual_envs(env, enc)

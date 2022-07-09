@@ -37,8 +37,8 @@
             <include file="../../../sims/furniture_sim/bin/busbin1_body.xml"/>
         </body>
 
-        <body name="object" pos="0 0 0.9">
-            <geom type="box" size="0.025 0.025 0.025" contype="0" conaffinity="0" rgba=".4 .6 .8 1" />
+        <body name="object" pos="0 0 0.85">
+            <geom type="box" size="0.025 0.025 0.025" contype="0" conaffinity="0" rgba=".9 .6 .4 1"/>
             <geom type="box" size="0.025 0.025 0.025" mass=".200" group="4"/>
             <site name='object' type="box" size="0.025 0.025 0.025" group="4"/>
             <freejoint/>
