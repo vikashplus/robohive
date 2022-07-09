@@ -12,7 +12,7 @@ from mj_envs.envs.env_variants import register_env_variant
 
 print("RS:> Registering Claw Envs")
 
-# FRANKA REACH =======================================================================
+# TRIFINGER REORIENT =======================================================================
 from mj_envs.envs.claws.reorient_v0 import ReorientBaseV0
 
 # Reorient to fixed target
