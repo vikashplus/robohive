@@ -89,7 +89,7 @@ def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera
 
             # initialize env to the starting position
             if path and "state" in path['env_infos'].keys():
-                env.reset(reset_qpos=path['env_infos']['state']['qpos'][0], reset_qvel=path['env_infos']['state']['qpos'][0])
+                env.reset(reset_qpos=path['env_infos']['state']['qpos'][0], reset_qvel=path['env_infos']['state']['qvel'][0])
             else:
                 env.reset()
 
