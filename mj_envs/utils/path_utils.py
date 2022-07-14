@@ -35,11 +35,11 @@ def main(rollout_path, output_dir, verify):
         rollout_name = os.path.split(rollout_path)[-1]
         output_name = os.path.splitext(rollout_name)[0]
         output_path = os.path.join(output_dir, output_name + '.h5')
-        print('Saving:  ', output_path)
 
         # start a h5 writer for this path
         writer = DataWriter(output_path)
         for i_path, path in enumerate(paths):
+            print("parsing rollout", i_path)
             path = writer.flatten_dict('', path)
 
             # parse all frames in this path/ tiral
@@ -48,11 +48,17 @@ def main(rollout_path, output_dir, verify):
                 frame_dict ={}
                 for key, val in path.items():
                     # print(key)
-                    frame_dict[key] = [] if len(val)==0 else val[h]
+                    if len(val)==0:
+                        frame_dict[key] = []
+                    elif len(val)==horizon:
+                        frame_dict[key] = val[h]
+                    else:
+                        frame_dict[key] = val
                 writer.add_frame(**frame_dict)
             writer.write_trial('Trial'+str(i_path))
 
         # close the h5 writer for this path
+        print('Saving:  ', output_path)
         del writer
 
         # Read back and verify a few keys
@@ -68,6 +74,5 @@ def main(rollout_path, output_dir, verify):
 
 if __name__ == '__main__':
     main()
-
 
 
