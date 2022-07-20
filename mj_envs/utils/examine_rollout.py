@@ -4,7 +4,7 @@ Helper script to record/examine a rollout's openloop effects (render/ playback/ 
     - Record:   Record an execution. (Useful for kinesthetic demonstrations on hardware)\n
     - Render:   Render back the execution. (sim.forward)\n
     - Playback: Playback the rollout action sequence in openloop (sim.step(a))\n
-    - Recover:  Plyaback actions recovered from the observations \n
+    - Recover:  Playback actions recovered from the observations \n
   > Render options\n
     - either onscreen, or offscreen, or just rollout without rendering.\n
   > Save options:\n
@@ -37,10 +37,12 @@ import skvideo.io
 @click.option('-o', '--output_dir', type=str, default='./', help=('Directory to save the outputs'))
 @click.option('-on', '--output_name', type=str, default=None, help=('The name to save the outputs as'))
 @click.option('-sp', '--save_paths', type=bool, default=False, help=('Save the rollout paths'))
+@click.option('-cp', '--compress_paths', type=bool, default=True, help=('compress paths. Remove obs and env_info/state keys'))
 @click.option('-pp', '--plot_paths', type=bool, default=False, help=('2D-plot of individual paths'))
 @click.option('-ea', '--env_args', type=str, default=None, help=('env args. E.g. --env_args "{\'is_hardware\':True}"'))
+@click.option('-ns', '--noise_scale', type=float, default=0.0, help=('Noise amplitude in randians}"'))
 
-def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera_name, output_dir, output_name, save_paths, plot_paths, env_args):
+def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera_name, output_dir, output_name, save_paths, compress_paths, plot_paths, env_args, noise_scale):
 
     # seed and load environments
     np.random.seed(seed)
@@ -48,7 +50,7 @@ def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera
     env.seed(seed)
 
     # load paths
-    if mode is 'record':
+    if mode == 'record':
         assert horizon>0, "Rollout horizon must be specified when recording rollout"
         assert output_name is not None, "Specify the name of the recording"
         if save_paths is False:
@@ -58,9 +60,10 @@ def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera
         assert rollout_path is not None, "Rollout path is required for mode:{} ".format(mode)
         paths = pickle.load(open(rollout_path, 'rb'))
         if output_dir == './': # overide the default
-            output_dir, rollout_name = os.path.split(rollout_path)
-            if output_name is None:
-                output_name = os.path.splitext(rollout_name)[0]
+            output_dir = os.path.dirname(rollout_path)
+        if output_name is None:
+            rollout_name = os.path.split(rollout_path)[-1]
+            output_name = os.path.splitext(rollout_name)[0]
 
     # resolve rendering
     if render == 'onscreen':
@@ -95,7 +98,7 @@ def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera
 
             # Rollout
             o = env.get_obs()
-            path_horizon = horizon if mode is 'record' else path['actions'].shape[0]
+            path_horizon = horizon if mode == 'record' else path['actions'].shape[0]
             for i_step in range(path_horizon):
 
                 # Record Execution. Useful for kinesthetic demonstrations on hardware
@@ -126,15 +129,21 @@ def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera
                 elif mode=='recover':
                     # assumes position controls
                     a = path['env_infos']['obs_dict']['qp'][i_step]
+                    if noise_scale:
+                        a = a +  env.env.np_random.uniform(high=noise_scale, low=-noise_scale, size=len(a)).astype(a.dtype)
                     if env.normalize_act:
                         a = env.robot.normalize_actions(controls=a)
                     onext, r, d, info = env.step(a) # t ==> t+1
 
                 # populate rollout paths
                 ep_rwd += r
-                obs.append(o); o = onext
                 act.append(a)
                 rewards.append(r)
+                if compress_paths:
+                    obs.append([]); o = onext # don't save obs
+                    del info['state']  # don't save state
+                else:
+                    obs.append(o); o = onext
                 env_infos.append(info)
 
                 # Render offscreen
@@ -172,13 +181,13 @@ def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera
     # Save paths
     time_stamp = time.strftime("%Y%m%d-%H%M%S")
     if save_paths:
-        file_name = output_dir + '/' + output_name + '{}_paths.pickle'.format(time_stamp)
+        file_name = os.path.join(output_dir, output_name + '{}_paths.pickle'.format(time_stamp))
         pickle.dump(pbk_paths, open(file_name, 'wb'))
         print("Saved: "+file_name)
 
     # plot paths
     if plot_paths:
-        file_name = output_dir + '/' + output_name + '{}'.format(time_stamp)
+        file_name = os.path.join(output_dir, output_name + '{}'.format(time_stamp))
         plotnsave_paths(pbk_paths, env=env, fileName_prefix=file_name)
 
 if __name__ == '__main__':
