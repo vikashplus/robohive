@@ -5,6 +5,7 @@ Source  :: https://github.com/vikashplus/mj_envs
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
+from cgitb import reset
 from typing import Dict, Sized
 import time
 
@@ -15,6 +16,8 @@ import torch
 from polymetis import RobotInterface
 import torchcontrol as toco
 from mj_envs.robot.hardware_base import hardwareBase
+from mj_envs.utils.min_jerk import generate_joint_space_min_jerk
+
 import argparse
 
 class JointPDPolicy(toco.PolicyModule):
@@ -22,39 +25,44 @@ class JointPDPolicy(toco.PolicyModule):
     Custom policy that performs PD control around a desired joint position
     """
 
-    def __init__(self, desired_joint_pos, kq, kqd, **kwargs):
+    def __init__(self, desired_joint_pos, kp, kd, **kwargs):
         """
         Args:
             desired_joint_pos (int):    Number of steps policy should execute
             hz (double):                Frequency of controller
-            kq, kqd (torch.Tensor):     PD gains (1d array)
+            kp, kd (torch.Tensor):     PD gains (1d array)
         """
         super().__init__(**kwargs)
 
+        self.kp = torch.nn.Parameter(kp)
+        self.kd = torch.nn.Parameter(kd)
         self.q_desired = torch.nn.Parameter(desired_joint_pos)
 
         # Initialize modules
-        self.feedback = toco.modules.JointSpacePD(kq, kqd)
+        self.feedback = toco.modules.JointSpacePD(self.kp, self.kd)
 
     def forward(self, state_dict: Dict[str, torch.Tensor]):
         # Parse states
         q_current = state_dict["joint_positions"]
         qd_current = state_dict["joint_velocities"]
+        # self.feedback.Kp = self.kp
+        # self.feedback.Kd = self.kd
 
         # Execute PD control
         output = self.feedback(
             q_current, qd_current, self.q_desired, torch.zeros_like(qd_current)
         )
-
         return {"joint_torques": output}
 
 
 
 class FrankaArm(hardwareBase):
-    def __init__(self, name, ip_address, **kwargs):
+    def __init__(self, name, ip_address, gain_scale=1.0, **kwargs):
         self.name = name
         self.ip_address = ip_address
         self.robot = None
+        self.gain_scale = gain_scale
+
 
     def connect(self, policy=None):
         """Establish hardware connection"""
@@ -77,15 +85,14 @@ class FrankaArm(hardwareBase):
         if connection:
             print("okay")
             state = self.robot.get_robot_state()
+            self.reset()
             if policy==None:
                 # Create policy instance
                 s_initial = self.get_sensors()
-                default_kq = 0.10*torch.Tensor(self.robot.metadata.default_Kq)
-                default_kqd = 0.10*torch.Tensor(self.robot.metadata.default_Kqd)
                 policy = JointPDPolicy(
                     desired_joint_pos=s_initial['joint_pos'],
-                    kq=default_kq,
-                    kqd=default_kqd,
+                    kp=self.gain_scale * torch.Tensor(self.robot.metadata.default_Kq),
+                    kd=self.gain_scale * torch.Tensor(self.robot.metadata.default_Kqd),
                 )
 
             # Send policy
@@ -95,6 +102,7 @@ class FrankaArm(hardwareBase):
             print("Not ready. Please retry connection")
 
         return connection
+
 
     def okay(self):
         """Return hardware health"""
@@ -110,16 +118,18 @@ class FrankaArm(hardwareBase):
                 okay = False
         return okay
 
+
     def close(self):
         """Close hardware connection"""
         if self.robot:
             print("Terminating PD policy: ", end="")
             try:
+                self.reset()
                 state_log = self.robot.terminate_current_policy()
                 print("Success")
             except:
-                print("Failed. Resetting directly to home: ", end="")
-            self.reset()
+                # print("Failed. Resetting directly to home: ", end="")
+                print("Resetting Failed. Exiting: ", end="")
             self.robot = None
             print("Done")
         return True
@@ -134,9 +144,29 @@ class FrankaArm(hardwareBase):
         print("Re-connection success")
 
 
-    def reset(self, time_to_go=5):
+    def reset(self, reset_pos=None, time_to_go=5):
         """Reset hardware"""
-        self.robot.go_home(time_to_go=time_to_go)
+
+        if self.robot.get_previous_interval().end == -1: # Is user controller?
+            print("Resetting using user controller")
+
+            if reset_pos == None:
+                reset_pos = torch.Tensor(self.robot.metadata.rest_pose)
+            elif not torch.is_tensor(reset_pos):
+                reset_pos = torch.Tensor(reset_pos)
+
+            # Use registered controller
+            q_current = self.get_sensors()['joint_pos']
+            # generate min jerk trajectory
+            dt = 0.1
+            waypoints =  generate_joint_space_min_jerk(start=q_current, goal=reset_pos, time_to_go=time_to_go, dt=dt)
+            for i in range(len(waypoints)):
+                self.apply_commands(q_desired=waypoints[i]['position'])
+                time.sleep(dt)
+        else:
+            # Use default controller
+            print("Resetting using default controller")
+            self.robot.go_home(time_to_go=time_to_go)
 
 
     def get_sensors(self):
@@ -151,14 +181,23 @@ class FrankaArm(hardwareBase):
         return {'joint_pos': joint_pos, 'joint_vel':joint_pos}
 
 
-    def apply_commands(self, q_desired):
+    def apply_commands(self, q_desired=None, kp=None, kd=None):
         """Apply hardware commands"""
-        q_des_tensor = torch.tensor(q_desired)
+        udpate_pkt = {}
+        if q_desired is not None:
+            udpate_pkt['q_desired'] = q_desired if torch.is_tensor(q_desired) else torch.tensor(q_desired)
+        if kp is not None:
+            udpate_pkt['kp'] = kp if torch.is_tensor(kp) else torch.tensor(kp)
+        if kd is not None:
+            udpate_pkt['kd'] = kd if torch.is_tensor(kd) else torch.tensor(kd)
+        assert udpate_pkt, "Atleast one parameter needs to be specified for udpate"
+
         try:
-            self.robot.update_current_policy({"q_desired": q_des_tensor})
+            self.robot.update_current_policy(udpate_pkt)
         except Exception as e:
             print("1> Failed to udpate policy with exception", e)
             self.reconnect()
+
 
     def __del__(self):
         self.close()
@@ -166,8 +205,7 @@ class FrankaArm(hardwareBase):
 
 # Get inputs from user
 def get_args():
-    parser = argparse.ArgumentParser(description="OptiTrack Client: Connects to \
-        the server and fetches streaming data")
+    parser = argparse.ArgumentParser(description="Polymetis based Franka client")
 
     parser.add_argument("-i", "--server_ip",
                         type=str,
@@ -181,7 +219,7 @@ if __name__ == "__main__":
     args = get_args()
 
     # user inputs
-    time_to_go = 2*np.pi
+    time_to_go = 1*np.pi
     m = 0.5  # magnitude of sine wave (rad)
     T = 2.0  # period of sine wave
     hz = 50  # update frequency
@@ -192,11 +230,14 @@ if __name__ == "__main__":
     # connect to robot with default policy
     assert franka.connect(policy=None), "Connection to robot failed."
 
+    # reset using the user controller
+    franka.reset()
+
     # Update policy to execute a sine trajectory on joint 6 for 5 seconds
     print("Starting sine motion updates...")
     s_initial = franka.get_sensors()
-    q_desired = s_initial['get_sensors'].clone()
-    print(list(q_desired.shape))
+    q_initial = s_initial['joint_pos'].clone()
+    q_desired = s_initial['joint_pos'].clone()
 
     for i in range(int(time_to_go * hz)):
         q_desired[5] = q_initial[5] + m * np.sin(np.pi * i / (T * hz))
@@ -205,5 +246,18 @@ if __name__ == "__main__":
 
         franka.apply_commands(q_desired = q_desired)
         time.sleep(1 / hz)
+
+    # import ipdb; ipdb.set_trace()
+    # Udpate the gains
+    # kp_new = 0.0001* torch.Tensor(franka.robot.metadata.default_Kq)
+    # kd_new = 0.0001* torch.Tensor(franka.robot.metadata.default_Kqd)
+    # franka.apply_commands(kp=kp_new, kd=kd_new)
+
+    # print("Starting sine motion updates again ...")
+    # for i in range(int(time_to_go * hz)):
+    #     q_desired[5] = q_initial[5] + m * np.sin(np.pi * i / (T * hz))
+    #     franka.apply_commands(q_desired = q_desired)
+    #     time.sleep(1 / hz)
+
 
     franka.close()
