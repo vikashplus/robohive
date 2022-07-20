@@ -47,8 +47,7 @@ def main(rollout_path, output_dir, verify):
             for h in range(horizon):
                 frame_dict ={}
                 for key, val in path.items():
-                    # print(key)
-                    if len(val)==0:
+                    if val is None:
                         frame_dict[key] = []
                     elif len(val)==horizon:
                         frame_dict[key] = val[h]
@@ -74,5 +73,3 @@ def main(rollout_path, output_dir, verify):
 
 if __name__ == '__main__':
     main()
-
-

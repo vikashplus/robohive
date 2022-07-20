@@ -47,13 +47,14 @@ def main(rollout_path, frame_size, format, cam):
             for t in range(path_horizon):
                 frames[t,:,:,:] = path['env_infos']['obs_dict'][cam_name][t].reshape(frame_size[0], frame_size[1], 3)
                 print(t, end=",")
+            frames[frames==255] = 254 # remove rendering artifact due to saturation
             skvideo.io.vwrite(file_name, np.asarray(frames))
             print("\nSaving: {}".format(file_name))
 
         elif format == "rgb":
             print("Recovering frames:", end="")
             for t in range(path_horizon):
-                file_name = os.path.join(output_dir, output_name+'{}{}{}.jpeg'.format(i_path, cam, t))
+                file_name = os.path.join(output_dir, output_name+'{}{}{}.png'.format(i_path, cam, t))
                 img =  path['env_infos']['obs_dict'][cam_name][t].reshape(frame_size[0], frame_size[1], 3)
                 image = Image.fromarray(img)
                 image.save(file_name)
