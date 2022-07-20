@@ -36,3 +36,6 @@
 [submodule "mj_envs/sims/robel_sim"]
 	path = mj_envs/sims/robel_sim
 	url = https://github.com/vikashplus/robel_sim.git
+[submodule "mj_envs/sims/robotiq_sim"]
+	path = mj_envs/sims/robotiq_sim
+	url = https://github.com/vikashplus/robotiq_sim.git

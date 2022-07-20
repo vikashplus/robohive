@@ -39,7 +39,7 @@
         </body>
 
         <!-- D'Manus Hand-->
-        <body name="DManus_mount" pos="0 0 .11" euler="0 0 -2.356">
+        <body name="ee_mount" pos="0 0 .11" euler="0 0 -2.356">
             <include file="../../../sims/robel_sim/dmanus/assets/dmanus_chain.xml"/>
         </body>
 

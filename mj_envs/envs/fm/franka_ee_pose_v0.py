@@ -12,7 +12,7 @@ from mj_envs.utils.xml_utils import reassign_parent
 import os
 import collections
 
-class FrankaDmanusPose(env_base.MujocoEnv):
+class FrankaEEPose(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS = [
         'qp', 'qv', 'pose_err'
@@ -29,7 +29,7 @@ class FrankaDmanusPose(env_base.MujocoEnv):
         # Process model to use DManus as end effector
         raw_sim = env_base.get_sim(model_path=curr_dir+model_path)
         raw_xml = raw_sim.model.get_xml()
-        processed_xml = reassign_parent(xml_str=raw_xml, receiver_node="panda0_link7", donor_node="DManus_mount")
+        processed_xml = reassign_parent(xml_str=raw_xml, receiver_node="panda0_link7", donor_node="ee_mount")
         processed_model_path = curr_dir+model_path[:-4]+"_processed.xml"
         with open(processed_model_path, 'w') as file:
             file.write(processed_xml)
@@ -40,7 +40,7 @@ class FrankaDmanusPose(env_base.MujocoEnv):
         elif obsd_model_path:
             raw_sim = env_base.get_sim(model_path=curr_dir+obsd_model_path)
             raw_xml = raw_sim.model.get_xml()
-            processed_xml = reassign_parent(xml_str=raw_xml, receiver_node="panda0_link7", donor_node="DManus_mount")
+            processed_xml = reassign_parent(xml_str=raw_xml, receiver_node="panda0_link7", donor_node="ee_mount")
             processed_obsd_model_path = curr_dir+obsd_model_path[:-4]+"_processed.xml"
             with open(processed_obsd_model_path, 'w') as file:
                 file.write(processed_xml)
@@ -78,7 +78,7 @@ class FrankaDmanusPose(env_base.MujocoEnv):
             self.target_pose = target_pose
         elif target_pose == 'random':
             self.target_type = 'random'
-            self.target_pose = self.sim.data.qpos.copy() # fake target for setup
+            self.target_pose = self.get_target_pose() # fake target for setup
 
         super()._setup(obs_keys=obs_keys,
                        weighted_reward_keys=weighted_reward_keys,
@@ -122,3 +122,23 @@ class FrankaDmanusPose(env_base.MujocoEnv):
         self.target_pose = self.get_target_pose()
         obs = super().reset(reset_qpos, reset_qvel)
         return obs
+
+class FrankaRobotiqPose(FrankaEEPose):
+    def __init__(self, model_path, obsd_model_path=None, seed=None, **kwargs):
+        gym.utils.EzPickle.__init__(self, model_path, obsd_model_path, seed, **kwargs)
+        self.nqp = 8
+        super().__init__(model_path=model_path, obsd_model_path=obsd_model_path, seed=seed, **kwargs)
+
+    def get_obs_dict(self, sim):
+        obs_dict = {}
+        obs_dict['t'] = np.array([self.sim.data.time])
+        obs_dict['qp'] = sim.data.qpos[:self.nqp].copy()
+        obs_dict['qv'] = sim.data.qvel[:self.nqp].copy()
+        obs_dict['pose_err'] = obs_dict['qp'] - self.target_pose
+        return obs_dict
+
+    def get_target_pose(self):
+        if self.target_type == 'fixed':
+            return self.target_pose
+        elif self.target_type == 'random':
+            return self.np_random.uniform(low=self.sim.model.actuator_ctrlrange[:self.nqp,0], high=self.sim.model.actuator_ctrlrange[:self.nqp,1])
