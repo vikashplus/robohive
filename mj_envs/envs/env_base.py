@@ -147,7 +147,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
     def _setup_rgb_encoders(self, obs_keys, device=None):
         """
-        Setup the supported visual encoders: flat/ r3m18/ r3m34/ r3m50
+        Setup the supported visual encoders: 1d /2d / r3m18/ r3m34/ r3m50
         """
         if device is None:
             self.device_encoder = "cuda" if torch.cuda.is_available() else "cpu"
@@ -172,7 +172,9 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
             # Load encoder
             print("Using {} visual inputs with {} encoder".format(wxh, id_encoder))
-            if id_encoder == "flat":
+            if id_encoder == "1d":
+                self.rgb_encoder = IdentityEncoder()
+            elif id_encoder == "2d":
                 self.rgb_encoder = IdentityEncoder()
             elif id_encoder == "r3m18":
                 self.rgb_encoder = load_r3m("resnet18")
@@ -251,7 +253,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
         Recover visual observation dict corresponding to the visual keys in obs_keys
         Acceptable visual keys:
-            - 'rgb:cam_name:HxW:flat'
+            - 'rgb:cam_name:HxW:1d'
+            - 'rgb:cam_name:HxW:2d'
             - 'rgb:cam_name:HxW:r3m18'
             - 'rgb:cam_name:HxW:r3m34'
             - 'rgb:cam_name:HxW:r3m50'
@@ -276,8 +279,10 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                                     sim=sim,
                                   )
                 # encode images
-                if rgb_encoder_id == 'flat':
+                if rgb_encoder_id == '1d':
                     rgb_encoded = img.reshape(-1)
+                elif rgb_encoder_id == '2d':
+                    rgb_encoded = img
                 elif rgb_encoder_id[:3] == 'r3m':
                     with torch.no_grad():
                         rgb_encoded = 255.0 * self.rgb_transform(img[0]).reshape(-1, 3, 224, 224)
