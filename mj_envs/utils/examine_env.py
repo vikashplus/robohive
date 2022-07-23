@@ -6,7 +6,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= """
 
 import gym
-from mj_envs.utils.viz_paths import plot_paths as plotnsave_paths
+from mj_envs.utils.paths_utils import plot as plotnsave_paths
 import click
 import numpy as np
 import pickle
