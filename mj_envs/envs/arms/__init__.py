@@ -52,7 +52,7 @@ def register_visual_envs(encoder_type):
                     ['qp', 'qv',
                     "rgb:left_cam:224x224:{}".format(encoder_type),
                     "rgb:right_cam:224x224:{}".format(encoder_type),
-                    "rgb:center_cam:224x224:{}".format(encoder_type)]
+                    "rgb:top_cam:224x224:{}".format(encoder_type)]
         },
         silent=True
     )
