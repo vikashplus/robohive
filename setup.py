@@ -25,16 +25,18 @@ setup(
     url='https://github.com/vikashplus/mj_envs.git',
     author='Movement Control Lab, UW',
     install_requires=[
-        'click', 
-        'gym==0.13', 
-        'mujoco-py<2.2,>=2.1', 
-        'termcolor', 
-        'sk-video', 
-        'flatten_dict', 
-        'matplotlib', 
-        'ffmpeg', 
+        'click',
+        'gym==0.13',
+        'mujoco-py<2.2,>=2.1',
+        'termcolor',
+        'sk-video',
+        'flatten_dict',
+        'matplotlib',
+        'ffmpeg',
         'absl-py',
         'pycapnp==1.1.0',
-        'r3m'
+        'r3m @ git+https://github.com/facebookresearch/r3m.git',
+        'data_tools @ git+https://github.com/fairinternal/data_tools.git',
+        'h5py==3.7.0'
     ],
 )
