@@ -84,8 +84,7 @@ class FrankaArm(hardwareBase):
         connection = self.okay()
         if connection:
             print("okay")
-            state = self.robot.get_robot_state()
-            self.reset()
+            self.reset() # reset the robot before starting operaions
             if policy==None:
                 # Create policy instance
                 s_initial = self.get_sensors()
@@ -147,26 +146,31 @@ class FrankaArm(hardwareBase):
     def reset(self, reset_pos=None, time_to_go=5):
         """Reset hardware"""
 
-        if self.robot.get_previous_interval().end == -1: # Is user controller?
-            print("Resetting using user controller")
+        if self.okay():
+            if self.robot.get_previous_interval().end == -1: # Is user controller?
+                print("Resetting using user controller")
 
-            if reset_pos == None:
-                reset_pos = torch.Tensor(self.robot.metadata.rest_pose)
-            elif not torch.is_tensor(reset_pos):
-                reset_pos = torch.Tensor(reset_pos)
+                if reset_pos == None:
+                    reset_pos = torch.Tensor(self.robot.metadata.rest_pose)
+                elif not torch.is_tensor(reset_pos):
+                    reset_pos = torch.Tensor(reset_pos)
 
-            # Use registered controller
-            q_current = self.get_sensors()['joint_pos']
-            # generate min jerk trajectory
-            dt = 0.1
-            waypoints =  generate_joint_space_min_jerk(start=q_current, goal=reset_pos, time_to_go=time_to_go, dt=dt)
-            for i in range(len(waypoints)):
-                self.apply_commands(q_desired=waypoints[i]['position'])
-                time.sleep(dt)
+                # Use registered controller
+                q_current = self.get_sensors()['joint_pos']
+                # generate min jerk trajectory
+                dt = 0.1
+                waypoints =  generate_joint_space_min_jerk(start=q_current, goal=reset_pos, time_to_go=time_to_go, dt=dt)
+                for i in range(len(waypoints)):
+                    self.apply_commands(q_desired=waypoints[i]['position'])
+                    time.sleep(dt)
+            else:
+                # Use default controller
+                print("Resetting using default controller")
+                self.robot.go_home(time_to_go=time_to_go)
         else:
-            # Use default controller
-            print("Resetting using default controller")
-            self.robot.go_home(time_to_go=time_to_go)
+            print("Can't connect to the robot for reset. Attemping reconnection and trying again")
+            self.reconnect()
+            self.reset(reset_pos, time_to_go)
 
 
     def get_sensors(self):
