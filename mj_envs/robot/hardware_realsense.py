@@ -81,12 +81,13 @@ if __name__ == "__main__":
 
     rs = RealSense(name="test cam", topic=args.topic)
     rs.connect()
+    assert rs.okay(), "Couldn't connect to the camera (topic: {})".format(args.topic)
     import cv2
 
     for i in range(50):
         img = rs.get_sensors()
         if img['rgb'] is not None:
-            #print(img['rgb'])
+            # print(img['rgb'])
             cv2.imshow("rgb", img['rgb'])
             cv2.waitKey(1)
         if img['d'] is not None:

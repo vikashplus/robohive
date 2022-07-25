@@ -45,7 +45,7 @@ class Robot():
                 mj_sim = None,              # pass sim directly
                 config_path: str = None,    # config defining sensors and actuator groups
                 act_mode: str = "pos",      # pos / vel
-                is_hardware = None,         # use hardware
+                is_hardware:bool = None,    # use hardware
                 sensor_cache_maxsize = 5,   # cache size for sensors
                 noise_scale = 0,            # scale for sensor noise
                 random_generator = None,    # random number generator
@@ -56,7 +56,7 @@ class Robot():
             print("Warning: Unused kwargs found: {}".format(kwargs))
         self.name = robot_name+'(sim)' if is_hardware is None else robot_name+'(hdr)'
         self._act_mode = act_mode
-        self.is_hardware = is_hardware
+        self.is_hardware = bool(is_hardware)
         self._sensor_cache_maxsize = sensor_cache_maxsize
         self._noise_scale = noise_scale
         if random_generator == None:
