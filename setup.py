@@ -37,6 +37,8 @@ setup(
         'pycapnp==1.1.0',
         'r3m @ git+https://github.com/facebookresearch/r3m.git',
         'data_tools @ git+https://github.com/fairinternal/data_tools.git',
-        'h5py==3.7.0'
+        'h5py==3.7.0',
+        'alephzero', # real_sense sub dependency
+
     ],
 )

@@ -23,4 +23,5 @@ RoboHive uses [Polymetis](https://facebookresearch.github.io/fairo/polymetis/) f
 
 5. [Real-Sense cameras](https://www.intelrealsense.com/)
 
-Robohive relies on a pub-sub framework from [Fairo](https://github.com/facebookresearch/fairo) to interact with intel realsense cameras.
+Robohive relies on a pub-sub framework from [Fairo](https://github.com/facebookresearch/fairo) to interact with intel realsense cameras. Quick install
+to get the a0 dependencies `pip install alephzero`

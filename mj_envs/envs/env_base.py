@@ -240,6 +240,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         # get obs_dict using the observed information
         self.obs_dict = self.get_obs_dict(self.sim_obsd)
+
         if self.rgb_encoder:
             visual_obs_dict = self.get_visual_obs_dict(sim=self.sim_obsd)
             self.obs_dict.update(visual_obs_dict)
@@ -271,7 +272,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 height = int(wxh.split('x')[0])
                 width = int(wxh.split('x')[1])
                 # render images ==> returns (ncams, height, width, 3)
-                img = self.robot.get_visual_sensors(
+                img, dpt = self.robot.get_visual_sensors(
                                     height=height,
                                     width=width,
                                     cameras=[cam],
@@ -291,7 +292,13 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                         rgb_encoded = np.squeeze(rgb_encoded)
                 else:
                     raise ValueError("Unsupported visual encoder: {}".format(rgb_encoder_id))
+
                 visual_obs_dict.update({key:rgb_encoded})
+                # add depth observations if requested in the keys (assumption d will always be accompanied by rgb keys)
+                d_key = 'd:'+key[4:]
+                if d_key in self.obs_keys:
+                    visual_obs_dict.update({d_key:dpt})
+
         return visual_obs_dict
 
 

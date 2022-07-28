@@ -84,6 +84,10 @@ register(
             "rgb:right_cam:{}:{}".format(img_res, encoder_type),
             "rgb:top_cam:{}:{}".format(img_res, encoder_type),
             "rgb:Franka_wrist_cam:{}:{}".format(img_res, encoder_type),
+            "d:left_cam:{}:{}".format(img_res, encoder_type),
+            "d:right_cam:{}:{}".format(img_res, encoder_type),
+            "d:top_cam:{}:{}".format(img_res, encoder_type),
+            "d:Franka_wrist_cam:{}:{}".format(img_res, encoder_type),
             ]
         }
 )

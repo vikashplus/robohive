@@ -142,6 +142,7 @@ class Robot():
                 from .hardware_realsense import RealSense
                 device['robot'] = RealSense(name=name, **device['interface'])
 
+
             elif device['interface']['type'] == 'robotiq':
                 from .hardware_robotiq import Robotiq
                 device['robot'] = Robotiq(name=name, **device['interface'])
@@ -414,9 +415,10 @@ class Robot():
     # get sensor data and update robot time accordingly
     def get_visual_sensors(self, height:int, width:int, cameras:list, device_id:int, sim):
 
-        imgs = np.zeros((len(cameras), height, width, 3), dtype=np.uint8)
-
         if self.is_hardware:
+            imgs = np.zeros((len(cameras), height, width, 3), dtype=np.uint8)
+            depths = np.zeros((len(cameras), height, width), dtype=np.uint16)
+
             current_sensor_value = {}
             current_sensor_value['time'] = time.time() - self.time_start
 
@@ -429,20 +431,26 @@ class Robot():
                 assert data_height == height, "Incorrect image height: required:{}, found:{}".format(height, data_height)
                 data_width = data['rgb'].shape[1]
                 assert data_width == width, "Incorrect image width: required:{}, found:{}".format(width, data_width)
-                current_sensor_value[cam_name] = data['rgb']
+                current_sensor_value[cam_name] = data
 
                 # calibrate sensors
-                current_sensor_value[cam_name] = current_sensor_value[cam_name]*device['cams'][0]['scale'] + device['cams'][0]['scale']
+                for cam in device['cams']:
+                    current_sensor_value[cam_name][cam['hdr_id']] = current_sensor_value[cam_name][cam['hdr_id']]*cam['scale'] + cam['offset']
                 device['sensor_data'] = current_sensor_value[cam_name]
                 device['sensor_time'] = current_sensor_value['time']
-                imgs[ind, :, :, :] = current_sensor_value[cam_name]
+                imgs[ind, :, :, :] = current_sensor_value[cam_name]['rgb']
+                depths[ind, :, :] = current_sensor_value[cam_name]['d'][:,:,0] # assumes single channel depth
+
         else:
             imgs = np.zeros((len(cameras), height, width, 3), dtype=np.uint8)
+            depths = np.zeros((len(cameras), height, width))
             for ind, cam in enumerate(cameras):
-                img = sim.render(width=width, height=height, mode='offscreen', camera_name=cam, device_id=device_id)
+                img, depth = sim.render(width=width, height=height, depth=True, mode='offscreen', camera_name=cam, device_id=device_id)
                 img = img[::-1, :, : ] # Image has to be flipped
                 imgs[ind, :, :, :] = img
-        return imgs
+                depths[ind, :, :] = depth
+
+        return imgs, depths
 
 
     # Propagate sensor values back through the sim.
