@@ -9,12 +9,11 @@ import numpy as np
 import os
 import glob
 import pickle
-from data_tools.writer import DataWriter
 import h5py
 import skvideo.io
 from PIL import Image
 import click
-
+from mj_envs.utils.dict_utils import flatten_dict, dict_numpify
 
 # Useful to check the horizon for teleOp / Hardware experiments
 def plot_horizon(paths, env, fileName_prefix=None):
@@ -227,7 +226,48 @@ def render(rollout_path, render_format:str="mp4", cam_name:str="left"):
             raise TypeError("Unknown format")
 
 
-# convert path from pickle to h5 format
+# parse path from robohive format into robopen dataset format
+def path2dataset(path:dict)->dict:
+    """
+    Convery Robohive path.pickle format into robopen dataset format
+    """
+
+    obs_keys = path['env_infos']['obs_dict'].keys()
+    dataset = {}
+    # Data =====
+    dataset['data/time'] = path['env_infos']['obs_dict']['t']
+
+    # actions
+    if 'actions' in path.keys():
+        dataset['data/ctrl_arm'] = path['actions'][:,:7]
+        dataset['data/ctrl_ee'] = path['actions'][:,7:]
+
+    # states
+    for key in ['qp_arm', 'qv_arm', 'tau_arm', 'qp_ee', 'qv_ee']:
+        if key in obs_keys:
+            dataset['data/'+key] = path['env_infos']['obs_dict'][key]
+
+    # cams
+    for cam in ['left', 'right', 'top', 'wrsit']:
+        for key in obs_keys:
+            if 'rgb:'+cam in key:
+                dataset['data/rgb_'+cam] = path['env_infos']['obs_dict'][key]
+            if 'd:'+cam in key:
+                dataset['data/d_'+cam] = path['env_infos']['obs_dict'][key]
+    # user
+    if 'user_input' in obs_keys:
+        dataset['data/user_input'] = path['env_infos']['obs_dict']['user_input']
+
+    # Derived =====
+    if 'pos_ee' in obs_keys:
+        dataset['derived/pos_ee'] = path['env_infos']['obs_dict']['pos_ee']
+    if 'rot_ee' in obs_keys:
+        dataset['derived/rot_ee'] = path['env_infos']['obs_dict']['rot_ee']
+
+    return dataset
+
+
+# convert paths from pickle to h5 format
 def pickle2h5(rollout_path, output_dir=None, verify_output=False, h5_format:str='path', compress_path=False):
     # path:         single path or folder with paths
     # output_dir:   Directory to save the outputs. use path location if none.
@@ -254,45 +294,41 @@ def pickle2h5(rollout_path, output_dir=None, verify_output=False, h5_format:str=
         output_name = os.path.splitext(rollout_name)[0]
         output_path = os.path.join(output_dir, output_name + '.h5')
 
-        # start a h5 writer for this path
-        writer = DataWriter(output_path)
+        paths_h5 = h5py.File(output_path, "w")
 
-        # h5_format = "break"
-        h5_format = "break"
-        if h5_format == "break":
+        # Robohive path format
+        if h5_format == "path":
             for i_path, path in enumerate(paths):
                 print("parsing rollout", i_path)
-                path = writer.flatten_dict('', path)
-
-                # parse all frames in this path/ tiral
-                horizon = path['actions'].shape[0]
-                for h in range(horizon):
-                    frame_dict ={}
-                    for key, val in path.items():
-                        if val is None:
-                            frame_dict[key] = []
-                        elif '__len__' in dir(val) and len(val)==horizon:
-                            frame_dict[key] = val[h]
-                        else:
-                            frame_dict[key] = val
-                    writer.add_frame(**frame_dict)
-                writer.write_trial('Trial'+str(i_path))
-        elif h5_format == "once":
-            for i_path, path in enumerate(paths):
-                print("parsing rollout", i_path)
+                trial = paths_h5.create_group('Trial'+str(i_path))
+                # remove duplicate infos
                 if compress_path:
                     if 'observations' in path.keys():
                         del path['observations']
                     if 'state' in path['env_infos'].keys():
                         del path['env_infos']['state']
-                path = writer.flatten_dict('', path)
-                writer.add_config(**path)
-                writer.write_trial('Trial'+str(i_path))
+                # flatten dict and fix resolutions
+                path = flatten_dict(data=path)
+                path = dict_numpify(path, u_res=None, i_res=None, f_res=np.float16)
+                # add trail
+                for k, v in path.items():
+                    trial.create_dataset(k, data=v, compression='gzip', compression_opts=4)
 
+        # RoboPen dataset format
+        elif h5_format == "dataset":
+            for i_path, path in enumerate(paths):
+                print("parsing rollout", i_path)
+                trial = paths_h5.create_group('Trial'+str(i_path))
+                dataset = path2dataset(path) # convert to robopen dataset format
+                dataset = dict_numpify(dataset, u_res=None, i_res=None, f_res=np.float16) # numpify + data resolutions
+                for k, v in dataset.items():
+                    trial.create_dataset(k, data=v, compression='gzip', compression_opts=4)
+
+        else:
+            TypeError('Unsupported h5_format')
 
         # close the h5 writer for this path
         print('Saving:  ', output_path)
-        del writer
 
         # Read back and verify a few keys
         if verify_output:
@@ -310,9 +346,7 @@ def pickle2h5(rollout_path, output_dir=None, verify_output=False, h5_format:str=
                     return keys
 
             with h5py.File(output_path, "r") as h5file:
-                # import ipdb; ipdb.set_trace()
                 print("Printing schema read from output: ", output_path)
-
                 keys = allkeys(h5file['Trial0'])
 
     print("Finished Processing")
