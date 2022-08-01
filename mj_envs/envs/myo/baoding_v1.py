@@ -84,13 +84,15 @@ class BaodingFixedEnvV1(BaseV0):
         if self.which_task!=Task.MOVE_TO_LOCATION:
             self.x_radius = 0.025 #0.03
             self.y_radius = 0.028 #0.02 * 1.5 * 1.2
-            self.center_pos = [-.0125, -.05] # [-.0020, -.0522]
+            self.center_pos = [-.0125, -.07] # [-.0020, -.0522]
         self.counter=0
         self.goal = self.create_goal_trajectory(time_step=frame_skip*self.sim.model.opt.timestep, time_period=6)
 
         # init target and body sites
         self.object1_sid = self.sim.model.site_name2id('ball1_site')
         self.object2_sid = self.sim.model.site_name2id('ball2_site')
+        self.object1_gid = self.sim.model.geom_name2id('ball1')
+        self.object2_gid = self.sim.model.geom_name2id('ball2')
         self.target1_sid = self.sim.model.site_name2id('target1_site')
         self.target2_sid = self.sim.model.site_name2id('target2_site')
 
@@ -105,8 +107,7 @@ class BaodingFixedEnvV1(BaseV0):
                 sim.model.site_pos[self.target2_sid, 2] = 0.05
                 sim.model.site_pos[self.target2_sid, 1] = 0
                 # make 2nd object invisible
-                object2_gid = self.sim.model.geom_name2id('ball2')
-                sim.model.geom_rgba[object2_gid,3] = 0
+                sim.model.geom_rgba[self.object2_gid,3] = 0
                 sim.model.site_rgba[self.object2_sid,3] = 0
                 # make object-target tendons invisible
                 self.sim.model.tendon_rgba[-2:,3] = 0
@@ -163,8 +164,8 @@ class BaodingFixedEnvV1(BaseV0):
                 self.sim.model.site_pos[self.target2_sid, 0] = desired_positions_wrt_palm[2]
                 self.sim.model.site_pos[self.target2_sid, 1] = desired_positions_wrt_palm[3]
                 # move upward, to be seen
-                sim.model.site_pos[self.target1_sid, 2] = -0.07
-                sim.model.site_pos[self.target2_sid, 2] = -0.07
+                # sim.model.site_pos[self.target1_sid, 2] = -0.037
+                # sim.model.site_pos[self.target2_sid, 2] = -0.037
         self.counter +=1
         # V0: mean center and scaled differently
         # a[a>0] = self.act_mid[a>0] + a[a>0]*self.upper_rng[a>0]
@@ -235,6 +236,11 @@ class BaodingFixedEnvV1(BaseV0):
             ('done',            is_fall),
         ))
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
+
+        # Sucess Indicator
+        self.sim.model.geom_rgba[self.object1_gid, :2] = np.array([1, 1]) if target1_dist < self.proximity_threshold else np.array([0.5, 0.5])
+        self.sim.model.geom_rgba[self.object2_gid, :2] = np.array([0.9, .7]) if target1_dist < self.proximity_threshold else np.array([0.5, 0.5])
+
         return rwd_dict
 
     def reset(self, reset_pose=None, reset_vel=None, reset_goal=None, time_period=6):

@@ -49,6 +49,7 @@ class ReorientEnvV0(BaseV0):
         ):
         self.object_sid = self.sim.model.site_name2id("object_o")
         self.goal_sid = self.sim.model.site_name2id("target_o")
+        self.success_indicator_sid = self.sim.model.site_name2id("target_ball")
         self.goal_bid = self.sim.model.body_name2id("target")
         self.goal_init_pos = self.sim.data.site_xpos[self.goal_sid].copy()
         self.pos_rand_th = pos_rand_th
@@ -79,7 +80,7 @@ class ReorientEnvV0(BaseV0):
 
     def get_reward_dict(self, obs_dict):
         pos_th = .025
-        rot_th = .52 # 10deg*3
+        rot_th = 0.262 # 15deg
         drop_th = .200
         pos_dist = np.abs(np.linalg.norm(self.obs_dict['pos_err'], axis=-1))
         rot_dist = np.abs(np.linalg.norm(self.obs_dict['rot_err'], axis=-1))
@@ -99,6 +100,8 @@ class ReorientEnvV0(BaseV0):
             ('done', drop),
         ))
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
+        # Sucess Indicator
+        self.sim.model.site_rgba[self.success_indicator_sid, :2] = np.array([0, 2]) if rwd_dict['solved'] else np.array([2, 0])
         return rwd_dict
 
     def reset(self):
