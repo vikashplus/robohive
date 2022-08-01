@@ -78,7 +78,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         # sims
         self.sim = get_sim(model_path)
-        self.sim_obsd = get_sim(obsd_model_path) if obsd_model_path else get_sim(model_path)
+        self.sim_obsd = get_sim(obsd_model_path) if obsd_model_path else self.sim
         self.sim.forward()
         self.sim_obsd.forward()
         ObsVecDict.__init__(self)
