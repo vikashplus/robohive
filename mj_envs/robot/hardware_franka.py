@@ -147,7 +147,7 @@ class FrankaArm(hardwareBase):
         """Reset hardware"""
 
         if self.okay():
-            if self.robot.get_previous_interval().end == -1: # Is user controller?
+            if self.robot.is_running_policy(): # Is user controller?
                 print("Resetting using user controller")
 
                 if reset_pos == None:
