@@ -33,7 +33,7 @@ def dict_numpify(data:dict, u_res=np.uint8, i_res=np.int8, f_res=np.float16)->di
             val = dict_numpify(val, i_res, f_res)
 
         # lists/ tuples
-        elif '__len__' in dir(val):
+        elif '__len__' in dir(val) and len(val)>0:
             if type(val[0]) == bool:
                 val = np.array(val, dtype=np.bool_)
             if type(val[0]) == int:

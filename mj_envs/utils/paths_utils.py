@@ -248,21 +248,26 @@ def path2dataset(path:dict)->dict:
             dataset['data/'+key] = path['env_infos']['obs_dict'][key]
 
     # cams
-    for cam in ['left', 'right', 'top', 'wrsit']:
+    for cam in ['left', 'right', 'top', 'wrist']:
         for key in obs_keys:
-            if 'rgb:'+cam in key:
-                dataset['data/rgb_'+cam] = path['env_infos']['obs_dict'][key]
-            if 'd:'+cam in key:
-                dataset['data/d_'+cam] = path['env_infos']['obs_dict'][key]
+            if cam in key:
+                if 'rgb:' in key:
+                    dataset['data/rgb_'+cam] = path['env_infos']['obs_dict'][key]
+                elif 'd:' in key:
+                    dataset['data/d_'+cam] = path['env_infos']['obs_dict'][key]
     # user
-    if 'user_input' in obs_keys:
-        dataset['data/user_input'] = path['env_infos']['obs_dict']['user_input']
+    if 'user' in obs_keys:
+        dataset['data/user'] = path['env_infos']['obs_dict']['user']
 
     # Derived =====
     if 'pos_ee' in obs_keys:
         dataset['derived/pos_ee'] = path['env_infos']['obs_dict']['pos_ee']
     if 'rot_ee' in obs_keys:
         dataset['derived/rot_ee'] = path['env_infos']['obs_dict']['rot_ee']
+
+    # Config =====
+    if 'user_cmt' in path.keys():
+        dataset['config/solved'] = path['user_cmt']
 
     return dataset
 
@@ -309,7 +314,7 @@ def pickle2h5(rollout_path, output_dir=None, verify_output=False, h5_format:str=
                         del path['env_infos']['state']
                 # flatten dict and fix resolutions
                 path = flatten_dict(data=path)
-                path = dict_numpify(path, u_res=None, i_res=None, f_res=np.float16)
+                path = dict_numpify(path, u_res=None, i_res=np.int8, f_res=np.float16)
                 # add trail
                 for k, v in path.items():
                     trial.create_dataset(k, data=v, compression='gzip', compression_opts=4)
@@ -320,7 +325,7 @@ def pickle2h5(rollout_path, output_dir=None, verify_output=False, h5_format:str=
                 print("parsing rollout", i_path)
                 trial = paths_h5.create_group('Trial'+str(i_path))
                 dataset = path2dataset(path) # convert to robopen dataset format
-                dataset = dict_numpify(dataset, u_res=None, i_res=None, f_res=np.float16) # numpify + data resolutions
+                dataset = dict_numpify(dataset, u_res=None, i_res=np.int8, f_res=np.float16) # numpify + data resolutions
                 for k, v in dataset.items():
                     trial.create_dataset(k, data=v, compression='gzip', compression_opts=4)
 
@@ -341,13 +346,13 @@ def pickle2h5(rollout_path, output_dir=None, verify_output=False, h5_format:str=
                             if isinstance(value, h5py.Group):
                                 keys = keys + allkeys(value)
                             else:
-                                print("\t", value.name, "\t\t", value)
+                                print("\t", "{0:25}".format(value.name), value)
                                 keys = keys + (value.name,)
                     return keys
 
             with h5py.File(output_path, "r") as h5file:
                 print("Printing schema read from output: ", output_path)
-                keys = allkeys(h5file['Trial0'])
+                keys = allkeys(h5file)
 
     print("Finished Processing")
 
