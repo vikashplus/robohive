@@ -4,6 +4,7 @@ Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gma
 ================================================= """
 
 import collections
+from traceback import print_tb
 import numpy as np
 import gym
 
@@ -16,9 +17,6 @@ class ReorientEnvV0(BaseV0):
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
         "pos_dist": 100.0,
         "rot_dist": 1.0,
-        "bonus": 4.0,
-        "act_reg": 1,
-        "penalty": 10,
     }
 
     def __init__(self, model_path, obsd_model_path=None, seed=None, **kwargs):
@@ -79,13 +77,16 @@ class ReorientEnvV0(BaseV0):
         drop = pos_dist > self.drop_th
 
         rwd_dict = collections.OrderedDict((
+            # Perform reward tuning here --
+            # Update Optional Keys section below
+            # Update reward keys (DEFAULT_RWD_KEYS_AND_WEIGHTS) accordingly to update final rewards
+            # Examples: Env comes pre-packaged with two keys pos_dist and rot_dist
+
             # Optional Keys
             ('pos_dist', -1.*pos_dist),
             ('rot_dist', -1.*rot_dist),
-            ('bonus', 1.*(pos_dist<2*self.pos_th) + 1.*(pos_dist<self.pos_th)),
-            ('act_reg', -1.*act_mag),
-            ('penalty', -1.*drop),
             # Must keys
+            ('act_reg', -1.*act_mag),
             ('sparse', -rot_dist-10.0*pos_dist),
             ('solved', (pos_dist<self.pos_th) and (rot_dist<self.rot_th) and (not drop) ),
             ('done', drop),
@@ -95,6 +96,13 @@ class ReorientEnvV0(BaseV0):
         # Sucess Indicator
         self.sim.model.site_rgba[self.success_indicator_sid, :2] = np.array([0, 2]) if rwd_dict['solved'] else np.array([2, 0])
         return rwd_dict
+
+    def get_metrics(self):
+        metrics = {
+            'solved':self.rwd_dict['solved'],
+            'act_mag':self.rwd_dict['act_mag'],
+            }
+        return metrics
 
     def reset(self):
         self.sim.model.body_pos[self.goal_bid] = self.goal_init_pos + \

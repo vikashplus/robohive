@@ -387,7 +387,8 @@ register_env_with_variants(id='myoHandDieReorientFixed-v0',
         kwargs={
             'model_path': curr_dir+'/assets/hand/myo_hand_die.xml',
             'normalize_act': True,
-            'frame_skip': 5,
+            'goal_pos': (0.0, 0.0),     # 0 meters
+            'goal_rot': (.785, .785)    # 45 degrees
         }
     )
 
@@ -397,34 +398,30 @@ register_env_with_variants(id='myoHandDieReorientRandom-v0',
         kwargs={
             'model_path': curr_dir+'/assets/hand/myo_hand_die.xml',
             'normalize_act': True,
-            'frame_skip': 5,
-            'pos_rand_th': .020, # +-2 cm
-            'rot_rand_th': .785 # +-45 degrees
+            'goal_pos': (-.020, .020),   # +-2 cm
+            'goal_rot': (-.785, .785)    # +-45 degrees
         }
     )
-
 
 # Baoding ==============================
 register_env_with_variants(id='myoHandBaodingFixed-v1',
-        entry_point='mj_envs.envs.myo.baoding_v1:BaodingFixedEnvV1',
+        entry_point='mj_envs.envs.myo.baoding_v1:BaodingEnvV1',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/hand/myo_hand_baoding.xml',
             'normalize_act': True,
-            'reward_option': 0,
         }
     )
 register_env_with_variants(id='myoHandBaodingRandom-v1',
-        entry_point='mj_envs.envs.myo.baoding_v1:BaodingRandomEnvV1',
+        entry_point='mj_envs.envs.myo.baoding_v1:BaodingEnvV1',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/hand/myo_hand_baoding.xml',
             'normalize_act': True,
-            'reward_option': 0,
         }
     )
 register_env_with_variants(id='myoHandBaodingFixed4th-v1',
-        entry_point='mj_envs.envs.myo.baoding_v1:BaodingFixedEnvV1',
+        entry_point='mj_envs.envs.myo.baoding_v1:BaodingEnvV1',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/hand/myo_hand_baoding.xml',
@@ -433,7 +430,7 @@ register_env_with_variants(id='myoHandBaodingFixed4th-v1',
         }
     )
 register_env_with_variants(id='myoHandBaodingFixed8th-v1',
-        entry_point='mj_envs.envs.myo.baoding_v1:BaodingFixedEnvV1',
+        entry_point='mj_envs.envs.myo.baoding_v1:BaodingEnvV1',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/hand/myo_hand_baoding.xml',
