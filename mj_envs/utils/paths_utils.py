@@ -267,7 +267,7 @@ def path2dataset(path:dict)->dict:
 
     # Config =====
     if 'user_cmt' in path.keys():
-        dataset['config/solved'] = path['user_cmt']
+        dataset['config/solved'] = float(path['user_cmt'])
 
     return dataset
 
