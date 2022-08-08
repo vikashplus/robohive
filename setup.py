@@ -10,7 +10,7 @@ import sys
 from setuptools import setup, find_packages
 
 if sys.version_info.major != 3:
-    print("This Python is only compatible with Python 3, but you are running "
+    print("This library is only compatible with Python 3, but you are running "
           "Python {}. The installation will likely fail.".format(sys.version_info.major))
 
 def read(fname):
@@ -38,7 +38,6 @@ setup(
         'r3m @ git+https://github.com/facebookresearch/r3m.git',
         # 'data_tools @ git+https://github.com/fairinternal/data_tools.git',
         'h5py==3.7.0',
-        'alephzero', # real_sense sub dependency
-
+        'alephzero', # real_sense subscribers dependency
     ],
 )
