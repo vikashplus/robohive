@@ -17,6 +17,7 @@ from mj_envs.utils import tensor_utils
 from mj_envs.robot.robot import Robot
 from os import path
 import skvideo.io
+from sys import platform
 
 from r3m import load_r3m
 
@@ -620,7 +621,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             # save offscreen buffers as video
             if render =='offscreen':
                 file_name = output_dir + filename + str(ep) + ".mp4"
-                skvideo.io.vwrite(file_name, np.asarray(frames))
+                # check if the platform is OS -- make it compatible with quicktime
+                if platform == "darwin": 
+                    skvideo.io.vwrite(file_name, np.asarray(frames),outputdict={"-pix_fmt": "yuv420p"})
+                else:
+                    skvideo.io.vwrite(file_name, np.asarray(frames))
                 print("saved", file_name)
 
         self.mujoco_render_frames = False
