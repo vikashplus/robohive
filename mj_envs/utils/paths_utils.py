@@ -194,12 +194,17 @@ def render(rollout_path, render_format:str="mp4", cam_names:list=["left"]):
             path_horizon = path['env_infos']['time'].shape[0]
 
         # find full key name
+        data_keys = data.keys()
         cam_keys = []
-        for key in data.keys():
-            for cam_name in cam_names:
+        for cam_name in cam_names:
+            cam_key = None
+            for key in data_keys:
                 if cam_name in key and 'rgb' in key:
-                    cam_keys.append(key)
-        assert cam_keys != [], "No observations found for cameras"
+                   cam_key = key
+                   break
+            assert cam_key != None, "Cam: {} not found in data. Available keys: [{}]".format(cam_name, data_keys)
+            cam_keys.append(key)
+
 
         # pre allocate buffer
         if i_path==0:
