@@ -1,4 +1,4 @@
-# Utility script to sync between myosuite repo to mj_envs repository
+# Utility script to sync between mj_envs to myosuite repo repository
 # Note: that its a one way sync at the moment "mj_envs => myosuite"
 # Usage: .sync_myo.sh <full_path>/mj_envs/ <full_path>/myoSuite/
 
@@ -30,6 +30,7 @@ xml2mjb hand myo_hand_hold
 xml2mjb hand myo_hand_keyturn
 xml2mjb hand myo_hand_pen
 xml2mjb hand myo_hand_pose
+xml2mjb hand myo_hand_die
 cd $src_path
 echo $PWD
 
@@ -39,7 +40,9 @@ rsync -av --progress $src_path/mj_envs/envs/env_base.py $dst_path/myosuite/envs/
 rsync -av --progress $src_path/mj_envs/envs/env_variants.py $dst_path/myosuite/envs/
 rsync -av --progress $src_path/mj_envs/envs/myo/*.md $dst_path/myosuite/envs/myo/
 rsync -av --progress $src_path/mj_envs/envs/myo/*.py $dst_path/myosuite/envs/myo/
+rsync -av --progress $src_path/mj_envs/envs/myo/myochallenge/*.py $dst_path/myosuite/envs/myo/myochallenge/
 sed -i '' "s/xml/mjb/g" $dst_path/myosuite/envs/myo/__init__.py
+sed -i '' "s/xml/mjb/g" $dst_path/myosuite/envs/myo/myochallenge/__init__.py
 
 # Robot
 mkdir -p $2/myosuite/robot
