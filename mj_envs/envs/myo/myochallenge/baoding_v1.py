@@ -78,6 +78,8 @@ class BaodingEnvV1(BaseV0):
         self.object2_gid = self.sim.model.geom_name2id('ball2')
         self.target1_sid = self.sim.model.site_name2id('target1_site')
         self.target2_sid = self.sim.model.site_name2id('target2_site')
+        self.sim.model.site_group[self.target1_sid] = 2
+        self.sim.model.site_group[self.target2_sid] = 2
 
         super()._setup(obs_keys=obs_keys,
                     weighted_reward_keys=weighted_reward_keys,

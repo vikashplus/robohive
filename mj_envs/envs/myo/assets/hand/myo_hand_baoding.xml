@@ -15,12 +15,12 @@
     <worldbody>
         <body name="ball1" pos="-.227 -.511 1.452">
             <freejoint/>
-            <geom name="ball1" material="MatBallY" type="sphere" size="0.022" group='0' mass='0.043' condim='4'/>
+            <geom name="ball1" material="MatBallY" type="sphere" size="0.022" group='2' mass='0.043' condim='4'/>
             <site name="ball1_site"  type="sphere" size="0.005" material="MatBallY" group="0"/>
         </body>
         <body name="ball2" pos="-.256 -.552 1.442">
             <freejoint/>
-            <geom name="ball2" material="MatBallP" type="sphere" size="0.022" group='0' mass='0.043' condim='4'/>
+            <geom name="ball2" material="MatBallP" type="sphere" size="0.022" group='2' mass='0.043' condim='4'/>
             <site name="ball2_site"  type="sphere" size="0.005" material="MatBallP" group="0"/>
         </body>
 
