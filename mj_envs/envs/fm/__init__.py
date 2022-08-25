@@ -66,7 +66,7 @@ register(
 
 # Pose to fixed target
 encoder_type = "2d"
-# img_res="640x480"
+# img_res="480x640"
 img_res="240x424"
 register(
     id='rpFrankaRobotiqData-v0',

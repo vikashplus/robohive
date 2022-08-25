@@ -15,7 +15,7 @@ import collections
 class FrankaRobotiqData(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS = [
-        'time'          # dummy key
+        't'          # dummy key
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
         "none": -0.0,   # dummy key
