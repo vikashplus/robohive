@@ -63,7 +63,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     Superclass for all MuJoCo environments.
     """
 
-    def __init__(self, model_path, obsd_model_path=None, seed=None, return_dict: bool = False):
+    def __init__(self, model_path, obsd_model_path=None, seed=None):
         """
         Create a gym env
         INPUTS:
@@ -86,7 +86,6 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.sim_obsd = get_sim(obsd_model_path) if obsd_model_path else self.sim
         self.sim.forward()
         self.sim_obsd.forward()
-        self.return_dict = return_dict
         ObsVecDict.__init__(self)
 
     def _setup(self,
@@ -98,8 +97,10 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                obs_range = (-10, 10),
                rwd_viz = False,
                device_id = 0, # device id for rendering
+               return_dict: bool = False,
                **kwargs,
         ):
+        self.return_dict = return_dict
 
         if self.sim is None or self.sim_obsd is None:
             raise TypeError("sim and sim_obsd must be instantiated for setup to run")
