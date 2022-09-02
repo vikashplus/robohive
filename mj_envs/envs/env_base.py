@@ -62,9 +62,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     """
     Superclass for all MuJoCo environments.
     """
-    return_dict: bool = True
 
-    def __init__(self, model_path, obsd_model_path=None, seed=None):
+    def __init__(self, model_path, obsd_model_path=None, seed=None, return_dict: bool = False):
         """
         Create a gym env
         INPUTS:
@@ -73,6 +72,10 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                             : observed model (useful to propagate noisy sensor through env)
                             : use model_path; if None
             seed: Random number generator seed
+            return_dict: if True, a dictionary will be returned. Otherwise, all
+                observations will be flattened (if necessary) and concatenated
+                along the last dimension.
+                Defaults to False.
         """
 
         # Seed and initialize the random number generator
