@@ -62,6 +62,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     """
     Superclass for all MuJoCo environments.
     """
+    return_dict: bool = True
 
     def __init__(self, model_path, obsd_model_path=None, seed=None):
         """
@@ -141,8 +142,29 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self._setup_rgb_encoders(obs_keys, device=None)
         observation, _reward, done, _info = self.step(np.zeros(self.sim.model.nu))
         assert not done, "Check initialization. Simulation starts in a done state."
-        self.obs_dim = observation.size
-        self.observation_space = gym.spaces.Box(obs_range[0]*np.ones(self.obs_dim), obs_range[1]*np.ones(self.obs_dim), dtype=np.float32)
+        if self.return_dict:
+            self.observation_space = {
+                key: gym.spaces.Box(
+                    obs_range[0] * np.ones(tuple()),
+                    obs_range[1] * np.ones(tuple()),
+                    shape=obs.shape if obs.shape else (1,),
+                    dtype=np.float32
+                ) if obs.dtype != np.dtype("uint8")
+                else gym.spaces.Box(
+                    0 * np.zeros(tuple(), dtype=np.dtype("uint8")),
+                    255 * np.ones(tuple(), dtype=np.dtype("uint8")),
+                    shape=obs.shape if obs.shape else (1,),
+                    dtype=np.dtype("uint8")
+                )
+                for key, obs in observation.items()
+            }
+        else:
+            self.obs_dim = observation.size
+            self.observation_space = gym.spaces.Box(
+                obs_range[0]*np.ones(self.obs_dim),
+                obs_range[1]*np.ones(self.obs_dim),
+                dtype=np.float32
+            )
 
         return
 
@@ -223,7 +245,6 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         # finalize step
         env_info = self.get_env_infos()
-
         # returns obs(t+1), rwd(t+1), done(t+1), info(t+1)
         return obs, env_info['rwd_'+self.rwd_mode], bool(env_info['done']), env_info
 
@@ -246,9 +267,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             visual_obs_dict = self.get_visual_obs_dict(sim=self.sim_obsd)
             self.obs_dict.update(visual_obs_dict)
 
-        # recoved observation vector from the obs_dict
-        t, obs = self.obsdict2obsvec(self.obs_dict, self.obs_keys)
-        return obs
+        if not self.return_dict:
+            # recoved observation vector from the obs_dict
+            t, obs = self.obsdict2obsvec(self.obs_dict, self.obs_keys)
+            return obs
+        return {k: value for k, value in self.obs_dict.items() if k in self.obs_keys}
 
 
     def get_visual_obs_dict(self, sim, device_id=None):
@@ -294,11 +317,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 else:
                     raise ValueError("Unsupported visual encoder: {}".format(rgb_encoder_id))
 
-                visual_obs_dict.update({key:rgb_encoded})
+                visual_obs_dict.update({key: rgb_encoded})
                 # add depth observations if requested in the keys (assumption d will always be accompanied by rgb keys)
                 d_key = 'd:'+key[4:]
                 if d_key in self.obs_keys:
-                    visual_obs_dict.update({d_key:dpt})
+                    visual_obs_dict.update({d_key: dpt})
 
         return visual_obs_dict
 
@@ -409,7 +432,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         qpos = self.init_qpos.copy() if reset_qpos is None else reset_qpos
         qvel = self.init_qvel.copy() if reset_qvel is None else reset_qvel
         self.robot.reset(qpos, qvel)
-        return self.get_obs()
+        out = self.get_obs()
+        return out
 
 
     @property
