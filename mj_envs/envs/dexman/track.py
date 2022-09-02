@@ -87,6 +87,9 @@ class TrackEnv(env_base.MujocoEnv):
                        weighted_reward_keys=weighted_reward_keys,
                        frame_skip=40,
                        **kwargs)
+        if self.sim.model.nkey>0:
+            self.init_qpos[:] = self.sim.model.key_qpos[0,:]
+
 
     def get_obs_dict(self, sim):
         obs_dict = {}

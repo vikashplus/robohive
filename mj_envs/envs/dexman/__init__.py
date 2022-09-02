@@ -11,7 +11,7 @@ import os
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Register Single object env
-def register_object(object_name):
+def register_Adroit_object(object_name):
     # Track reference motion
     register(
         id='Adroit{}TrackFixed-v0'.format(object_name.title()),
@@ -24,9 +24,24 @@ def register_object(object_name):
             }
     )
 
+# Register Single object env
+def register_Franka_object(object_name):
+    # Track reference motion
+    register(
+        id='Franka{}TrackFixed-v0'.format(object_name.title()),
+        entry_point='mj_envs.envs.dexman.track:TrackEnv',
+        max_episode_steps=50, #50steps*40Skip*2ms = 4s
+        kwargs={
+                'model_path': '/assets/Franka_object.xml',
+                'object_name': object_name,
+                'target_pose': None, # TODO: pass reference trajectories
+            }
+    )
+
 # Register all object envs
 OBJECTS = ('airplane','alarmclock','apple','banana','binoculars','bowl','camera','coffeemug','cubelarge','cubemedium','cubemiddle','cubesmall','cup','cylinderlarge','cylindermedium','cylindersmall','doorknob','duck','elephant','eyeglasses','flashlight','flute','fryingpan','gamecontroller','hammer','hand','headphones','human','knife','lightbulb','mouse','mug','phone','piggybank', 'pyramidlarge','pyramidmedium','pyramidsmall','rubberduck','scissors','spherelarge','spheremedium','spheresmall','stamp','stanfordbunny','stapler','table','teapot','toothbrush','toothpaste','toruslarge','torusmedium','torussmall','train','watch','waterbottle','wineglass','wristwatch')
 
 for obj in OBJECTS:
-    register_object(obj)
+    register_Adroit_object(obj)
+    register_Franka_object(obj)
 
