@@ -166,7 +166,7 @@ class BaodingEnvV1(BaseV0):
             ('pos_dist_1',      -1.*target1_dist),
             ('pos_dist_2',      -1.*target2_dist),
             # Must keys
-            ('act_mag',         -1.*act_mag),
+            ('act_reg',         -1.*act_mag),
             ('sparse',          -target_dist),
             ('solved',          (target1_dist < self.proximity_th)*(target2_dist < self.proximity_th)*(~is_fall)),
             ('done',            is_fall),
@@ -179,19 +179,40 @@ class BaodingEnvV1(BaseV0):
 
         return rwd_dict
 
+    def evaluate_success(self, paths, logger=None, successful_steps=5):
+        """
+        Evaluate paths and log metrics to logger
+        """
+        # average sucess over entire env horizon
+        score = np.mean([np.sum(p['env_infos']['rwd_dict']['solved'])/self.horizon for p in paths])
+        success_percentage = score*100
+        # average activations over entire trajectory (can be shorter than horizon, if done) realized
+        effort = -1.0*np.mean([np.mean(p['env_infos']['rwd_dict']['act_reg']) for p in paths])
+
+        rwd_sparse = np.mean([np.mean(p['env_infos']['rwd_sparse']) for p in paths]) # return rwd/step
+        rwd_dense = np.mean([np.sum(p['env_infos']['rwd_dense'])/self.horizon for p in paths]) # return rwd/step
+
+        # log stats
+        if logger:
+            logger.log_kv('rwd_sparse', rwd_sparse)
+            logger.log_kv('rwd_dense', rwd_dense)
+            logger.log_kv('success_percentage', success_percentage)
+            logger.log_kv('effort', effort)
+        return success_percentage
+
 
     def get_metrics(self, paths):
         """
         Evaluate paths and report metrics
         """
         # average sucess over entire env horizon
-        solved = np.mean([np.sum(p['env_infos']['rwd_dict']['solved'])/self.horizon for p in paths])
+        score = np.mean([np.sum(p['env_infos']['rwd_dict']['solved'])/self.horizon for p in paths])
         # average activations over entire trajectory (can be shorter than horizon, if done) realized
-        act_mag = -1.0*np.mean([np.mean(p['env_infos']['rwd_dict']['act_mag']) for p in paths])
+        effort = -1.0*np.mean([np.mean(p['env_infos']['rwd_dict']['act_reg']) for p in paths])
 
         metrics = {
-            'solved': solved,
-            'act_mag':act_mag,
+            'score': score,
+            'effort': effort,
             }
         return metrics
 

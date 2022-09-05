@@ -239,6 +239,27 @@ class BaodingEnvV1(BaseV0):
 
         return rwd_dict
 
+    def evaluate_success(self, paths, logger=None, successful_steps=5):
+        """
+        Evaluate paths and log metrics to logger
+        """
+        # average sucess over entire env horizon
+        score = np.mean([np.sum(p['env_infos']['rwd_dict']['solved'])/self.horizon for p in paths])
+        success_percentage = score*100
+        # average activations over entire trajectory (can be shorter than horizon, if done) realized
+        effort = -1.0*np.mean([np.mean(p['env_infos']['rwd_dict']['act_mag']) for p in paths])
+
+        rwd_sparse = np.mean([np.mean(p['env_infos']['rwd_sparse']) for p in paths]) # return rwd/step
+        rwd_dense = np.mean([np.sum(p['env_infos']['rwd_dense'])/self.horizon for p in paths]) # return rwd/step
+
+        # log stats
+        if logger:
+            logger.log_kv('rwd_sparse', rwd_sparse)
+            logger.log_kv('rwd_dense', rwd_dense)
+            logger.log_kv('success_percentage', success_percentage)
+            logger.log_kv('effort', effort)
+        return success_percentage
+
     def reset(self, reset_pose=None, reset_vel=None, reset_goal=None, time_period=None):
         # reset counters
         self.counter=0
