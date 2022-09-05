@@ -115,6 +115,8 @@ def poll_spacemouse(input_device):
 @click.option('-ps', '--pos_scale', type=float, default=0.05, help=('position scaling factor'))
 @click.option('-rs', '--rot_scale', type=float, default=0.1, help=('rotation scaling factor'))
 @click.option('-gs', '--gripper_scale', type=float, default=1, help=('gripper scaling factor'))
+@click.option('-vi', '--vendor_id', type=int, default=9583, help=('Spacemouse vendor id'))
+@click.option('-pi', '--product_id', type=int, default=50741, help=('Spacemouse product id'))
 # @click.option('-tx', '--x_range', type=tuple, default=(-0.5, 0.5), help=('x range'))
 # @click.option('-ty', '--y_range', type=tuple, default=(-0.5, 0.5), help=('y range'))
 # @click.option('-tz', '--z_range', type=tuple, default=(-0.5, 0.5), help=('z range'))
@@ -122,7 +124,7 @@ def poll_spacemouse(input_device):
 # @click.option('-ry', '--pitch_range', type=tuple, default=(-0.5, 0.5), help=('pitch range'))
 # @click.option('-rz', '--yaw_range', type=tuple, default=(-0.5, 0.5), help=('yaw range'))
 # @click.option('-gr', '--gripper_range', type=tuple, default=(0, 1), help=('z range'))
-def main(env_name, env_args, input_device, horizon, num_rollouts, seed, goal_site, teleop_site, pos_scale, rot_scale, gripper_scale):
+def main(env_name, env_args, input_device, horizon, num_rollouts, seed, goal_site, teleop_site, pos_scale, rot_scale, gripper_scale, vendor_id, product_id):
     # x_range, y_range, z_range, roll_range, pitch_range, yaw_range, gripper_range
 
     # seed and load environments
@@ -137,7 +139,8 @@ def main(env_name, env_args, input_device, horizon, num_rollouts, seed, goal_sit
     if input_device=='keyboard':
         input = KeyBoard()
     elif input_device=='spacemouse':
-        input = SpaceMouse()
+        input = SpaceMouse(vendor_id=vendor_id, product_id=product_id)
+
         print("Press both keys to stop listening")
     done = False
 
