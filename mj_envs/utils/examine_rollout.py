@@ -108,14 +108,25 @@ def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera
             states = []
 
             # initialize env to the starting position
-            if path and "state" in path['env_infos'].keys():
-                env.reset(reset_qpos=path['env_infos']['state']['qpos'][0], reset_qvel=path['env_infos']['state']['qvel'][0])
+            if path:
+                if output_type=='.h5':
+                    reset_qpos = env.init_qpos.copy()
+                    reset_qpos[:7] = data['qp_arm'][0]
+                    reset_qpos[7] = data['qp_ee'][0]
+                    env.reset(reset_qpos=reset_qpos)
+                elif output_type=='.pickle' and "state" in path['env_infos'].keys():
+                    env.reset(reset_qpos=path['env_infos']['state']['qpos'][0], reset_qvel=path['env_infos']['state']['qvel'][0])
+                else:
+                    raise TypeError("Unknown path type")
             else:
                 env.reset()
 
             # Rollout
             o = env.get_obs()
-            path_horizon = horizon if mode == 'record' else path['actions'].shape[0]
+            if output_type=='.h5':
+                path_horizon = horizon if mode == 'record' else data['qp_arm'].shape[0]
+            else:
+                path_horizon = horizon if mode == 'record' else path['actions'].shape[0]
             for i_step in range(path_horizon):
 
                 # Record Execution. Useful for kinesthetic demonstrations on hardware
@@ -139,7 +150,10 @@ def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera
 
                 # Apply actions in open loop
                 elif mode=='playback':
-                    a = path['actions'][i_step] if output_type=='.pickle' else path['data']['ctrl_arm']
+                    if output_type=='.h5':
+                        a = np.concatenate([data['ctrl_arm'][i_step], data['ctrl_ee'][i_step]])
+                    else:
+                        a = path['actions'][i_step] if output_type=='.pickle' else path['data']['ctrl_arm']
                     onext, r, d, info = env.step(a) # t ==> t+1
 
                 # Recover actions from states
