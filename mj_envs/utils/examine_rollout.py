@@ -16,7 +16,6 @@ USAGE:\n
 
 import gym
 from mj_envs.utils.paths_utils import plot as plotnsave_paths
-
 from mj_envs.utils import tensor_utils
 import click
 import numpy as np
