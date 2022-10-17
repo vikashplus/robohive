@@ -241,7 +241,7 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
 
         # success if pen within 15 degrees of target for 5 steps
         for path in paths:
-            if np.sum(path['env_infos']['solved']) > 5:
+            if np.sum(path['env_infos']['solved']*1.0) > 5:
                 num_success += 1
         success_percentage = num_success*100.0/num_paths
 
@@ -254,3 +254,11 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
             logger.log_kv('success_percentage', success_percentage)
 
         return success_percentage
+
+    def obs2state(self, obs):
+        
+        qpos = np.concatenate([obs['hand_jnt'], obs['obj_pos'], obs['obj_rot']], axis=1)
+        qvel = np.zeros_like(qpos)
+        qvel[:, -6:] = obs['obj_vel']
+        des_rot = euler2quat(obs['obj_des_rot'])
+        return qpos, qvel, des_rot
