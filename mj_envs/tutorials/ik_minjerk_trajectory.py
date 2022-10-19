@@ -13,7 +13,7 @@ EXAMPLE:\n
 
 from mujoco_py import load_model_from_path, MjSim, MjViewer
 
-from mj_envs.utils.inverse_kinematics import IKResult, qpos_from_site_pose
+from mj_envs.utils.inverse_kinematics import qpos_from_site_pose
 from mj_envs.utils.min_jerk import *
 from mj_envs.utils.quat_math import euler2quat, euler2mat
 import click

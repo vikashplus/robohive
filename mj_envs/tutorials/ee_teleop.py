@@ -8,7 +8,7 @@ DESC = """
 TUTORIAL: Arm+Gripper tele-op using input devices (keyboard / spacenav) \n
     - NOTE: Tutorial is written for franka arm and robotiq gripper. This demo is a tutorial, not a generic functionality for any any environment
 EXAMPLE:\n
-    - python tutorials/get_ik_minjerk_trajectory.py --sim_path envs/arms/franka/assets/franka_busbin_v0.xml\n
+    - python tutorials/ee_teleop.py -e rpFrankaRobotiqData-v0\n
 """
 # TODO: (1) Enforce pos/rot/grip limits (b) move gripper to delta commands
 
