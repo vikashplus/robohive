@@ -37,10 +37,12 @@ register(id='myoChallengeDieReorientP2-v0',
             'model_path': curr_dir+'/../assets/hand/myo_hand_die.xml',
             'normalize_act': True,
             'frame_skip': 5,
+            # Randomization in goals
             'goal_pos': (-.020, .020),  # +- 2 cm
-            'goal_rot': (-3.14, 3.14)   # +-180 degrees
-            # + Randomization in physical properties of the die
-            # Details will be released during the launch of Phase2
+            'goal_rot': (-3.14, 3.14),   # +-180 degrees
+            # Randomization in physical properties of the die
+            'obj_size_change': 0.007, # +-7mm delta change in object size
+            'obj_friction_change': (0.2, 0.001, 0.00002) # nominal: 1.0, 0.005, 0.0001
         }
     )
 
