@@ -139,10 +139,13 @@ class Robot():
                 device['robot'] = FrankaArm(name=name, **device['interface'])
 
             elif device['interface']['type'] == 'realsense':
-                from .hardware_realsense import RealSense
-                device['robot'] = RealSense(name=name, **device['interface'])
-
-
+                try:
+                    from .hardware_realsense import RealSense
+                    device['robot'] = RealSense(name=name, **device['interface'])
+                except: 
+                    from .hardware_realsense_single import RealsenseAPI
+                    device['robot'] = RealsenseAPI(**device['interface'])
+                    
             elif device['interface']['type'] == 'robotiq':
                 from .hardware_robotiq import Robotiq
                 device['robot'] = Robotiq(name=name, **device['interface'])

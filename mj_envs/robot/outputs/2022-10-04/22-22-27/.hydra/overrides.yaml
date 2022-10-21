@@ -1,0 +1,2 @@
+- robot_client=franka_hardware
+- port=50051
