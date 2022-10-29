@@ -182,7 +182,7 @@ class FrankaArm(hardwareBase):
             print("Failed to get current sensors: ", end="")
             self.reconnect()
             return self.get_sensors()
-        return {'joint_pos': joint_pos, 'joint_vel':joint_pos}
+        return {'joint_pos': joint_pos, 'joint_vel':joint_vel}
 
 
     def apply_commands(self, q_desired=None, kp=None, kd=None):
