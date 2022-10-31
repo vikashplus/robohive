@@ -77,7 +77,6 @@
             <joint name="OBJRz" pos="0 0 0" axis="0 0 1" limited="false" damping="0" />
             <geom name="sphere" size="0.035" condim="4" material="MatWoodB" />
         </body>
-        <geom type="mesh" mesh="robohive" conaffinity="0" contype="0" rgba=".5 .5 .5 1" pos="0 0.075 -1"/>
     </worldbody>
 
     <actuator>
