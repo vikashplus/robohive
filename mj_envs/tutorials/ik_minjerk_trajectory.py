@@ -8,7 +8,7 @@ DESC = """
 TUTORIAL: Calculate min jerk trajectory using IK \n
     - NOTE: written for franka_busbin_v0.xml model and might not be too generic
 EXAMPLE:\n
-    - python tutorials/get_ik_minjerk_trajectory.py --sim_path envs/arms/franka/assets/franka_busbin_v0.xml\n
+    - python tutorials/ik_minjerk_trajectory.py --sim_path envs/arms/franka/assets/franka_busbin_v0.xml\n
 """
 
 from mujoco_py import load_model_from_path, MjSim, MjViewer
@@ -19,8 +19,9 @@ from mj_envs.utils.quat_math import euler2quat, euler2mat
 import click
 import numpy as np
 
-BIN_POS = np.array([-.235, 0.5, .85])
+BIN_POS = np.array([.235, 0.5, .85])
 BIN_DIM = np.array([.2, .3, 0])
+BIN_TOP = 0.10
 ARM_nJnt = 7
 
 @click.command(help=DESC)
@@ -43,14 +44,13 @@ def main(sim_path, horizon):
             print("Resamping new target")
 
             # sample targets
-            target_pos = BIN_POS + np.random.uniform(high=BIN_DIM, low=-1*BIN_DIM) + np.array([0, 0, 0.10]) # add some z offfset
+            target_pos = BIN_POS + np.random.uniform(high=BIN_DIM, low=-1*BIN_DIM) + np.array([0, 0, BIN_TOP]) # add some z offfset
             target_elr = np.random.uniform(high= [3.14, 0, 0], low=[3.14, 0, -3.14])
             target_quat= euler2quat(target_elr)
-            target_mat = euler2mat(target_elr)
 
             # propagage targets to the sim for viz
-            sim.data.site_xpos[target_sid] = target_pos
-            sim.data.site_xmat[target_sid] = target_mat.flatten()
+            sim.model.site_pos[target_sid][:] = target_pos - np.array([0, 0, BIN_TOP])
+            sim.model.site_quat[target_sid][:] = target_quat
 
             # reseed the arm for IK
             sim.data.qpos[:ARM_nJnt] = ARM_JNT0
@@ -71,8 +71,8 @@ def main(sim_path, horizon):
 
         # propagate waypoint in sim
         waypoint_ind = int(sim.data.time/sim.model.opt.timestep)
-        sim.data.qpos[:ARM_nJnt] = waypoints[waypoint_ind]['position']
-        sim.forward()
+        sim.data.ctrl[:ARM_nJnt] = waypoints[waypoint_ind]['position']
+        sim.step()
 
         # update time and render
         sim.data.time += sim.model.opt.timestep
