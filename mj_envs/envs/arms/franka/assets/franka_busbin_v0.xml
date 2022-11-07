@@ -46,7 +46,7 @@
             <include file="../../../../sims/furniture_sim/bin/busbin1_body.xml"/>
         </body>
 
-        <site name='drop_target' type='cylinder' size='.088 0.021' pos='-0.235 0.5 .85' group='1' rgba='.1 .8 .2 .4'/>
+        <site name='drop_target' type='sphere' size='.075' pos='-0.235 0.5 .85' group='1' rgba='.1 .8 .2 .4'/>
 
         <body name="obj0" pos="-0.15 0.5 1.">
             <inertial pos="0 0 0" mass="0.088" diaginertia="0.0001 0.0001 0.0001" />
