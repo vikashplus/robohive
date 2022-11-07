@@ -116,10 +116,10 @@ register(
         'model_path': curr_dir+'/franka/assets/franka_busbin_v0.xml',
         'config_path': curr_dir+'/franka/assets/franka_busbin_v0.config',
         'robot_site_name': "end_effector",
-        'object_site_name': "obj0",
+        'object_site_names': ["obj0","obj1","obj2"],
         'target_site_name': "drop_target",
         'randomize': True,
-        'target_xyz_range': {'high':[0.235, 0.5, 1.25], 'low':[0.235, 0.5, 1.25]},
+        'target_xyz_range': {'high':[0.0, 0.5, 1.25], 'low':[0.0, 0.5, 1.25]},
         'geom_sizes': {'high':[.03, .03, .03], 'low':[.02, 0.02, 0.02]}
     }
 )

@@ -47,7 +47,7 @@ class PickPlaceV0(env_base.MujocoEnv):
 
     def _setup(self,
                robot_site_name,
-               object_site_name,
+               object_site_names,
                target_site_name,
                target_xyz_range,
                frame_skip=40,
@@ -59,12 +59,14 @@ class PickPlaceV0(env_base.MujocoEnv):
                pos_limit_low=[-0.435, 0.2, -np.inf, 3.14, 0.0, -3.14, 0.0, 0.0],
                pos_limit_high=[0.435, 0.8, np.inf, 3.14, 0.0, 0.0, 0.04, 0.04],
                vel_limit=[0.1, 0.1, 0.1, 0.3, 0.3, 0.3, 0.04, 0.04],
+               max_ik=3,
                **kwargs,
         ):
 
         # ids
         self.grasp_sid = self.sim.model.site_name2id(robot_site_name)
-        self.object_sid = self.sim.model.site_name2id(object_site_name)
+        self.object_site_names = object_site_names
+        self.object_sid = self.sim.model.site_name2id(self.object_site_names[np.random.randint(len(self.object_site_names))])
         self.target_sid = self.sim.model.site_name2id(target_site_name)
         self.target_xyz_range = target_xyz_range
         self.randomize = randomize
@@ -72,6 +74,7 @@ class PickPlaceV0(env_base.MujocoEnv):
         self.pos_limit_low = pos_limit_low
         self.pos_limit_high = pos_limit_high
         self.vel_limit = vel_limit
+        self.max_ik = max_ik
         self.last_eef_cmd = None 
         
         model = load_model_from_path('mj_envs/envs/arms/franka/assets/franka_busbin_v0.xml')
@@ -123,6 +126,8 @@ class PickPlaceV0(env_base.MujocoEnv):
             self.sim.model.site_pos[self.target_sid] = self.np_random.uniform(high=self.target_xyz_range['high'], low=self.target_xyz_range['low'])
             self.sim_obsd.model.site_pos[self.target_sid] = self.sim.model.site_pos[self.target_sid]
 
+            self.object_sid = self.sim.model.site_name2id(
+                self.object_site_names[np.random.randint(len(self.object_site_names))])
             # object shapes and locations
             for body in ["obj0", "obj1", "obj2"]:
                 bid = self.sim.model.body_name2id(body)
@@ -165,22 +170,24 @@ class PickPlaceV0(env_base.MujocoEnv):
             eef_elr = eef_cmd[3:6]
             eef_quat= euler2quat(eef_elr)
 
-            self.ik_sim.data.qpos[:7] = self.sim.data.qpos[:7]
-            ik_result = qpos_from_site_pose(physics = self.ik_sim,
-                                            site_name = self.sim.model.site_id2name(self.grasp_sid),
-                                            target_pos= eef_pos,
-                                            target_quat= eef_quat,
-                                            inplace=False,
-                                            regularization_strength=1.0)
-            action = ik_result.qpos[:self.sim.model.nu]
+            for i in range(self.max_ik):
+
+                self.ik_sim.data.qpos[:7] = np.random.normal(self.sim.data.qpos[:7], i*0.1)
+                ik_result = qpos_from_site_pose(physics = self.ik_sim,
+                                                site_name = self.sim.model.site_id2name(self.grasp_sid),
+                                                target_pos= eef_pos,
+                                                target_quat= eef_quat,
+                                                inplace=False,
+                                                regularization_strength=1.0)
+                action = ik_result.qpos[:self.sim.model.nu]
+                if ik_result.success:
+                    break
 
             action[7:9] = eef_cmd[7:]
             
             if self.normalize_act:
                 action = 2*(((action - self.jnt_low)/(self.jnt_high-self.jnt_low))-0.5)
 
-
-        action = np.clip(action, self.action_space.low, self.action_space.high)
         self.last_ctrl = self.robot.step(ctrl_desired=action,
                                         ctrl_normalized=self.normalize_act,
                                         step_duration=self.dt,

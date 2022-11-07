@@ -15,17 +15,15 @@ class HeuristicPolicy():
     def __init__(self, env, seed):
         self.env = env
         self.gripper_buff = GRIPPER_FULL_OPEN*np.ones((GRIPPER_BUFF_N,2))
+        self.yaw = 0.0
         np.random.seed(seed)
         
     def get_action(self, obs):
-        #low=[-0.435, 0.2, 0.9, 3.14, 0.0, -3.14, 0.0, 0.0]
-        #high=[-0.035, 0.8, 0.9, 3.14, 0.0, 0.0, 0.04, 0.04]
+
         # TODO Change obsvec2dict to handle obs vectors with single dim
         obs_dict = self.env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
-        #print(obs_dict)
-        #exit()
 
-        action = np.concatenate([obs_dict['grasp_pos'][0,0,:], [3.14,0.0,0.0], obs_dict['qp'][0,0,7:9]])
+        action = np.concatenate([obs_dict['grasp_pos'][0,0,:], [3.14,0.0,self.yaw], obs_dict['qp'][0,0,7:9]])
         
         if np.linalg.norm(obs_dict['object_err'][0,0,:]) > BEGIN_GRASP_THRESH:
             # Reset gripper buff
@@ -33,19 +31,16 @@ class HeuristicPolicy():
 
             # Object not yet within gripper
             if np.linalg.norm(obs_dict['object_err'][0,0,:2]) > BEGIN_DESCENT_THRESH:
-                
+                self.yaw = np.random.uniform(-3.14, 0.0)
                 # Gripper not yet aligned with object (also open gripper)
                 action[2] = ALIGN_HEIGHT
                 action[:2] += obs_dict['object_err'][0,0,0:2]
                 action[6:8] = GRIPPER_FULL_OPEN
-                #print('Obj err: {}, Action {}'.format(np.linalg.norm(obs_dict['object_err'][0,0,0:2]), action))
         
             else:
                 # Gripper aligned with object, go down towards it (also open gripper)
                 action[:3] += obs_dict['object_err'][0,0,0:3]
                 action[6:8] = GRIPPER_FULL_OPEN
-                #print('Obj err: {}, Action {}'.format(np.linalg.norm(obs_dict['object_err'][0,0,0:3]), action))
-        
         else:
             # Close gripper, move to target once gripper has had chance to close
             for i in range(self.gripper_buff.shape[0]-1):
@@ -55,7 +50,6 @@ class HeuristicPolicy():
             if np.all(np.linalg.norm(self.gripper_buff - GRIPPER_FULL_OPEN, axis=1) > 1e-4):
                 # Move to target
                 action[:3] += obs_dict['target_err'][0,0,0:3]
-                #print('Moving to target: {}'.format(obs_dict['target_err'][0,0,0:3]))
 
             action[6:8] = GRIPPER_FULL_CLOSE
 
