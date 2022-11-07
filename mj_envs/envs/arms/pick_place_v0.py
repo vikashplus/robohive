@@ -109,8 +109,8 @@ class PickPlaceV0(env_base.MujocoEnv):
             ('bonus',   (object_dist<.1) + (target_dist<.1) + (target_dist<.05)),
             ('penalty', (object_dist>far_th)),
             # Must keys
-            ('sparse',  target_dist<.050),
-            ('solved',  target_dist<.050),
+            ('sparse',  target_dist<.075),
+            ('solved',  target_dist<.075),
             ('done',    object_dist > far_th),
         ))
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
