@@ -44,7 +44,7 @@ register(
 )
 
 # Reach to random target using visual inputs
-def register_visual_envs(encoder_type):
+def register_reacher_visual_envs(encoder_type):
     register_env_variant(
         env_id='FrankaReachRandom-v0',
         variant_id='FrankaReachRandom_v{}-v0'.format(encoder_type),
@@ -56,8 +56,8 @@ def register_visual_envs(encoder_type):
         },
         silent=True
     )
-for enc in ["r3m18", "r3m34", "r3m50", "flat"]:
-    register_visual_envs(enc)
+for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
+    register_reacher_visual_envs(enc)
 
 
 
@@ -119,11 +119,29 @@ register(
         'object_site_name': "obj0",
         'target_site_name': "drop_target",
         'randomize': True,
-        'target_xyz_range': {'high':[-.135, 0.6, 0.85], 'low':[-.335, 0.4, 0.85]},
+        'target_xyz_range': {'high':[0.235, 0.5, 1.25], 'low':[0.235, 0.5, 1.25]},
         'geom_sizes': {'high':[.03, .03, .03], 'low':[.02, 0.02, 0.02]}
     }
 )
 
+
+
+# Reach to random target using visual inputs
+def register_pick_place_visual_envs(encoder_type):
+    register_env_variant(
+        env_id='FrankaPickPlaceRandom-v0',
+        variant_id='FrankaPickPlaceRandom_v{}-v0'.format(encoder_type),
+        variants={'obs_keys':
+                    ['qp', 'qv',
+                    "rgb:left_cam:224x224:{}".format(encoder_type),
+                    "rgb:right_cam:224x224:{}".format(encoder_type),
+                    "rgb:top_cam:224x224:{}".format(encoder_type),
+                    "rgb:Franka_wrist_cam:224x224:{}".format(encoder_type)]
+        },
+        silent=True
+    )
+for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
+    register_pick_place_visual_envs(enc)
 
 # FETCH =======================================================================
 from mj_envs.envs.arms.reach_base_v0 import ReachBaseV0

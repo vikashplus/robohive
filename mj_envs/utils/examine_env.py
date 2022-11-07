@@ -7,6 +7,8 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 import gym
 from mj_envs.utils.paths_utils import plot as plotnsave_paths
+from mj_envs.utils.policies.rand_eef_policy import RandEEFPolicy
+from mj_envs.utils.policies.heuristic_policy import HeuristicPolicy
 import click
 import numpy as np
 import pickle
@@ -31,6 +33,7 @@ class rand_policy():
     def get_action(self, obs):
         # return self.env.np_random.uniform(high=self.env.action_space.high, low=self.env.action_space.low)
         return self.env.action_space.sample(), {'mode': 'random samples'}
+
 
 # MAIN =========================================================
 @click.command(help=DESC)

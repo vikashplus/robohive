@@ -11,11 +11,13 @@ import numpy as np
 
 from mj_envs.envs import env_base
 from mj_envs.utils.quat_math import euler2quat
+from mj_envs.utils.inverse_kinematics import qpos_from_site_pose
+from mujoco_py import load_model_from_path, MjSim
 
 class PickPlaceV0(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS = [
-        'qp', 'qv', 'object_err', 'target_err'
+        'qp', 'qv', 'grasp_pos', 'object_err', 'target_err'
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
         "object_dist": -1.0,
@@ -54,6 +56,9 @@ class PickPlaceV0(env_base.MujocoEnv):
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
                randomize=False,
                geom_sizes={'high':[.05, .05, .05], 'low':[.2, 0.2, 0.2]},
+               pos_limit_low=[-0.435, 0.2, -np.inf, 3.14, 0.0, -3.14, 0.0, 0.0],
+               pos_limit_high=[0.435, 0.8, np.inf, 3.14, 0.0, 0.0, 0.04, 0.04],
+               vel_limit=[0.1, 0.1, 0.1, 0.3, 0.3, 0.3, 0.04, 0.04],
                **kwargs,
         ):
 
@@ -64,6 +69,16 @@ class PickPlaceV0(env_base.MujocoEnv):
         self.target_xyz_range = target_xyz_range
         self.randomize = randomize
         self.geom_sizes = geom_sizes
+        self.pos_limit_low = pos_limit_low
+        self.pos_limit_high = pos_limit_high
+        self.vel_limit = vel_limit
+        self.last_eef_cmd = None 
+        
+        model = load_model_from_path('mj_envs/envs/arms/franka/assets/franka_busbin_v0.xml')
+        self.ik_sim = MjSim(model)
+        
+        self.jnt_low = model.jnt_range[:model.nu, 0]
+        self.jnt_high = model.jnt_range[:model.nu, 1]
 
         super()._setup(obs_keys=obs_keys,
                        weighted_reward_keys=weighted_reward_keys,
@@ -76,6 +91,7 @@ class PickPlaceV0(env_base.MujocoEnv):
         obs_dict['t'] = np.array([self.sim.data.time])
         obs_dict['qp'] = sim.data.qpos.copy()
         obs_dict['qv'] = sim.data.qvel.copy()
+        obs_dict['grasp_pos'] = sim.data.site_xpos[self.grasp_sid]
         obs_dict['object_err'] = sim.data.site_xpos[self.object_sid]-sim.data.site_xpos[self.grasp_sid]
         obs_dict['target_err'] = sim.data.site_xpos[self.target_sid]-sim.data.site_xpos[self.object_sid]
         return obs_dict
@@ -93,7 +109,7 @@ class PickPlaceV0(env_base.MujocoEnv):
             ('bonus',   (object_dist<.1) + (target_dist<.1) + (target_dist<.05)),
             ('penalty', (object_dist>far_th)),
             # Must keys
-            ('sparse',  -1.0*target_dist),
+            ('sparse',  target_dist<.050),
             ('solved',  target_dist<.050),
             ('done',    object_dist > far_th),
         ))
@@ -124,3 +140,65 @@ class PickPlaceV0(env_base.MujocoEnv):
 
         obs = super().reset(self.init_qpos, self.init_qvel)
         return obs
+
+
+    def step(self, a):
+        """
+        Step the simulation forward (t => t+1)
+        Uses robot interface to safely step the forward respecting pos/ vel limits
+        Accepts a(t) returns obs(t+1), rwd(t+1), done(t+1), info(t+1)
+        """
+        
+        if a.shape[0] == self.sim.model.nu:
+            action = a
+        else:           
+            
+            assert(a.flatten().shape[0]==8)
+           
+            eef_cmd = np.clip(a.flatten(), self.pos_limit_low, self.pos_limit_high)
+
+            if self.last_eef_cmd is not None:
+                eef_cmd = np.clip(eef_cmd, self.last_eef_cmd-self.vel_limit, self.last_eef_cmd+self.vel_limit)
+            self.last_eef_cmd = eef_cmd
+            
+            eef_pos = eef_cmd[:3]
+            eef_elr = eef_cmd[3:6]
+            eef_quat= euler2quat(eef_elr)
+
+            self.ik_sim.data.qpos[:7] = self.sim.data.qpos[:7]
+            ik_result = qpos_from_site_pose(physics = self.ik_sim,
+                                            site_name = self.sim.model.site_id2name(self.grasp_sid),
+                                            target_pos= eef_pos,
+                                            target_quat= eef_quat,
+                                            inplace=False,
+                                            regularization_strength=1.0)
+            action = ik_result.qpos[:self.sim.model.nu]
+
+            action[7:9] = eef_cmd[7:]
+            
+            if self.normalize_act:
+                action = 2*(((action - self.jnt_low)/(self.jnt_high-self.jnt_low))-0.5)
+
+
+        action = np.clip(action, self.action_space.low, self.action_space.high)
+        self.last_ctrl = self.robot.step(ctrl_desired=action,
+                                        ctrl_normalized=self.normalize_act,
+                                        step_duration=self.dt,
+                                        realTimeSim=self.mujoco_render_frames,
+                                        render_cbk=self.mj_render if self.mujoco_render_frames else None)
+
+        # observation
+        obs = self.get_obs()
+
+        # rewards
+        self.expand_dims(self.obs_dict) # required for vectorized rewards calculations
+        self.rwd_dict = self.get_reward_dict(self.obs_dict)
+        self.squeeze_dims(self.rwd_dict)
+        self.squeeze_dims(self.obs_dict)
+
+        # finalize step
+        env_info = self.get_env_infos()
+
+        # returns obs(t+1), rwd(t+1), done(t+1), info(t+1)
+        return obs, env_info['rwd_'+self.rwd_mode], bool(env_info['done']), env_info
+
