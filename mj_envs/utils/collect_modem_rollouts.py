@@ -14,6 +14,7 @@ import numpy as np
 import pickle
 import time
 import os
+import torch
 
 DESC = '''
 Helper script to examine an environment and associated policy for behaviors; \n
@@ -50,7 +51,7 @@ def main(env_name, policy_path, mode, seed, render, camera_name, output_dir, out
 
     # seed and load environments
     np.random.seed(seed)
-    env = gym.make(env_name, **{reward_mode: 'sparse'})
+    env = gym.make(env_name, **{'reward_mode': 'sparse'})
     env.seed(seed)
 
     # resolve policy and outputs
@@ -73,6 +74,8 @@ def main(env_name, policy_path, mode, seed, render, camera_name, output_dir, out
 
     rollouts = 0
     successes = 0
+    act_low = np.array(env.pos_limit_low)
+    act_high = np.array(env.pos_limit_high)
     while successes < 1e11:
         # examine policy's behavior to recover paths
         paths = env.examine_policy(
@@ -93,13 +96,13 @@ def main(env_name, policy_path, mode, seed, render, camera_name, output_dir, out
             
             data = {}
             data['states'] = paths[0]['observations']
-            actions = 2*(((paths[0]['actions']-env.pos_limit_low)/(env.pos_limit_high-env.pos_limit_low))-0.5)
+            actions = 2*(((paths[0]['actions']-act_low)/(act_high-act_low))-0.5)
             data['actions'] = actions
             data['infos'] = [{'success': reward} for reward in paths[0]['rewards']]
-            torch.save(data, 'rollout'+f'{successes:010d}'+'.pt')
+            torch.save(data, output_dir+'/rollout'+f'{successes:010d}'+'.pt')
             successes += 1
 
-            print('Success {} ({}/{})'.format(successes/rollouts,successes,rollout))
+            print('Success {} ({}/{})'.format(successes/rollouts,successes,rollouts))
 
 if __name__ == '__main__':
     main()
