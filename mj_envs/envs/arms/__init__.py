@@ -119,7 +119,7 @@ register(
         'object_site_names': ["obj0","obj1","obj2"],
         'target_site_name': "drop_target",
         'randomize': True,
-        'target_xyz_range': {'high':[0.0, 0.5, 1.25], 'low':[0.0, 0.5, 1.25]},
+        'target_xyz_range': {'high':[0.235, 0.45, 1.185], 'low':[0.235, 0.43, 1.185]},
         'geom_sizes': {'high':[.03, .03, .03], 'low':[.02, 0.02, 0.02]}
     }
 )

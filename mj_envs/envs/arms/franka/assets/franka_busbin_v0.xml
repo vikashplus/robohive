@@ -37,18 +37,21 @@
         <body name="ventiontable" pos='0 -.3 0'>
             <include file="../../../../sims/furniture_sim/ventionTable/ventionTable_body.xml"/>
         </body>
-        <body name="scenetable" pos='0 0.49 0.065'>
+        <body name="scenetable" pos='0 0.49 0.0'>
             <include file="../../../../sims/furniture_sim/simpleTable/simpleMarbleTable_body.xml"/>
         </body>
 
         <!-- tasks details added here via include-->
-        <body name="busbin1" pos='0.0 0.5 0.825' quat='0.7071 0.0 0.0 0.7071'>
+        <body name="busbin1" pos='0.235 0.45 0.76' >
             <include file="../../../../sims/furniture_sim/bin/busbin1_body.xml"/>
         </body>
+        <body name="busbin2" pos='-0.235 0.45 0.76' >
+            <include file="../../../../sims/furniture_sim/bin/busbin2_body.xml"/>
+        </body>
 
-        <site name='drop_target' type='sphere' size='.075' pos='-0.235 0.5 .85' group='1' rgba='.1 .8 .2 .4'/>
+        <site name='drop_target' type='sphere' size='.075' pos='0.235 0.45 1.2' group='1' rgba='.1 .8 .2 .4'/>
 
-        <body name="obj0" pos="-0.15 0.5 1.">
+        <body name="obj0" pos="0.235 0.45 0.935">
             <inertial pos="0 0 0" mass="0.088" diaginertia="0.0001 0.0001 0.0001" />
             <geom type="capsule" size="0.02 0.04" pos="0.01 0.02 0.005" euler=".52 .6 .8" group="1" rgba=".55 .28 .04 1" mass=".040"/>
             <geom type="box" size="0.023 0.02 0.041" pos="0.03 0.012 .01" euler=".6 .8 1" group="1" rgba=".3 .7 .8 1" mass=".100"/>
@@ -57,7 +60,7 @@
             <freejoint/>
         </body>
 
-        <body name="obj1" pos="0.0 0.5 1.">
+        <body name="obj1" pos="0.253 0.225 0.935">
             <inertial pos="0 0 0" mass="0.055" diaginertia="0.0001 0.0001 0.0001" />
             <geom type="sphere" size="0.03" pos="0.06 0.05 0.005" euler="1.2 .5 .9" group="1" rgba=".31 .37 .7 1" mass=".045"/>
             <geom type="cylinder" size="0.026 0.06" pos="0.03 0.012 .01" euler=".1 .6 .2" group="1" rgba=".6 .3 .8 1" mass=".010"/>
@@ -66,7 +69,7 @@
             <freejoint/>
         </body>
 
-        <body name="obj2" pos="0.15 0.5 1.">
+        <body name="obj2" pos="0.23 0.625 0.935">
             <inertial pos="0 0 0" mass="0.076" diaginertia="0.0001 0.0001 0.0001" />
             <geom type="box" size="0.02 .04 .07" pos="0.03 0.034 0.063" euler=".86 .52 .8" group="1" rgba=".72 .72 .12 1" mass=".052"/>
             <geom type="box" size="0.05 .02 .06" pos="0.082 0.023 .035" euler=".6 .3 .8" group="1" rgba=".33 .52 .73 1" mass=".024"/>
