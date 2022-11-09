@@ -11,21 +11,13 @@ from mj_envs.utils.policies.rand_eef_policy import RandEEFPolicy
 from mj_envs.utils.policies.heuristic_policy import HeuristicPolicy
 from PIL import Image
 from pathlib import Path
-import click
 import numpy as np
 import pickle
 import time
 import os
 import torch
-
-DESC = '''
-Helper script to examine an environment and associated policy for behaviors; \n
-- either onscreen, or offscreen, or just rollout without rendering.\n
-- save resulting paths as pickle or as 2D plots
-USAGE:\n
-    $ python examine_env.py --env_name door-v0 \n
-    $ python examine_env.py --env_name door-v0 --policy my_policy.pickle --mode evaluation --episodes 10 \n
-'''
+import hydra
+from omegaconf import DictConfig, OmegaConf
 
 # Random policy
 class rand_policy():
@@ -37,20 +29,19 @@ class rand_policy():
         # return self.env.np_random.uniform(high=self.env.action_space.high, low=self.env.action_space.low)
         return self.env.action_space.sample(), {'mode': 'random samples'}
 
-
-# MAIN =========================================================
-@click.command(help=DESC)
-@click.option('-e', '--env_name', type=str, help='environment to load', required= True)
-@click.option('-p', '--policy_path', type=str, help='absolute path of the policy file', default=None)
-@click.option('-m', '--mode', type=str, help='exploration or evaluation mode for policy', default='evaluation')
-@click.option('-s', '--seed', type=int, help='seed for generating environment instances', default=123)
-@click.option('-r', '--render', type=click.Choice(['onscreen', 'offscreen', 'none']), help='visualize onscreen or offscreen', default='onscreen')
-@click.option('-c', '--camera_name', type=str, default=None, help=('Camera name for rendering'))
-@click.option('-o', '--output_dir', type=str, default='./', help=('Directory to save the outputs'))
-@click.option('-on', '--output_name', type=str, default=None, help=('The name to save the outputs as'))
-@click.option('-n', '--num_rollouts', type=int, help='number of rollouts to save', default=100)
-def main(env_name, policy_path, mode, seed, render, camera_name, output_dir, output_name, num_rollouts):
-
+@hydra.main(config_name='default', config_path='config')
+def main(cfg:dict):
+    print("Working directory : {}".format(os.getcwd()))
+    env_name = cfg.env_name
+    policy_path = cfg.policy_path
+    mode = cfg.mode
+    seed = cfg.seed 
+    render = cfg.render
+    camera_name = cfg.camera_name
+    output_dir = cfg.output_dir
+    output_name = cfg.output_name
+    num_rollouts = cfg.num_rollouts
+    
     # seed and load environments
     np.random.seed(seed)
     env = gym.make(env_name, **{'reward_mode': 'sparse'})
@@ -125,4 +116,5 @@ def main(env_name, policy_path, mode, seed, render, camera_name, output_dir, out
             print('Success {} ({}/{})'.format(successes/rollouts,successes,rollouts))
 
 if __name__ == '__main__':
+    
     main()

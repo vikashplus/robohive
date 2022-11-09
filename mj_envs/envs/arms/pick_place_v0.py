@@ -77,11 +77,10 @@ class PickPlaceV0(env_base.MujocoEnv):
         self.max_ik = max_ik
         self.last_eef_cmd = None 
         
-        model = load_model_from_path('mj_envs/envs/arms/franka/assets/franka_busbin_v0.xml')
-        self.ik_sim = MjSim(model)
+        self.ik_sim = MjSim(self.sim.model)
         
-        self.jnt_low = model.jnt_range[:model.nu, 0]
-        self.jnt_high = model.jnt_range[:model.nu, 1]
+        self.jnt_low = self.sim.model.jnt_range[:self.sim.model.nu, 0]
+        self.jnt_high = self.sim.model.jnt_range[:self.sim.model.nu, 1]
 
         super()._setup(obs_keys=obs_keys,
                        weighted_reward_keys=weighted_reward_keys,

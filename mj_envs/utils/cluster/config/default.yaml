@@ -1,0 +1,28 @@
+defaults:
+    - override hydra/launcher: local
+    - override hydra/output: local
+
+env_name: FrankaPickPlaceRandom_v2d-v0
+policy_path: /private/home/plancaster/remodem/mj_envs/mj_envs/utils/policies/heuristic.pickle
+mode: evaluation
+seed: 1
+render: none
+camera_name: None
+output_dir: /checkpoint/plancaster/outputs/tdmpc/franka_demos/pick-place
+output_name: None
+num_rollouts: 100
+
+# hydra
+hydra:
+    job:
+        name: franka_pick_place
+    launcher:
+        cpus_per_task: 8
+        gpus_per_node: 1
+        tasks_per_node: 1
+        timeout_min: 1200
+        mem_gb: 80
+        name: ${hydra.job.name}
+        submitit_folder: ${hydra.sweep.dir}/.submitit/%j
+    sweep:
+        dir: /checkpoint/${oc.env:USER}/outputs
