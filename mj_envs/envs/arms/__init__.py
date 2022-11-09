@@ -132,7 +132,7 @@ def register_pick_place_visual_envs(encoder_type):
         env_id='FrankaPickPlaceRandom-v0',
         variant_id='FrankaPickPlaceRandom_v{}-v0'.format(encoder_type),
         variants={'obs_keys':
-                    ['qp', 'qv',
+                    ['qp', 'qv', 'grasp_pos', 'object_err', 'target_err',
                     "rgb:left_cam:224x224:{}".format(encoder_type),
                     "rgb:right_cam:224x224:{}".format(encoder_type),
                     "rgb:top_cam:224x224:{}".format(encoder_type),

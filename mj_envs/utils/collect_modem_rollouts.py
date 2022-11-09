@@ -9,6 +9,8 @@ import gym
 from mj_envs.utils.paths_utils import plot as plotnsave_paths
 from mj_envs.utils.policies.rand_eef_policy import RandEEFPolicy
 from mj_envs.utils.policies.heuristic_policy import HeuristicPolicy
+from PIL import Image
+from pathlib import Path
 import click
 import numpy as np
 import pickle
@@ -72,6 +74,9 @@ def main(env_name, policy_path, mode, seed, render, camera_name, output_dir, out
     if (os.path.isdir(output_dir) == False):
         os.mkdir(output_dir)
 
+    if (os.path.isdir(output_dir +'/frames') == False):
+        os.mkdir(output_dir+'/frames')
+
     rollouts = 0
     successes = 0
     act_low = np.array(env.pos_limit_low)
@@ -93,13 +98,28 @@ def main(env_name, policy_path, mode, seed, render, camera_name, output_dir, out
         # evaluate paths
         success_percentage = env.env.evaluate_success(paths)
         if success_percentage > 0.5:
-            
+            ro_fn = 'rollout'+f'{successes:010d}'
+
             data = {}
-            data['states'] = paths[0]['observations']
+            data['states'] = paths[0]['observations'][:,:66]
             actions = 2*(((paths[0]['actions']-act_low)/(act_high-act_low))-0.5)
             data['actions'] = actions
             data['infos'] = [{'success': reward} for reward in paths[0]['rewards']]
-            torch.save(data, output_dir+'/rollout'+f'{successes:010d}'+'.pt')
+            
+            data['frames'] = []
+            imgs = paths[0]['observations'][:,66:]
+            imgs = imgs.reshape((data['states'].shape[0],-1,224,224,3))
+            imgs = imgs.astype(np.uint8)
+            for i in range(len(imgs.shape[0])):
+                for j in range(len(imgs.shape[1])):
+                    img_fn = ro_fn +'_cam'+str(j)+'_step'+f'{i:05d}'
+                    img = Image.fromarray(imgs[i,j])
+                    img.save(output_dir+'/frames/'+img_fn+'.png')
+                    if imgs.shape[1] == 1 or j == 1: # First case if there's only one cam, second case corresponds to right_cam
+                        # Record path in data
+                        data['frames'].append(Path(img_fn+'.png'))
+         
+            torch.save(data, output_dir+'/'+ro_fn+'.pt')
             successes += 1
 
             print('Success {} ({}/{})'.format(successes/rollouts,successes,rollouts))
