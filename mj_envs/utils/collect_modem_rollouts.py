@@ -17,7 +17,7 @@ import pickle
 import time
 import os
 import torch
-
+import mujoco_py
 DESC = '''
 Helper script to examine an environment and associated policy for behaviors; \n
 - either onscreen, or offscreen, or just rollout without rendering.\n
@@ -48,8 +48,8 @@ class rand_policy():
 @click.option('-c', '--camera_name', type=str, default=None, help=('Camera name for rendering'))
 @click.option('-o', '--output_dir', type=str, default='./', help=('Directory to save the outputs'))
 @click.option('-on', '--output_name', type=str, default=None, help=('The name to save the outputs as'))
-
-def main(env_name, policy_path, mode, seed, render, camera_name, output_dir, output_name):
+@click.option('-n', '--num_rollouts', type=int, help='number of rollouts to save', default=100)
+def main(env_name, policy_path, mode, seed, render, camera_name, output_dir, output_name, num_rollouts):
 
     # seed and load environments
     np.random.seed(seed)
@@ -81,7 +81,7 @@ def main(env_name, policy_path, mode, seed, render, camera_name, output_dir, out
     successes = 0
     act_low = np.array(env.pos_limit_low)
     act_high = np.array(env.pos_limit_high)
-    while successes < 1e11:
+    while successes < num_rollouts:
         # examine policy's behavior to recover paths
         paths = env.examine_policy(
             policy=pi,
@@ -98,7 +98,7 @@ def main(env_name, policy_path, mode, seed, render, camera_name, output_dir, out
         # evaluate paths
         success_percentage = env.env.evaluate_success(paths)
         if success_percentage > 0.5:
-            ro_fn = 'rollout'+f'{successes:010d}'
+            ro_fn = 'rollout'+f'{(successes+seed):010d}'
 
             data = {}
             data['states'] = paths[0]['observations'][:,:66]
@@ -110,8 +110,8 @@ def main(env_name, policy_path, mode, seed, render, camera_name, output_dir, out
             imgs = paths[0]['observations'][:,66:]
             imgs = imgs.reshape((data['states'].shape[0],-1,224,224,3))
             imgs = imgs.astype(np.uint8)
-            for i in range(len(imgs.shape[0])):
-                for j in range(len(imgs.shape[1])):
+            for i in range(imgs.shape[0]):
+                for j in range(imgs.shape[1]):
                     img_fn = ro_fn +'_cam'+str(j)+'_step'+f'{i:05d}'
                     img = Image.fromarray(imgs[i,j])
                     img.save(output_dir+'/frames/'+img_fn+'.png')
