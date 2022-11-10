@@ -3,7 +3,6 @@ defaults:
     - override hydra/output: local
 
 env_name: FrankaPickPlaceRandom_v2d-v0
-policy_path: /private/home/plancaster/remodem/mj_envs/mj_envs/utils/policies/heuristic.pickle
 mode: evaluation
 seed: 1
 render: none
