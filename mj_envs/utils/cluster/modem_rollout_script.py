@@ -58,8 +58,6 @@ def collect_rollouts(job_data):
 
     rollouts = 0
     successes = 0
-    act_low = np.array(env.pos_limit_low)
-    act_high = np.array(env.pos_limit_high)
     while successes < num_rollouts:
         # examine policy's behavior to recover paths
         paths = env.examine_policy(
@@ -81,8 +79,7 @@ def collect_rollouts(job_data):
 
             data = {}
             data['states'] = paths[0]['observations'][:,:66]
-            actions = 2*(((paths[0]['actions']-act_low)/(act_high-act_low))-0.5)
-            data['actions'] = actions
+            data['actions'] = paths[0]['actions']
             data['infos'] = [{'success': reward} for reward in paths[0]['rewards']]
             
             data['frames'] = []

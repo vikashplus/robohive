@@ -71,8 +71,8 @@ class PickPlaceV0(env_base.MujocoEnv):
         self.target_xyz_range = target_xyz_range
         self.randomize = randomize
         self.geom_sizes = geom_sizes
-        self.pos_limit_low = pos_limit_low
-        self.pos_limit_high = pos_limit_high
+        self.pos_limit_low = np.array(pos_limit_low)
+        self.pos_limit_high = np.array(pos_limit_high)
         self.vel_limit = vel_limit
         self.max_ik = max_ik
         self.last_eef_cmd = None 
@@ -158,8 +158,10 @@ class PickPlaceV0(env_base.MujocoEnv):
         else:           
             
             assert(a.flatten().shape[0]==8)
-           
-            eef_cmd = np.clip(a.flatten(), self.pos_limit_low, self.pos_limit_high)
+            
+            # Un-normalize cmd
+            eef_cmd = (0.5*a.flatten()+0.5)*(self.pos_limit_high-self.pos_limit_low)+self.pos_limit_low
+            eef_cmd = np.clip(eef_cmd, self.pos_limit_low, self.pos_limit_high)
 
             if self.last_eef_cmd is not None:
                 eef_cmd = np.clip(eef_cmd, self.last_eef_cmd-self.vel_limit, self.last_eef_cmd+self.vel_limit)

@@ -27,21 +27,10 @@ USAGE:\n
     $ python examine_env.py --env_name door-v0 --policy my_policy.pickle --mode evaluation --episodes 10 \n
 '''
 
-# Random policy
-class rand_policy():
-    def __init__(self, env, seed):
-        self.env = env
-        self.env.action_space.np_random.seed(seed) # requires exlicit seeding
-
-    def get_action(self, obs):
-        # return self.env.np_random.uniform(high=self.env.action_space.high, low=self.env.action_space.low)
-        return self.env.action_space.sample(), {'mode': 'random samples'}
-
 
 # MAIN =========================================================
 @click.command(help=DESC)
 @click.option('-e', '--env_name', type=str, help='environment to load', required= True)
-@click.option('-p', '--policy_path', type=str, help='absolute path of the policy file', default=None)
 @click.option('-m', '--mode', type=str, help='exploration or evaluation mode for policy', default='evaluation')
 @click.option('-s', '--seed', type=int, help='seed for generating environment instances', default=123)
 @click.option('-r', '--render', type=click.Choice(['onscreen', 'offscreen', 'none']), help='visualize onscreen or offscreen', default='onscreen')
@@ -49,26 +38,15 @@ class rand_policy():
 @click.option('-o', '--output_dir', type=str, default='./', help=('Directory to save the outputs'))
 @click.option('-on', '--output_name', type=str, default=None, help=('The name to save the outputs as'))
 @click.option('-n', '--num_rollouts', type=int, help='number of rollouts to save', default=100)
-def main(env_name, policy_path, mode, seed, render, camera_name, output_dir, output_name, num_rollouts):
+def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts):
 
     # seed and load environments
     np.random.seed(seed)
     env = gym.make(env_name, **{'reward_mode': 'sparse'})
     env.seed(seed)
 
-    # resolve policy and outputs
-    if policy_path is not None:
-        pi = pickle.load(open(policy_path, 'rb'))
-        if output_dir == './': # overide the default
-            output_dir, pol_name = os.path.split(policy_path)
-            output_name = os.path.splitext(pol_name)[0]
-        if output_name is None:
-            pol_name = os.path.split(policy_path)[1]
-            output_name = os.path.splitext(pol_name)[0]
-    else:
-        pi = rand_policy(env, seed)
-        mode = 'exploration'
-        output_name ='random_policy'
+    pi = HeuristicPolicy(env, seed)
+    output_name = 'heuristic'
 
     # resolve directory
     if (os.path.isdir(output_dir) == False):
@@ -79,8 +57,7 @@ def main(env_name, policy_path, mode, seed, render, camera_name, output_dir, out
 
     rollouts = 0
     successes = 0
-    act_low = np.array(env.pos_limit_low)
-    act_high = np.array(env.pos_limit_high)
+
     while successes < num_rollouts:
         # examine policy's behavior to recover paths
         paths = env.examine_policy(
@@ -102,8 +79,7 @@ def main(env_name, policy_path, mode, seed, render, camera_name, output_dir, out
 
             data = {}
             data['states'] = paths[0]['observations'][:,:66]
-            actions = 2*(((paths[0]['actions']-act_low)/(act_high-act_low))-0.5)
-            data['actions'] = actions
+            data['actions'] = paths[0]['actions']
             data['infos'] = [{'success': reward} for reward in paths[0]['rewards']]
             
             data['frames'] = []

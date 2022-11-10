@@ -54,19 +54,8 @@ class HeuristicPolicy():
             action[6:8] = GRIPPER_FULL_CLOSE
 
 
-            
-        '''
-        elif (np.linalg.norm(obs_dict['qp'][0,0,7:9] - GRIPPER_FULL_OPEN) < 1e-4 or
-                np.linalg.norm(obs_dict['qv'][0,0,7:9]) > 1e-4):
-            # Gripper either open or closing, tell it to close
-            action[6:8] = GRIPPER_FULL_CLOSE
-            print('Closing gripper')
-        
-        else:
-            print('Move to target')
-            # Object within gripper and gripper is closed, move to target pose
-            #action[:3] += obs_dict['target_err'][0,0,0:3]
-        '''
+        # Normalize action to be between -1 and 1
+        action = 2*(((action - self.env.pos_limit_low) / (self.env.pos_limit_high - self.env.pos_limit_low)) - 0.5)
         
         return action, {'evaluation': action}
 
