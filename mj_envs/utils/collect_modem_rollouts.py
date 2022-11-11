@@ -38,14 +38,15 @@ USAGE:\n
 @click.option('-o', '--output_dir', type=str, default='./', help=('Directory to save the outputs'))
 @click.option('-on', '--output_name', type=str, default=None, help=('The name to save the outputs as'))
 @click.option('-n', '--num_rollouts', type=int, help='number of rollouts to save', default=100)
-def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts):
+@click.option('-hw', '--is_hardware', type=bool help='whether or not to run on real robot', default=False)
+def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, is_hardware):
 
     # seed and load environments
     np.random.seed(seed)
-    env = gym.make(env_name, **{'reward_mode': 'sparse'})
+    env = gym.make(env_name, **{'reward_mode': 'sparse', 'is_hardware':is_hardware})
     env.seed(seed)
 
-    pi = HeuristicPolicy(env, seed)
+    pi = HeuristicPolicy(env, seed, is_hardware)
     output_name = 'heuristic'
 
     # resolve directory
@@ -59,6 +60,16 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
     successes = 0
 
     while successes < num_rollouts:
+
+        if self.is_hardware:
+            # Move arm out of camera's view
+            start_action = [0.25, 0.5, 1.25, 3.14, 0, 0, 0.04, 0.04]
+            env.step(start_action)
+            time.sleep(3)
+
+            # Detect and set the object pose
+            env.real_obj_pos = [0.0, 0.5, 1.0]
+
         # examine policy's behavior to recover paths
         paths = env.examine_policy(
             policy=pi,

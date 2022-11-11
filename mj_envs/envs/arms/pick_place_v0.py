@@ -60,6 +60,7 @@ class PickPlaceV0(env_base.MujocoEnv):
                pos_limit_high=[0.435, 0.8, 1.5, 3.14, 3.14, 3.14, 0.04, 0.04],
                vel_limit=[0.1, 0.1, 0.1, 0.3, 0.3, 0.3, 0.04, 0.04],
                max_ik=3,
+               is_hardware=None,
                **kwargs,
         ):
 
@@ -75,12 +76,15 @@ class PickPlaceV0(env_base.MujocoEnv):
         self.pos_limit_high = np.array(pos_limit_high)
         self.vel_limit = vel_limit
         self.max_ik = max_ik
+        self.is_hardware = bool(is_hardware)
         self.last_eef_cmd = None 
         
         self.ik_sim = MjSim(self.sim.model)
         
         self.jnt_low = self.sim.model.jnt_range[:self.sim.model.nu, 0]
         self.jnt_high = self.sim.model.jnt_range[:self.sim.model.nu, 1]
+
+        self.real_obj_pos = None
 
         super()._setup(obs_keys=obs_keys,
                        weighted_reward_keys=weighted_reward_keys,
@@ -94,8 +98,13 @@ class PickPlaceV0(env_base.MujocoEnv):
         obs_dict['qp'] = sim.data.qpos.copy()
         obs_dict['qv'] = sim.data.qvel.copy()
         obs_dict['grasp_pos'] = sim.data.site_xpos[self.grasp_sid]
-        obs_dict['object_err'] = sim.data.site_xpos[self.object_sid]-sim.data.site_xpos[self.grasp_sid]
-        obs_dict['target_err'] = sim.data.site_xpos[self.target_sid]-sim.data.site_xpos[self.object_sid]
+        if self.is_hardware:
+            obs_dict['object_err'] = self.real_obj_pos-sim.data.site_xpos[self.grasp_sid]
+            obs_dict['target_err'] = sim.data.site_xpos[self.target_sid]-sim.data.site_xpos[self.grasp_sid]
+
+        else:
+            obs_dict['object_err'] = sim.data.site_xpos[self.object_sid]-sim.data.site_xpos[self.grasp_sid]
+            obs_dict['target_err'] = sim.data.site_xpos[self.target_sid]-sim.data.site_xpos[self.object_sid]
         return obs_dict
 
 
@@ -142,7 +151,10 @@ class PickPlaceV0(env_base.MujocoEnv):
                     self.sim.model.geom_rgba[gid]=self.np_random.uniform(low=[.2, .2, .2, 1], high=[.9, .9, .9, 1]) # random color
             self.sim.forward()
 
-        obs = super().reset(self.init_qpos, self.init_qvel)
+        if self.is_hardware:
+            obs = self.get_obs()
+        else:
+            obs = super().reset(self.init_qpos, self.init_qvel)
         return obs
 
 

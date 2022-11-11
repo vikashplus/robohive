@@ -12,9 +12,10 @@ GRIPPER_BUFF_N = 4
 GRIPPER_CLOSE_THRESH = 0.003
 
 class HeuristicPolicy():
-    def __init__(self, env, seed):
+    def __init__(self, env, seed, is_hardware=False):
         self.env = env
         self.gripper_buff = GRIPPER_FULL_OPEN*np.ones((GRIPPER_BUFF_N,2))
+        self.is_hardware = bool(is_hardware)
         self.yaw = 0.0
         np.random.seed(seed)
         
@@ -31,7 +32,8 @@ class HeuristicPolicy():
 
             # Object not yet within gripper
             if np.linalg.norm(obs_dict['object_err'][0,0,:2]) > BEGIN_DESCENT_THRESH:
-                self.yaw = np.random.uniform(-3.14, 0.0)
+                if not self.is_hardware:
+                    self.yaw = np.random.uniform(-3.14, 0.0)
                 # Gripper not yet aligned with object (also open gripper)
                 action[2] = ALIGN_HEIGHT
                 action[:2] += obs_dict['object_err'][0,0,0:2]
@@ -41,7 +43,7 @@ class HeuristicPolicy():
                 # Gripper aligned with object, go down towards it (also open gripper)
                 action[:3] += obs_dict['object_err'][0,0,0:3]
                 action[6:8] = GRIPPER_FULL_OPEN
-        else:
+        elif not self.is_hardware:
             # Close gripper, move to target once gripper has had chance to close
             for i in range(self.gripper_buff.shape[0]-1):
                 self.gripper_buff[i] = self.gripper_buff[i+1]
