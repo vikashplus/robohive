@@ -33,12 +33,12 @@ USAGE:\n
 @click.option('-e', '--env_name', type=str, help='environment to load', required= True)
 @click.option('-m', '--mode', type=str, help='exploration or evaluation mode for policy', default='evaluation')
 @click.option('-s', '--seed', type=int, help='seed for generating environment instances', default=123)
-@click.option('-r', '--render', type=click.Choice(['onscreen', 'offscreen', 'none']), help='visualize onscreen or offscreen', default='onscreen')
+@click.option('-r', '--render', type=click.Choice(['onscreen', 'offscreen', 'none']), help='visualize onscreen or offscreen', default='none')
 @click.option('-c', '--camera_name', type=str, default=None, help=('Camera name for rendering'))
 @click.option('-o', '--output_dir', type=str, default='./', help=('Directory to save the outputs'))
 @click.option('-on', '--output_name', type=str, default=None, help=('The name to save the outputs as'))
 @click.option('-n', '--num_rollouts', type=int, help='number of rollouts to save', default=100)
-@click.option('-hw', '--is_hardware', type=bool help='whether or not to run on real robot', default=False)
+@click.option('-hw', '--is_hardware', type=bool, help='whether or not to run on real robot', default=False)
 def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, is_hardware):
 
     # seed and load environments
@@ -61,7 +61,7 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
 
     while successes < num_rollouts:
 
-        if self.is_hardware:
+        if is_hardware:
             # Move arm out of camera's view
             start_action = [0.25, 0.5, 1.25, 3.14, 0, 0, 0.04, 0.04]
             env.step(start_action)
