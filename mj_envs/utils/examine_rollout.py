@@ -176,7 +176,7 @@ def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera
                 rewards.append(r)
                 if compress_paths:
                     obs.append([]); o = onext # don't save obs
-                    del info['state']  # don't save state
+                    if 'state' in info.keys(): del info['state']  # don't save state
                 else:
                     obs.append(o); o = onext
                 env_infos.append(info)
