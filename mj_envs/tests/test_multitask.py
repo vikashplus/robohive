@@ -5,6 +5,7 @@ class TestKitchen(TestEnvs):
     def test_kitchen(self):
         env_names = [
         'kitchen-v3',
+        'kitchen_rgb-v3',
         #substeps1
         'kitchen_micro_open-v3',
         'kitchen_micro_close-v3',

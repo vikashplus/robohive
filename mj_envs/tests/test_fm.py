@@ -8,6 +8,7 @@ class TestFM(TestEnvs):
         'rpFrankaDmanusPoseRandom-v0',
         'rpFrankaRobotiqPoseFixed-v0',
         'rpFrankaRobotiqPoseRandom-v0',
+        'rpFrankaRobotiqData-v0'
         ]
         self.check_envs('FM', env_names)
 
