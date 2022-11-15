@@ -129,8 +129,8 @@ visual_obs_keys_wt = {"robot_jnt": 1.0,
             "end_effector": 1.0,
             # "rgb:right_cam:224x224:r3m18": 1.0,
             # "rgb:left_cam:224x224:r3m18": 1.0,
-            "rgb:right_cam:224x224:flat": 1.0,
-            "rgb:left_cam:224x224:flat": 1.0,
+            "rgb:right_cam:224x224:1d": 1.0,
+            "rgb:left_cam:224x224:1d": 1.0,
             }
 
 # Kitchen (base-env; obj_init==obj_goal => do nothing in the env)

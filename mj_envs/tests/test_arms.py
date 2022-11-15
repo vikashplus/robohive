@@ -17,7 +17,7 @@ class TestArms(TestEnvs):
 
     def test_arms_visual(self):
         env_names = [
-            'FrankaReachRandom_vflat-v0',
+            'FrankaReachRandom_v2d-v0',
             'FrankaReachRandom_vr3m18-v0',
             'FrankaReachRandom_vr3m34-v0',
             'FrankaReachRandom_vr3m50-v0',
