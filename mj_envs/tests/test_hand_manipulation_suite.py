@@ -9,7 +9,7 @@ class TestHMS(TestEnvs):
         'door-v1',
         'hammer-v1',
         'relocate-v1',
-        'baoding-v1', 'baoding4th-v1', 'baoding8th-v1'
+        # 'baoding-v1', 'baoding4th-v1', 'baoding8th-v1'
         ]
         self.check_envs('Hand Manipulation', env_names)
 
