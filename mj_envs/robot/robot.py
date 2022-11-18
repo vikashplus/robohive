@@ -143,10 +143,10 @@ class Robot():
                 try:
                     from .hardware_realsense import RealSense
                     device['robot'] = RealSense(name=name, **device['interface'])
-                except: 
+                except:
                     from .hardware_realsense_single import RealsenseAPI
                     device['robot'] = RealsenseAPI(**device['interface'])
-                    
+
             elif device['interface']['type'] == 'robotiq':
                 from .hardware_robotiq import Robotiq
                 device['robot'] = Robotiq(name=name, **device['interface'])
@@ -449,8 +449,9 @@ class Robot():
             imgs = np.zeros((len(cameras), height, width, 3), dtype=np.uint8)
             depths = np.zeros((len(cameras), height, width))
             for ind, cam in enumerate(cameras):
-                img, depth = sim.render(width=width, height=height, depth=True, mode='offscreen', camera_name=cam, device_id=device_id)
-                img = img[::-1, :, : ] # Image has to be flipped
+                # img, depth = sim.render(width=width, height=height, depth=True, mode='offscreen', camera_name=cam, device_id=device_id)
+                img, depth = sim.renderer.render_offscreen(width=width, height=height, depth=True, camera_id=cam, device_id=device_id)
+                # img = img[::-1, :, :] # Image has to be flipped
                 imgs[ind, :, :, :] = img
                 depths[ind, :, :] = depth
 
@@ -674,9 +675,12 @@ class Robot():
             n_frames=int(step_duration/self.sim.model.opt.timestep)
             self.sim.data.ctrl[:] = ctrl_feasible
             with ignore_mujoco_warnings():
+                functions = self.sim.get_mjlib()
+                model = self.sim.get_handle(self.sim.model)
+                data = self.sim.get_handle(self.sim.data)
                 for _ in range(n_frames):
-                    functions.mj_step2(self.sim.model, self.sim.data)
-                    functions.mj_step1(self.sim.model, self.sim.data)
+                    functions.mj_step2(model, data)
+                    functions.mj_step1(model, data)
                     if render_cbk:
                         render_cbk()
 
