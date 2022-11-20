@@ -91,6 +91,9 @@ class PickPlaceV0(env_base.MujocoEnv):
                        reward_mode=reward_mode,
                        frame_skip=frame_skip,
                        **kwargs)
+        self.action_space = gym.spaces.Box(-np.ones(8), 
+                                           np.ones(8), 
+                                           dtype=np.float32)
 
     def get_obs_dict(self, sim):
         obs_dict = {}
