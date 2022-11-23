@@ -240,7 +240,7 @@ def qpos_from_site_pose(physics,
     # will be a view onto a block of deallocated memory. We therefore need to
     # make a copy of physics.data.qpos while physics.data is still alive.
     qpos = physics.data.qpos.copy()
-    physics.set_state(old_state)
+    physics.set_state(**old_state)
     physics.forward()
   else:
     # If we're modifying physics.data in place then it's fine to return a view.
