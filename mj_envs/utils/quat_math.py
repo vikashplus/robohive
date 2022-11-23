@@ -29,9 +29,13 @@ def quat2Vel(quat, dt=1):
     speed = 2*np.arctan2(sin_a_2, quat[0])/dt
     return speed, axis
 
-def quatDiff2Vel(quat1, quat2, dt):
+def diffQuat(quat1, quat2):
     neg = negQuat(quat1)
     diff = mulQuat(quat2, neg)
+    return diff
+
+def quatDiff2Vel(quat1, quat2, dt):
+    diff = diffQuat(quat1, quat2)
     return quat2Vel(diff, dt)
 
 
