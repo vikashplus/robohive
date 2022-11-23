@@ -414,25 +414,6 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         return self.spec.max_episode_steps # paths could have early termination before horizon
 
 
-    # state utilities ========================================================
-
-    def set_state(self, qpos=None, qvel=None, act=None):
-        """
-        Set MuJoCo sim state
-        """
-        assert qpos.shape == (self.sim.model.nq,) and qvel.shape == (self.sim.model.nv,)
-        old_state = self.sim.get_state()
-        if qpos is None:
-            qpos = old_state.qpos
-        if qvel is None:
-            qvel = old_state.qvel
-        if act is None:
-            act = old_state.act
-        new_state = mujoco_py.MjSimState(old_state.time, qpos=qpos, qvel=qvel, act=act, udd_state={})
-        self.sim.set_state(new_state)
-        self.sim.forward()
-
-
     def get_env_state(self):
         """
         Get full state of the environemnt

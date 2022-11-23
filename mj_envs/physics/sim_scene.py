@@ -124,6 +124,33 @@ class SimScene(metaclass=abc.ABCMeta):
         if actuation:
             self.model.opt.disableflags |= (1 << 10)
 
+
+    # get state of the scene
+    def get_state(self):
+        tt = self.data.time
+        qp = self.data.qpos.ravel().copy()
+        qv = self.data.qvel.ravel().copy()
+        act = self.data.act.ravel().copy() if self.model.na>0 else None
+        return dict(time=tt,
+                    qpos=qp,
+                    qvel=qv,
+                    act=act)
+
+    # set state of the scene
+    def set_state(self, time=None, qpos=None, qvel=None, act=None):
+        if time:
+            self.data.time = time
+        if qpos is not None:
+            assert qpos.shape == (self.model.nq,)
+            self.sim.data.qpos[:] = qpos
+        if qvel is not None:
+            assert qvel.shape == (self.model.nv,)
+            self.sim.data.qvel[:] = qvel
+        if self.model.na>0 and act is not None:
+            assert act.shape == (self.model.na,)
+            self.sim.data.act[:] = act
+        self.sim.forward()
+
     @contextlib.contextmanager
     def disable_option_context(self, **kwargs):
         """Disables options(s) in the simulation for the context."""
