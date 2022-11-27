@@ -711,7 +711,9 @@ class Robot():
     # Reset the robot
     def reset(self,
               reset_pos,
-              reset_vel):
+              reset_vel,
+              blocking = True
+              ):
 
         prompt("Resetting {}".format(self.name), 'white', 'on_grey', flush=True)
 
@@ -745,7 +747,8 @@ class Robot():
             # engage other reset mechanisms for passive dofs
             # TODO raise NotImplementedError
 
-            input("press a key to start rollout")
+            if blocking:
+                input("press a key to start rollout")
             prompt(" Done in {}".format(time.time()-t_reset_start), 'white', 'on_grey', flush=True)
         else:
             # Ideally we should use actuator/ reset mechanism as in the real world
