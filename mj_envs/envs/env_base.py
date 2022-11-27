@@ -388,14 +388,14 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         return self.input_seed
 
 
-    def reset(self, reset_qpos=None, reset_qvel=None):
+    def reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
         """
         Reset the environment
         Default implemention provided. Override if env needs custom reset
         """
         qpos = self.init_qpos.copy() if reset_qpos is None else reset_qpos
         qvel = self.init_qvel.copy() if reset_qvel is None else reset_qvel
-        self.robot.reset(qpos, qvel)
+        self.robot.reset(qpos, qvel, **kwargs)
         return self.get_obs()
 
 
@@ -467,14 +467,12 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             # self.viewer.cam.azimuth+=.1 # trick to rotate camera for 360 videos
             # self.viewer.render()
             self.sim.renderer.set_free_camera_settings(
-                distance=5,
-                azimuth=90,
-                elevation=-30,
+                distance=1,
+                azimuth=180,
+                elevation=-10,
                 # lookat=,
                 # center=
                 )
-            print('.',end="")
-
             self.sim.renderer.render_to_window()
         except:
             # self.viewer = MjViewer(self.sim)
