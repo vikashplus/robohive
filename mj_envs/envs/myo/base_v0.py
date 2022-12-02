@@ -41,6 +41,9 @@ class BaseV0(env_base.MujocoEnv):
                     frame_skip=frame_skip,
                     **kwargs)
 
+        self.viewer_setup(azimuth=90, distance=1.5)
+        # self.sim.renderer._onscreen_renderer.vopt.flags[3] = 1 # render actuators #ToDo: make it binding agnostic
+
     def initializeConditions(self):
         # for muscle weakness we assume that a weaker muscle has a
         # reduced maximum force
@@ -120,11 +123,5 @@ class BaseV0(env_base.MujocoEnv):
         # finalize step
         env_info = self.get_env_infos()
 
-        # returns obs(t+1), rew(t), done(t), info(t+1)
+        # returns obs(t+1), rwd(t+1), done(t+1), info(t+1)
         return obs, env_info['rwd_'+self.rwd_mode], bool(env_info['done']), env_info
-
-    def viewer_setup(self):
-        self.viewer.cam.azimuth = 90
-        self.viewer.cam.distance = 1.5
-        self.viewer.vopt.flags[3] = 1 # render actuators
-        self.sim.forward()

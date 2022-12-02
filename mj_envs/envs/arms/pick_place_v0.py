@@ -70,6 +70,8 @@ class PickPlaceV0(env_base.MujocoEnv):
                        reward_mode=reward_mode,
                        frame_skip=frame_skip,
                        **kwargs)
+        self.viewer_setup(distance=1.25, azimuth=-90, elevation=-20)
+
 
     def get_obs_dict(self, sim):
         obs_dict = {}
@@ -124,3 +126,10 @@ class PickPlaceV0(env_base.MujocoEnv):
 
         obs = super().reset(self.init_qpos, self.init_qvel)
         return obs
+
+    # def viewer_setup(self):
+    #     self.sim.renderer.set_free_camera_settings(
+    #             distance=1.25,
+    #             azimuth=-90,
+    #             elevation=-20,
+    #     )
