@@ -84,9 +84,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         if self.sim is None or self.sim_obsd is None:
             raise TypeError("sim and sim_obsd must be instantiated for setup to run")
 
+        # Resolve viewer
         self.mujoco_render_frames = False
         self.device_id = device_id
         self.rwd_viz = rwd_viz
+        self.viewer_setup()
 
         # resolve robot config
         self.robot = Robot(mj_sim=self.sim,
@@ -296,7 +298,6 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         Get information about the environment.
         - Essential keys are added below. Users can add more keys
         - Requires necessary keys (dense, sparse, solved, done) in rwd_dict to be populated
-        - Note that entries belongs to different MDP steps
         """
         env_info = {
             'time': self.obs_dict['t'][()],             # MDP(t)
@@ -462,62 +463,22 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     # Vizualization utilities ================================================
 
     def mj_render(self):
-        # self.sim.renderer.render_to_window()
-        try:
-            # self.viewer.cam.azimuth+=.1 # trick to rotate camera for 360 videos
-            # self.viewer.render()
-            self.sim.renderer.set_free_camera_settings(
-                distance=1,
-                azimuth=180,
-                elevation=-10,
-                # lookat=,
-                # center=
-                )
-            self.sim.renderer.render_to_window()
-        except:
-            # self.viewer = MjViewer(self.sim)
-            # self.viewer._run_speed = 0.5
-            # self.viewer.cam.elevation = -30
-            # self.viewer.cam.azimuth = 90
-            # self.viewer.cam.distance = 2.5
-            # #self.viewer._run_speed /= self.frame_skip
-            # self.viewer_setup()
-            # self.viewer.render()
-            print("Nop, can't do")
-
-
-    def update_camera(self, camera=None, distance=None, azimuth=None, elevation=None, lookat=None):
         """
-        Updates the given camera to move to the provided settings.
+        Render the default camera
         """
-        if not camera:
-            if hasattr(self, 'viewer'):
-                camera = self.viewer.cam
-            else:
-                return
-        if distance is not None:
-            camera.distance = distance
-        if azimuth is not None:
-            camera.azimuth = azimuth
-        if elevation is not None:
-            camera.elevation = elevation
-        if lookat is not None:
-            camera.lookat[:] = lookat
+        self.sim.renderer.render_to_window()
 
 
-    # def render_camera_offscreen(self, cameras:list, width:int=640, height:int=480, device_id:int=0, sim=None):
-    #     """
-    #     Render images(widthxheight) from a list_of_cameras on the specified device_id.
-    #     """
-    #     if sim is None:
-    #         sim = self.sim_obsd
-    #     imgs = np.zeros((len(cameras), height, width, 3), dtype=np.uint8)
-    #     for ind, cam in enumerate(cameras):
-    #         img = sim.render(width=width, height=height, mode='offscreen', camera_name=cam, device_id=device_id)
-    #         img = img[::-1, :, : ] # Image has to be flipped
-    #         imgs[ind, :, :, :] = img
-    #     return imgs
-
+    def viewer_setup(self, distance=2.5, azimuth=90, elevation=-30, lookat=None):
+        """
+        Setup the default camera
+        """
+        self.sim.renderer.set_free_camera_settings(
+                distance=distance,
+                azimuth=azimuth,
+                elevation=elevation,
+                lookat=lookat
+        )
 
     def examine_policy(self,
             policy,
@@ -538,20 +499,12 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
         exp_t0 = timer.time()
 
-        # configure renderer
-        self.sim.renderer.set_free_camera_settings(
-                distance=2.5,
-                azimuth=90,
-                elevation=-30,
-                center=False
-            )
-
         if render == 'onscreen':
             self.mujoco_render_frames = True
         elif render =='offscreen':
             self.mujoco_render_frames = False
             frames = np.zeros((horizon, frame_size[1], frame_size[0], 3), dtype=np.uint8)
-        elif render == None:
+        elif render == None or render == 'None' or render == 'none':
             self.mujoco_render_frames = False
 
         # start rollouts
@@ -575,19 +528,6 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 ep_rwd += rwd
                 # render offscreen visuals
                 if render =='offscreen':
-                    # curr_frame = self.render_camera_offscreen(
-                    #     sim=self.sim,
-                    #     cameras=[camera_name],
-                    #     width=frame_size[0],
-                    #     height=frame_size[1],
-                    #     device_id=device_id
-                    # )
-                    # curr_frame = self.sim.render_offscreen(
-                    #     width=frame_size[0],
-                    #     height=frame_size[1],
-                    #     cameras=[camera_name],
-                    # )
-
                     curr_frame = self.sim.renderer.render_offscreen(
                         width=frame_size[0],
                         height=frame_size[1],
@@ -651,10 +591,3 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         Implement this in each subclass.
         """
         raise NotImplementedError
-
-    def viewer_setup(self):
-        """
-        Due to specifics of new mujoco rendering, the standard viewer cannot be used
-        with this set-up. Instead we use this mujoco specific function. Customize your viewer here
-        """
-        pass
