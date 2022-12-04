@@ -44,7 +44,7 @@ def dict_numpify(data:dict, u_res=np.uint8, i_res=np.int8, f_res=np.float16)->di
                 val = np.array(val, dtype=i_res)
             elif type(val[0]) == float:
                 val = np.array(val, dtype=f_res)
-            else:
+            elif type(val[0]) != str:
                 val = np.array(val) # let numpy handle it for nested stuctures
                 # raise TypeError("Data type {} not supported for {}".format(type(val[0]), key))
 
