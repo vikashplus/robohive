@@ -1,4 +1,4 @@
-name: robohive_base
+name: data_proc
 channels:
   - pytorch
   - fair-robotics
@@ -9,7 +9,6 @@ dependencies:
   - cudatoolkit=11.3
   - gdown
   - hydra-core
-  - polymetis=1180
   - pytorch=1.10.0
   - torchvision
   - pillow

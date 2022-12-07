@@ -8,6 +8,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 import collections
 import gym
 import numpy as np
+import sys
 
 from mj_envs.envs import env_base
 from mj_envs.utils.quat_math import euler2quat
@@ -17,7 +18,7 @@ from mujoco_py import load_model_from_path, MjSim
 class PickPlaceV0(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS = [
-        'qp', 'qv', 'grasp_pos', 'object_err', 'target_err'
+        'qp', 'qv', 'grasp_pos', 'object_err', 'target_err', 't'
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
         "object_dist": -1.0,
@@ -57,10 +58,12 @@ class PickPlaceV0(env_base.MujocoEnv):
                randomize=False,
                geom_sizes={'high':[.05, .05, .05], 'low':[.2, 0.2, 0.2]},
                pos_limit_low=[-0.435, 0.2, 0.76, -3.14, -3.14, -3.14, 0.0, 0.0],
-               pos_limit_high=[0.435, 0.8, 1.5, 3.14, 3.14, 3.14, 0.04, 0.04],
-               vel_limit=[0.1, 0.1, 0.1, 0.3, 0.3, 0.3, 0.04, 0.04],
+               pos_limit_high=[0.435, 0.8, 1.5, 3.14, 3.14, 3.14, 0.04, 1.0],
+               vel_limit=[0.15, 0.3, 0.2, 0.3, 0.2, 0.2, 0.35, 1.0, 1.0],
+               slow_vel_limit = [0.15, 0.075, 0.1, 0.125, 0.15, 0.15, 0.35, 1.0, 1.0],
+               min_grab_height=0.905,
+               max_slow_height=1.075,
                max_ik=3,
-               is_hardware=None,
                **kwargs,
         ):
 
@@ -75,30 +78,46 @@ class PickPlaceV0(env_base.MujocoEnv):
         self.pos_limit_low = np.array(pos_limit_low)
         self.pos_limit_high = np.array(pos_limit_high)
         self.vel_limit = vel_limit
+        self.slow_vel_limit = np.array(slow_vel_limit)
+        self.min_grab_height = min_grab_height
+        self.max_slow_height = max_slow_height
         self.max_ik = max_ik
-        self.is_hardware = bool(is_hardware)
         self.last_eef_cmd = None 
-        
+        self.last_ctrl = None
         self.ik_sim = MjSim(self.sim.model)
         
         self.jnt_low = self.sim.model.jnt_range[:self.sim.model.nu, 0]
         self.jnt_high = self.sim.model.jnt_range[:self.sim.model.nu, 1]
 
-        self.real_obj_pos = None
+        self.real_obj_pos = np.array([0.0,0.5,1.0]) 
 
         super()._setup(obs_keys=obs_keys,
                        weighted_reward_keys=weighted_reward_keys,
                        reward_mode=reward_mode,
                        frame_skip=frame_skip,
                        **kwargs)
-
+    def set_real_obj_pos(self, real_obj_pos):
+        self.real_obj_pos = real_obj_pos
+        
+    def set_target_pos(self, target_pos):
+        self.sim.model.site_pos[self.target_sid] = target_pos
+        
+    def set_init_qpos(self, init_qpos):
+        self.init_qpos[:8] = init_qpos[:8]   
+        
+    def set_vel_limit(self, vel_limit):
+        self.vel_limit = vel_limit
+        
+    def set_slow_vel_limit(self, slow_vel_limit):
+         self.slow_vel_limit = slow_vel_limit
+        
     def get_obs_dict(self, sim):
         obs_dict = {}
         obs_dict['t'] = np.array([self.sim.data.time])
         obs_dict['qp'] = sim.data.qpos.copy()
         obs_dict['qv'] = sim.data.qvel.copy()
         obs_dict['grasp_pos'] = sim.data.site_xpos[self.grasp_sid]
-        if self.is_hardware:
+        if self.robot.is_hardware:
             obs_dict['object_err'] = self.real_obj_pos-sim.data.site_xpos[self.grasp_sid]
             obs_dict['target_err'] = sim.data.site_xpos[self.target_sid]-sim.data.site_xpos[self.grasp_sid]
 
@@ -127,7 +146,7 @@ class PickPlaceV0(env_base.MujocoEnv):
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
 
-    def reset(self):
+    def reset(self, reset_qpos=None, reset_qvel=None):
 
         if self.randomize:
             # target location
@@ -151,10 +170,16 @@ class PickPlaceV0(env_base.MujocoEnv):
                     self.sim.model.geom_rgba[gid]=self.np_random.uniform(low=[.2, .2, .2, 1], high=[.9, .9, .9, 1]) # random color
             self.sim.forward()
 
-        if self.is_hardware:
+        if reset_qpos is None:
+            reset_qpos = self.init_qpos.copy()
+        if reset_qvel is None:
+            reset_qvel = self.init_qvel.copy()
+
+        if self.robot.is_hardware:
+            self.robot.reset(reset_qpos, reset_qvel, pause_in=False)
             obs = self.get_obs()
         else:
-            obs = super().reset(self.init_qpos, self.init_qvel)
+            obs = super().reset(reset_qpos, reset_qvel)
         return obs
 
 
@@ -164,20 +189,21 @@ class PickPlaceV0(env_base.MujocoEnv):
         Uses robot interface to safely step the forward respecting pos/ vel limits
         Accepts a(t) returns obs(t+1), rwd(t+1), done(t+1), info(t+1)
         """
-        
+        ik_success = True
+        eef_cmd = None
+        invalid_grab = False
         if a.shape[0] == self.sim.model.nu:
             action = a
+            action = (0.5*action+0.5)*(self.jnt_high-self.jnt_low)+self.jnt_low
+            action = np.clip(action, self.sim_obsd.data.qpos[:9]-self.vel_limit, self.sim_obsd.data.qpos[:9]+self.vel_limit)
+            action = 2*(((action - self.jnt_low)/(self.jnt_high-self.jnt_low))-0.5)
         else:           
-            
-            assert(a.flatten().shape[0]==8)
+            ik_success = False
+            assert(a.flatten().shape[0]==8 or a.flatten().shape[0] == 17)
             
             # Un-normalize cmd
-            eef_cmd = (0.5*a.flatten()+0.5)*(self.pos_limit_high-self.pos_limit_low)+self.pos_limit_low
+            eef_cmd = (0.5*a.flatten()[-8:]+0.5)*(self.pos_limit_high-self.pos_limit_low)+self.pos_limit_low
             eef_cmd = np.clip(eef_cmd, self.pos_limit_low, self.pos_limit_high)
-
-            if self.last_eef_cmd is not None:
-                eef_cmd = np.clip(eef_cmd, self.last_eef_cmd-self.vel_limit, self.last_eef_cmd+self.vel_limit)
-            self.last_eef_cmd = eef_cmd
             
             eef_pos = eef_cmd[:3]
             eef_elr = eef_cmd[3:6]
@@ -185,7 +211,12 @@ class PickPlaceV0(env_base.MujocoEnv):
 
             for i in range(self.max_ik):
 
-                self.ik_sim.data.qpos[:7] = np.random.normal(self.sim.data.qpos[:7], i*0.1)
+                self.ik_sim.data.qpos[:7] = np.random.normal(self.sim_obsd.data.qpos[:7], i*0.1)
+                
+                # Helps limit motion of arm such that it stays upright
+                self.ik_sim.data.qpos[2] = 0.0
+                
+                self.ik_sim.forward()
                 ik_result = qpos_from_site_pose(physics = self.ik_sim,
                                                 site_name = self.sim.model.site_id2name(self.grasp_sid),
                                                 target_pos= eef_pos,
@@ -194,19 +225,37 @@ class PickPlaceV0(env_base.MujocoEnv):
                                                 regularization_strength=1.0)
                 action = ik_result.qpos[:self.sim.model.nu]
                 if ik_result.success:
+                    ik_success = True
                     break
+                
+            if not ik_result:
+                print('IK failed')
 
-            action[7:9] = eef_cmd[7:]
+            # Check that we are not initiating a grasp at too low of height
+            if (self.last_eef_cmd is not None and 
+                (eef_cmd[6] > self.last_eef_cmd[6] + sys.float_info.epsilon) and 
+                self.sim_obsd.data.site_xpos[self.grasp_sid][2] < self.min_grab_height):
+                print('Cant grasp this low, z = {}'.format(self.sim_obsd.data.site_xpos[self.grasp_sid][2]))
+                invalid_grab = True
             
+            self.last_eef_cmd = eef_cmd
+
+            action[7:9] = eef_cmd[6]
+            if self.sim_obsd.data.site_xpos[self.grasp_sid][2] < self.max_slow_height:
+                action = np.clip(action, self.sim_obsd.data.qpos[:9]-self.slow_vel_limit, self.sim_obsd.data.qpos[:9]+self.slow_vel_limit)
+            else:
+                action = np.clip(action, self.sim_obsd.data.qpos[:9]-self.vel_limit, self.sim_obsd.data.qpos[:9]+self.vel_limit)
+
             if self.normalize_act:
                 action = 2*(((action - self.jnt_low)/(self.jnt_high-self.jnt_low))-0.5)
 
-        self.last_ctrl = self.robot.step(ctrl_desired=action,
-                                        ctrl_normalized=self.normalize_act,
-                                        step_duration=self.dt,
-                                        realTimeSim=self.mujoco_render_frames,
-                                        render_cbk=self.mj_render if self.mujoco_render_frames else None)
-
+        if ik_success and not invalid_grab:
+            self.last_ctrl = self.robot.step(ctrl_desired=action,
+                                            ctrl_normalized=self.normalize_act,
+                                            step_duration=self.dt,
+                                            realTimeSim=self.mujoco_render_frames,
+                                            render_cbk=self.mj_render if self.mujoco_render_frames else None)
+        
         # observation
         obs = self.get_obs()
 
@@ -220,5 +269,5 @@ class PickPlaceV0(env_base.MujocoEnv):
         env_info = self.get_env_infos()
 
         # returns obs(t+1), rwd(t+1), done(t+1), info(t+1)
-        return obs, env_info['rwd_'+self.rwd_mode], bool(env_info['done']), env_info
+        return obs, env_info['rwd_'+self.rwd_mode], bool(env_info['done']) or not ik_success or (eef_cmd is not None and eef_cmd[7]>0.5) or invalid_grab, env_info
 
