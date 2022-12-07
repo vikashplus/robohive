@@ -96,6 +96,7 @@ class PickPlaceV0(env_base.MujocoEnv):
                        reward_mode=reward_mode,
                        frame_skip=frame_skip,
                        **kwargs)
+
     def set_real_obj_pos(self, real_obj_pos):
         self.real_obj_pos = real_obj_pos
         
