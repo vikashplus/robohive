@@ -480,7 +480,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 lookat=lookat
         )
 
-    def examine_policy(self,
+    def examine_policy_old(self,
             policy,
             horizon=1000,
             num_episodes=1,
@@ -568,6 +568,98 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.mujoco_render_frames = False
         print("Total time taken = %f"% (timer.time()-exp_t0))
         return paths
+
+
+    def examine_policy(self,
+            policy,
+            horizon=1000,
+            num_episodes=1,
+            mode='exploration', # options: exploration/evaluation
+            render=None,        # options: onscreen/offscreen/none
+            camera_name=None,
+            frame_size=(640,480),
+            output_dir='/tmp/',
+            filename='newvid',
+            device_id:int=0
+            ):
+        """
+            Examine a policy for behaviors;
+            - either onscreen, or offscreen, or just rollout without rendering.
+            - return resulting paths
+        """
+
+        from mj_envs.logger.path_logger import Trace
+        trace = Trace("Rollout")
+
+        exp_t0 = timer.time()
+
+        if render == 'onscreen':
+            self.mujoco_render_frames = True
+        elif render =='offscreen':
+            self.mujoco_render_frames = False
+            frames = np.zeros((horizon, frame_size[1], frame_size[0], 3), dtype=np.uint8)
+        elif render == None or render == 'None' or render == 'none':
+            self.mujoco_render_frames = False
+
+        # start rollouts
+        for ep in range(num_episodes):
+            ep_t0 = timer.time()
+
+            group_key='Trial'+str(ep); trace.create_group(group_key)
+
+            print("Episode %d" % ep, end=":> ")
+            o = self.reset()
+            done = False
+            t = 0
+            ep_rwd = 0.0
+            while t < horizon and done is False:
+                a = policy.get_action(o)[0] if mode == 'exploration' else policy.get_action(o)[1]['evaluation']
+                next_o, rwd, done, env_info = self.step(a)
+                ep_rwd += rwd
+                # render offscreen visuals
+                if render =='offscreen':
+                    curr_frame = self.sim.renderer.render_offscreen(
+                        width=frame_size[0],
+                        height=frame_size[1],
+                        camera_id=camera_name,
+                        device_id=device_id)
+
+                    frames[t,:,:,:] = curr_frame
+                    print(t, end=', ', flush=True)
+
+                # log values
+                datum_dict = dict(
+                        time=t,
+                        observation=o,
+                        action=a,
+                        reward=rwd,
+                        env_info=env_info,
+                        done=done,
+                    )
+                trace.append_datums(group_key=group_key,
+                    dataset_key_val=datum_dict)
+                o = next_o
+                t = t+1
+                ep_rwd += rwd
+
+            print("Total reward = %3.3f, Total time = %2.3f" % (ep_rwd, timer.time()-ep_t0))
+
+            # save offscreen buffers as video
+            if render =='offscreen':
+                file_name = output_dir + filename + str(ep) + ".mp4"
+                # check if the platform is OS -- make it compatible with quicktime
+                if platform == "darwin":
+                    skvideo.io.vwrite(file_name, np.asarray(frames),outputdict={"-pix_fmt": "yuv420p"})
+                else:
+                    skvideo.io.vwrite(file_name, np.asarray(frames))
+                print("saved", file_name)
+
+        self.mujoco_render_frames = False
+        print("Total time taken = %f"% (timer.time()-exp_t0))
+        trace.save("env_base_trace.h5", verify_length=True)
+        # trace.save("env_base_trace.pickle", verify_length=True)
+        quit()
+        # return trace
 
 
     # methods to override ====================================================
