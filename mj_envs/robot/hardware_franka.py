@@ -45,8 +45,8 @@ class JointPDPolicy(toco.PolicyModule):
         # Parse states
         q_current = state_dict["joint_positions"]
         qd_current = state_dict["joint_velocities"]
-        # self.feedback.Kp = self.kp
-        # self.feedback.Kd = self.kd
+        self.feedback.Kp = torch.diag(self.kp)
+        self.feedback.Kd = torch.diag(self.kd)
 
         # Execute PD control
         output = self.feedback(
@@ -143,7 +143,7 @@ class FrankaArm(hardwareBase):
         print("Re-connection success")
 
 
-    def reset(self, reset_pos=None, time_to_go=5):
+    def reset(self, reset_pos=None, time_to_go=3):
         """Reset hardware"""
 
         if self.okay():
@@ -161,8 +161,17 @@ class FrankaArm(hardwareBase):
                 dt = 0.1
                 waypoints =  generate_joint_space_min_jerk(start=q_current, goal=reset_pos, time_to_go=time_to_go, dt=dt)
                 for i in range(len(waypoints)):
-                    self.apply_commands(q_desired=waypoints[i]['position'])
+                    self.apply_commands(q_desired=waypoints[i]['position'], 
+                    #kp=2.0 * torch.Tensor(self.robot.metadata.default_Kq),
+                    #kd=2.0 * torch.Tensor(self.robot.metadata.default_Kqd),
+                )
                     time.sleep(dt)
+                self.apply_commands(
+                    q_desired=self.get_sensors()['joint_pos'],
+                    #kp=1.0 * torch.Tensor(self.robot.metadata.default_Kq),
+                    #kd=1.0 * torch.Tensor(self.robot.metadata.default_Kqd),
+                )
+                time.sleep(dt)
             else:
                 # Use default controller
                 print("Resetting using default controller")

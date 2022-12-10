@@ -14,6 +14,6 @@ def get_capnp_msgs(msgpkg):
             print(f'capnp loading {msgpkg}')
             filedir = os.path.dirname(os.path.abspath(__file__))
             capnp_cache[msgpkg] = _schema_parser.load(
-                os.path.join(filedir, f"/mnt/tmp_nfs_clientshare/.robopen/robopen/msgs/def/{msgpkg}.capnp"),
+                os.path.join(filedir, f"/home/robopen08/.robopen08/robopen/msgs/def/{msgpkg}.capnp"),
                 imports=site.getsitepackages())
     return capnp_cache[msgpkg]

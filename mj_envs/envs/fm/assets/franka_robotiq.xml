@@ -23,6 +23,7 @@
         <camera name='left_cam' pos='-1.2 -0.5 1.8' quat='0.78 0.49 -0.22 -0.32'/>
         <camera name='right_cam' pos='1.2 -0.5 1.8' quat='0.76 0.5 0.21 0.35'/>
         <camera name='top_cam' pos='0 0.5 2.2' euler='0 0 0'/>
+        <camera name='exo_cam' pos='0 0.0 2.2' euler='0 0 0'/>
         <site name='workspace' type='box' size='.6 .375 .25' pos='0 0.475 1.0' group='3' rgba='0 0 .4 .2'/>
 
         <!-- Franka Arm-->

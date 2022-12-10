@@ -32,7 +32,7 @@ class Robotiq(hardwareBase):
         print("RBQ:> Testing {} connection: ".format(self.name), end="")
         if self.okay():
             print("Okay")
-            self.max_width = self.robot.get_state().max_width
+            self.max_width = self.robot.metadata.max_width
             connection = True
         else:
             print("Not ready. Please retry connection")
