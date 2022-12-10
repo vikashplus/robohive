@@ -12,9 +12,18 @@ import abc
 import contextlib
 import enum
 from typing import Any, Union
-
+import os
 from mj_envs.renderer.renderer import Renderer
 
+# resolve  backend and return the sim
+def get_sim(model_path:str=None, model_xmlstr=None):
+    sim_backend = os.getenv('sim_backend')
+    if sim_backend == 'MUJOCO_PY' or sim_backend == None:
+        return SimScene.create(model_path, backend=SimBackend.MUJOCO_PY)
+    elif sim_backend == 'MUJOCO':
+        return SimScene.create( model_path, backend=SimBackend.DM_CONTROL)
+    else:
+        raise ValueError("Unknown sim_backend: {}. Available choices: MUJOCO_PY, MUJOCO")
 
 class SimBackend(enum.Enum):
     """Simulation library types."""

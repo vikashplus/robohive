@@ -20,21 +20,12 @@ import skvideo.io
 from sys import platform
 
 from r3m import load_r3m
-from mj_envs.physics.sim_scene import SimBackend, SimScene
+from mj_envs.physics.sim_scene import get_sim
 
 # TODO
 # remove rwd_mode
 # convet obs_keys to obs_keys_wt
 # batch images before passing them through the encoder
-
-def get_sim(model_path:str=None, model_xmlstr=None):
-    sim_backend = os.getenv('sim_backend')
-    if sim_backend == 'MUJOCO_PY' or sim_backend == None:
-        return SimScene.create(model_path, backend=SimBackend.MUJOCO_PY)
-    elif sim_backend == 'MUJOCO':
-        return SimScene.create( model_path, backend=SimBackend.DM_CONTROL)
-    else:
-        raise ValueError("Unknown sim_backend: {}. Available choices: MUJOCO_PY, MUJOCO")
 
 class IdentityEncoder(torch.nn.Module):
     def __init__(self):
@@ -480,7 +471,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 lookat=lookat
         )
 
-    def examine_policy_old(self,
+    def examine_policy(self,
             policy,
             horizon=1000,
             num_episodes=1,
@@ -570,7 +561,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         return paths
 
 
-    def examine_policy(self,
+    def examine_policy_new(self,
             policy,
             horizon=1000,
             num_episodes=1,
@@ -588,7 +579,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             - return resulting paths
         """
 
-        from mj_envs.logger.path_logger import Trace
+        from mj_envs.logger.grouped_datasets import Trace
         trace = Trace("Rollout")
 
         exp_t0 = timer.time()

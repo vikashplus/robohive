@@ -5,13 +5,14 @@ Source  :: https://github.com/vikashplus/mj_envs
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
+from mujoco_py import ignore_mujoco_warnings
+from mj_envs.physics.sim_scene import get_sim
+from mj_envs.utils.quat_math import quat2euler
 import time
 from termcolor import cprint
 import numpy as np
 from collections import deque
-from mujoco_py import load_model_from_path, MjSim, functions, ignore_mujoco_warnings
 import os
-from mj_envs.utils.quat_math import quat2euler
 np.set_printoptions(precision=4)
 
 
@@ -72,7 +73,7 @@ class Robot():
         if mj_sim is None:
             # (creates new robot everytime to facilitate parallelization)
             prompt("Preparing robot-sim from %s" % model_path)
-            self.sim = MjSim(load_model_from_path(model_path))
+            self.sim =get_sim(model_path=model_path)
         else:
             # use provided sim
             self.sim = mj_sim
