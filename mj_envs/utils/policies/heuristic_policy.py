@@ -7,8 +7,10 @@ BEGIN_GRASP_THRESH = 0.08
 BEGIN_DESCENT_THRESH = 0.08#0.05
 #ALIGN_HEIGHT = 1.185
 ALIGN_HEIGHT = 1.075#1.05
-GRIPPER_FULL_OPEN = 0.00
-GRIPPER_FULL_CLOSE = 0.04
+ROBOTIQ_GRIPPER_OPEN = 0.00
+ROBOTIQ_GRIPPER_CLOSE = 0.04
+FRANKA_GRIPPER_OPEN = 0.04
+FRANKA_GRIPPER_CLOSE = 0.00
 GRIPPER_BUFF_N = 4
 GRIPPER_CLOSE_THRESH = 1e-8
 MOVE_THRESH = 0.005 #0.001
@@ -16,7 +18,7 @@ MOVE_THRESH = 0.005 #0.001
 class HeuristicPolicy():
     def __init__(self, env, seed):
         self.env = env
-        self.gripper_buff = GRIPPER_FULL_OPEN*np.ones((GRIPPER_BUFF_N,2))
+        self.gripper_buff = FRANKA_GRIPPER_OPEN*np.ones((GRIPPER_BUFF_N,2))
         self.yaw = 0.0
         np.random.seed(seed)
         
@@ -25,11 +27,11 @@ class HeuristicPolicy():
         # TODO Change obsvec2dict to handle obs vectors with single dim
         obs_dict = self.env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
 
-        action = np.concatenate([obs_dict['grasp_pos'][0,0,:], [3.14,0.0,self.yaw], obs_dict['qp'][0,0,7:9]])
+        action = np.concatenate([obs_dict['grasp_pos'][0,0,:], [3.14,0.0,self.yaw, obs_dict['qp'][0,0,7], 0.0]])
         
         if np.linalg.norm(obs_dict['object_err'][0,0,:]) > BEGIN_GRASP_THRESH:
             # Reset gripper buff
-            self.gripper_buff = GRIPPER_FULL_OPEN*np.ones((GRIPPER_BUFF_N,2))
+            self.gripper_buff = FRANKA_GRIPPER_OPEN*np.ones((GRIPPER_BUFF_N,2))
 
             # Object not yet within gripper
             if np.linalg.norm(obs_dict['object_err'][0,0,:2]) > BEGIN_DESCENT_THRESH:
@@ -38,23 +40,23 @@ class HeuristicPolicy():
                 # Gripper not yet aligned with object (also open gripper)
                 action[2] = ALIGN_HEIGHT
                 action[:2] += obs_dict['object_err'][0,0,0:2]
-                action[6:8] = GRIPPER_FULL_OPEN
+                action[6] = FRANKA_GRIPPER_OPEN
         
             else: 
                 # Gripper aligned with object, go down towards it (also open gripper)
                 action[:3] += obs_dict['object_err'][0,0,0:3]
-                action[6:8] = GRIPPER_FULL_OPEN
+                action[6] = FRANKA_GRIPPER_OPEN
         else:
             # Close gripper, move to target once gripper has had chance to close
             for i in range(self.gripper_buff.shape[0]-1):
                 self.gripper_buff[i] = self.gripper_buff[i+1]
             self.gripper_buff[-1] = obs_dict['qp'][0,0,7:9]
 
-            if np.all(np.linalg.norm(self.gripper_buff - GRIPPER_FULL_OPEN, axis=1) > 1e-4):
+            if np.all(np.linalg.norm(self.gripper_buff - FRANKA_GRIPPER_OPEN, axis=1) > 1e-4):
                 # Move to target
                 action[:3] += obs_dict['target_err'][0,0,0:3]
 
-            action[6:8] = GRIPPER_FULL_CLOSE
+            action[6] = FRANKA_GRIPPER_CLOSE
 
 
         # Normalize action to be between -1 and 1
@@ -113,20 +115,20 @@ class HeuristicPolicyReal():
         if self.stage == 0: # Align in xy
             action[2] = ALIGN_HEIGHT
             action[:2] += obs_dict['object_err'][0,0,0:2]
-            action[6] = GRIPPER_FULL_OPEN
+            action[6] = ROBOTIQ_GRIPPER_OPEN
             action[7] = 0
         elif self.stage == 1 or self.stage == 2: # Move to pregrasp
             action[:3] += obs_dict['object_err'][0,0,0:3]
-            action[6] = GRIPPER_FULL_OPEN
+            action[6] = ROBOTIQ_GRIPPER_OPEN
             action[7] = 0    
         elif self.stage == 3 or self.stage == 4: # Close gripper
             action[:3] += obs_dict['object_err'][0,0,0:3]
-            action[6] = GRIPPER_FULL_CLOSE
+            action[6] = ROBOTIQ_GRIPPER_CLOSE
             action[7] = 0
             #print('Grasp pos {}'.format(obs_dict['grasp_pos'][0,0,:]))
         elif self.stage == 5: # Move to target pose
             action[:3] += obs_dict['object_err'][0,0,0:3] #obs_dict['target_err'][0,0,0:3]
-            action[6] = GRIPPER_FULL_CLOSE
+            action[6] = ROBOTIQ_GRIPPER_CLOSE
             action[7] = 1
         
         

@@ -101,6 +101,8 @@ class PickPlaceV0(env_base.MujocoEnv):
         self.real_obj_pos = real_obj_pos
         
     def set_target_pos(self, target_pos):
+        self.target_xyz_range['high'] = target_pos
+        self.target_xyz_range['low'] = target_pos
         self.sim.model.site_pos[self.target_sid] = target_pos
         
     def set_init_qpos(self, init_qpos):
