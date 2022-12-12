@@ -136,7 +136,7 @@ def main(env_name, env_args, horizon, num_rollouts, seed, render, goal_site, tel
                     if buttons['RG']:
                         # dVRP/R = VRP/Rt - VRP/R0
                         dVRP = VRpos - VRP0
-                        dVRR = VRquat - VRR0
+                        # dVRR = VRquat - VRR0
                         dVRR = diffQuat(VRR0, VRquat)
                         # MJP/Rt =  MJP/R0 + dVRP/R
                         env.sim.model.site_pos[goal_sid] = MJP0 + dVRP
