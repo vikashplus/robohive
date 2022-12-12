@@ -108,23 +108,25 @@ register(
         'target_xyz_range': {'high':[-.235, 0.5, 0.85], 'low':[-.235, 0.5, 0.85]},
     }
 )
+
 register(
     id='FrankaPickPlaceRandom-v0',
     entry_point='mj_envs.envs.arms.pick_place_v0:PickPlaceV0',
     max_episode_steps=150, #50steps*40Skip*2ms = 4s
     kwargs={
-        'model_path': curr_dir+'/franka/assets/franka_busbin_v0.xml',
+        'model_path': curr_dir+'/franka/assets/franka_busbin_single_object_v0.xml',
+        #'model_path': curr_dir+'/franka/assets/franka_busbin_v0.xml',
         'config_path': curr_dir+'/franka/assets/franka_busbin_v0.config',
         'robot_site_name': "end_effector",
-        'object_site_names': ["obj0","obj1","obj2"],
+        'object_site_names': ["obj0"],
+        #'object_site_names': ["obj0","obj1","obj2"],
         'target_site_name': "drop_target",
-        'randomize': True,
+        'randomize_obj_pose': True,
+        'randomize_obj_id': False,
         'target_xyz_range': {'high':[0.0, 0.5, 1.25], 'low':[0.0, 0.5, 1.25]},
         'geom_sizes': {'high':[.03, .03, .03], 'low':[.02, 0.02, 0.02]}
     }
 )
-
-
 
 # Reach to random target using visual inputs
 def register_pick_place_visual_envs(encoder_type):
@@ -133,6 +135,8 @@ def register_pick_place_visual_envs(encoder_type):
         variant_id='FrankaPickPlaceRandom_v{}-v0'.format(encoder_type),
         variants={'obs_keys':
                     ['qp', 'qv', 'grasp_pos', 'object_err', 'target_err', 't',
+                    "rgb:target_cam:240x424:{}".format(encoder_type),
+                    "d:target_cam:240x424:{}".format(encoder_type),
                     "rgb:left_cam:240x424:{}".format(encoder_type),
                     "d:left_cam:240x424:{}".format(encoder_type),
                     "rgb:right_cam:240x424:{}".format(encoder_type),

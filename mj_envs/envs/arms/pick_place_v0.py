@@ -55,7 +55,8 @@ class PickPlaceV0(env_base.MujocoEnv):
                reward_mode="dense",
                obs_keys=DEFAULT_OBS_KEYS,
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
-               randomize=False,
+               randomize_obj_pose=False,
+               randomize_obj_id=False
                geom_sizes={'high':[.05, .05, .05], 'low':[.2, 0.2, 0.2]},
                pos_limit_low=[-0.435, 0.2, 0.76, -3.14, -3.14, -3.14, 0.0, 0.0],
                pos_limit_high=[0.435, 0.8, 1.5, 3.14, 3.14, 3.14, 0.04, 1.0],
@@ -73,7 +74,8 @@ class PickPlaceV0(env_base.MujocoEnv):
         self.object_sid = self.sim.model.site_name2id(self.object_site_names[np.random.randint(len(self.object_site_names))])
         self.target_sid = self.sim.model.site_name2id(target_site_name)
         self.target_xyz_range = target_xyz_range
-        self.randomize = randomize
+        self.randomize_obj_pose = randomize_obj_pose
+        self.randomize_obj_id = randomize_obj_id
         self.geom_sizes = geom_sizes
         self.pos_limit_low = np.array(pos_limit_low)
         self.pos_limit_high = np.array(pos_limit_high)
@@ -151,26 +153,31 @@ class PickPlaceV0(env_base.MujocoEnv):
 
     def reset(self, reset_qpos=None, reset_qvel=None):
 
-        if self.randomize:
-            # target location
-            self.sim.model.site_pos[self.target_sid] = self.np_random.uniform(high=self.target_xyz_range['high'], low=self.target_xyz_range['low'])
-            self.sim_obsd.model.site_pos[self.target_sid] = self.sim.model.site_pos[self.target_sid]
-
+        # target location
+        #self.sim.model.site_pos[self.target_sid] = self.np_random.uniform(high=self.target_xyz_range['high'], low=self.target_xyz_range['low'])
+        #self.sim_obsd.model.site_pos[self.target_sid] = self.sim.model.site_pos[self.target_sid]
+ 
+        if self.randomize_obj_id:
+            # TODO Get image of random item 
             self.object_sid = self.sim.model.site_name2id(
                 self.object_site_names[np.random.randint(len(self.object_site_names))])
+            target_cam_sid = self.sim.model.body_name2id('target_cam')
+            self.sim.model.body_parent_id[target_cam_sid] = self.object_sid
+
+        if self.randomize_obj_pose:
             # object shapes and locations
-            for body in ["obj0", "obj1", "obj2"]:
+            for body in self.object_site_names:
                 bid = self.sim.model.body_name2id(body)
                 self.sim.model.body_pos[bid] += self.np_random.uniform(low=[-.010, -.010, -.010], high=[-.010, -.010, -.010])# random pos
                 self.sim.model.body_quat[bid] = euler2quat(self.np_random.uniform(low=(-np.pi/2, -np.pi/2, -np.pi/2), high=(np.pi/2, np.pi/2, np.pi/2)) ) # random quat
 
-                for gid in range(self.sim.model.body_geomnum[bid]):
-                    gid+=self.sim.model.body_geomadr[bid]
-                    self.sim.model.geom_type[gid]=self.np_random.randint(low=2, high=7) # random shape
-                    self.sim.model.geom_size[gid]=self.np_random.uniform(low=self.geom_sizes['low'], high=self.geom_sizes['high']) # random size
-                    self.sim.model.geom_pos[gid]=self.np_random.uniform(low=-1*self.sim.model.geom_size[gid], high=self.sim.model.geom_size[gid]) # random pos
-                    self.sim.model.geom_quat[gid]=euler2quat(self.np_random.uniform(low=(-np.pi/2, -np.pi/2, -np.pi/2), high=(np.pi/2, np.pi/2, np.pi/2)) ) # random quat
-                    self.sim.model.geom_rgba[gid]=self.np_random.uniform(low=[.2, .2, .2, 1], high=[.9, .9, .9, 1]) # random color
+                #for gid in range(self.sim.model.body_geomnum[bid]):
+                #    gid+=self.sim.model.body_geomadr[bid]
+                #    self.sim.model.geom_type[gid]=self.np_random.randint(low=2, high=7) # random shape
+                #    self.sim.model.geom_size[gid]=self.np_random.uniform(low=self.geom_sizes['low'], high=self.geom_sizes['high']) # random size
+                #    self.sim.model.geom_pos[gid]=self.np_random.uniform(low=-1*self.sim.model.geom_size[gid], high=self.sim.model.geom_size[gid]) # random pos
+                #    self.sim.model.geom_quat[gid]=euler2quat(self.np_random.uniform(low=(-np.pi/2, -np.pi/2, -np.pi/2), high=(np.pi/2, np.pi/2, np.pi/2)) ) # random quat
+                #    self.sim.model.geom_rgba[gid]=self.np_random.uniform(low=[.2, .2, .2, 1], high=[.9, .9, .9, 1]) # random color
             self.sim.forward()
 
         if reset_qpos is None:
@@ -236,6 +243,7 @@ class PickPlaceV0(env_base.MujocoEnv):
 
             # Check that we are not initiating a grasp at too low of height
             if (self.last_eef_cmd is not None and 
+                self.robot.is_hardware and
                 (eef_cmd[6] > self.last_eef_cmd[6] + sys.float_info.epsilon) and 
                 self.sim_obsd.data.site_xpos[self.grasp_sid][2] < self.min_grab_height):
                 print('Cant grasp this low, z = {}'.format(self.sim_obsd.data.site_xpos[self.grasp_sid][2]))

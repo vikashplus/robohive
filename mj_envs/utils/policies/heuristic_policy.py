@@ -12,6 +12,7 @@ ROBOTIQ_GRIPPER_CLOSE = 0.04
 FRANKA_GRIPPER_OPEN = 0.04
 FRANKA_GRIPPER_CLOSE = 0.00
 GRIPPER_BUFF_N = 4
+SUCCESS_BUFF_N = 5
 GRIPPER_CLOSE_THRESH = 1e-8
 MOVE_THRESH = 0.005 #0.001
 
@@ -19,6 +20,7 @@ class HeuristicPolicy():
     def __init__(self, env, seed):
         self.env = env
         self.gripper_buff = FRANKA_GRIPPER_OPEN*np.ones((GRIPPER_BUFF_N,2))
+        self.success_buff =  np.array(SUCCESS_BUFF_N*[False])
         self.yaw = 0.0
         np.random.seed(seed)
         
@@ -30,8 +32,9 @@ class HeuristicPolicy():
         action = np.concatenate([obs_dict['grasp_pos'][0,0,:], [3.14,0.0,self.yaw, obs_dict['qp'][0,0,7], 0.0]])
         
         if np.linalg.norm(obs_dict['object_err'][0,0,:]) > BEGIN_GRASP_THRESH:
-            # Reset gripper buff
+            # Reset buffers
             self.gripper_buff = FRANKA_GRIPPER_OPEN*np.ones((GRIPPER_BUFF_N,2))
+            self.success_buff = np.array(SUCCESS_BUFF_N*[False])
 
             # Object not yet within gripper
             if np.linalg.norm(obs_dict['object_err'][0,0,:2]) > BEGIN_DESCENT_THRESH:
@@ -50,13 +53,20 @@ class HeuristicPolicy():
             # Close gripper, move to target once gripper has had chance to close
             for i in range(self.gripper_buff.shape[0]-1):
                 self.gripper_buff[i] = self.gripper_buff[i+1]
-            self.gripper_buff[-1] = obs_dict['qp'][0,0,7:9]
+            for i in range(self.success_buff.shape[0]-1)
+                self.success_buff[i] = self.success_buff[i+1]
 
+            self.gripper_buff[-1] = obs_dict['qp'][0,0,7:9]
+            self.success_buff[-1] = np.linalg.norm(obs_dict['target_err'][0,0,0:3]) < 0.075
             if np.all(np.linalg.norm(self.gripper_buff - FRANKA_GRIPPER_OPEN, axis=1) > 1e-4):
                 # Move to target
                 action[:3] += obs_dict['target_err'][0,0,0:3]
 
             action[6] = FRANKA_GRIPPER_CLOSE
+
+            # Check if should send done signal
+            if np.all(self.success_buff):
+                action[7] = 1.0
 
 
         # Normalize action to be between -1 and 1

@@ -23,8 +23,7 @@ Helper script to examine an environment and associated policy for behaviors; \n
 - either onscreen, or offscreen, or just rollout without rendering.\n
 - save resulting paths as pickle or as 2D plots
 USAGE:\n
-    $ python examine_env.py --env_name door-v0 \n
-    $ python examine_env.py --env_name door-v0 --policy my_policy.pickle --mode evaluation --episodes 10 \n
+   python collect_modem_rollouts.py -e FrankaPickPlaceRandom_v2d-v0 -r none -o /checkpoint/plancaster/outputs/tdmpc/demonstrations/franka-FrankaPickPlaceRandom -n 1
 '''
 
 
@@ -38,15 +37,14 @@ USAGE:\n
 @click.option('-o', '--output_dir', type=str, default='./', help=('Directory to save the outputs'))
 @click.option('-on', '--output_name', type=str, default=None, help=('The name to save the outputs as'))
 @click.option('-n', '--num_rollouts', type=int, help='number of rollouts to save', default=100)
-@click.option('-hw', '--is_hardware', type=bool, help='whether or not to run on real robot', default=False)
-def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, is_hardware):
+def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts):
 
     # seed and load environments
     np.random.seed(seed)
-    env = gym.make(env_name, **{'reward_mode': 'sparse', 'is_hardware':is_hardware})
+    env = gym.make(env_name, **{'reward_mode': 'sparse'})
     env.seed(seed)
 
-    pi = HeuristicPolicy(env, seed, is_hardware)
+    pi = HeuristicPolicy(env, seed)
     output_name = 'heuristic'
 
     # resolve directory
@@ -56,19 +54,13 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
     if (os.path.isdir(output_dir +'/frames') == False):
         os.mkdir(output_dir+'/frames')
 
+    if (os.path.isdir(output_dir +'/targets') == False):
+        os.mkdir(output_dir+'/targets')
+
     rollouts = 0
     successes = 0
 
     while successes < num_rollouts:
-
-        if is_hardware:
-            # Move arm out of camera's view
-            start_action = [0.25, 0.5, 1.25, 3.14, 0, 0, 0.04, 0.04]
-            env.step(start_action)
-            time.sleep(3)
-
-            # Detect and set the object pose
-            env.real_obj_pos = [0.0, 0.5, 1.0]
 
         # examine policy's behavior to recover paths
         paths = env.examine_policy(
@@ -83,29 +75,63 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
             render=render)
         rollouts += 1
 
+        print(paths[0]['observations'].shape)
+        exit()
+
         # evaluate paths
         success_percentage = env.env.evaluate_success(paths)
         if success_percentage > 0.5:
             ro_fn = 'rollout'+f'{(successes+seed):010d}'
 
             data = {}
-            data['states'] = paths[0]['observations'][:,:66]
+            data['states'] = paths[0]['observations'][:,:67]
             data['actions'] = paths[0]['actions']
             data['infos'] = [{'success': reward} for reward in paths[0]['rewards']]
             
+            '''
             data['frames'] = []
-            imgs = paths[0]['observations'][:,66:]
-            imgs = imgs.reshape((data['states'].shape[0],-1,224,224,3))
+            imgs = paths[0]['observations'][:,67:]
+            imgs = imgs.reshape((data['states'].shape[0],-1,240,424,4))
             imgs = imgs.astype(np.uint8)
             for i in range(imgs.shape[0]):
+                img_paths = []
                 for j in range(imgs.shape[1]):
                     img_fn = ro_fn +'_cam'+str(j)+'_step'+f'{i:05d}'
                     img = Image.fromarray(imgs[i,j])
                     img.save(output_dir+'/frames/'+img_fn+'.png')
-                    if imgs.shape[1] == 1 or j == 1: # First case if there's only one cam, second case corresponds to right_cam
-                        # Record path in data
-                        data['frames'].append(Path(img_fn+'.png'))
-         
+                    img_paths.append(Path(img_fn+'.png'))
+                data['frames'].append(img_paths)
+            '''
+            for key in env.obs_keys:
+                if 'target' in key:
+                    if 'rgb:' in key:
+                        target_fn = ro_fn + '_target_cam_rgb'
+                    elif 'd:' in key:
+                        target_fn = ro_fn + '_target_cam_depth'
+                    else:
+                        continue 
+                    target_imgs = paths[0]['env_infos']['obs_dict'][key]
+                    target_img = Image.fromarray[target_imgs[0]]
+                    target_img.save(output_dir+'/targets/'+target_fn+'.png')
+                    data['target'] = Path(target_fn+'.png')
+
+            data['frames'] = [[]*paths[0]['observations'].shape[0]]
+            for cam in ['left', 'right', 'top', 'wrist']:
+                for key in env.obs_keys:
+                    if cam in key:
+                        imgs = paths[0]['env_infos']['obs_dict'][key]
+                        if 'rgb:' in key:
+                            img_fn = ro_fn + '_rgb_cam_'+cam+'_step'
+                        elif 'd:' in key:
+                            img_fn = ro_fn + '_depth_cam_'+cam+'_step' 
+                        else:
+                            continue                     
+                        for i in range(imgs.shape[0]):
+                            img = Image.fromarray(imgs[i])
+                            img.save(output_dir+'/frames/'+img_fn+f'{i:05d}.png')
+                            data['frames'][i].append(Path(img_fn+f'{i:05d}.png'))
+                        
+
             torch.save(data, output_dir+'/'+ro_fn+'.pt')
             successes += 1
 
