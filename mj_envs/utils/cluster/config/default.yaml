@@ -4,12 +4,12 @@ defaults:
 
 env_name: FrankaPickPlaceRandom_v2d-v0
 mode: evaluation
-seed: 1
+seed: 20
 render: none
 camera_name: None
 output_dir: /checkpoint/plancaster/outputs/tdmpc/demonstrations/franka-FrankaPickPlaceRandom
 output_name: None
-num_rollouts: 5
+num_rollouts: 100
 
 # hydra
 hydra:
