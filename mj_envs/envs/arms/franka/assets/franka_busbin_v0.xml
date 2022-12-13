@@ -54,7 +54,12 @@
             <geom type="box" size="0.023 0.02 0.041" pos="0.03 0.012 .01" euler=".6 .8 1" group="1" rgba=".3 .7 .8 1" mass=".100"/>
             <geom type="sphere" size="0.02 0.012 0.014" pos="0.02 0.023 .005" euler=".3 .5 .2" group="1" rgba=".3 .2 .2 1" mass=".010"/>
             <site name="obj0" size="0.01" pos="0 0 0"/>
-            <freejoint/>
+            <freejoint name="obj0"/>
+
+            <body name="target_cam" pos="0 0 0.25">
+                <camera name='target_cam' pos='0 0.0 0.0' euler='0 0 0'/>
+            </body>
+
         </body>
 
         <body name="obj1" pos="0.0 0.5 1.">
@@ -63,7 +68,7 @@
             <geom type="cylinder" size="0.026 0.06" pos="0.03 0.012 .01" euler=".1 .6 .2" group="1" rgba=".6 .3 .8 1" mass=".010"/>
             <geom type="box" size="0.045 0.023 0.032" pos="0.02 0.012 .02" euler=".4 .5 .4" group="1" rgba=".12 .5 .2 1" mass=".004"/>
             <site name="obj1" size="0.01" pos="0 0 0"/>
-            <freejoint/>
+            <freejoint name="obj1"/>
         </body>
 
         <body name="obj2" pos="0.15 0.5 1.">
@@ -71,7 +76,7 @@
             <geom type="box" size="0.02 .04 .07" pos="0.03 0.034 0.063" euler=".86 .52 .8" group="1" rgba=".72 .72 .12 1" mass=".052"/>
             <geom type="box" size="0.05 .02 .06" pos="0.082 0.023 .035" euler=".6 .3 .8" group="1" rgba=".33 .52 .73 1" mass=".024"/>
             <site name="obj2" size="0.01" pos="0 0 0"/>
-            <freejoint/>
+            <freejoint name="obj2"/>
         </body>
 
     </worldbody>
