@@ -7,9 +7,9 @@ mode: evaluation
 seed: 1
 render: none
 camera_name: None
-output_dir: /checkpoint/plancaster/outputs/tdmpc/franka_demos/pick-place
+output_dir: /checkpoint/plancaster/outputs/tdmpc/demonstrations/franka-FrankaPickPlaceRandom
 output_name: None
-num_rollouts: 100
+num_rollouts: 5
 
 # hydra
 hydra:

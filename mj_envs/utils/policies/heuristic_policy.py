@@ -4,15 +4,16 @@ import numpy as np
 import pickle
 
 BEGIN_GRASP_THRESH = 0.08
-BEGIN_DESCENT_THRESH = 0.08#0.05
-#ALIGN_HEIGHT = 1.185
-ALIGN_HEIGHT = 1.075#1.05
+REAL_BEGIN_DESCENT_THRESH = 0.08
+SIM_BEGIN_DESCENT_THRESH = 0.05
+REAL_ALIGN_HEIGHT = 1.075
+SIM_ALIGN_HEIGHT = 1.185
 ROBOTIQ_GRIPPER_OPEN = 0.00
 ROBOTIQ_GRIPPER_CLOSE = 0.04
 FRANKA_GRIPPER_OPEN = 0.04
 FRANKA_GRIPPER_CLOSE = 0.00
 GRIPPER_BUFF_N = 4
-SUCCESS_BUFF_N = 5
+SUCCESS_BUFF_N = 8
 GRIPPER_CLOSE_THRESH = 1e-8
 MOVE_THRESH = 0.005 #0.001
 
@@ -37,11 +38,11 @@ class HeuristicPolicy():
             self.success_buff = np.array(SUCCESS_BUFF_N*[False])
 
             # Object not yet within gripper
-            if np.linalg.norm(obs_dict['object_err'][0,0,:2]) > BEGIN_DESCENT_THRESH:
+            if np.linalg.norm(obs_dict['object_err'][0,0,:2]) > SIM_BEGIN_DESCENT_THRESH:
                 
                 self.yaw = np.random.uniform(-3.14, 0.0)
                 # Gripper not yet aligned with object (also open gripper)
-                action[2] = ALIGN_HEIGHT
+                action[2] = SIM_ALIGN_HEIGHT
                 action[:2] += obs_dict['object_err'][0,0,0:2]
                 action[6] = FRANKA_GRIPPER_OPEN
         
@@ -53,7 +54,7 @@ class HeuristicPolicy():
             # Close gripper, move to target once gripper has had chance to close
             for i in range(self.gripper_buff.shape[0]-1):
                 self.gripper_buff[i] = self.gripper_buff[i+1]
-            for i in range(self.success_buff.shape[0]-1)
+            for i in range(self.success_buff.shape[0]-1):
                 self.success_buff[i] = self.success_buff[i+1]
 
             self.gripper_buff[-1] = obs_dict['qp'][0,0,7:9]
@@ -99,7 +100,7 @@ class HeuristicPolicyReal():
             self.yaw = np.random.uniform(low = 0.0, high = 3.14)
         elif self.stage == 0: # Wait until aligned xy
             # Advance to next stage?
-            if (np.linalg.norm(obs_dict['object_err'][0,0,:2]) < BEGIN_DESCENT_THRESH and
+            if (np.linalg.norm(obs_dict['object_err'][0,0,:2]) < REAL_BEGIN_DESCENT_THRESH and
                 (self.last_qp is not None and np.linalg.norm(obs_dict['qp'][0,0,:] - self.last_qp) < MOVE_THRESH)):
                 self.stage = 1
         elif self.stage == 1:# Wait until close pregrasp
@@ -123,7 +124,7 @@ class HeuristicPolicyReal():
     
         #print('Stage {}, t {}'.format(self.stage, self.last_t))
         if self.stage == 0: # Align in xy
-            action[2] = ALIGN_HEIGHT
+            action[2] = REAL_ALIGN_HEIGHT
             action[:2] += obs_dict['object_err'][0,0,0:2]
             action[6] = ROBOTIQ_GRIPPER_OPEN
             action[7] = 0

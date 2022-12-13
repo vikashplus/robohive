@@ -75,22 +75,19 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
             render=render)
         rollouts += 1
 
-        print(paths[0]['observations'].shape)
-        exit()
-
         # evaluate paths
         success_percentage = env.env.evaluate_success(paths)
         if success_percentage > 0.5:
             ro_fn = 'rollout'+f'{(successes+seed):010d}'
 
             data = {}
-            data['states'] = paths[0]['observations'][:,:67]
+            data['states'] = paths[0]['observations'][:,:41]
             data['actions'] = paths[0]['actions']
             data['infos'] = [{'success': reward} for reward in paths[0]['rewards']]
             
             '''
             data['frames'] = []
-            imgs = paths[0]['observations'][:,67:]
+            imgs = paths[0]['observations'][:,41:]
             imgs = imgs.reshape((data['states'].shape[0],-1,240,424,4))
             imgs = imgs.astype(np.uint8)
             for i in range(imgs.shape[0]):
@@ -106,28 +103,40 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
                 if 'target' in key:
                     if 'rgb:' in key:
                         target_fn = ro_fn + '_target_cam_rgb'
+                        target_imgs = paths[0]['env_infos']['obs_dict'][key]
+                        target_img = Image.fromarray(target_imgs[0])
+                        #print('rgb target img max {}, min {}'.format(np.max(target_img),np.min(target_img)))
                     elif 'd:' in key:
                         target_fn = ro_fn + '_target_cam_depth'
+                        target_imgs = paths[0]['env_infos']['obs_dict'][key]
+                        target_img = Image.fromarray(target_imgs[0])
+                        target_img = target_img.transpose(Image.FLIP_TOP_BOTTOM)
+                        #print('depth target_img max {}, min {}'.format(np.max(target_img), np.min(target_img)))
+                        target_img = target_img.convert("L")                        
                     else:
                         continue 
-                    target_imgs = paths[0]['env_infos']['obs_dict'][key]
-                    target_img = Image.fromarray[target_imgs[0]]
                     target_img.save(output_dir+'/targets/'+target_fn+'.png')
                     data['target'] = Path(target_fn+'.png')
 
-            data['frames'] = [[]*paths[0]['observations'].shape[0]]
+            data['frames'] = [[]]*paths[0]['observations'].shape[0]
             for cam in ['left', 'right', 'top', 'wrist']:
                 for key in env.obs_keys:
                     if cam in key:
                         imgs = paths[0]['env_infos']['obs_dict'][key]
-                        if 'rgb:' in key:
-                            img_fn = ro_fn + '_rgb_cam_'+cam+'_step'
-                        elif 'd:' in key:
-                            img_fn = ro_fn + '_depth_cam_'+cam+'_step' 
-                        else:
-                            continue                     
+                        if ('rgb:' not in key) and ('d:' not in key):
+                            continue
+ 
                         for i in range(imgs.shape[0]):
-                            img = Image.fromarray(imgs[i])
+                            if 'rgb:' in key:
+                                img = Image.fromarray(imgs[i])
+                                img_fn = ro_fn + '_rgb_cam_'+cam+'_step'
+                            elif 'd:' in key:
+                                img = Image.fromarray(imgs[i])
+                                img = img.transpose(Image.FLIP_TOP_BOTTOM)
+                                img = img.convert("L")
+                                img_fn = ro_fn + '_depth_cam_'+cam+'_step'                            
+                                
+
                             img.save(output_dir+'/frames/'+img_fn+f'{i:05d}.png')
                             data['frames'][i].append(Path(img_fn+f'{i:05d}.png'))
                         
