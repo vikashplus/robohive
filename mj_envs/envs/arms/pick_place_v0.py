@@ -71,7 +71,7 @@ class PickPlaceV0(env_base.MujocoEnv):
         # ids
         self.grasp_sid = self.sim.model.site_name2id(robot_site_name)
         self.object_site_names = object_site_names
-        self.object_sid = self.sim.model.site_name2id(self.object_site_names[np.random.randint(len(self.object_site_names))])
+        self.object_sid = self.sim.model.site_name2id(self.object_site_names[0])
         self.target_sid = self.sim.model.site_name2id(target_site_name)
         self.target_xyz_range = target_xyz_range
         self.randomize_obj_pose = randomize_obj_pose
@@ -178,10 +178,12 @@ class PickPlaceV0(env_base.MujocoEnv):
         if reset_qpos is None:
             reset_qpos = self.init_qpos.copy()
             if self.randomize_obj_pose:
-                obj_name = self.sim.model.site_id2name(self.object_sid)
-                obj_jid = self.sim.model.joint_name2id(obj_name)
-                reset_qpos[obj_jid:obj_jid+3] += self.np_random.uniform(low=[-.01, -.01, -.01], high=[.01, .01, .01])
-                reset_qpos[obj_jid+3:obj_jid+7] = euler2quat(self.np_random.uniform(low=(-np.pi/2, -np.pi/2, -np.pi/2), high=(np.pi/2, np.pi/2, np.pi/2)) ) # random quat
+                first_obj_id = self.sim.model.joint_name2id(self.object_site_names[0])
+                for body in self.object_site_names:
+                    obj_jid = self.sim.model.joint_name2id(body)
+                    base_jid = first_obj_id + 7*(obj_jid-first_obj_id)
+                    reset_qpos[base_jid:base_jid+3] += self.np_random.uniform(low=[-.01, -.01, -.01], high=[.01, .01, .01])
+                    reset_qpos[base_jid+3:base_jid+7] = euler2quat(self.np_random.uniform(low=(-np.pi/2, -np.pi/2, -np.pi/2), high=(np.pi/2, np.pi/2, np.pi/2)) ) # random quat
 
         if reset_qvel is None:
             reset_qvel = self.init_qvel.copy()

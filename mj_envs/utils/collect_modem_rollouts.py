@@ -81,24 +81,17 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
             ro_fn = 'rollout'+f'{(successes+seed):010d}'
 
             data = {}
-            data['states'] = paths[0]['observations'][:,:41]
+            for key in paths[0]['env_infos']['obs_dict'].keys():
+                if 'cam' not in key:
+                    next_val = paths[0]['env_infos']['obs_dict'][key].reshape((paths[0]['observations'].shape[0], -1))
+                    if 'states' not in data:
+                        data['states'] = next_val
+                    else:
+                        data['states'] = np.concatenate([data['states'], next_val], axis=1)
+
             data['actions'] = paths[0]['actions']
             data['infos'] = [{'success': reward} for reward in paths[0]['rewards']]
             
-            '''
-            data['frames'] = []
-            imgs = paths[0]['observations'][:,41:]
-            imgs = imgs.reshape((data['states'].shape[0],-1,240,424,4))
-            imgs = imgs.astype(np.uint8)
-            for i in range(imgs.shape[0]):
-                img_paths = []
-                for j in range(imgs.shape[1]):
-                    img_fn = ro_fn +'_cam'+str(j)+'_step'+f'{i:05d}'
-                    img = Image.fromarray(imgs[i,j])
-                    img.save(output_dir+'/frames/'+img_fn+'.png')
-                    img_paths.append(Path(img_fn+'.png'))
-                data['frames'].append(img_paths)
-            '''
             for key in env.obs_keys:
                 if 'target' in key:
                     if 'rgb:' in key:

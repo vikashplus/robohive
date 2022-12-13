@@ -114,12 +114,12 @@ register(
     entry_point='mj_envs.envs.arms.pick_place_v0:PickPlaceV0',
     max_episode_steps=50,#150, #50steps*40Skip*2ms = 4s
     kwargs={
-        'model_path': curr_dir+'/franka/assets/franka_busbin_single_obj_v0.xml',
-        #'model_path': curr_dir+'/franka/assets/franka_busbin_v0.xml',
+        #'model_path': curr_dir+'/franka/assets/franka_busbin_single_obj_v0.xml',
+        'model_path': curr_dir+'/franka/assets/franka_busbin_v0.xml',
+        # 'object_site_names': ["obj0"],
+        'object_site_names': ["obj0", "obj1", "obj2"],
         'config_path': curr_dir+'/franka/assets/franka_busbin_v0.config',
         'robot_site_name': "end_effector",
-        'object_site_names': ["obj0"],
-        #'object_site_names': ["obj0","obj1","obj2"],
         'target_site_name': "drop_target",
         'randomize_obj_pose': True,
         'randomize_obj_id': False,
