@@ -114,6 +114,19 @@ class MjPySimScene(SimScene):
         """Returns a handle that can be passed to mjlib methods."""
         return value
 
+    def advance(self, substeps: int = 1, render:bool = True):
+        """Advances the simulation substeps times forward."""
+        with mujoco_py.ignore_mujoco_warnings():
+            functions = self.get_mjlib()
+            model = self.get_handle(self.sim.model)
+            data = self.get_handle(self.sim.data)
+            for _ in range(substeps):
+                functions.mj_step2(model, data)
+                functions.mj_step1(model, data)
+                if render:
+                    # self.renderer.refresh_window()
+                    self.renderer.render_to_window()
+
 
 class _MjlibWrapper:
     """Wrapper that forwards mjlib calls."""
