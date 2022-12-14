@@ -8,6 +8,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 import gym
 import numpy as np
 from mj_envs.envs import env_base
+from mj_envs.physics.sim_scene import get_sim
 from mj_envs.utils.xml_utils import reassign_parent
 import os
 import collections
@@ -25,7 +26,7 @@ class FrankaRobotiqData(env_base.MujocoEnv):
         curr_dir = os.path.dirname(os.path.abspath(__file__))
 
         # Process model to use DManus as end effector
-        raw_sim = env_base.get_sim(model_path=curr_dir+model_path)
+        raw_sim = get_sim(curr_dir+model_path)
         raw_xml = raw_sim.model.get_xml()
         processed_xml = reassign_parent(xml_str=raw_xml, receiver_node="panda0_link7", donor_node="ee_mount")
         processed_model_path = curr_dir+model_path[:-4]+"_processed.xml"
@@ -36,7 +37,7 @@ class FrankaRobotiqData(env_base.MujocoEnv):
         if obsd_model_path == model_path:
             processed_obsd_model_path = processed_model_path
         elif obsd_model_path:
-            raw_sim = env_base.get_sim(model_path=curr_dir+obsd_model_path)
+            raw_sim = get_sim(curr_dir+obsd_model_path)
             raw_xml = raw_sim.model.get_xml()
             processed_xml = reassign_parent(xml_str=raw_xml, receiver_node="panda0_link7", donor_node="ee_mount")
             processed_obsd_model_path = curr_dir+obsd_model_path[:-4]+"_processed.xml"
