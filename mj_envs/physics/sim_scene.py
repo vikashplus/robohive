@@ -16,12 +16,12 @@ import os
 from mj_envs.renderer.renderer import Renderer
 
 # resolve  backend and return the sim
-def get_sim(model_path:str=None, model_xmlstr=None):
+def get_sim(model_handle: Any):
     sim_backend = os.getenv('sim_backend')
     if sim_backend == 'MUJOCO_PY' or sim_backend == None:
-        return SimScene.create(model_path, backend=SimBackend.MUJOCO_PY)
+        return SimScene.create(model_handle=model_handle, backend=SimBackend.MUJOCO_PY)
     elif sim_backend == 'MUJOCO':
-        return SimScene.create( model_path, backend=SimBackend.DM_CONTROL)
+        return SimScene.create(model_handle=model_handle, backend=SimBackend.DM_CONTROL)
     else:
         raise ValueError("Unknown sim_backend: {}. Available choices: MUJOCO_PY, MUJOCO")
 
@@ -59,19 +59,13 @@ class SimScene(metaclass=abc.ABCMeta):
     def __init__(
             self,
             model_handle: Any,
-            frame_skip: int = 1,
     ):
         """Initializes a new simulation.
 
         Args:
             model_handle: The simulation model to load. This can be a XML file,
                 or a format/object specific to the simulation backend.
-            frame_skip: The number of simulation steps per environment step.
-                This multiplied by the timestep defined in the model file is the
-                step duration.
         """
-        self.frame_skip = frame_skip
-
         self.sim = self._load_simulation(model_handle)
         self.model = self.sim.model
         self.data = self.sim.data
@@ -86,20 +80,11 @@ class SimScene(metaclass=abc.ABCMeta):
     @property
     def step_duration(self):
         """Returns the simulation step duration in seconds."""
-        return self.model.opt.timestep * self.frame_skip
+        return self.model.opt.timestep
 
     def close(self):
         """Cleans up any resources used by the simulation."""
         self.renderer.close()
-
-    def advance(self, substeps: int = None):
-        """Advances the simulation for one step."""
-        # Step the simulation `frame_skip` times.
-        if substeps is None:
-            substeps = self.frame_skip
-        for _ in range(substeps):
-            self.sim.step()
-            self.renderer.refresh_window()
 
     def forward(self):
         """Run the simulation forward"""
@@ -199,3 +184,8 @@ class SimScene(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def _create_renderer(self, sim: Any) -> Renderer:
         """Creates a renderer for the given simulation."""
+
+    @abc.abstractmethod
+    def advance(self, substeps: int, render:bool):
+        """Advances the simulation substeps times forward."""
+

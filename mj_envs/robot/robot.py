@@ -5,7 +5,6 @@ Source  :: https://github.com/vikashplus/mj_envs
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
-from mujoco_py import ignore_mujoco_warnings
 from mj_envs.physics.sim_scene import get_sim
 from mj_envs.utils.quat_math import quat2euler
 import time
@@ -673,17 +672,9 @@ class Robot():
             if render_cbk:
                 render_cbk()
         else:
-            n_frames=int(step_duration/self.sim.model.opt.timestep)
+            n_frames=int(step_duration/self.sim.step_duration)
             self.sim.data.ctrl[:] = ctrl_feasible
-            with ignore_mujoco_warnings():
-                functions = self.sim.get_mjlib()
-                model = self.sim.get_handle(self.sim.model)
-                data = self.sim.get_handle(self.sim.data)
-                for _ in range(n_frames):
-                    functions.mj_step2(model, data)
-                    functions.mj_step1(model, data)
-                    if render_cbk:
-                        render_cbk()
+            self.sim.advance(substeps=n_frames, render=(render_cbk!=None))
 
         # update viz
         if _ROBOT_VIZ:

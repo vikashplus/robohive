@@ -41,6 +41,16 @@ class DMSimScene(SimScene):
         self._patch_mjdata_accessors(sim.data)
         return sim
 
+    def advance(self, substeps: int = 1, render:bool = True):
+        """Advances the simulation for one step."""
+        # Step the simulation substeps (frame_skip) times.
+        for _ in range(substeps):
+            self.sim.step()
+            if render:
+                # self.renderer.refresh_window()
+                self.renderer.render_to_window()
+
+
     def _create_renderer(self, sim: Any) -> DMRenderer:
         """Creates a renderer for the given simulation."""
         return DMRenderer(sim)
