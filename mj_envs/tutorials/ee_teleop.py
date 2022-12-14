@@ -14,6 +14,7 @@ EXAMPLE:\n
 
 from mj_envs.utils.quat_math import euler2quat, mulQuat
 from mj_envs.utils.inverse_kinematics import IKResult, qpos_from_site_pose
+from mj_envs.logger.grouped_datasets import Trace
 import numpy as np
 import click
 import gym
@@ -148,8 +149,14 @@ def main(env_name, env_args, input_device, horizon, num_rollouts, seed, goal_sit
     act = np.zeros(env.action_space.shape)
     gripper_state = 0
 
+    trace = Trace("TeleOp Trajectories")
+
     # Collect rollout
     for i_rollout in range(num_rollouts):
+
+        # start a new rollout
+        print("rollout {} start".format(i_rollout))
+        group_key='Trial'+str(i_rollout); trace.create_group(group_key)
         env.reset()
 
         for i_step in range(horizon):
@@ -184,9 +191,25 @@ def main(env_name, env_args, input_device, horizon, num_rollouts, seed, goal_sit
             act[7:] = gripper_state
             if env.normalize_act:
                 act = env.env.robot.normalize_actions(act)
-            env.step(act)
-        if done: break
+            obs, rwd, done, env_info = env.step(act)
+            # log values
+            datum_dict = dict(
+                    time=i_step,
+                    observation=obs,
+                    action=act,
+                    reward=rwd,
+                    env_info=env_info,
+                    done=done,
+                )
+            trace.append_datums(group_key=group_key,
+                dataset_key_val=datum_dict)
+            print(i_step)
+        if done:
+            print("rollout {} end".format(i_rollout))
+            break
 
+    trace.save("teleOp_trace.h5", verify_length=True)
+    env.close()
 
 if __name__ == '__main__':
     main()
