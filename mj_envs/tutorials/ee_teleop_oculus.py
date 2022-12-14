@@ -5,7 +5,7 @@
 # License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 # ================================================= """
 DESC = """
-TUTORIAL: Arm+Gripper tele-op using input devices (keyboard / spacenav) \n
+TUTORIAL: Arm+Gripper tele-op using oculus \n
     - NOTE: Tutorial is written for franka arm and robotiq gripper. This demo is a tutorial, not a generic functionality for any any environment
 EXAMPLE:\n
     - python tutorials/ee_teleop.py -e rpFrankaRobotiqData-v0\n
@@ -18,6 +18,8 @@ import click
 import gym
 from mj_envs.utils.quat_math import euler2quat, euler2mat, mat2quat, diffQuat, mulQuat
 from mj_envs.utils.inverse_kinematics import IKResult, qpos_from_site_pose
+from mj_envs.logger.grouped_datasets import Trace
+
 try:
     from oculus_reader import OculusReader
 except ImportError as e:
@@ -99,7 +101,7 @@ def main(env_name, env_args, horizon, num_rollouts, seed, render, goal_site, tel
             print("Oculus reander not ready. Check that headset is awake and controller are on")
         time.sleep(0.10)
 
-
+    trace = Trace("TeleOp Trajectories")
 
     # default actions
     act = np.zeros(env.action_space.shape)
@@ -108,7 +110,10 @@ def main(env_name, env_args, horizon, num_rollouts, seed, render, goal_site, tel
     # Collect rollouts
     env.reset(blocking=False) # blocking reset to prep the scene
     for i_rollout in range(num_rollouts):
+
+        # start a new rollout
         print("rollout {} start".format(i_rollout))
+        group_key='Trial'+str(i_rollout); trace.create_group(group_key)
         rollout_done = False
         # Reset goal back to nominal position
         env.sim.model.site_pos[goal_sid] = env.sim.data.site_xpos[teleop_sid]
@@ -177,8 +182,21 @@ def main(env_name, env_args, horizon, num_rollouts, seed, render, goal_site, tel
                         act[7:] = gripper_state
                         if env.normalize_act:
                             act = env.env.robot.normalize_actions(act)
-                        next_o, rwd, done, env_info = env.step(act)
+                        obs, rwd, done, env_info = env.step(act)
 
+                        # log values
+                        datum_dict = dict(
+                                time=i_step,
+                                observation=obs,
+                                action=act,
+                                reward=rwd,
+                                env_info=env_info,
+                                done=done,
+                            )
+                        trace.append_datums(group_key=group_key,
+                            dataset_key_val=datum_dict)
+
+                        # Detect jumps
                         qpos_now = env_info['obs_dict']['qp_arm']
                         qpos_arm_err = np.linalg.norm(ik_result.qpos[:7]-qpos_now[:7])
                         if qpos_arm_err>0.5:
@@ -199,6 +217,7 @@ def main(env_name, env_args, horizon, num_rollouts, seed, render, goal_site, tel
         print("rollout {} end".format(i_rollout))
         time.sleep(0.5)
 
+    trace.save("teleOp_trace.h5", verify_length=True)
     oculus_reader.stop()
     env.close()
 
