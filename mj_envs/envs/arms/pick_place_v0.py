@@ -11,14 +11,14 @@ import numpy as np
 import sys
 
 from mj_envs.envs import env_base
-from mj_envs.utils.quat_math import euler2quat
+from mj_envs.utils.quat_math import euler2quat, mat2euler
 from mj_envs.utils.inverse_kinematics import qpos_from_site_pose
 from mujoco_py import load_model_from_path, MjSim
 
 class PickPlaceV0(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS = [
-        'qp', 'qv', 'grasp_pos', 'object_err', 'target_err', 't'
+        'qp', 'qv', 'grasp_pos', 'grasp_elr', 'object_err', 'target_err', 't'
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
         "object_dist": -1.0,
@@ -122,6 +122,7 @@ class PickPlaceV0(env_base.MujocoEnv):
         obs_dict['qp'] = sim.data.qpos.copy()
         obs_dict['qv'] = sim.data.qvel.copy()
         obs_dict['grasp_pos'] = sim.data.site_xpos[self.grasp_sid]
+        obs_dict['grasp_elr'] = mat2euler(sim.data.site_xmat[self.grasp_sid])
         if self.robot.is_hardware:
             obs_dict['object_err'] = self.real_obj_pos-sim.data.site_xpos[self.grasp_sid]
             obs_dict['target_err'] = sim.data.site_xpos[self.target_sid]-sim.data.site_xpos[self.grasp_sid]

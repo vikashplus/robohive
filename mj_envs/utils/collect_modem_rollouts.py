@@ -37,7 +37,10 @@ USAGE:\n
 @click.option('-o', '--output_dir', type=str, default='./', help=('Directory to save the outputs'))
 @click.option('-on', '--output_name', type=str, default=None, help=('The name to save the outputs as'))
 @click.option('-n', '--num_rollouts', type=int, help='number of rollouts to save', default=100)
-def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts):
+def collect_rollouts_cli(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts):
+    collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts)
+
+def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts):
 
     # seed and load environments
     np.random.seed(seed)
@@ -81,17 +84,20 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
             ro_fn = 'rollout'+f'{(successes+seed):010d}'
 
             data = {}
-            for key in paths[0]['env_infos']['obs_dict'].keys():
-                if 'cam' not in key:
-                    next_val = paths[0]['env_infos']['obs_dict'][key].reshape((paths[0]['observations'].shape[0], -1))
-                    if 'states' not in data:
-                        data['states'] = next_val
-                    else:
-                        data['states'] = np.concatenate([data['states'], next_val], axis=1)
+
+            data['states'] = {}
+            data['states']['qp'] = paths[0]['env_infos']['obs_dict']['qp']
+            data['states']['qv'] = paths[0]['env_infos']['obs_dict']['qv']
+            data['states']['grasp_pos'] = paths[0]['env_infos']['obs_dict']['grasp_pos']
+            data['states']['grasp_elr'] = paths[0]['env_infos']['obs_dict']['grasp_elr']
+            data['states']['object_err'] = paths[0]['env_infos']['obs_dict']['object_err']
+            data['states']['target_err'] = paths[0]['env_infos']['obs_dict']['target_err']
+            data['states']['t'] = paths[0]['env_infos']['obs_dict']['t'].reshape((paths[0]['observations'].shape[0], -1))
 
             data['actions'] = paths[0]['actions']
             data['infos'] = [{'success': reward} for reward in paths[0]['rewards']]
             
+            data['target'] = []
             for key in env.obs_keys:
                 if 'target' in key:
                     if 'rgb:' in key:
@@ -102,37 +108,49 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
                     elif 'd:' in key:
                         target_fn = ro_fn + '_target_cam_depth'
                         target_imgs = paths[0]['env_infos']['obs_dict'][key]
-                        target_img = Image.fromarray(target_imgs[0])
-                        target_img = target_img.transpose(Image.FLIP_TOP_BOTTOM)
+                        target_img = 255*target_imgs[0]
+                        if np.max(target_img) > 255:
+                            print("WARN: DEPTH IMAGE PIXEL VAL > 255")
+                        target_img = Image.fromarray(target_img)
+                        #target_img = target_img.transpose(Image.FLIP_TOP_BOTTOM)
                         #print('depth target_img max {}, min {}'.format(np.max(target_img), np.min(target_img)))
                         target_img = target_img.convert("L")                        
                     else:
                         continue 
                     target_img.save(output_dir+'/targets/'+target_fn+'.png')
-                    data['target'] = Path(target_fn+'.png')
+                    data['target'].append(Path(target_fn+'.png'))
+            assert(len(data['target'])==2)
 
-            data['frames'] = [[]]*paths[0]['observations'].shape[0]
-            for cam in ['left', 'right', 'top', 'wrist']:
-                for key in env.obs_keys:
-                    if cam in key:
-                        imgs = paths[0]['env_infos']['obs_dict'][key]
-                        if ('rgb:' not in key) and ('d:' not in key):
-                            continue
- 
-                        for i in range(imgs.shape[0]):
-                            if 'rgb:' in key:
-                                img = Image.fromarray(imgs[i])
-                                img_fn = ro_fn + '_rgb_cam_'+cam+'_step'
-                            elif 'd:' in key:
-                                img = Image.fromarray(imgs[i])
-                                img = img.transpose(Image.FLIP_TOP_BOTTOM)
-                                img = img.convert("L")
-                                img_fn = ro_fn + '_depth_cam_'+cam+'_step'                            
-                                
-
-                            img.save(output_dir+'/frames/'+img_fn+f'{i:05d}.png')
-                            data['frames'][i].append(Path(img_fn+f'{i:05d}.png'))
+            data['frames'] = []
+            for cam in ['left_cam', 'right_cam', 'top_cam', 'Franka_wrist_cam']:
+                rgb_key = 'rgb:'+cam+':240x424:2d'
+                if rgb_key in env.obs_keys:
+                    rgb_imgs = paths[0]['env_infos']['obs_dict'][rgb_key]
+                    for i in range(rgb_imgs.shape[0]):
+                        rgb_img = Image.fromarray(rgb_imgs[i])
+                        rgb_img_fn = ro_fn + '_rgb_'+cam+'_step'
                         
+                        rgb_img.save(output_dir+'/frames/'+rgb_img_fn+f'{i:05d}.png')
+                        if len(data['frames']) <= i:
+                            data['frames'].append([])
+                        data['frames'][i].append(Path(rgb_img_fn+f'{i:05d}.png'))
+                else:
+                    print('WARN: Missing rgb key: {}'.format(rgb_key))
+                    
+                depth_key = 'd:'+cam+':240x424:2d'
+                if depth_key in env.obs_keys:
+                    depth_imgs = paths[0]['env_infos']['obs_dict'][depth_key]
+                    for i in range(depth_imgs.shape[0]):
+                        depth_img = 255*depth_imgs[i]       
+                        depth_img = Image.fromarray(depth_img)
+                        depth_img = depth_img.convert("L")
+                        depth_img_fn = ro_fn + '_depth_'+cam+'_step'                            
+                        depth_img.save(output_dir+'/frames/'+depth_img_fn+f'{i:05d}.png')
+                        if len(data['frames']) <= i:
+                            data['frames'].append([])
+                        data['frames'][i].append(Path(depth_img_fn+f'{i:05d}.png'))
+                else:
+                    print('WARN: Missing depth key: {}'.format(depth_key))
 
             torch.save(data, output_dir+'/'+ro_fn+'.pt')
             successes += 1
@@ -140,4 +158,4 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
             print('Success {} ({}/{})'.format(successes/rollouts,successes,rollouts))
 
 if __name__ == '__main__':
-    main()
+    collect_rollouts_cli()
