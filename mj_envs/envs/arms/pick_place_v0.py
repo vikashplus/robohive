@@ -122,7 +122,7 @@ class PickPlaceV0(env_base.MujocoEnv):
         obs_dict['qp'] = sim.data.qpos.copy()
         obs_dict['qv'] = sim.data.qvel.copy()
         obs_dict['grasp_pos'] = sim.data.site_xpos[self.grasp_sid]
-        obs_dict['grasp_elr'] = mat2euler(sim.data.site_xmat[self.grasp_sid])
+        obs_dict['grasp_elr'] = mat2euler(sim.data.site_xmat[self.grasp_sid].reshape(3,3))
         if self.robot.is_hardware:
             obs_dict['object_err'] = self.real_obj_pos-sim.data.site_xpos[self.grasp_sid]
             obs_dict['target_err'] = sim.data.site_xpos[self.target_sid]-sim.data.site_xpos[self.grasp_sid]
@@ -218,6 +218,9 @@ class PickPlaceV0(env_base.MujocoEnv):
             
             # Un-normalize cmd
             eef_cmd = (0.5*a.flatten()[-8:]+0.5)*(self.pos_limit_high-self.pos_limit_low)+self.pos_limit_low
+            eef_cmd[:3] = eef_cmd[:3]+ self.obs_dict['grasp_pos']
+            eef_cmd[3:6] = eef_cmd[3:6] + self.obs_dict['grasp_elr']
+            eef_cmd[6] = eef_cmd[6] + self.obs_dict['qp'][7]
             eef_cmd = np.clip(eef_cmd, self.pos_limit_low, self.pos_limit_high)
             
             eef_pos = eef_cmd[:3]
