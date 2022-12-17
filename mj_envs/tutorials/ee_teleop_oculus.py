@@ -217,7 +217,7 @@ def main(env_name, env_args, horizon, num_rollouts, seed, render, goal_site, tel
         print("rollout {} end".format(i_rollout))
         time.sleep(0.5)
 
-    trace.save("teleOp_trace.h5", verify_length=True)
+    trace.save("teleOp_trace.h5", verify_length=True, trace_fomat='roboset')
     oculus_reader.stop()
     env.close()
 
