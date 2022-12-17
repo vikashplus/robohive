@@ -3,6 +3,7 @@ import pickle
 import h5py
 from mj_envs.utils import tensor_utils
 from mj_envs.utils.dict_utils import flatten_dict, dict_numpify
+from mj_envs.utils.paths_utils import path2dataset
 
 # Trace_name: {
 #     grp1: {dataset{k1:v1}, dataset{k2:v2}, ...}
@@ -10,7 +11,8 @@ from mj_envs.utils.dict_utils import flatten_dict, dict_numpify
 # }
 
 # ToDo
-# access pattern for pickle and h5 backbone post load isn't the same.
+# access pattern for pickle and h5 backbone post load isn't the same
+# Should we get rid of pickle support and double down on h5?
 class Trace:
     def __init__(self, name):
         # self.keys = keys
@@ -136,6 +138,7 @@ class Trace:
     def save(self,
                 # save options
                 trace_name:str,
+                trace_fomat:str='robohive', #robohive/roboset
                 # numpify options
                 u_res=np.uint8, i_res=np.int8, f_res=np.float16,
                 # compression options
@@ -144,8 +147,15 @@ class Trace:
                 verify_length=False,
                 ):
 
-        # stack, flatten, numpify
+        # stack all records
         self.stack()
+
+        # Dataset format
+        if trace_fomat=='roboset':
+            for grp_k, grp_v in self.trace.items():
+                self.trace[grp_k] = path2dataset(grp_v)
+
+        # flatten structure
         self.flatten() # WARNING: Will create loading difference between h5 and pickle backbones
         self.numpify(u_res=u_res, i_res=i_res, f_res=f_res)
         if verify_length:

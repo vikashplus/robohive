@@ -605,7 +605,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             ep_rwd = 0.0
             while t < horizon and done is False:
                 a = policy.get_action(o)[0] if mode == 'exploration' else policy.get_action(o)[1]['evaluation']
-                next_o, rwd, done, env_info = self.step(a)
+                next_o, rwd, done, env_infos = self.step(a)
                 ep_rwd += rwd
                 # render offscreen visuals
                 if render =='offscreen':
@@ -621,10 +621,10 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 # log values
                 datum_dict = dict(
                         time=t,
-                        observation=o,
-                        action=a,
-                        reward=rwd,
-                        env_info=env_info,
+                        observations=o,
+                        actions=a,
+                        rewards=rwd,
+                        env_infos=env_infos,
                         done=done,
                     )
                 trace.append_datums(group_key=group_key,
@@ -647,7 +647,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         self.mujoco_render_frames = False
         print("Total time taken = %f"% (timer.time()-exp_t0))
-        trace.save("env_base_trace.h5", verify_length=True)
+        trace.save("env_base_trace.h5", verify_length=True,trace_fomat='roboset')
         # trace.save("env_base_trace.pickle", verify_length=True)
         quit()
         # return trace
