@@ -58,6 +58,8 @@ class PickPlaceV0(env_base.MujocoEnv):
                randomize_obj_pose=False,
                randomize_obj_id=False,
                geom_sizes={'high':[.05, .05, .05], 'low':[.2, 0.2, 0.2]},
+               act_limit_low=[-1.0, -1.0, -1.0, -6.3, -6.3, -6.3, -0.04, -1.0],
+               act_limit_high=[1.0, 1.0, 1.0, 6.3, 6.3, 6.3, 0.04, 1.0],
                pos_limit_low=[-0.435, 0.2, 0.76, -3.14, -3.14, -3.14, 0.0, 0.0],
                pos_limit_high=[0.435, 0.8, 1.5, 3.14, 3.14, 3.14, 0.04, 1.0],
                vel_limit=[0.15, 0.3, 0.2, 0.3, 0.2, 0.2, 0.35, 1.0, 1.0],
@@ -77,6 +79,8 @@ class PickPlaceV0(env_base.MujocoEnv):
         self.randomize_obj_pose = randomize_obj_pose
         self.randomize_obj_id = randomize_obj_id
         self.geom_sizes = geom_sizes
+        self.act_limit_low = np.array(act_limit_low)
+        self.act_limit_high = np.array(act_limit_high)
         self.pos_limit_low = np.array(pos_limit_low)
         self.pos_limit_high = np.array(pos_limit_high)
         self.vel_limit = vel_limit
@@ -217,10 +221,12 @@ class PickPlaceV0(env_base.MujocoEnv):
             assert(a.flatten().shape[0]==8 or a.flatten().shape[0] == 17)
             
             # Un-normalize cmd
-            eef_cmd = (0.5*a.flatten()[-8:]+0.5)*(self.pos_limit_high-self.pos_limit_low)+self.pos_limit_low
+            #eef_cmd = (0.5*a.flatten()[-8:]+0.5)*(self.pos_limit_high-self.pos_limit_low)+self.pos_limit_low
+            eef_cmd = (0.5*a.flatten()[-8:]+0.5)*(self.act_limit_high-self.act_limit_low)+self.act_limit_low
             eef_cmd[:3] = eef_cmd[:3]+ self.obs_dict['grasp_pos']
             eef_cmd[3:6] = eef_cmd[3:6] + self.obs_dict['grasp_elr']
             eef_cmd[6] = eef_cmd[6] + self.obs_dict['qp'][7]
+            
             eef_cmd = np.clip(eef_cmd, self.pos_limit_low, self.pos_limit_high)
             
             eef_pos = eef_cmd[:3]
@@ -232,7 +238,8 @@ class PickPlaceV0(env_base.MujocoEnv):
                 self.ik_sim.data.qpos[:7] = np.random.normal(self.sim_obsd.data.qpos[:7], i*0.1)
                 
                 # Helps limit motion of arm such that it stays upright
-                self.ik_sim.data.qpos[2] = 0.0
+                if self.robot.is_hardware:
+                    self.ik_sim.data.qpos[2] = 0.0
                 
                 self.ik_sim.forward()
                 ik_result = qpos_from_site_pose(physics = self.ik_sim,
@@ -270,6 +277,13 @@ class PickPlaceV0(env_base.MujocoEnv):
 
         if ik_success and not invalid_grab:
             self.last_ctrl = self.robot.step(ctrl_desired=action,
+                                            ctrl_normalized=self.normalize_act,
+                                            step_duration=self.dt,
+                                            realTimeSim=self.mujoco_render_frames,
+                                            render_cbk=self.mj_render if self.mujoco_render_frames else None)
+        elif not self.robot.is_hardware:
+            redo_action = 2*(((self.last_ctrl - self.jnt_low)/(self.jnt_high-self.jnt_low))-0.5)
+            self.last_ctrl = self.robot.step(ctrl_desired=redo_action,
                                             ctrl_normalized=self.normalize_act,
                                             step_duration=self.dt,
                                             realTimeSim=self.mujoco_render_frames,

@@ -121,7 +121,7 @@ register(
         'config_path': curr_dir+'/franka/assets/franka_busbin_v0.config',
         'robot_site_name': "end_effector",
         'target_site_name': "drop_target",
-        'randomize_obj_pose': True,
+        'randomize_obj_pose': False,
         'randomize_obj_id': False,
         'target_xyz_range': {'high':[0.0, 0.5, 1.25], 'low':[0.0, 0.5, 1.25]},
         'geom_sizes': {'high':[.03, .03, .03], 'low':[.02, 0.02, 0.02]}

@@ -273,8 +273,11 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
         
         done = False        
         while(obs_dict['grasp_pos'][0,0,2] < 1.1 and not done):
-            move_up_action = np.concatenate([target_pos, [3.14,0.0,0.0,obs_dict['qp'][0,0,7],0.0]])
-            move_up_action = 2*(((move_up_action - env.pos_limit_low) / (env.pos_limit_high - env.pos_limit_low)) - 0.5)
+            des_config = np.concatenate([target_pos, [3.14,0.0,0.0,obs_dict['qp'][0,0,7],0.0]])
+            move_up_action = des_config - np.concatenate([obs_dict['grasp_pos'][0,0,0:3],
+                                                          obs_dict['grasp_elr'][0,0,0:3],
+                                                          [obs_dict['qp'][0,0,7],0.0]])
+            move_up_action = 2*(((move_up_action - env.act_limit_low) / (env.act_limit_high - env.act_limit_low)) - 0.5)
             obs, _, done, _ = env.step(move_up_action)
             obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))     
         

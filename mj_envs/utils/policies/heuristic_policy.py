@@ -75,7 +75,7 @@ class HeuristicPolicy():
 
 
         # Normalize action to be between -1 and 1
-        action = 2*(((action - self.env.pos_limit_low) / (self.env.pos_limit_high - self.env.pos_limit_low)) - 0.5)
+        action = 2*(((action - self.env.act_limit_low) / (self.env.act_limit_high - self.env.act_limit_low)) - 0.5)
 
         return action, {'evaluation': action}
 
@@ -153,7 +153,7 @@ class HeuristicPolicyReal():
         
         
         # Normalize action to be between -1 and 1
-        action = 2*(((action - self.env.pos_limit_low) / (self.env.pos_limit_high - self.env.pos_limit_low)) - 0.5)
+        action = 2*(((action - self.env.act_limit_low) / (self.env.act_limit_high - self.env.act_limit_low)) - 0.5)
 
         return action, {'evaluation': action}
 
