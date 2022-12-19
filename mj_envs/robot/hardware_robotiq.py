@@ -32,7 +32,7 @@ class Robotiq(hardwareBase):
         print("RBQ:> Testing {} connection: ".format(self.name), end="")
         if self.okay():
             print("Okay")
-            self.max_width = 0.085#self.robot.get_state().max_width
+            self.max_width = self.robot.get_state().max_width
             connection = True
         else:
             print("Not ready. Please retry connection")
@@ -92,7 +92,7 @@ class Robotiq(hardwareBase):
             return self.get_sensors()
         return np.array([curr_state.width])
 
-    def apply_commands(self, width:float, speed:float=0.4, force:float=0.4):
+    def apply_commands(self, width:float, speed:float=0.1, force:float=0.1):
         assert width>=0.0 and width<=self.max_width, "Gripper desired width ({}) is out of bound (0,{})".format(width, self.max_width)
         self.robot.goto(width=width, speed=speed, force=force)
         return 0

@@ -23,7 +23,8 @@ Helper script to examine an environment and associated policy for behaviors; \n
 - either onscreen, or offscreen, or just rollout without rendering.\n
 - save resulting paths as pickle or as 2D plots
 USAGE:\n
-   python collect_modem_rollouts.py -e FrankaPickPlaceRandom_v2d-v0 -r none -o /checkpoint/plancaster/outputs/tdmpc/demonstrations/franka-FrankaPickPlaceRandom -n 1
+    $ python examine_env.py --env_name door-v0 \n
+    $ python examine_env.py --env_name door-v0 --policy my_policy.pickle --mode evaluation --episodes 10 \n
 '''
 
 
@@ -37,17 +38,15 @@ USAGE:\n
 @click.option('-o', '--output_dir', type=str, default='./', help=('Directory to save the outputs'))
 @click.option('-on', '--output_name', type=str, default=None, help=('The name to save the outputs as'))
 @click.option('-n', '--num_rollouts', type=int, help='number of rollouts to save', default=100)
-def collect_rollouts_cli(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts):
-    collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts)
-
-def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts):
+@click.option('-hw', '--is_hardware', type=bool, help='whether or not to run on real robot', default=False)
+def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, is_hardware):
 
     # seed and load environments
     np.random.seed(seed)
-    env = gym.make(env_name, **{'reward_mode': 'sparse'})
+    env = gym.make(env_name, **{'reward_mode': 'sparse', 'is_hardware':is_hardware})
     env.seed(seed)
 
-    pi = HeuristicPolicy(env, seed)
+    pi = HeuristicPolicy(env, seed, is_hardware)
     output_name = 'heuristic'
 
     # resolve directory
@@ -57,13 +56,19 @@ def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, outp
     if (os.path.isdir(output_dir +'/frames') == False):
         os.mkdir(output_dir+'/frames')
 
-    if (os.path.isdir(output_dir +'/targets') == False):
-        os.mkdir(output_dir+'/targets')
-
     rollouts = 0
     successes = 0
 
     while successes < num_rollouts:
+
+        if is_hardware:
+            # Move arm out of camera's view
+            start_action = [0.25, 0.5, 1.25, 3.14, 0, 0, 0.04, 0.04]
+            env.step(start_action)
+            time.sleep(3)
+
+            # Detect and set the object pose
+            env.real_obj_pos = [0.0, 0.5, 1.0]
 
         # examine policy's behavior to recover paths
         paths = env.examine_policy(
@@ -84,78 +89,27 @@ def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, outp
             ro_fn = 'rollout'+f'{(successes+seed):010d}'
 
             data = {}
-
-            data['states'] = {}
-            data['states']['qp'] = paths[0]['env_infos']['obs_dict']['qp']
-            data['states']['qv'] = paths[0]['env_infos']['obs_dict']['qv']
-            data['states']['grasp_pos'] = paths[0]['env_infos']['obs_dict']['grasp_pos']
-            data['states']['grasp_elr'] = paths[0]['env_infos']['obs_dict']['grasp_elr']
-            data['states']['object_err'] = paths[0]['env_infos']['obs_dict']['object_err']
-            data['states']['target_err'] = paths[0]['env_infos']['obs_dict']['target_err']
-            data['states']['t'] = paths[0]['env_infos']['obs_dict']['t'].reshape((paths[0]['observations'].shape[0], -1))
-
+            data['states'] = paths[0]['observations'][:,:66]
             data['actions'] = paths[0]['actions']
             data['infos'] = [{'success': reward} for reward in paths[0]['rewards']]
             
-            data['target'] = []
-            for key in env.obs_keys:
-                if 'target' in key:
-                    if 'rgb:' in key:
-                        target_fn = ro_fn + '_target_cam_rgb'
-                        target_imgs = paths[0]['env_infos']['obs_dict'][key]
-                        target_img = Image.fromarray(target_imgs[0])
-                        #print('rgb target img max {}, min {}'.format(np.max(target_img),np.min(target_img)))
-                    elif 'd:' in key:
-                        target_fn = ro_fn + '_target_cam_depth'
-                        target_imgs = paths[0]['env_infos']['obs_dict'][key]
-                        target_img = 255*target_imgs[0]
-                        if np.max(target_img) > 255:
-                            print("WARN: DEPTH IMAGE PIXEL VAL > 255")
-                        target_img = Image.fromarray(target_img)
-                        #target_img = target_img.transpose(Image.FLIP_TOP_BOTTOM)
-                        #print('depth target_img max {}, min {}'.format(np.max(target_img), np.min(target_img)))
-                        target_img = target_img.convert("L")                        
-                    else:
-                        continue 
-                    target_img.save(output_dir+'/targets/'+target_fn+'.png')
-                    data['target'].append(Path(target_fn+'.png'))
-            assert(len(data['target'])==2)
-
             data['frames'] = []
-            for cam in ['left_cam', 'right_cam', 'top_cam', 'Franka_wrist_cam']:
-                rgb_key = 'rgb:'+cam+':240x424:2d'
-                if rgb_key in env.obs_keys:
-                    rgb_imgs = paths[0]['env_infos']['obs_dict'][rgb_key]
-                    for i in range(rgb_imgs.shape[0]):
-                        rgb_img = Image.fromarray(rgb_imgs[i])
-                        rgb_img_fn = ro_fn + '_rgb_'+cam+'_step'
-                        
-                        rgb_img.save(output_dir+'/frames/'+rgb_img_fn+f'{i:05d}.png')
-                        if len(data['frames']) <= i:
-                            data['frames'].append([])
-                        data['frames'][i].append(Path(rgb_img_fn+f'{i:05d}.png'))
-                else:
-                    print('WARN: Missing rgb key: {}'.format(rgb_key))
-                    
-                depth_key = 'd:'+cam+':240x424:2d'
-                if depth_key in env.obs_keys:
-                    depth_imgs = paths[0]['env_infos']['obs_dict'][depth_key]
-                    for i in range(depth_imgs.shape[0]):
-                        depth_img = 255*depth_imgs[i]       
-                        depth_img = Image.fromarray(depth_img)
-                        depth_img = depth_img.convert("L")
-                        depth_img_fn = ro_fn + '_depth_'+cam+'_step'                            
-                        depth_img.save(output_dir+'/frames/'+depth_img_fn+f'{i:05d}.png')
-                        if len(data['frames']) <= i:
-                            data['frames'].append([])
-                        data['frames'][i].append(Path(depth_img_fn+f'{i:05d}.png'))
-                else:
-                    print('WARN: Missing depth key: {}'.format(depth_key))
-
+            imgs = paths[0]['observations'][:,66:]
+            imgs = imgs.reshape((data['states'].shape[0],-1,224,224,3))
+            imgs = imgs.astype(np.uint8)
+            for i in range(imgs.shape[0]):
+                for j in range(imgs.shape[1]):
+                    img_fn = ro_fn +'_cam'+str(j)+'_step'+f'{i:05d}'
+                    img = Image.fromarray(imgs[i,j])
+                    img.save(output_dir+'/frames/'+img_fn+'.png')
+                    if imgs.shape[1] == 1 or j == 1: # First case if there's only one cam, second case corresponds to right_cam
+                        # Record path in data
+                        data['frames'].append(Path(img_fn+'.png'))
+         
             torch.save(data, output_dir+'/'+ro_fn+'.pt')
             successes += 1
 
             print('Success {} ({}/{})'.format(successes/rollouts,successes,rollouts))
 
 if __name__ == '__main__':
-    collect_rollouts_cli()
+    main()

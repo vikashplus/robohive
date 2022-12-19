@@ -4,7 +4,7 @@ defaults:
 
 env_name: FrankaPickPlaceRandom_v2d-v0
 mode: evaluation
-seed: 0
+seed: 1
 render: none
 camera_name: None
 output_dir: /checkpoint/plancaster/outputs/tdmpc/demonstrations/franka-FrankaPickPlaceRandom_v2d
@@ -24,4 +24,4 @@ hydra:
         name: ${hydra.job.name}
         submitit_folder: ${hydra.sweep.dir}/.submitit/%j
     sweep:
-        dir: /checkpoint/${oc.env:USER}/outputs/tdmpc/sweep
+        dir: /checkpoint/${oc.env:USER}/outputs

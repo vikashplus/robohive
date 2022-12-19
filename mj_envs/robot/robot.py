@@ -448,7 +448,6 @@ class Robot():
                 img, depth = sim.render(width=width, height=height, depth=True, mode='offscreen', camera_name=cam, device_id=device_id)
                 img = img[::-1, :, : ] # Image has to be flipped
                 imgs[ind, :, :, :] = img
-                depth = depth[::-1,:]
                 depths[ind, :, :] = depth
 
         return imgs, depths
@@ -669,8 +668,7 @@ class Robot():
     # Reset the robot
     def reset(self,
               reset_pos,
-              reset_vel,
-              pause_in=True):
+              reset_vel):
 
         prompt("Resetting {}".format(self.name), 'white', 'on_grey', flush=True)
 
@@ -704,8 +702,7 @@ class Robot():
             # engage other reset mechanisms for passive dofs
             # TODO raise NotImplementedError
 
-            if pause_in:
-                input("press a key to start rollout")
+            input("press a key to start rollout")
             prompt(" Done in {}".format(time.time()-t_reset_start), 'white', 'on_grey', flush=True)
         else:
             # Ideally we should use actuator/ reset mechanism as in the real world
