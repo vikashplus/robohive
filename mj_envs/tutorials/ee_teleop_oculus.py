@@ -18,7 +18,7 @@ import click
 import gym
 from mj_envs.utils.quat_math import euler2quat, euler2mat, mat2quat, diffQuat, mulQuat
 from mj_envs.utils.inverse_kinematics import IKResult, qpos_from_site_pose
-from mj_envs.logger.grouped_datasets import Trace
+from mj_envs.logger.roboset_logger import RoboSet_Trace as Trace
 
 try:
     from oculus_reader import OculusReader
@@ -217,9 +217,11 @@ def main(env_name, env_args, horizon, num_rollouts, seed, render, goal_site, tel
         print("rollout {} end".format(i_rollout))
         time.sleep(0.5)
 
-    trace.save("teleOp_trace.h5", verify_length=True, trace_fomat='roboset')
-    oculus_reader.stop()
+    output_name = "teleOp_trace"
+    trace.save(output_name+".h5", verify_length=True)
+    trace.render(output_name+".mp4", groups=":", datasets=["data/rgb_left","data/rgb_right","data/rgb_top","data/rgb_wrist"])
     env.close()
+    print("Saved: "+output_name)
 
 
 if __name__ == '__main__':

@@ -15,7 +15,6 @@ import torchvision.transforms as T
 from mj_envs.utils.obj_vec_dict import ObsVecDict
 from mj_envs.utils import tensor_utils
 from mj_envs.robot.robot import Robot
-from os import path
 import skvideo.io
 from sys import platform
 
@@ -471,6 +470,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 lookat=lookat
         )
 
+
     def examine_policy(self,
             policy,
             horizon=1000,
@@ -579,7 +579,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             - return resulting paths
         """
 
-        from mj_envs.logger.grouped_datasets import Trace
+        from mj_envs.logger.roboset_logger import RoboSet_Trace as Trace
         trace = Trace("Rollout")
 
         exp_t0 = timer.time()
@@ -647,8 +647,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         self.mujoco_render_frames = False
         print("Total time taken = %f"% (timer.time()-exp_t0))
-        trace.save("env_base_trace.h5", verify_length=True,trace_fomat='roboset')
-        # trace.save("env_base_trace.pickle", verify_length=True)
+        trace.save("env_base_trace.pickle", verify_length=True)
+        trace.render("test_render.mp4", groups=":", datasets=["data/rgb_left","data/rgb_right","data/rgb_top","data/rgb_wrist"])
         quit()
         # return trace
 
