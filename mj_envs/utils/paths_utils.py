@@ -245,7 +245,7 @@ def path2dataset(path:dict, config_path=None)->dict:
     obs_keys = path['env_infos']['obs_dict'].keys()
     dataset = {}
     # Data =====
-    dataset['data/time'] = path['env_infos']['obs_dict']['t']
+    dataset['data/time'] = path['env_infos']['obs_dict']['time']
 
     # actions
     if 'actions' in path.keys():

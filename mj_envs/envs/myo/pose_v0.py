@@ -76,7 +76,7 @@ class PoseEnvV0(BaseV0):
                 )
 
     def get_obs_vec(self):
-        self.obs_dict['t'] = np.array([self.sim.data.time])
+        self.obs_dict['time'] = np.array([self.sim.data.time])
         self.obs_dict['qpos'] = self.sim.data.qpos[:].copy()
         self.obs_dict['qvel'] = self.sim.data.qvel[:].copy()*self.dt
         if self.sim.model.na>0:
@@ -88,7 +88,7 @@ class PoseEnvV0(BaseV0):
 
     def get_obs_dict(self, sim):
         obs_dict = {}
-        obs_dict['t'] = np.array([sim.data.time])
+        obs_dict['time'] = np.array([sim.data.time])
         obs_dict['qpos'] = sim.data.qpos[:].copy()
         obs_dict['qvel'] = sim.data.qvel[:].copy()*self.dt
         if sim.model.na>0:

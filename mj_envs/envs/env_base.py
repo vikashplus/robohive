@@ -245,7 +245,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             device_id = self.device_id
 
         visual_obs_dict = {}
-        visual_obs_dict['t'] = np.array([self.sim.data.time])
+        visual_obs_dict['time'] = np.array([self.sim.data.time])
         # find keys with rgb tags
         for key in self.obs_keys:
             if key.startswith('rgb'):
@@ -291,7 +291,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         - Requires necessary keys (dense, sparse, solved, done) in rwd_dict to be populated
         """
         env_info = {
-            'time': self.obs_dict['t'][()],             # MDP(t)
+            'time': self.obs_dict['time'][()],          # MDP(t)
             'rwd_dense': self.rwd_dict['dense'][()],    # MDP(t)
             'rwd_sparse': self.rwd_dict['sparse'][()],  # MDP(t)
             'solved': self.rwd_dict['solved'][()],      # MDP(t)

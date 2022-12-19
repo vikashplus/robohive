@@ -68,17 +68,17 @@ class RealsenseAPI:
     def get_sensors(self):
         # get all data from all topics
         rgbd = self.get_rgbd()
-        return {'t':0, 'rgb': rgbd[:, :, :3], 'd': rgbd[:, :, 3]}
+        return {'time':0, 'rgb': rgbd[:, :, :3], 'd': rgbd[:, :, 3]}
 
     def okay(self):
-        return True 
+        return True
 
     def apply_commands(self):
         return 0
 
     def close(self):
         return True
-    
+
     def reset(self):
         return 0
 

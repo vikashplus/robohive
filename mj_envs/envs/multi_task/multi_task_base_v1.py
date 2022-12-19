@@ -111,7 +111,7 @@ class KitchenBase(env_base.MujocoEnv):
 
     def get_obs_dict(self, sim):
         obs_dict = {}
-        obs_dict["t"] = np.array([sim.data.time])
+        obs_dict["time"] = np.array([sim.data.time])
         obs_dict["robot_jnt"] = sim.data.qpos[self.robot_dofs].copy()
         obs_dict["objs_jnt"] = sim.data.qpos[self.obj["dof_adrs"]].copy()
         obs_dict["robot_vel"] = sim.data.qvel[self.robot_dofs].copy() * self.dt

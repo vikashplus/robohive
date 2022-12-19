@@ -16,7 +16,7 @@ import collections
 class FrankaRobotiqData(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS = [
-        't'          # dummy key
+        'time'          # dummy key
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
         "none": -0.0,   # dummy key
@@ -85,7 +85,7 @@ class FrankaRobotiqData(env_base.MujocoEnv):
 
     def get_obs_dict(self, sim):
         obs_dict = {}
-        obs_dict['t'] = np.array([self.sim.data.time])
+        obs_dict['time'] = np.array([self.sim.data.time])
         obs_dict['qp'] = sim.data.qpos[:self.nq_arm+self.nq_ee].copy()
 
         obs_dict['qp_arm'] = sim.data.qpos[:self.nq_arm].copy()

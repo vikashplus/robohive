@@ -88,7 +88,7 @@ class FrankaEEPose(env_base.MujocoEnv):
 
     def get_obs_dict(self, sim):
         obs_dict = {}
-        obs_dict['t'] = np.array([self.sim.data.time])
+        obs_dict['time'] = np.array([self.sim.data.time])
         obs_dict['qp'] = sim.data.qpos.copy()
         obs_dict['qv'] = sim.data.qvel.copy()
         obs_dict['pose_err'] = obs_dict['qp'] - self.target_pose
@@ -132,7 +132,7 @@ class FrankaRobotiqPose(FrankaEEPose):
 
     def get_obs_dict(self, sim):
         obs_dict = {}
-        obs_dict['t'] = np.array([self.sim.data.time])
+        obs_dict['time'] = np.array([self.sim.data.time])
         obs_dict['qp'] = sim.data.qpos[:self.nqp].copy()
         obs_dict['qv'] = sim.data.qvel[:self.nqp].copy()
         obs_dict['pose_err'] = obs_dict['qp'] - self.target_pose
