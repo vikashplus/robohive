@@ -59,7 +59,7 @@ class DoorEnvV1(env_base.MujocoEnv):
     def get_obs_dict(self, sim):
         # qpos for hand, xpos for obj, xpos for target
         obs_dict = {}
-        obs_dict['t'] = np.array([sim.data.time])
+        obs_dict['time'] = np.array([sim.data.time])
         obs_dict['hand_jnt'] = sim.data.qpos[1:-2].copy()
         obs_dict['hand_vel'] = sim.data.qvel[:-2].copy()
         obs_dict['handle_pos'] = sim.data.site_xpos[self.handle_sid].copy()

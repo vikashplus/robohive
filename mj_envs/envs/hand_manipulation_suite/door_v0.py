@@ -72,7 +72,7 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
     def get_obs_dict(self, sim):
         # qpos for hand, xpos for obj, xpos for target
         obs_dict = {}
-        obs_dict['t'] = np.array([sim.data.time])
+        obs_dict['time'] = np.array([sim.data.time])
         obs_dict['hand_jnt'] = sim.data.qpos[1:-2].copy()
         obs_dict['hand_vel'] = sim.data.qvel[:-2].copy()
         obs_dict['handle_pos'] = sim.data.site_xpos[self.handle_sid].copy()
@@ -114,7 +114,7 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
     # Its getting called twice. Once in step and sampler calls it as well
     def get_env_infos(self):
         env_info = {
-            'time': self.obs_dict['t'][()],
+            'time': self.obs_dict['time'][()],
             'rwd_dense': self.rwd_dict['dense'][()],
             'rwd_sparse': self.rwd_dict['sparse'][()],
             'solved': self.rwd_dict['solved'][()],

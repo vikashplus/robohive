@@ -12,7 +12,7 @@ class ObsVecDict():
     """
     Class to help with conversion between obs_dict <> obs_vector
     Requirements:
-        - obs_dict must have key 't' with observation timestamp
+        - obs_dict must have key 'time' with observation timestamp
         - initialize() must be called if 'ordered_obs_keys' changes post initialization
     """
     def __init__(self,
@@ -50,7 +50,7 @@ class ObsVecDict():
     # initialize dict <> vec mapping
     def initialize(self, obs_dict, ordered_obs_keys):
         base_idx = 0
-        assert 't' in obs_dict.keys(), "obs_dict must have key 't' with observation timestamp "
+        assert 'time' in obs_dict.keys(), "obs_dict must have key 'time' with observation timestamp "
         self.ordered_obs_keys = ordered_obs_keys.copy()
         for key in self.ordered_obs_keys:
             key_len = len(obs_dict[key])
@@ -84,7 +84,7 @@ class ObsVecDict():
             obsvec = np.concatenate([obsvec, obs_dict[key].ravel()]) # ravel helps with images
 
         # cache
-        t = obs_dict['t']
+        t = obs_dict['time']
         self.add_obsvec_to_cache(t, obsvec)
         return t, obsvec
 

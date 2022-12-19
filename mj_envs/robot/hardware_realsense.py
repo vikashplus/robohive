@@ -62,7 +62,7 @@ class RealSense(hardwareBase):
         # get all data from all topics
         last_img = copy.deepcopy(self.last_image_pkt)
         last_depth = copy.deepcopy(self.last_depth_pkt)
-        return {'t':self.most_recent_pkt_ts, 'rgb': last_img, 'd': last_depth}
+        return {'time':self.most_recent_pkt_ts, 'rgb': last_img, 'd': last_depth}
 
     def apply_commands(self):
         return 0

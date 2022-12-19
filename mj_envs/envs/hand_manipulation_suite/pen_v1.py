@@ -65,7 +65,7 @@ class PenEnvV1(env_base.MujocoEnv):
     def get_obs_dict(self, sim):
         # qpos for hand, xpos for obj, xpos for target
         obs_dict = {}
-        obs_dict['t'] = np.array([sim.data.time])
+        obs_dict['time'] = np.array([sim.data.time])
         obs_dict['hand_jnt'] = sim.data.qpos[:-6].copy()
         obs_dict['obj_pos'] = sim.data.body_xpos[self.obj_bid].copy()
         obs_dict['obj_des_pos'] = sim.data.site_xpos[self.eps_ball_sid].ravel()

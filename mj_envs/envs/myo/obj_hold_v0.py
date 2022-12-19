@@ -56,7 +56,7 @@ class ObjHoldFixedEnvV0(BaseV0):
 
 
     def get_obs_vec(self):
-        self.obs_dict['t'] = np.array([self.sim.data.time])
+        self.obs_dict['time'] = np.array([self.sim.data.time])
         self.obs_dict['hand_qpos'] = self.sim.data.qpos[:-7].copy()
         self.obs_dict['hand_qvel'] = self.sim.data.qvel[:-6].copy()*self.dt
         self.obs_dict['obj_pos'] = self.sim.data.site_xpos[self.object_sid]
@@ -69,7 +69,7 @@ class ObjHoldFixedEnvV0(BaseV0):
 
     def get_obs_dict(self, sim):
         obs_dict = {}
-        obs_dict['t'] = np.array([sim.data.time])
+        obs_dict['time'] = np.array([sim.data.time])
         obs_dict['hand_qpos'] = sim.data.qpos[:-7].copy()
         obs_dict['hand_qvel'] = sim.data.qvel[:-6].copy()*self.dt
         obs_dict['obj_pos'] = sim.data.site_xpos[self.object_sid]

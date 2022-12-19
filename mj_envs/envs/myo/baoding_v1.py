@@ -170,7 +170,7 @@ class BaodingEnvV1(BaseV0):
 
     def get_obs_dict(self, sim):
         obs_dict = {}
-        obs_dict['t'] = np.array([sim.data.time])
+        obs_dict['time'] = np.array([sim.data.time])
         obs_dict['hand_pos'] = sim.data.qpos[:-14].copy() # 7*2 for ball's free joint, rest should be hand
 
         # object positions
