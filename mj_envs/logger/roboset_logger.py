@@ -23,8 +23,9 @@ class RoboSet_Trace(Trace):
 
         # states
         for key in ['qp_arm', 'qv_arm', 'tau_arm', 'qp_ee', 'qv_ee']:
-            if key in path_keys:
-                dataset['data/'+key] = path['env_infos/obs_dict/'+key]
+            roboset_keyin_path = 'env_infos/obs_dict/'+key
+            if roboset_keyin_path in path_keys:
+                dataset['data/'+key] = path[roboset_keyin_path]
 
         # cams
         for cam in ['left', 'right', 'top', 'wrist']:
