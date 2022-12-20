@@ -187,10 +187,10 @@ def main(env_name, env_args, horizon, num_rollouts, seed, render, goal_site, tel
                         # log values
                         datum_dict = dict(
                                 time=i_step,
-                                observation=obs,
-                                action=act,
-                                reward=rwd,
-                                env_info=env_info,
+                                observations=obs,
+                                actions=act,
+                                rewards=rwd,
+                                env_infos=env_info,
                                 done=done,
                             )
                         trace.append_datums(group_key=group_key,
