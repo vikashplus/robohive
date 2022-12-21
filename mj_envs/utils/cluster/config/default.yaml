@@ -9,7 +9,7 @@ render: none
 camera_name: None
 output_dir: /checkpoint/plancaster/outputs/tdmpc/demonstrations/franka-FrankaPickPlaceRandom_v2d
 output_name: None
-num_rollouts: 10
+num_rollouts: 100
 
 # hydra
 hydra:

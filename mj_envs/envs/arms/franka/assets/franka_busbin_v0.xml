@@ -50,9 +50,7 @@
 
         <body name="obj0" pos="0.0 0.5 0.935">
             <inertial pos="0 0 0" mass="0.088" diaginertia="0.0001 0.0001 0.0001" />
-            <geom type="capsule" size="0.02 0.04" pos="0.01 0.02 0.005" euler=".52 .6 .8" group="1" rgba=".55 .28 .04 1" mass=".040"/>
-            <geom type="box" size="0.023 0.02 0.041" pos="0.03 0.012 .01" euler=".6 .8 1" group="1" rgba=".3 .7 .8 1" mass=".100"/>
-            <geom type="sphere" size="0.02 0.012 0.014" pos="0.02 0.023 .005" euler=".3 .5 .2" group="1" rgba=".3 .2 .2 1" mass=".010"/>
+            <geom type="box" size="0.023 0.02 0.021" pos="0.0 0.0 0.0" euler=".6 .8 1" group="1" rgba=".3 .7 .8 1" mass=".100"/>
             <site name="obj0" size="0.01" pos="0 0 0"/>
             <freejoint name="obj0"/>
         </body>

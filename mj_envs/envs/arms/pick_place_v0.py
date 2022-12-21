@@ -58,6 +58,8 @@ class PickPlaceV0(env_base.MujocoEnv):
                geom_sizes={'high':[.05, .05, .05], 'low':[.2, 0.2, 0.2]},
                pos_limit_low=[-0.435, 0.2, 0.76, -3.14, -3.14, -3.14, 0.0, 0.0],
                pos_limit_high=[0.435, 0.8, 1.5, 3.14, 3.14, 3.14, 0.04, 0.04],
+               #pos_limit_low=[-0.35, 0.25, 0.76, 3.14-np.pi/6.0, -np.pi/6.0, -3.14, 0.0, 0.0],
+               #pos_limit_high=[0.35, 0.75, 1.5, 3.14+np.pi/6.0, np.pi/6.0, 3.14, 0.04, 0.04],
                vel_limit=[0.1, 0.1, 0.1, 0.3, 0.3, 0.3, 0.04, 0.04],
                max_ik=3,
                is_hardware=None,
@@ -145,13 +147,13 @@ class PickPlaceV0(env_base.MujocoEnv):
             #    self.sim.model.body_pos[bid] += self.np_random.uniform(low=[-.010, -.010, -.010], high=[-.010, -.010, -.010])# random pos
             #    self.sim.model.body_quat[bid] = euler2quat(self.np_random.uniform(low=(-np.pi/2, -np.pi/2, -np.pi/2), high=(np.pi/2, np.pi/2, np.pi/2)) ) # random quat
 
-                for gid in range(self.sim.model.body_geomnum[bid]):
-                    gid+=self.sim.model.body_geomadr[bid]
-                    self.sim.model.geom_type[gid]=self.np_random.randint(low=2, high=7) # random shape
-                    self.sim.model.geom_size[gid]=self.np_random.uniform(low=self.geom_sizes['low'], high=self.geom_sizes['high']) # random size
-                    self.sim.model.geom_pos[gid]=self.np_random.uniform(low=-1*self.sim.model.geom_size[gid], high=self.sim.model.geom_size[gid]) # random pos
-                    self.sim.model.geom_quat[gid]=euler2quat(self.np_random.uniform(low=(-np.pi/2, -np.pi/2, -np.pi/2), high=(np.pi/2, np.pi/2, np.pi/2)) ) # random quat
-                    self.sim.model.geom_rgba[gid]=self.np_random.uniform(low=[.2, .2, .2, 1], high=[.9, .9, .9, 1]) # random color
+                #for gid in range(self.sim.model.body_geomnum[bid]):
+                #    gid+=self.sim.model.body_geomadr[bid]
+                #    self.sim.model.geom_type[gid]=self.np_random.randint(low=2, high=7) # random shape
+                #    self.sim.model.geom_size[gid]=self.np_random.uniform(low=self.geom_sizes['low'], high=self.geom_sizes['high']) # random size
+                #    self.sim.model.geom_pos[gid]=self.np_random.uniform(low=-1*self.sim.model.geom_size[gid], high=self.sim.model.geom_size[gid]) # random pos
+                #    self.sim.model.geom_quat[gid]=euler2quat(self.np_random.uniform(low=(-np.pi/2, -np.pi/2, -np.pi/2), high=(np.pi/2, np.pi/2, np.pi/2)) ) # random quat
+                #    self.sim.model.geom_rgba[gid]=self.np_random.uniform(low=[.2, .2, .2, 1], high=[.9, .9, .9, 1]) # random color
             self.sim.forward()
 
         if reset_qpos is None:
