@@ -25,7 +25,6 @@ def package_files(directory):
 
 extra_files = package_files('mj_envs')
 
-print("package list", find_packages())
 setup(
     name='mj_envs',
     version='0.3.0',
