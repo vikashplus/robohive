@@ -1,8 +1,11 @@
+from mj_envs.utils import tensor_utils
+from mj_envs.utils.dict_utils import flatten_dict, dict_numpify
 import numpy as np
 import pickle
 import h5py
-from mj_envs.utils import tensor_utils
-from mj_envs.utils.dict_utils import flatten_dict, dict_numpify
+from PIL import Image
+from sys import platform
+import skvideo.io
 
 # Trace_name: {
 #     grp1: {dataset{k1:v1}, dataset{k2:v2}, ...}
@@ -10,10 +13,11 @@ from mj_envs.utils.dict_utils import flatten_dict, dict_numpify
 # }
 
 # ToDo
-# access pattern for pickle and h5 backbone post load isn't the same.
+# access pattern for pickle and h5 backbone post load isn't the same
+# Should we get rid of pickle support and double down on h5?
 class Trace:
     def __init__(self, name):
-        # self.keys = keys
+        self.name = name
         self.root = {name: {}}
         self.trace = self.root[name]
 
@@ -81,6 +85,77 @@ class Trace:
                     assert trace_len == key_len, ValueError("len({}[{}]={}, should be {}".format(grp_k, key, key_len, trace_len))
 
 
+    # Very if trace is stacked and flattened. Useful for utilities like render, save etc
+    def verify_stacked_flattened(self):
+        for grp_k, grp_v in self.trace.items():
+            for dst_k, dst_v in grp_v.items():
+                # Check if stacked
+                if type(dst_v) == list:
+                    return False
+                # check if flattened
+                if type(dst_v) == dict:
+                    return False
+        return True
+
+
+    # Render frames/videos
+    def render(self, output_path, groups:list, datasets:list=["left"]):
+        # output_path:      Full output path with name and extension
+        # group:            Group to render: Pass ":" for rendering given dataset from all groups
+        # dataset:          List(datasets) to render Example ['left', 'right', 'top', 'Franka_wrist']
+
+        assert self.verify_stacked_flattened(), "Dataset needs to be stacked and flattened"
+
+        # Parse inputs
+        file_name, format = output_path.split('.')
+
+        # Resolve groups
+        if type(groups)==str:
+            if groups==":":
+                groups = self.trace.keys()
+            else:
+                groups = [groups]
+        for grp in groups:
+            assert grp in self.trace.keys(), "Unknown group {}".format(grp)
+
+        # Run through all trajs in the paths
+        for i_grp, grp in enumerate(groups):
+
+            # Pre allocate buffer
+            if i_grp==0:
+                horizon, height, width, _ = self.trace[grp][datasets[0]].shape
+
+                frame_tile = np.zeros((height, width*len(datasets), 3), dtype=np.uint8)
+                if format == "mp4":
+                    frames = np.zeros((horizon, height, width*len(datasets), 3), dtype=np.uint8)
+
+            # Render
+            print("Recovering {} frames:".format(format), end="")
+            for t in range(horizon):
+                # render single frame
+                for i_cam, cam_key in enumerate(datasets):
+                    frame_tile[:,i_cam*width:(i_cam+1)*width, :] = self.trace[grp][cam_key][t]
+                # process single frame
+                if format == "mp4":
+                    frames[t,:,:,:] = frame_tile
+                elif format == "rgb":
+                    image = Image.fromarray(frame_tile)
+                    image.save(file_name+"_{}-{}.png".format(i_grp, t))
+                else:
+                    raise TypeError("Unknown format")
+                print(t, end=",", flush=True)
+
+            # Save video
+            if format == "mp4":
+                file_name_mp4 = file_name+"_{}.mp4".format(i_grp)
+                # check if the platform is OS -- make it compatible with quicktime
+                if platform == "darwin":
+                    skvideo.io.vwrite(file_name_mp4, np.asarray(frames),outputdict={"-pix_fmt": "yuv420p"})
+                else:
+                    skvideo.io.vwrite(file_name_mp4, np.asarray(frames))
+                print("\nSaved: " + file_name_mp4)
+
+
     # Display data
     def __repr__(self) -> str:
         disp = "Trace_name: {}\n".format(self.root.keys())
@@ -111,7 +186,7 @@ class Trace:
         return disp
 
 
-    # stack values
+    # Stack trace
     def stack(self):
         for grp_k, grp_v in self.trace.items():
             for dst_k, dst_v in grp_v.items():
@@ -119,6 +194,7 @@ class Trace:
                     grp_v[dst_k] = tensor_utils.stack_tensor_dict_list(dst_v)
                 elif type(dst_v[0]) != str:
                     grp_v[dst_k] = np.array(dst_v)
+
 
     # Flatten
     def flatten(self):
@@ -132,24 +208,39 @@ class Trace:
             self.trace[grp_k] = dict_numpify(data=grp_v, u_res=u_res, i_res=i_res, f_res=f_res)
 
 
+    # Close the logger and post process the data
+    def close(self,
+            u_res=np.uint8, i_res=np.int8, f_res=np.float16,
+            verify_length=False):
+
+        # stack all records
+        self.stack()
+
+        # flatten structure
+        self.flatten() # WARNING: Will create loading difference between h5 and pickle backbones
+
+        # fix datatypes and resolutions
+        self.numpify(u_res=u_res, i_res=i_res, f_res=f_res)
+
+        # verify that
+        if verify_length:
+            self.verify_len()
+
+
     # Save
     def save(self,
                 # save options
                 trace_name:str,
-                # numpify options
-                u_res=np.uint8, i_res=np.int8, f_res=np.float16,
                 # compression options
                 compressions='gzip',
                 compression_opts=4,
-                verify_length=False,
+                **kwargs
                 ):
 
-        # stack, flatten, numpify
-        self.stack()
-        self.flatten() # WARNING: Will create loading difference between h5 and pickle backbones
-        self.numpify(u_res=u_res, i_res=i_res, f_res=f_res)
-        if verify_length:
-            self.verify_len()
+        # close trace before saving
+        if not self.verify_stacked_flattened():
+            print("Closing Trace: "+self.name)
+            self.close(**kwargs)
 
         # save
         trace_format = trace_name.split('.')[-1]

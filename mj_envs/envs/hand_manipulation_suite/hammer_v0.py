@@ -101,7 +101,7 @@ class HammerEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
     def get_obs_dict(self, sim):
         # qpos for hand, xpos for obj, xpos for target
         obs_dict = {}
-        obs_dict['t'] = np.array([sim.data.time])
+        obs_dict['time'] = np.array([sim.data.time])
         obs_dict['hand_jnt'] = sim.data.qpos[:-6].copy()
         obs_dict['obj_vel'] = np.clip(sim.data.qvel[-6:].copy(), -1.0, 1.0)
         obs_dict['palm_pos'] = sim.data.site_xpos[self.S_grasp_sid].copy()
@@ -131,7 +131,7 @@ class HammerEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
     # Its getting called twice. Once in step and sampler calls it as well
     def get_env_infos(self):
         env_info = {
-            'time': self.obs_dict['t'][()],
+            'time': self.obs_dict['time'][()],
             'rwd_dense': self.rwd_dict['dense'][()],
             'rwd_sparse': self.rwd_dict['sparse'][()],
             'solved': self.rwd_dict['solved'][()],

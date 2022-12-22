@@ -239,13 +239,13 @@ def render(rollout_path, render_format:str="mp4", cam_names:list=["left"]):
 # parse path from robohive format into robopen dataset format
 def path2dataset(path:dict, config_path=None)->dict:
     """
-    Convery Robohive path.pickle format into robopen dataset format
+    Convert Robohive format into roboset format
     """
 
     obs_keys = path['env_infos']['obs_dict'].keys()
     dataset = {}
     # Data =====
-    dataset['data/time'] = path['env_infos']['obs_dict']['t']
+    dataset['data/time'] = path['env_infos']['obs_dict']['time']
 
     # actions
     if 'actions' in path.keys():
@@ -301,7 +301,7 @@ def print_h5_schema(obj):
 
 
 # convert paths from pickle to h5 format
-def pickle2h5(rollout_path, output_dir=None, verify_output=False, h5_format:str='path', compress_path=False, config_path=None, max_paths=1e6):
+def pickle2h5(rollout_path, output_dir=None, verify_output=False, h5_format:str='robohive', compress_path=False, config_path=None, max_paths=1e6):
     # rollout_path:     Single path or folder with paths
     # output_dir:       Directory to save the outputs. use path location if none.
     # verify_output:    Verify the saved file
@@ -358,7 +358,7 @@ def pickle2h5(rollout_path, output_dir=None, verify_output=False, h5_format:str=
                     break
 
         # RoboPen dataset format
-        elif h5_format == "dataset":
+        elif h5_format == 'roboset':
             for i_path, path in enumerate(paths):
                 print("parsing rollout", i_path)
                 trial = paths_h5.create_group('Trial'+str(i_path))
@@ -399,7 +399,7 @@ Script to recover images and videos from the saved pickle files
 @click.option('-on', '--output_name', type=str, default=None, help=('Output name'))
 @click.option('-od', '--output_dir', type=str, default=None, help=('Directory to save the outputs'))
 @click.option('-vo', '--verify_output', type=bool, default=False, help=('Verify the saved file'))
-@click.option('-hf', '--h5_format', type=click.Choice(['path', 'dataset']), help='format to save', default="dataset")
+@click.option('-hf', '--h5_format', type=click.Choice(['robohive', 'roboset']), help='format to save', default='roboset')
 @click.option('-cp', '--compress_path', help='compress paths. Remove obs and env_info/state keys', default=False)
 @click.option('-rf', '--render_format', type=click.Choice(['rgb', 'mp4']), help='format to save', default="mp4")
 @click.option('-cn', '--cam_names', multiple=True, help='camera to render. Eg: left, right, top, Franka_wrist', default=["left", "top", "right", "wrist"])

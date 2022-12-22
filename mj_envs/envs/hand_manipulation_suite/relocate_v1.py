@@ -118,7 +118,7 @@ class RelocateEnvV1(env_base.MujocoEnv):
     def get_obs_dict(self, sim):
         # qpos for hand, xpos for obj, xpos for target
         obs_dict = {}
-        obs_dict['t'] = np.array([sim.data.time])
+        obs_dict['time'] = np.array([sim.data.time])
         obs_dict['hand_jnt'] = sim.data.qpos[:-6].copy()
         obs_dict['palm_obj_err'] = sim.data.site_xpos[self.S_grasp_sid] - sim.data.body_xpos[self.obj_bid]
         obs_dict['palm_tar_err'] = sim.data.site_xpos[self.S_grasp_sid] - sim.data.site_xpos[self.target_obj_sid]

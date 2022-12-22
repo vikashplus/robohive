@@ -14,7 +14,7 @@ EXAMPLE:\n
 
 from mj_envs.utils.quat_math import euler2quat, mulQuat
 from mj_envs.utils.inverse_kinematics import IKResult, qpos_from_site_pose
-from mj_envs.logger.grouped_datasets import Trace
+from mj_envs.logger.roboset_logger import RoboSet_Trace as Trace
 import numpy as np
 import click
 import gym
@@ -195,10 +195,10 @@ def main(env_name, env_args, input_device, horizon, num_rollouts, seed, goal_sit
             # log values
             datum_dict = dict(
                     time=i_step,
-                    observation=obs,
-                    action=act,
-                    reward=rwd,
-                    env_info=env_info,
+                    observations=obs,
+                    actions=act,
+                    rewards=rwd,
+                    env_infos=env_info,
                     done=done,
                 )
             trace.append_datums(group_key=group_key,
@@ -208,8 +208,11 @@ def main(env_name, env_args, input_device, horizon, num_rollouts, seed, goal_sit
             print("rollout {} end".format(i_rollout))
             break
 
-    trace.save("teleOp_trace.h5", verify_length=True)
+    output_name = "teleOp_trace"
+    trace.save(output_name+".h5", verify_length=True)
+    trace.render(output_name+".mp4", groups=":", datasets=["data/rgb_left","data/rgb_right","data/rgb_top","data/rgb_wrist"])
     env.close()
+    print("Saved: "+output_name)
 
 if __name__ == '__main__':
     main()
