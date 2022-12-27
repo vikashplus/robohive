@@ -38,15 +38,17 @@ USAGE:\n
 @click.option('-o', '--output_dir', type=str, default='./', help=('Directory to save the outputs'))
 @click.option('-on', '--output_name', type=str, default=None, help=('The name to save the outputs as'))
 @click.option('-n', '--num_rollouts', type=int, help='number of rollouts to save', default=100)
-@click.option('-hw', '--is_hardware', type=bool, help='whether or not to run on real robot', default=False)
-def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, is_hardware):
+def collect_rollouts_cli(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts):
+    collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts)
+
+def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts):
 
     # seed and load environments
     np.random.seed(seed)
-    env = gym.make(env_name, **{'reward_mode': 'sparse', 'is_hardware':is_hardware})
+    env = gym.make(env_name, **{'reward_mode': 'sparse'})
     env.seed(seed)
 
-    pi = HeuristicPolicy(env, seed, is_hardware)
+    pi = HeuristicPolicy(env, seed)
     output_name = 'heuristic'
 
     # resolve directory
@@ -60,15 +62,6 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
     successes = 0
 
     while successes < num_rollouts:
-
-        if is_hardware:
-            # Move arm out of camera's view
-            start_action = [0.25, 0.5, 1.25, 3.14, 0, 0, 0.04, 0.04]
-            env.step(start_action)
-            time.sleep(3)
-
-            # Detect and set the object pose
-            env.real_obj_pos = [0.0, 0.5, 1.0]
 
         # examine policy's behavior to recover paths
         paths = env.examine_policy(
@@ -89,22 +82,47 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
             ro_fn = 'rollout'+f'{(successes+seed):010d}'
 
             data = {}
-            data['states'] = paths[0]['observations'][:,:66]
+
+            data['states'] = {}
+            data['states']['qp'] = paths[0]['env_infos']['obs_dict']['qp']
+            data['states']['qv'] = paths[0]['env_infos']['obs_dict']['qv']
+            data['states']['grasp_pos'] = paths[0]['env_infos']['obs_dict']['grasp_pos']
+            data['states']['object_err'] = paths[0]['env_infos']['obs_dict']['object_err']
+            data['states']['target_err'] = paths[0]['env_infos']['obs_dict']['target_err']
+
             data['actions'] = paths[0]['actions']
             data['infos'] = [{'success': reward} for reward in paths[0]['rewards']]
             
             data['frames'] = []
-            imgs = paths[0]['observations'][:,66:]
-            imgs = imgs.reshape((data['states'].shape[0],-1,224,224,3))
-            imgs = imgs.astype(np.uint8)
-            for i in range(imgs.shape[0]):
-                for j in range(imgs.shape[1]):
-                    img_fn = ro_fn +'_cam'+str(j)+'_step'+f'{i:05d}'
-                    img = Image.fromarray(imgs[i,j])
-                    img.save(output_dir+'/frames/'+img_fn+'.png')
-                    if imgs.shape[1] == 1 or j == 1: # First case if there's only one cam, second case corresponds to right_cam
-                        # Record path in data
-                        data['frames'].append(Path(img_fn+'.png'))
+            for cam in ['left_cam', 'right_cam', 'top_cam', 'Franka_wrist_cam']:
+                rgb_key = 'rgb:'+cam+':240x424:2d'
+                if rgb_key in env.obs_keys:
+                    rgb_imgs = paths[0]['env_infos']['obs_dict'][rgb_key]
+                    for i in range(rgb_imgs.shape[0]):
+                        rgb_img = Image.fromarray(rgb_imgs[i])
+                        rgb_img_fn = ro_fn + '_rgb_'+cam+'_step'
+                        
+                        rgb_img.save(output_dir+'/frames/'+rgb_img_fn+f'{i:05d}.png')
+                        if len(data['frames']) <= i:
+                            data['frames'].append([])
+                        data['frames'][i].append(Path(rgb_img_fn+f'{i:05d}.png'))
+                else:
+                    print('WARN: Missing rgb key: {}'.format(rgb_key))
+                    
+                depth_key = 'd:'+cam+':240x424:2d'
+                if depth_key in env.obs_keys:
+                    depth_imgs = paths[0]['env_infos']['obs_dict'][depth_key]
+                    for i in range(depth_imgs.shape[0]):
+                        depth_img = 255*depth_imgs[i]       
+                        depth_img = Image.fromarray(depth_img)
+                        depth_img = depth_img.convert("L")
+                        depth_img_fn = ro_fn + '_depth_'+cam+'_step'                            
+                        depth_img.save(output_dir+'/frames/'+depth_img_fn+f'{i:05d}.png')
+                        if len(data['frames']) <= i:
+                            data['frames'].append([])
+                        data['frames'][i].append(Path(depth_img_fn+f'{i:05d}.png'))
+                else:
+                    print('WARN: Missing depth key: {}'.format(depth_key))                        
          
             torch.save(data, output_dir+'/'+ro_fn+'.pt')
             successes += 1
@@ -112,4 +130,4 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
             print('Success {} ({}/{})'.format(successes/rollouts,successes,rollouts))
 
 if __name__ == '__main__':
-    main()
+    collect_rollouts_cli()
