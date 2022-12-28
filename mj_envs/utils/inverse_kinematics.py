@@ -51,7 +51,8 @@ def qpos_from_site_pose(physics,
                         max_update_norm=2.0,
                         progress_thresh=20.0,
                         max_steps=500,
-                        inplace=False):
+                        inplace=False,
+                        is_hardware=False):
   """Find joint positions that satisfy a target site position and/or rotation.
 
   Args:
@@ -200,7 +201,7 @@ def qpos_from_site_pose(physics,
           regularization_strength if err_norm > regularization_threshold
           else 0.0)
       update_joints = nullspace_method(
-          jac_joints, err, regularization_strength=reg_strength)
+          jac_joints, err, regularization_strength=reg_strength, is_hardware=is_hardware)
 
       update_norm = np.linalg.norm(update_joints)
 
@@ -249,7 +250,7 @@ def qpos_from_site_pose(physics,
   return IKResult(qpos=qpos, err_norm=err_norm, steps=steps, success=success)
 
 
-def nullspace_method(jac_joints, delta, regularization_strength=0.0):
+def nullspace_method(jac_joints, delta, regularization_strength=0.0, is_hardware=False):
   """Calculates the joint velocities to achieve a specified end effector delta.
 
   Args:
@@ -274,6 +275,8 @@ def nullspace_method(jac_joints, delta, regularization_strength=0.0):
   if regularization_strength > 0:
     # L2 regularization
     hess_approx += np.eye(hess_approx.shape[0]) * regularization_strength
+    if is_hardware:
+      hess_approx[2][2] = 6
     return np.linalg.solve(hess_approx, joint_delta)
   else:
     return np.linalg.lstsq(hess_approx, joint_delta, rcond=-1)[0]

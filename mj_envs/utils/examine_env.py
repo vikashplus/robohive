@@ -22,6 +22,10 @@ Helper script to examine an environment and associated policy for behaviors; \n
 USAGE:\n
     $ python examine_env.py --env_name door-v0 \n
     $ python examine_env.py --env_name door-v0 --policy my_policy.pickle --mode evaluation --episodes 10 \n
+
+    # Run on real robot w/ random policy
+    $ python mj_envs/utils/examine_env.py -e FrankaPickPlaceRandom-v0 -n 1 -r none -ea {\'is_hardware\':True}
+
 '''
 
 # Random policy
