@@ -250,7 +250,7 @@ class PickPlaceV0(env_base.MujocoEnv):
                 print('IK failed')
 
             # Check that we are not initiating a grasp at too low of height
-            if (self.last_eef_cmd is not None and 
+            if self.robot.is_hardware and (self.last_eef_cmd is not None and 
                 (eef_cmd[6] > self.last_eef_cmd[6] + sys.float_info.epsilon) and 
                 self.sim_obsd.data.site_xpos[self.grasp_sid][2] < self.min_grab_height):
                 print('Cant grasp this low, z = {}'.format(self.sim_obsd.data.site_xpos[self.grasp_sid][2]))
