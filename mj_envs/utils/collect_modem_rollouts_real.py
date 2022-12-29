@@ -49,9 +49,14 @@ X_DIST_FROM_CENTER = -1.0668/2
 Y_DIST_FROM_BASE = 0.7493
 Y_SCALE = -0.5207/152 # 0.5207 is length of bin 
 X_SCALE = 1.0668/314 # 1.0668 is width of bin
-OBJ_POS_LOW = [-0.35,0.25,0.91]
-OBJ_POS_HIGH = [0.35,0.65,0.91]
+OBJ_POS_LOW = [-0.267,0.368,0.91] #[-0.35,0.25,0.91]
+OBJ_POS_HIGH = [0.267, 0.75, 0.91] #[0.35,0.65,0.91]
 MOVE_JOINT_VEL = [0.15, 0.35, 0.25, 0.35, 0.3, 0.3, 0.45, 1.0, 1.0]
+
+MASK_START_X = 148 #40
+MASK_END_X = 313 #400
+MASK_START_Y = 57 #30
+MASK_END_Y = 170 #220
 
 def is_moving(prev, cur, tol):
     return np.linalg.norm(cur-prev) > tol
@@ -80,7 +85,7 @@ def rollout_policy(policy,
     ep_rwd = 0.0
     while t < horizon and not solved and not done:
         a = policy.get_action(o)[0]
-        next_o, rwd, done, env_info = env.step(a)
+        next_o, rwd, done, env_info = env.step(a)      
         a = np.concatenate([env.last_ctrl, a])
         obs_dict = env.obsvec2obsdict(np.expand_dims(next_o, axis=(0,1)))
         solved = env_info['solved'] and obs_dict['qp'][0,0,7] > 0.001
@@ -105,16 +110,31 @@ def rollout_policy(policy,
 
     return observations[-1], path
 
+def cart_move(action, env):
+    last_pos = None
+    action = 2*(((action-env.pos_limit_low)/(env.pos_limit_high-env.pos_limit_low))-0.5)
+    old_vel_limit = env.vel_limit.copy()
+
+    env.set_vel_limit(np.array(MOVE_JOINT_VEL))
+
+    for _ in range(1000):
+
+        obs, _, _, env_info = env.step(action)
+        obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
+        pos = obs_dict['qp'][0,0,:7]
+        if last_pos is not None and not is_moving(last_pos, pos, 0.0001):
+            break
+        last_pos = pos
+
+    env.set_vel_limit(old_vel_limit)
+
 # Adapted from here: https://github.com/fairinternal/robopen/blob/bb856233b3d8df89698ef80bf3c63ceab445b4aa/closed_loop_perception/robodev/policy/predict_grasp_release.py
 def get_ccomp_grasp(img, out_dir, out_name):
     if not os.path.isdir(out_dir):
         os.mkdir(out_dir)
     bin_mask = np.zeros(img.shape, dtype=np.uint8)
-    mask_start_x = 40
-    mask_end_x = 400
-    mask_start_y = 30
-    mask_end_y = 220
-    bin_mask[mask_start_y:mask_end_y, mask_start_x:mask_end_x, :] = 255
+
+    bin_mask[MASK_START_Y:MASK_END_Y, MASK_START_X:MASK_END_X, :] = 255
     img_masked = cv2.bitwise_and(img, bin_mask)
     #img_masked_fn = os.path.join(out_dir, out_name+'_masked.png')
     #cv2.imwrite(img_masked_fn, img_masked)
@@ -258,11 +278,16 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
         env.set_target_pos(target_pos)
         print('Real obs pos {} target pos {}'.format(real_obj_pos, target_pos))        
 
+        #align_action = np.concatenate([real_obj_pos, [ 3.14,0.0,0.0,0.0,0.0]])
+        #align_action[2] = 1.075
+        #cart_move( align_action, env)
+
+        print('Rolling out policy')
         env.set_slow_vel_limit(np.array([0.15, 0.15, 0.2, 0.15, 0.2, 0.2, 0.45, 1.0, 1.0]))
         obs, path = rollout_policy(pi,
                                    env,
                                    obs,
-                                   horizon=env.spec.max_episode_steps,)
+                                   horizon=100)#env.spec.max_episode_steps,)
         env.set_slow_vel_limit(np.array([0.15, 0.3, 0.2, 0.25, 0.2, 0.2, 0.35, 1.0, 1.0],))
 
         rollouts += 1
@@ -318,8 +343,8 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
             mean_diff = np.mean(np.abs(post_drop_img-pre_drop_img))
             print('Mean img diff: {}'.format(mean_diff))
         # Move to drop zone
-        drop_id = np.random.randint(low=0, high=len(drops_zones))
-        env.set_init_qpos(np.concatenate([drops_zones[drop_id], [0.0]]))
+        #drop_id = np.random.randint(low=0, high=len(drops_zones))
+        #env.set_init_qpos(np.concatenate([drops_zones[drop_id], [0.0]]))
 
         # Determine success
         if mean_diff > 2.05:

@@ -80,10 +80,10 @@ class HeuristicPolicyReal():
         # TODO Change obsvec2dict to handle obs vectors with single dim
         obs_dict = self.env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
 
-        action = np.concatenate([obs_dict['grasp_pos'][0,0,:], [3.14,0.0,self.yaw], [obs_dict['qp'][0,0,7:9]]])
+        action = np.concatenate([obs_dict['grasp_pos'][0,0,:], [3.14,0.0,self.yaw], obs_dict['qp'][0,0,7:9]])
 
         # Figure out which stage we are in
-        if self.last_t > obs_dict['t'][0,0,0]:
+        if self.last_t > self.env.sim.data.time:
             # Reset
             self.stage = 0
             self.last_qp = None
@@ -109,7 +109,7 @@ class HeuristicPolicyReal():
             if (self.last_qp is not None and np.abs(self.last_qp[7] - obs_dict['qp'][0,0,7]) < GRIPPER_CLOSE_THRESH):
                 self.stage = 5   
 
-        self.last_t = obs_dict['t'][0,0,0]
+        self.last_t = self.env.sim.data.time #obs_dict['t'][0,0,0]
         self.last_qp = obs_dict['qp'][0,0,:]
 
         #print('Stage {}, t {}'.format(self.stage, self.last_t))
