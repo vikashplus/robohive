@@ -80,7 +80,7 @@ class HeuristicPolicyReal():
         # TODO Change obsvec2dict to handle obs vectors with single dim
         obs_dict = self.env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
 
-        action = np.concatenate([obs_dict['grasp_pos'][0,0,:], [3.14,0.0,self.yaw], obs_dict['qp'][0,0,7:9]])
+        action = np.concatenate([obs_dict['grasp_pos'][0,0,:], [3.14,0.0,self.yaw], [obs_dict['qp'][0,0,7],0]])
 
         # Figure out which stage we are in
         if self.last_t > self.env.sim.data.time:
@@ -116,17 +116,21 @@ class HeuristicPolicyReal():
         if self.stage == 0: # Align in xy
             action[2] = REAL_ALIGN_HEIGHT
             action[:2] += obs_dict['object_err'][0,0,0:2]
-            action[6:8] = REAL_GRIPPER_FULL_OPEN
+            action[6] = REAL_GRIPPER_FULL_OPEN
+            action[7] = 0
         elif self.stage == 1 or self.stage == 2: # Move to pregrasp
             action[:3] += obs_dict['object_err'][0,0,0:3]
-            action[6:8] = REAL_GRIPPER_FULL_OPEN
+            action[6] = REAL_GRIPPER_FULL_OPEN
+            action[7] = 0
         elif self.stage == 3 or self.stage == 4: # Close gripper
             action[:3] += obs_dict['object_err'][0,0,0:3]
-            action[6:8] = REAL_GRIPPER_FULL_CLOSE
+            action[6] = REAL_GRIPPER_FULL_CLOSE
+            action[7] = 0
             #print('Grasp pos {}'.format(obs_dict['grasp_pos'][0,0,:]))
         elif self.stage == 5: # Move to target pose
             action[:3] += obs_dict['object_err'][0,0,0:3] #obs_dict['target_err'][0,0,0:3]
-            action[6:8] = REAL_GRIPPER_FULL_CLOSE
+            action[6] = REAL_GRIPPER_FULL_CLOSE
+            action[7] = 1
 
 
         # Normalize action to be between -1 and 1

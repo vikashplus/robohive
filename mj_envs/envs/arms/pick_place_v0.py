@@ -58,7 +58,7 @@ class PickPlaceV0(env_base.MujocoEnv):
                randomize=False,
                geom_sizes={'high':[.05, .05, .05], 'low':[.2, 0.2, 0.2]},
                pos_limit_low=[-0.35, 0.25, 0.76, -3.14, 0, -3.14, 0.0, 0.0],
-               pos_limit_high=[0.35, 0.75, 1.5, 3.14, 6.28, 3.14, 0.04, 0.04],
+               pos_limit_high=[0.35, 0.75, 1.5, 3.14, 6.28, 3.14, 0.04, 1.0],
                vel_limit=[0.15,0.3,0.2,0.3,0.2,0.2,0.35,1.0,1.0],
                slow_vel_limit=[0.15,0.075,0.1,0.125,0.15,0.15,0.35,1.0,1.0],
                min_grab_height=0.905,
@@ -287,7 +287,7 @@ class PickPlaceV0(env_base.MujocoEnv):
 
         # finalize step
         env_info = self.get_env_infos()
-        done = self.robot.is_hardware and (not ik_success or invalid_grab)
+        done = self.robot.is_hardware and (not ik_success or invalid_grab or (eef_cmd is not None and bool(eef_cmd[7])))
         # returns obs(t+1), rwd(t+1), done(t+1), info(t+1)
         return obs, env_info['rwd_'+self.rwd_mode], bool(env_info['done']) or done, env_info
 

@@ -126,6 +126,22 @@ register(
 )
 
 register(
+    id='FrankaPickPlaceRandomReal-v0',
+    entry_point='mj_envs.envs.arms.pick_place_v0:PickPlaceV0',
+    max_episode_steps=150, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_busbin_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_busbin_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_names': ["obj0"],
+        'target_site_name': "drop_target",
+        'randomize': True,
+        'target_xyz_range': {'high':[0.235, 0.45, 1.185], 'low':[0.235, 0.43, 1.185]},
+        'geom_sizes': {'high':[.03, .03, .03], 'low':[.02, 0.02, 0.02]}
+    }
+)
+
+register(
     id='FrankaPickPlaceRandomMultiObj-v0',
     entry_point='mj_envs.envs.arms.pick_place_v0:PickPlaceV0',
     max_episode_steps=50, #50steps*40Skip*2ms = 4s
@@ -161,6 +177,9 @@ def register_pick_place_visual_envs(env_name, encoder_type):
     )
 for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
     register_pick_place_visual_envs('FrankaPickPlaceRandom', enc)
+
+for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
+    register_pick_place_visual_envs('FrankaPickPlaceRandomReal', enc)
 
 for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
     register_pick_place_visual_envs('FrankaPickPlaceRandomMultiObj', enc)

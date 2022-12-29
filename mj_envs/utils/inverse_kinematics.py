@@ -275,8 +275,8 @@ def nullspace_method(jac_joints, delta, regularization_strength=0.0, is_hardware
   if regularization_strength > 0:
     # L2 regularization
     hess_approx += np.eye(hess_approx.shape[0]) * regularization_strength
-    if is_hardware:
-      hess_approx[2][2] = 6
+    #if is_hardware:
+    #  hess_approx[2][2] = 6
     return np.linalg.solve(hess_approx, joint_delta)
   else:
     return np.linalg.lstsq(hess_approx, joint_delta, rcond=-1)[0]
