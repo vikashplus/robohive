@@ -99,7 +99,7 @@ class Trace:
 
 
     # Render frames/videos
-    def render(self, output_path, groups:list, datasets:list=["left"]):
+    def render(self, output_path, groups:list, datasets:list=["left"], input_fps:int=25):
         # output_path:      Full output path with name and extension
         # group:            Group to render: Pass ":" for rendering given dataset from all groups
         # dataset:          List(datasets) to render Example ['left', 'right', 'top', 'Franka_wrist']
@@ -148,11 +148,12 @@ class Trace:
             # Save video
             if format == "mp4":
                 file_name_mp4 = file_name+"_{}.mp4".format(i_grp)
+                inputdict={"-r": str(input_fps)}
                 # check if the platform is OS -- make it compatible with quicktime
                 if platform == "darwin":
-                    skvideo.io.vwrite(file_name_mp4, np.asarray(frames),outputdict={"-pix_fmt": "yuv420p"})
+                    skvideo.io.vwrite(file_name_mp4, np.asarray(frames),inputdict=inputdict, outputdict={"-pix_fmt": "yuv420p"})
                 else:
-                    skvideo.io.vwrite(file_name_mp4, np.asarray(frames))
+                    skvideo.io.vwrite(file_name_mp4, np.asarray(frames),inputdict=inputdict)
                 print("\nSaved: " + file_name_mp4)
 
 
