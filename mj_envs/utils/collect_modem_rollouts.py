@@ -38,14 +38,18 @@ USAGE:\n
 @click.option('-o', '--output_dir', type=str, default='./', help=('Directory to save the outputs'))
 @click.option('-on', '--output_name', type=str, default=None, help=('The name to save the outputs as'))
 @click.option('-n', '--num_rollouts', type=int, help='number of rollouts to save', default=100)
-def collect_rollouts_cli(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts):
-    collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts)
+@click.option('-sp', '--sparse_reward', type=bool, default=True)
+def collect_rollouts_cli(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, sparse_reward):
+    collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, sparse_reward)
 
-def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts):
+def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, sparse_reward):
 
     # seed and load environments
     np.random.seed(seed)
-    env = gym.make(env_name, **{'reward_mode': 'sparse'})
+    if sparse_reward:
+        env = gym.make(env_name, **{'reward_mode': 'sparse'})
+    else:
+        env = gym.make(env_name)        
     env.seed(seed)
 
     pi = HeuristicPolicy(env, seed)

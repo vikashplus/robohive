@@ -28,7 +28,8 @@ def configure_jobs(job_data):
                      camera_name=job_data.camera_name, 
                      output_dir=job_data.output_dir, 
                      output_name=job_data.output_name, 
-                     num_rollouts=job_data.num_rollouts)
+                     num_rollouts=job_data.num_rollouts,
+                     sparse_reward=job_data.sparse_reward)
 
 if __name__ == "__main__":
     configure_jobs()
