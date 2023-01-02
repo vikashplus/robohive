@@ -51,8 +51,8 @@ Y_SCALE = -0.5207/152 # 0.5207 is length of bin
 X_SCALE = 1.0668/314 # 1.0668 is width of bin
 OBJ_POS_LOW = [-0.25,0.368,0.91] #[-0.35,0.25,0.91]
 OBJ_POS_HIGH = [0.25, 0.72, 0.91] #[0.35,0.65,0.91]
-DROP_ZONE_LOW = [-0.18, 0.45, 1.15]
-DROP_ZONE_HIGH = [0.18, 0.58, 1.15]
+DROP_ZONE_LOW = [-0.18, 0.5, 1.15]
+DROP_ZONE_HIGH = [0.18, 0.65, 1.15]
 MOVE_JOINT_VEL = [0.15, 0.35, 0.25, 0.35, 0.3, 0.3, 0.45, 1.0, 1.0]
 DIFF_THRESH = 0.45
 
@@ -60,6 +60,11 @@ MASK_START_X = 148 #40
 MASK_END_X = 313 #400
 MASK_START_Y = 57 #30
 MASK_END_Y = 170 #220
+
+MAX_GRIPPER_OPEN = 0.0002
+MIN_GRIPPER_CLOSED = 0.8228
+
+OUT_OF_WAY = np.array([0.3438, -0.9361,  0.0876, -2.8211,  0.0749,  0.5144,  1.8283])
 
 def is_moving(prev, cur, tol):
     return np.linalg.norm(cur-prev) > tol
@@ -198,6 +203,101 @@ def move_joint_config(env, config):
 
     return obs, env_info
 
+def check_grasp_success(env, obs):
+        obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
+        if obs_dict['qp'][0,0,7] < MAX_GRIPPER_OPEN:
+            print('Policy didnt close gripper, resetting')
+            return None, None
+
+        print('moving up')
+        done = False
+        des_grasp_pos = obs_dict['grasp_pos'][0,0,:].copy()
+        des_grasp_y = des_grasp_pos[1]
+        des_grasp_pos[2] = 1.2        
+        move_up_tries = 4
+        for i in range(1,move_up_tries+1):
+            des_grasp_pos[1] = ((move_up_tries-i)/(move_up_tries))*des_grasp_y+((i)/(move_up_tries))*(0.5*(DROP_ZONE_HIGH[1]+DROP_ZONE_LOW[1])) 
+            while(obs_dict['grasp_pos'][0,0,2] < 1.1 and not done):
+                move_up_action = np.concatenate([des_grasp_pos, [3.14,0.0,0.0,obs_dict['qp'][0,0,7],0.0]])
+                move_up_action = 2*(((move_up_action - env.pos_limit_low) / (env.pos_limit_high - env.pos_limit_low)) - 0.5)
+                obs, _, done, _ = env.step(move_up_action)
+                obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))  
+            if not done:
+                break
+            else:
+                done = False
+
+        obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))      
+
+        print('Grip Width {}'.format(obs_dict['qp'][0,0,7]))
+        grip_width = obs_dict['qp'][0,0,7]
+        mean_diff = 0.0
+
+        if grip_width < MAX_GRIPPER_OPEN or grip_width > MIN_GRIPPER_CLOSED:
+            return None, None
+
+        obs, env_info = move_joint_config(env, np.concatenate([OUT_OF_WAY, [obs_dict['qp'][0,0,7]]*2])) 
+
+        # Wait for stabilize
+        time.sleep(3)
+        obs, env_info = move_joint_config(env, np.concatenate([OUT_OF_WAY, [obs_dict['qp'][0,0,7]]*2]))   
+
+        # Get top cam image
+        if top_cam_key is None:
+            for key in env_info['obs_dict'].keys():
+                if 'top' in key:
+                    top_cam_key = key
+                    break
+
+        pre_drop_img = env_info['obs_dict'][top_cam_key]
+        bin_mask = np.zeros(pre_drop_img.shape, dtype=np.uint8)
+        bin_mask[MASK_START_Y:MASK_END_Y, MASK_START_X:MASK_END_X, :] = 255
+        pre_drop_img = cv2.bitwise_and(pre_drop_img, bin_mask).astype(float)
+
+        print('Moving to drop zone')
+        drop_zone_pos = np.random.uniform(low=DROP_ZONE_LOW, high=DROP_ZONE_HIGH)
+        obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
+        last_pos = None
+        while(not done):
+            drop_zone_action = np.concatenate([drop_zone_pos, [3.14,0.0,0.0,obs_dict['qp'][0,0,7],0.0]])
+            drop_zone_action = 2*(((drop_zone_action - env.pos_limit_low) / (env.pos_limit_high - env.pos_limit_low)) - 0.5)
+            obs, _, done, _ = env.step(drop_zone_action)
+            obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))    
+            pos = obs_dict['qp'][0,0,:7]
+            if last_pos is not None and not is_moving(last_pos, pos, 0.0001):
+                break
+            last_pos = pos                
+
+        obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
+
+        if np.linalg.norm(obs_dict['grasp_pos'][0,0,:2] - drop_zone_pos[:2]) > 0.1:
+            return None, None
+
+        open_qp = obs_dict['qp'][0,0,:9].copy()
+        open_qp[7:9] = 0.0
+        done = False
+
+        print('Releasing')
+        extra_time = 25
+        while((obs_dict['qp'][0,0,7] > 0.001 and not done) or extra_time > 0):
+            release_action = 2*(((open_qp - env.jnt_low)/(env.jnt_high-env.jnt_low))-0.5)
+            obs, _, done, env_info = env.step(release_action)
+            obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
+            extra_time -= 1
+
+        print('moving out of way after drop')
+        obs, env_info = move_joint_config(env, np.concatenate([OUT_OF_WAY, [obs_dict['qp'][0,0,7]]*2])) 
+        time.sleep(3)
+        obs, env_info = move_joint_config(env, np.concatenate([OUT_OF_WAY, [obs_dict['qp'][0,0,7]]*2]))
+
+        latest_img = env_info['obs_dict'][top_cam_key].copy()
+        post_drop_img = cv2.bitwise_and(latest_img, bin_mask).astype(float)
+
+        mean_diff = np.mean(np.abs(post_drop_img-pre_drop_img))
+        print('Mean img diff: {}'.format(mean_diff))    
+
+        return mean_diff, latest_img
+
 # MAIN =========================================================
 @click.command(help=DESC)
 @click.option('-e', '--env_name', type=str, help='environment to load', required= True)
@@ -241,11 +341,6 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
     right_drop = np.array([-0.51, 0.09, 0.03, -1.96, 0.0, 0.4, -0.47])
     drops_zones = [left_drop, center_drop, right_drop]
 
-    #out_of_way = np.array([0.0, -1.04, 0.0, -2.3, 0.0, 1.0, -0.5])
-    #out_of_way = np.array([0.5822, 0.2697, 0.01, -1.6753, -0.0067, 0.3391, 1.8494] )
-    out_of_way = np.array([0.3438, -0.9361,  0.0876, -2.8211,  0.0749,  0.5144,  1.8283])
-    max_gripper_open = 0.0002
-    min_gripper_closed = 0.8228
     latest_img  = None
 
     filtered_boxes = None
@@ -260,7 +355,7 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
         open_qp[7:9] = 0.0
         done = False
 
-        while(obs_dict['qp'][0,0,7] > max_gripper_open and not done):
+        while(obs_dict['qp'][0,0,7] > MAX_GRIPPER_OPEN and not done):
             release_action = 2*(((open_qp - env.jnt_low)/(env.jnt_high-env.jnt_low))-0.5)
             obs, _, done, env_info = env.step(release_action)
             obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
@@ -298,108 +393,13 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
 
         rollouts += 1
 
-        obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
-        if obs_dict['qp'][0,0,7] < max_gripper_open:
-            print('Policy didnt close gripper, resetting')
+        mean_diff, new_img = check_grasp_success(env, obs)
+
+        if mean_diff is None:
             continue
+        else:
+            latest_img = new_img
 
-        print('moving up')
-        done = False
-        des_grasp_pos = obs_dict['grasp_pos'][0,0,:].copy()
-        des_grasp_pos[2] = 1.2        
-        while(obs_dict['grasp_pos'][0,0,2] < 1.1 and not done):
-            move_up_action = np.concatenate([des_grasp_pos, [3.14,0.0,0.0,obs_dict['qp'][0,0,7],0.0]])
-            move_up_action = 2*(((move_up_action - env.pos_limit_low) / (env.pos_limit_high - env.pos_limit_low)) - 0.5)
-            obs, _, done, _ = env.step(move_up_action)
-            obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))  
-
-        obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))      
-
-        print('Grip Width {}'.format(obs_dict['qp'][0,0,7]))
-        grip_width = obs_dict['qp'][0,0,7]
-        mean_diff = 0.0
-        if grip_width > max_gripper_open and grip_width < min_gripper_closed:
-            obs, env_info = move_joint_config(env, np.concatenate([out_of_way, [obs_dict['qp'][0,0,7]]*2])) 
-
-            '''
-            done = False  
-            tmp = 0      
-            while(tmp < 100):
-                move_out_action = np.concatenate([[-0.1,0.2,1.1], [3.14,0.0,0.0,obs_dict['qp'][0,0,7],0.0]])
-                move_out_action = 2*(((move_out_action - env.pos_limit_low) / (env.pos_limit_high - env.pos_limit_low)) - 0.5)
-                obs, _, done, env_info = env.step(move_out_action)
-                obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
-                print('qp: {}, grasp_pos: {}'.format(obs_dict['qp'][0,0,:7], obs_dict['grasp_pos'][0,0,:]))
-                tmp+= 1
-            if top_cam_key is None:
-                for key in obs_dict.keys():
-                    if 'top' in key:
-                        top_cam_key = key
-                        break            
-            latest_img = env_info['obs_dict'][top_cam_key].copy()
-            filtered_boxes = get_ccomp_grasp(latest_img, output_dir+'/debug', 'ccomp_grasp'+f'{(rollouts+seed):010d}')
-            
-            exit()
-            '''
-            # Wait for stabilize
-            time.sleep(3)
-            obs, env_info = move_joint_config(env, np.concatenate([out_of_way, [obs_dict['qp'][0,0,7]]*2]))   
-
-            # Get top cam image
-            if top_cam_key is None:
-                for key in env_info['obs_dict'].keys():
-                    if 'top' in key:
-                        top_cam_key = key
-                        break
-
-            pre_drop_img = env_info['obs_dict'][top_cam_key]
-            bin_mask = np.zeros(pre_drop_img.shape, dtype=np.uint8)
-
-            bin_mask[MASK_START_Y:MASK_END_Y, MASK_START_X:MASK_END_X, :] = 255
-            pre_drop_img = cv2.bitwise_and(pre_drop_img, bin_mask).astype(float)
-
-
-            print('Moving to drop zone')
-            drop_zone_pos = np.random.uniform(low=DROP_ZONE_LOW, high=DROP_ZONE_HIGH)
-            obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
-            last_pos = None
-            while(not done):
-                drop_zone_action = np.concatenate([drop_zone_pos, [3.14,0.0,0.0,obs_dict['qp'][0,0,7],0.0]])
-                drop_zone_action = 2*(((drop_zone_action - env.pos_limit_low) / (env.pos_limit_high - env.pos_limit_low)) - 0.5)
-                obs, _, done, _ = env.step(drop_zone_action)
-                obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))    
-                pos = obs_dict['qp'][0,0,:7]
-                if last_pos is not None and not is_moving(last_pos, pos, 0.0001):
-                    break
-                last_pos = pos                
-
-            obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
-
-            if np.linalg.norm(obs_dict['grasp_pos'][0,0,:2] - drop_zone_pos[:2]) > 0.1:
-                continue
-
-            open_qp = obs_dict['qp'][0,0,:9].copy()
-            open_qp[7:9] = 0.0
-            done = False
-
-            print('Releasing')
-            extra_time = 25
-            while((obs_dict['qp'][0,0,7] > 0.001 and not done) or extra_time > 0):
-                release_action = 2*(((open_qp - env.jnt_low)/(env.jnt_high-env.jnt_low))-0.5)
-                obs, _, done, env_info = env.step(release_action)
-                obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
-                extra_time -= 1
-
-            print('moving out of way after drop')
-            obs, env_info = move_joint_config(env, np.concatenate([out_of_way, [obs_dict['qp'][0,0,7]]*2])) 
-            time.sleep(3)
-            obs, env_info = move_joint_config(env, np.concatenate([out_of_way, [obs_dict['qp'][0,0,7]]*2]))
-
-            latest_img = env_info['obs_dict'][top_cam_key].copy()
-            post_drop_img = cv2.bitwise_and(latest_img, bin_mask).astype(float)
-
-            mean_diff = np.mean(np.abs(post_drop_img-pre_drop_img))
-            print('Mean img diff: {}'.format(mean_diff))
         # Move to drop zone
         #drop_id = np.random.randint(low=0, high=len(drops_zones))
         #env.set_init_qpos(np.concatenate([drops_zones[drop_id], [0.0]]))
