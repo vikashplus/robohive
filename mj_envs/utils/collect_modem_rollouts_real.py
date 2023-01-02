@@ -210,22 +210,21 @@ def check_grasp_success(env, obs):
             return None, None
 
         print('moving up')
-        done = False
         des_grasp_pos = obs_dict['grasp_pos'][0,0,:].copy()
         des_grasp_y = des_grasp_pos[1]
         des_grasp_pos[2] = 1.2        
         move_up_tries = 4
         for i in range(1,move_up_tries+1):
             des_grasp_pos[1] = ((move_up_tries-i)/(move_up_tries))*des_grasp_y+((i)/(move_up_tries))*(0.5*(DROP_ZONE_HIGH[1]+DROP_ZONE_LOW[1])) 
-            while(obs_dict['grasp_pos'][0,0,2] < 1.1 and not done):
+            move_up_steps = 0
+            while(obs_dict['grasp_pos'][0,0,2] < 1.1 and move_up_steps < 25):
                 move_up_action = np.concatenate([des_grasp_pos, [3.14,0.0,0.0,obs_dict['qp'][0,0,7],0.0]])
                 move_up_action = 2*(((move_up_action - env.pos_limit_low) / (env.pos_limit_high - env.pos_limit_low)) - 0.5)
                 obs, _, done, _ = env.step(move_up_action)
-                obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))  
-            if not done:
+                obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1))) 
+                move_up_steps += 1 
+            if obs_dict['grasp_pos'][0,0,2] < 1.1:
                 break
-            else:
-                done = False
 
         obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))      
 
@@ -258,7 +257,8 @@ def check_grasp_success(env, obs):
         drop_zone_pos = np.random.uniform(low=DROP_ZONE_LOW, high=DROP_ZONE_HIGH)
         obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
         last_pos = None
-        while(not done):
+        drop_zone_steps = 0
+        while(drop_zone_steps < 100):
             drop_zone_action = np.concatenate([drop_zone_pos, [3.14,0.0,0.0,obs_dict['qp'][0,0,7],0.0]])
             drop_zone_action = 2*(((drop_zone_action - env.pos_limit_low) / (env.pos_limit_high - env.pos_limit_low)) - 0.5)
             obs, _, done, _ = env.step(drop_zone_action)
@@ -266,20 +266,23 @@ def check_grasp_success(env, obs):
             pos = obs_dict['qp'][0,0,:7]
             if last_pos is not None and not is_moving(last_pos, pos, 0.0001):
                 break
-            last_pos = pos                
+            last_pos = pos         
+            drop_zone_steps += 1       
 
         obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
 
         if np.linalg.norm(obs_dict['grasp_pos'][0,0,:2] - drop_zone_pos[:2]) > 0.1:
-            return None, None
+            #return None, None
+            print('Rand drop failed, moving to init qpos for drop')
+            obs, env_info = move_joint_config(env, np.concatenate([env.init_qpos, [obs_dict['qp'][0,0,7]]*2]))
+            obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
 
         open_qp = obs_dict['qp'][0,0,:9].copy()
         open_qp[7:9] = 0.0
-        done = False
 
         print('Releasing')
         extra_time = 25
-        while((obs_dict['qp'][0,0,7] > 0.001 and not done) or extra_time > 0):
+        while((obs_dict['qp'][0,0,7] > 0.001) or extra_time > 0):
             release_action = 2*(((open_qp - env.jnt_low)/(env.jnt_high-env.jnt_low))-0.5)
             obs, _, done, env_info = env.step(release_action)
             obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
