@@ -25,6 +25,7 @@ import h5py
 import time
 import os
 import skvideo.io
+from sys import platform
 
 
 @click.command(help=DESC)
@@ -36,6 +37,7 @@ import skvideo.io
 @click.option('-n', '--num_repeat', type=int, help='number of repeats for the rollouts', default=1)
 @click.option('-r', '--render', type=click.Choice(['onscreen', 'offscreen', 'none']), help='visualize onscreen or offscreen', default='onscreen')
 @click.option('-c', '--camera_name', type=str, default=None, help=('Camera name for rendering'))
+@click.option('-fs', '--frame_size', type=tuple, default=(640,480), help=('Camera frame size for rendering'))
 @click.option('-o', '--output_dir', type=str, default='./', help=('Directory to save the outputs'))
 @click.option('-on', '--output_name', type=str, default=None, help=('The name to save the outputs as'))
 @click.option('-sp', '--save_paths', type=bool, default=False, help=('Save the rollout paths'))
@@ -44,7 +46,7 @@ import skvideo.io
 @click.option('-ea', '--env_args', type=str, default=None, help=('env args. E.g. --env_args "{\'is_hardware\':True}"'))
 @click.option('-ns', '--noise_scale', type=float, default=0.0, help=('Noise amplitude in randians}"'))
 
-def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera_name, output_dir, output_name, save_paths, compress_paths, plot_paths, env_args, noise_scale):
+def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera_name, frame_size, output_dir, output_name, save_paths, compress_paths, plot_paths, env_args, noise_scale):
 
     # seed and load environments
     np.random.seed(seed)
@@ -81,8 +83,7 @@ def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera
         env.env.mujoco_render_frames = True
     elif render =='offscreen':
         env.mujoco_render_frames = False
-        frame_size=(640,480)
-        frames = np.zeros((env.horizon, frame_size[1], frame_size[0], 3), dtype=np.uint8)
+        frames = np.zeros((env.horizon+1, frame_size[1], frame_size[0], 3), dtype=np.uint8)
     elif render == None:
         env.mujoco_render_frames = False
 
@@ -183,15 +184,14 @@ def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera
 
                 # Render offscreen
                 if render =='offscreen':
-                    curr_frame = env.render_camera_offscreen(
-                        sim=env.sim,
-                        cameras=[camera_name],
+                    curr_frame = env.sim.renderer.render_offscreen(
+                        camera_id=camera_name,
                         width=frame_size[0],
                         height=frame_size[1],
                         device_id=0
                     )
-                    frames[i_step,:,:,:] = curr_frame[0]
-                    print(i_step, end=', ', flush=True)
+                    frames[i_step,:,:,:] = curr_frame
+                    # print(i_step, end=', ', flush=True)
 
             # Create rollout outputs
             pbk_path = dict(observations=np.array(obs),
@@ -204,8 +204,13 @@ def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera
             # save offscreen buffers as video
             if render =='offscreen':
                 file_name = output_dir + 'rollout' + str(i_path) + ".mp4"
-                skvideo.io.vwrite(file_name, np.asarray(frames))
-                print("saved", file_name)
+                inputdict={"-r": str(1/env.dt)}
+                # check if the platform is OS -- make it compatible with quicktime
+                if platform == "darwin":
+                    skvideo.io.vwrite(file_name, np.asarray(frames), inputdict=inputdict, outputdict={"-pix_fmt": "yuv420p"},)
+                else:
+                    skvideo.io.vwrite(file_name, np.asarray(frames), inputdict=inputdict)
+                print("\nSaved: " + file_name)
 
             # Finish rollout
             print("-- Finished playback path %d :: Total reward = %3.3f, Total time = %2.3f" % (i_path, ep_rwd, ep_t0-time.time()))
