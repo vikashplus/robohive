@@ -99,12 +99,12 @@ class Trace:
 
 
     # Render frames/videos
-    def render(self, output_path, groups:list, datasets:list=["left"], input_fps:int=25):
+    def render(self, output_path, groups:list, datasets:list, input_fps:int=25):
         # output_path:      Full output path with name and extension
-        # group:            Group to render: Pass ":" for rendering given dataset from all groups
-        # dataset:          List(datasets) to render Example ['left', 'right', 'top', 'Franka_wrist']
-
-        assert self.verify_stacked_flattened(), "Dataset needs to be stacked and flattened"
+        # groups:           Groups to render: Pass ":" for rendering given dataset from all groups
+        # datasets:         List(datasets) to render Example ['left', 'right', 'top', 'Franka_wrist']
+        #                   dataset can be np.ndarray([N,H,W,3])stacked or a list Nx[HxWx3]
+        # input_fps         input fps of the provided dataset frames
 
         # Parse inputs
         file_name, format = output_path.split('.')
@@ -122,12 +122,15 @@ class Trace:
         for i_grp, grp in enumerate(groups):
 
             # Pre allocate buffer
-            if i_grp==0:
+            if type(self.trace[grp][datasets[0]])==list: #unstacked
+                horizon = len(self.trace[grp][datasets[0]])
+                height, width, _ = self.trace[grp][datasets[0]][0].shape
+            elif type(self.trace[grp][datasets[0]])==np.ndarray: #stacked
                 horizon, height, width, _ = self.trace[grp][datasets[0]].shape
 
-                frame_tile = np.zeros((height, width*len(datasets), 3), dtype=np.uint8)
-                if format == "mp4":
-                    frames = np.zeros((horizon, height, width*len(datasets), 3), dtype=np.uint8)
+            frame_tile = np.zeros((height, width*len(datasets), 3), dtype=np.uint8)
+            if format == "mp4":
+                frames = np.zeros((horizon, height, width*len(datasets), 3), dtype=np.uint8)
 
             # Render
             print("Recovering {} frames:".format(format), end="")
