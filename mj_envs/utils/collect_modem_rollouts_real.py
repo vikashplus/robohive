@@ -243,11 +243,11 @@ def check_grasp_success(env, obs):
         obs, env_info = move_joint_config(env, np.concatenate([OUT_OF_WAY, [obs_dict['qp'][0,0,7]]*2]))   
 
         # Get top cam image
-        if top_cam_key is None:
-            for key in env_info['obs_dict'].keys():
-                if 'top' in key:
-                    top_cam_key = key
-                    break
+        top_cam_key = None
+        for key in env_info['obs_dict'].keys():
+            if 'top' in key:
+                top_cam_key = key
+                break
 
         pre_drop_img = env_info['obs_dict'][top_cam_key]
         bin_mask = np.zeros(pre_drop_img.shape, dtype=np.uint8)
@@ -333,7 +333,6 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
 
     rollouts = 0
     successes = 0
-    top_cam_key = None
     pickle_thread = None
 
     center_drop = np.array([0.0, -0.1, 0.0, -2.0, 0.0, 0.0, 0.0])
