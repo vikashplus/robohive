@@ -190,6 +190,18 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                                         step_duration=self.dt,
                                         realTimeSim=self.mujoco_render_frames,
                                         render_cbk=self.mj_render if self.mujoco_render_frames else None)
+        return self.forward()
+
+
+    def forward(self):
+        """
+        Forward propagate env to recover env details
+        Returns current obs(t), rwd(t), done(t), info(t)
+        """
+
+        # render the scene
+        if self.mujoco_render_frames:
+            self.mj_render()
 
         # observation
         obs = self.get_obs()
@@ -398,6 +410,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     @property
     def dt(self):
         return self.sim.model.opt.timestep * self.frame_skip
+
+
+    @property
+    def time(self):
+        return self.sim_obsd.data.time
 
 
     @property
