@@ -6,6 +6,7 @@ import h5py
 from PIL import Image
 from sys import platform
 import skvideo.io
+import os
 
 # Trace_name: {
 #     grp1: {dataset{k1:v1}, dataset{k2:v2}, ...}
@@ -32,6 +33,20 @@ class Trace:
         if group_key not in self.trace.keys():
             self.create_group(name=group_key)
         self.trace[group_key][dataset_key] = [dataset_val]
+
+
+    # Remove dataset from an existing group(s)
+    def remove_dataset(self, group_keys:list, dataset_key:str):
+        if type(group_keys)==str:
+            if group_keys==":":
+                group_keys = self.trace.keys()
+            else:
+                group_keys=[group_keys]
+
+        for group_key in group_keys:
+            assert group_key in self.trace.keys(), "Group:{} does not exist".format(group_key)
+            if dataset_key in self.trace[group_key].keys():
+                del self.trace[group_key][dataset_key]
 
 
     # Append dataset datum to an existing group
@@ -99,15 +114,13 @@ class Trace:
 
 
     # Render frames/videos
-    def render(self, output_path, groups:list, datasets:list, input_fps:int=25):
-        # output_path:      Full output path with name and extension
+    def render(self, output_dir, output_format, groups:list, datasets:list, input_fps:int=25):
+        # output_dir:       path for output
+        # output_type:      rgb/ mp4
         # groups:           Groups to render: Pass ":" for rendering given dataset from all groups
         # datasets:         List(datasets) to render Example ['left', 'right', 'top', 'Franka_wrist']
         #                   dataset can be np.ndarray([N,H,W,3])stacked or a list Nx[HxWx3]
         # input_fps         input fps of the provided dataset frames
-
-        # Parse inputs
-        file_name, format = output_path.split('.')
 
         # Resolve groups
         if type(groups)==str:
@@ -129,30 +142,31 @@ class Trace:
                 horizon, height, width, _ = self.trace[grp][datasets[0]].shape
 
             frame_tile = np.zeros((height, width*len(datasets), 3), dtype=np.uint8)
-            if format == "mp4":
+            if output_format == "mp4":
                 frames = np.zeros((horizon, height, width*len(datasets), 3), dtype=np.uint8)
 
             # Render
-            print("Recovering {} frames:".format(format), end="")
+            print("Recovering {} frames:".format(output_format), end="")
             for t in range(horizon):
                 # render single frame
                 for i_cam, cam_key in enumerate(datasets):
                     frame_tile[:,i_cam*width:(i_cam+1)*width, :] = self.trace[grp][cam_key][t]
                 # process single frame
-                if format == "mp4":
+                if output_format == "mp4":
                     frames[t,:,:,:] = frame_tile
-                elif format == "rgb":
+                elif output_format == "rgb":
                     image = Image.fromarray(frame_tile)
-                    image.save(file_name+"_{}-{}.png".format(i_grp, t))
+                    file_name_rgb = os.path.join(output_dir, grp+'-'+str(t)+".png")
+                    image.save(file_name_rgb)
                 else:
                     raise TypeError("Unknown format")
                 print(t, end=",", flush=True)
 
             # Save video
-            if format == "mp4":
-                file_name_mp4 = file_name+"_{}.mp4".format(i_grp)
+            if output_format == "mp4":
+                file_name_mp4 = os.path.join(output_dir, grp+".mp4")
                 inputdict={"-r": str(input_fps)}
-                # check if the platform is OS -- make it compatible with quicktime
+                # quicktime compatibility for mac-os
                 if platform == "darwin":
                     skvideo.io.vwrite(file_name_mp4, np.asarray(frames),inputdict=inputdict, outputdict={"-pix_fmt": "yuv420p"})
                 else:
@@ -194,9 +208,9 @@ class Trace:
     def stack(self):
         for grp_k, grp_v in self.trace.items():
             for dst_k, dst_v in grp_v.items():
-                if type(dst_v[0]) == dict:
+                if type(dst_v)==list and type(dst_v[0]) == dict:
                     grp_v[dst_k] = tensor_utils.stack_tensor_dict_list(dst_v)
-                elif type(dst_v[0]) != str:
+                elif type(dst_v)==list and type(dst_v[0]) != str:
                     grp_v[dst_k] = np.array(dst_v)
 
 
