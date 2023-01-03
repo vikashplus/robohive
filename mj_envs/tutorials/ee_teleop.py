@@ -14,7 +14,8 @@ EXAMPLE:\n
 
 from mj_envs.utils.quat_math import euler2quat, mulQuat
 from mj_envs.utils.inverse_kinematics import IKResult, qpos_from_site_pose
-from mj_envs.logger.roboset_logger import RoboSet_Trace as Trace
+from mj_envs.logger.roboset_logger import RoboSet_Trace
+from mj_envs.logger.grouped_datasets import Trace as RoboHive_Trace
 import numpy as np
 import click
 import gym
@@ -110,6 +111,9 @@ def poll_spacemouse(input_device):
 @click.option('-i', '--input_device', type=click.Choice(['keyboard', 'spacemouse']), help='input to use for teleOp', default='keyboard')
 @click.option('-h', '--horizon', type=int, help='Rollout horizon', default=100)
 @click.option('-n', '--num_rollouts', type=int, help='number of repeats for the rollouts', default=1)
+@click.option('-f', '--output_format', type=click.Choice(['RoboHive', 'RoboSet']), help='Data format', default='RoboHive')
+@click.option('-c', '--camera', multiple=True, type=str, default=[], help=('list of camera topics for rendering'))
+@click.option('-r', '--render', type=click.Choice(['onscreen', 'offscreen', 'none']), help='visualize onscreen or offscreen', default='onscreen')
 @click.option('-s', '--seed', type=int, help='seed for generating environment instances', default=123)
 @click.option('-gs', '--goal_site', type=str, help='Site that updates as goal using inputs', default='ee_target')
 @click.option('-ts', '--teleop_site', type=str, help='Site used for teleOp/target for IK', default='end_effector')
@@ -125,14 +129,14 @@ def poll_spacemouse(input_device):
 # @click.option('-ry', '--pitch_range', type=tuple, default=(-0.5, 0.5), help=('pitch range'))
 # @click.option('-rz', '--yaw_range', type=tuple, default=(-0.5, 0.5), help=('yaw range'))
 # @click.option('-gr', '--gripper_range', type=tuple, default=(0, 1), help=('z range'))
-def main(env_name, env_args, input_device, horizon, num_rollouts, seed, goal_site, teleop_site, pos_scale, rot_scale, gripper_scale, vendor_id, product_id):
+def main(env_name, env_args, input_device, horizon, num_rollouts, output_format, camera, render, seed, goal_site, teleop_site, pos_scale, rot_scale, gripper_scale, vendor_id, product_id):
     # x_range, y_range, z_range, roll_range, pitch_range, yaw_range, gripper_range
 
     # seed and load environments
     np.random.seed(seed)
     env = gym.make(env_name) if env_args==None else gym.make(env_name, **(eval(env_args)))
     env.seed(seed)
-    env.env.mujoco_render_frames = True
+    env.env.mujoco_render_frames = True if render == 'onscreen' else False
     goal_sid = env.sim.model.site_name2id(goal_site)
     env.sim.model.site_rgba[goal_sid][3] = 0.2 # make visible
 
@@ -141,17 +145,14 @@ def main(env_name, env_args, input_device, horizon, num_rollouts, seed, goal_sit
         input = KeyBoard()
     elif input_device=='spacemouse':
         input = SpaceMouse(vendor_id=vendor_id, product_id=product_id)
-
         print("Press both keys to stop listening")
-    done = False
 
-    # default actions
-    act = np.zeros(env.action_space.shape)
-    gripper_state = 0
+    # Collect rollouts
+    if output_format=="RoboHive":
+        trace = RoboHive_Trace("TeleOp Trajectories")
+    elif output_format=="RoboSet":
+        trace = RoboSet_Trace("TeleOp Trajectories")
 
-    trace = Trace("TeleOp Trajectories")
-
-    # Collect rollout
     for i_rollout in range(num_rollouts):
 
         # start a new rollout
@@ -159,16 +160,23 @@ def main(env_name, env_args, input_device, horizon, num_rollouts, seed, goal_sit
         group_key='Trial'+str(i_rollout); trace.create_group(group_key)
         env.reset()
 
-        for i_step in range(horizon):
+        # record init state
+        obs, rwd, done, env_info = env.forward()
+        act = np.zeros(env.action_space.shape)
+        gripper_state = 0
 
-            # prep input device
+        # start rolling out
+        done = False
+        for i_step in range(horizon+1):
+
+            # poll input device --------------------------------------
             if input_device=='keyboard':
-                delta_pos, delta_euler, delta_gripper, done = poll_keyboard(input)
+                delta_pos, delta_euler, delta_gripper, exit_request = poll_keyboard(input)
             elif input_device=='spacemouse':
-                delta_pos, delta_euler, delta_gripper, done = poll_spacemouse(input)
+                delta_pos, delta_euler, delta_gripper, exit_request = poll_spacemouse(input)
+            if exit_request: break
 
-            if done: break
-
+            # recover actions using input ----------------------------
             # udpate pos
             curr_pos = env.sim.model.site_pos[goal_sid]
             curr_pos[:] += pos_scale*delta_pos
@@ -179,6 +187,7 @@ def main(env_name, env_args, input_device, horizon, num_rollouts, seed, goal_sit
             if delta_gripper !=0:
                 gripper_state = gripper_scale*delta_gripper # TODO: Update to be delta
 
+            # get action using IK
             ik_result = qpos_from_site_pose(
                         physics = env.sim,
                         site_name = teleop_site,
@@ -186,33 +195,48 @@ def main(env_name, env_args, input_device, horizon, num_rollouts, seed, goal_sit
                         target_quat= curr_quat,
                         inplace=False,
                         regularization_strength=1.0)
-            print(f"IK(t:{i_step}):: Status:{ik_result.success}, total steps:{ik_result.steps}, err_norm:{ik_result.err_norm}")
+            if ik_result.success==False:
+                print(f"IK(t:{i_step}):: Status:{ik_result.success}, total steps:{ik_result.steps}, err_norm:{ik_result.err_norm}")
             act[:7] = ik_result.qpos[:7]
             act[7:] = gripper_state
             if env.normalize_act:
                 act = env.env.robot.normalize_actions(act)
-            obs, rwd, done, env_info = env.step(act)
-            # log values
+
+            # nan actions for last log entry
+            act = np.nan*np.ones(env.action_space.shape) if i_step == horizon else act
+
+            # log values at time=t ----------------------------------
             datum_dict = dict(
-                    time=i_step,
+                    time=env.time,
                     observations=obs,
-                    actions=act,
+                    actions=act.copy(),
                     rewards=rwd,
                     env_infos=env_info,
                     done=done,
                 )
-            trace.append_datums(group_key=group_key,
-                dataset_key_val=datum_dict)
-            print(i_step)
-        if done:
-            print("rollout {} end".format(i_rollout))
-            break
+            trace.append_datums(group_key=group_key,dataset_key_val=datum_dict)
+            # print(f't={env.time:2.2}, a={act}, o={obs[:3]}')
 
+            # step env using action from t=>t+1 ----------------------
+            if i_step < horizon: #incase last actions (nans) can cause issues in step
+                obs, rwd, done, env_info = env.step(act)
+
+        print("rollout {} end".format(i_rollout))
+
+    # save and close
     output_name = "teleOp_trace"
     trace.save(output_name+".h5", verify_length=True)
-    trace.render(output_name+".mp4", groups=":", datasets=["data/rgb_left","data/rgb_right","data/rgb_top","data/rgb_wrist"])
-    env.close()
-    print("Saved: "+output_name)
+
+    # render video outputs
+    if render =='offscreen':
+        if len(camera)>0:
+            trace.render(output_dir=".", output_format="mp4", groups=":", datasets=camera, input_fps=1/env.dt)
+        elif output_format=="RoboHive":
+            trace.render(output_dir=".", output_format="mp4", groups=":", datasets=["env_infos/obs_dict/rgb:left_cam:240x424:2d","env_infos/obs_dict/rgb:right_cam:240x424:2d","env_infos/obs_dict/rgb:top_cam:240x424:2d","env_infos/obs_dict/rgb:Franka_wrist_cam:240x424:2d"], input_fps=1/env.dt)
+        elif output_format=="RoboSet":
+            trace.render(output_dir=".", output_format="mp4", groups=":", datasets=["data/rgb_left","data/rgb_right","data/rgb_top","data/rgb_wrist"], input_fps=1/env.dt)
+        env.close()
+        print("Saved: "+output_name)
 
 if __name__ == '__main__':
     main()
