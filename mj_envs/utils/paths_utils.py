@@ -82,11 +82,11 @@ def plot(paths, env=None, fileName_prefix=''):
     import matplotlib.pyplot as plt
     plt.rcParams.update({'font.size': 5})
 
-    for i, path in enumerate(paths):
+    for path_name, path in paths.items():
         plt.clf()
 
         # observations
-        nplt1 = len(path['env_infos']['obs_dict'])
+        nplt1 = len(path['env_infos']['obs_dict'].keys())
         for iplt1, key in enumerate(
                 sorted(path['env_infos']['obs_dict'].keys())):
             ax = plt.subplot(nplt1, 2, iplt1 * 2 + 1)
@@ -95,10 +95,11 @@ def plot(paths, env=None, fileName_prefix=''):
             if iplt1 == 0:
                 plt.title('Observations')
             ax.yaxis.tick_right()
-            plt.plot(
-                path['env_infos']['time'],
-                path['env_infos']['obs_dict'][key],
-                label=key)
+            if path['env_infos']['obs_dict'][key].ndim<3:
+                plt.plot(
+                    path['env_infos']['time'],
+                    path['env_infos']['obs_dict'][key],
+                    label=key)
             # plt.ylabel(key)
             plt.text(0.01, .01, key, transform=ax.transAxes)
         plt.xlabel('time (sec)')
@@ -159,7 +160,7 @@ def plot(paths, env=None, fileName_prefix=''):
             plt.ylabel('wt*rewards')
             ax.yaxis.tick_right()
 
-        file_name = fileName_prefix + '_path' + str(i) + '.pdf'
+        file_name = fileName_prefix + path_name + '.pdf'
         plt.savefig(file_name)
         print("saved ", file_name)
 
