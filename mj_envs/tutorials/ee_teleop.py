@@ -113,7 +113,7 @@ def poll_spacemouse(input_device):
 @click.option('-n', '--num_rollouts', type=int, help='number of repeats for the rollouts', default=1)
 @click.option('-f', '--output_format', type=click.Choice(['RoboHive', 'RoboSet']), help='Data format', default='RoboHive')
 @click.option('-c', '--camera', multiple=True, type=str, default=[], help=('list of camera topics for rendering'))
-@click.option('-r', '--render', type=click.Choice(['onscreen', 'offscreen', 'none']), help='visualize onscreen or offscreen', default='onscreen')
+@click.option('-r', '--render', type=click.Choice(['onscreen', 'offscreen', 'onscreen+offscreen', 'none']), help='visualize onscreen or offscreen', default='onscreen')
 @click.option('-s', '--seed', type=int, help='seed for generating environment instances', default=123)
 @click.option('-gs', '--goal_site', type=str, help='Site that updates as goal using inputs', default='ee_target')
 @click.option('-ts', '--teleop_site', type=str, help='Site used for teleOp/target for IK', default='end_effector')
@@ -136,7 +136,7 @@ def main(env_name, env_args, input_device, horizon, num_rollouts, output_format,
     np.random.seed(seed)
     env = gym.make(env_name) if env_args==None else gym.make(env_name, **(eval(env_args)))
     env.seed(seed)
-    env.env.mujoco_render_frames = True if render == 'onscreen' else False
+    env.env.mujoco_render_frames = True if 'onscreen'in render else False
     goal_sid = env.sim.model.site_name2id(goal_site)
     env.sim.model.site_rgba[goal_sid][3] = 0.2 # make visible
 
@@ -228,7 +228,7 @@ def main(env_name, env_args, input_device, horizon, num_rollouts, output_format,
     trace.save(output_name+".h5", verify_length=True)
 
     # render video outputs
-    if render =='offscreen':
+    if 'offscreen' in render:
         if len(camera)>0:
             trace.render(output_dir=".", output_format="mp4", groups=":", datasets=camera, input_fps=1/env.dt)
         elif output_format=="RoboHive":
