@@ -1,4 +1,4 @@
-# Utility script to sync between mj_envs to myosuite repo repository
+# Utility script to sync from mj_envs to myosuite repo repository
 # Note: that its a one way sync at the moment "mj_envs => myosuite"
 # Usage: .sync_myo.sh <full_path>/mj_envs/ <full_path>/myoSuite/
 

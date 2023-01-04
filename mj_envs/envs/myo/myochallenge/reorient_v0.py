@@ -111,7 +111,6 @@ class ReorientEnvV0(BaseV0):
         ))
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
 
-        # print(rwd_dict['solved'], rwd_dict['done'])
         # Sucess Indicator
         self.sim.model.site_rgba[self.success_indicator_sid, :2] = np.array([0, 2]) if rwd_dict['solved'] else np.array([2, 0])
         return rwd_dict
