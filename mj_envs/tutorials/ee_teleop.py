@@ -109,6 +109,7 @@ def poll_spacemouse(input_device):
 @click.option('-e', '--env_name', type=str, help='environment to load', default='rpFrankaRobotiqData-v0')
 @click.option('-ea', '--env_args', type=str, default=None, help=('env args. E.g. --env_args "{\'is_hardware\':True}"'))
 @click.option('-i', '--input_device', type=click.Choice(['keyboard', 'spacemouse']), help='input to use for teleOp', default='keyboard')
+@click.option('-o', '--output', type=str, default="teleOp_trace.h5", help=('Output name'))
 @click.option('-h', '--horizon', type=int, help='Rollout horizon', default=100)
 @click.option('-n', '--num_rollouts', type=int, help='number of repeats for the rollouts', default=1)
 @click.option('-f', '--output_format', type=click.Choice(['RoboHive', 'RoboSet']), help='Data format', default='RoboHive')
@@ -129,7 +130,7 @@ def poll_spacemouse(input_device):
 # @click.option('-ry', '--pitch_range', type=tuple, default=(-0.5, 0.5), help=('pitch range'))
 # @click.option('-rz', '--yaw_range', type=tuple, default=(-0.5, 0.5), help=('yaw range'))
 # @click.option('-gr', '--gripper_range', type=tuple, default=(0, 1), help=('z range'))
-def main(env_name, env_args, input_device, horizon, num_rollouts, output_format, camera, render, seed, goal_site, teleop_site, pos_scale, rot_scale, gripper_scale, vendor_id, product_id):
+def main(env_name, env_args, input_device, output, horizon, num_rollouts, output_format, camera, render, seed, goal_site, teleop_site, pos_scale, rot_scale, gripper_scale, vendor_id, product_id):
     # x_range, y_range, z_range, roll_range, pitch_range, yaw_range, gripper_range
 
     # seed and load environments
@@ -147,12 +148,13 @@ def main(env_name, env_args, input_device, horizon, num_rollouts, output_format,
         input = SpaceMouse(vendor_id=vendor_id, product_id=product_id)
         print("Press both keys to stop listening")
 
-    # Collect rollouts
+    # prep the logger
     if output_format=="RoboHive":
         trace = RoboHive_Trace("TeleOp Trajectories")
     elif output_format=="RoboSet":
         trace = RoboSet_Trace("TeleOp Trajectories")
 
+    # Collect rollouts
     for i_rollout in range(num_rollouts):
 
         # start a new rollout
@@ -160,13 +162,12 @@ def main(env_name, env_args, input_device, horizon, num_rollouts, output_format,
         group_key='Trial'+str(i_rollout); trace.create_group(group_key)
         env.reset()
 
-        # record init state
+        # recover init state
         obs, rwd, done, env_info = env.forward()
         act = np.zeros(env.action_space.shape)
         gripper_state = 0
 
         # start rolling out
-        done = False
         for i_step in range(horizon+1):
 
             # poll input device --------------------------------------
@@ -174,7 +175,9 @@ def main(env_name, env_args, input_device, horizon, num_rollouts, output_format,
                 delta_pos, delta_euler, delta_gripper, exit_request = poll_keyboard(input)
             elif input_device=='spacemouse':
                 delta_pos, delta_euler, delta_gripper, exit_request = poll_spacemouse(input)
-            if exit_request: break
+            if exit_request:
+                print("Rollout done. ")
+                break
 
             # recover actions using input ----------------------------
             # udpate pos
@@ -197,10 +200,11 @@ def main(env_name, env_args, input_device, horizon, num_rollouts, output_format,
                         regularization_strength=1.0)
             if ik_result.success==False:
                 print(f"IK(t:{i_step}):: Status:{ik_result.success}, total steps:{ik_result.steps}, err_norm:{ik_result.err_norm}")
-            act[:7] = ik_result.qpos[:7]
-            act[7:] = gripper_state
-            if env.normalize_act:
-                act = env.env.robot.normalize_actions(act)
+            else:
+                act[:7] = ik_result.qpos[:7]
+                act[7:] = gripper_state
+                if env.normalize_act:
+                    act = env.env.robot.normalize_actions(act)
 
             # nan actions for last log entry
             act = np.nan*np.ones(env.action_space.shape) if i_step == horizon else act
@@ -224,19 +228,18 @@ def main(env_name, env_args, input_device, horizon, num_rollouts, output_format,
         print("rollout {} end".format(i_rollout))
 
     # save and close
-    output_name = "teleOp_trace"
-    trace.save(output_name+".h5", verify_length=True)
+    env.close()
+    trace.save(output, verify_length=True)
 
     # render video outputs
-    if 'offscreen' in render:
-        if len(camera)>0:
+    if len(camera)>0:
+        if camera[0]!="default":
             trace.render(output_dir=".", output_format="mp4", groups=":", datasets=camera, input_fps=1/env.dt)
         elif output_format=="RoboHive":
             trace.render(output_dir=".", output_format="mp4", groups=":", datasets=["env_infos/obs_dict/rgb:left_cam:240x424:2d","env_infos/obs_dict/rgb:right_cam:240x424:2d","env_infos/obs_dict/rgb:top_cam:240x424:2d","env_infos/obs_dict/rgb:Franka_wrist_cam:240x424:2d"], input_fps=1/env.dt)
         elif output_format=="RoboSet":
             trace.render(output_dir=".", output_format="mp4", groups=":", datasets=["data/rgb_left","data/rgb_right","data/rgb_top","data/rgb_wrist"], input_fps=1/env.dt)
-        env.close()
-        print("Saved: "+output_name)
+
 
 if __name__ == '__main__':
     main()
