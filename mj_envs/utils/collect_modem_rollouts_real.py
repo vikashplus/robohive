@@ -71,7 +71,6 @@ def is_moving(prev, cur, tol):
 
 def rollout_policy(policy,
                    env,
-                   start_o,
                    horizon=1000):
     """
         Examine a policy for behaviors;
@@ -86,7 +85,11 @@ def rollout_policy(policy,
     rewards=[]
     env_infos = []
 
-    o = start_o
+    o = env.get_obs()
+    env_info = env.get_env_infos()
+    observations.append(o)
+    env_infos.append(env_info)
+
     solved = False
     done = False
     t = 0
@@ -99,7 +102,7 @@ def rollout_policy(policy,
         solved = env_info['solved'] and obs_dict['qp'][0,0,7] > 0.001
         ep_rwd += rwd
 
-        observations.append(o)
+        observations.append(next_o)
         actions.append(a)
         rewards.append(rwd)
         env_infos.append(env_info)
@@ -389,7 +392,6 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
         env.set_slow_vel_limit(np.array([0.15, 0.15, 0.2, 0.15, 0.2, 0.2, 0.45, 1.0, 1.0]))
         obs, path = rollout_policy(pi,
                                    env,
-                                   obs,
                                    horizon=100)#env.spec.max_episode_steps,)
         env.set_slow_vel_limit(np.array([0.15, 0.3, 0.2, 0.25, 0.2, 0.2, 0.35, 1.0, 1.0],))
 
