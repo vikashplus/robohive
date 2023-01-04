@@ -1,5 +1,5 @@
 # RoboHive Logger
-RoboHive provides a custom logger to facilitates working with grouped data. Logger consists of a `name`, `group`, and `dataset`. Attached below is logger's general schema -
+RoboHive provides a custom logger to facilitates working with grouped data. Logger consists of a `name` for the logs, `group` for organizing the data, and `dataset` for storing data. Attached below is logger's general schema -
 ```
 name: {
     group{g1: dataset{k1:v1}, dataset{k2:v2}, ...}
