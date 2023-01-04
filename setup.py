@@ -18,7 +18,7 @@ def read(fname):
 
 setup(
     name='mj_envs',
-    version='0.3.0',
+    version='0.4.0',
     packages=find_packages(),
     description='environments simulated in MuJoCo',
     long_description=read('README.md'),
