@@ -215,7 +215,7 @@ def check_grasp_success(env, obs):
         obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
         if obs_dict['qp'][0,0,7] < MAX_GRIPPER_OPEN:
             print('Policy didnt close gripper, resetting')
-            return None, None
+            return None, None, False
 
         print('moving up')
         des_grasp_pos = obs_dict['grasp_pos'][0,0,:].copy()
@@ -231,7 +231,7 @@ def check_grasp_success(env, obs):
                 obs, _, done, _ = env.step(move_up_action)
                 obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1))) 
                 move_up_steps += 1 
-            if obs_dict['grasp_pos'][0,0,2] < 1.1:
+            if obs_dict['grasp_pos'][0,0,2] >= 1.1:
                 break
 
         obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))      
@@ -241,7 +241,7 @@ def check_grasp_success(env, obs):
         mean_diff = 0.0
 
         if grip_width < MAX_GRIPPER_OPEN or grip_width > MIN_GRIPPER_CLOSED:
-            return None, None
+            return None, None, False
 
         obs, env_info = move_joint_config(env, np.concatenate([OUT_OF_WAY, [obs_dict['qp'][0,0,7]]*2])) 
 
@@ -307,7 +307,7 @@ def check_grasp_success(env, obs):
         mean_diff = np.mean(np.abs(post_drop_img-pre_drop_img))
         print('Mean img diff: {}'.format(mean_diff))    
 
-        return mean_diff, latest_img
+        return mean_diff, latest_img, mean_diff > DIFF_THRESH
 
 # MAIN =========================================================
 @click.command(help=DESC)
@@ -402,7 +402,7 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
 
         rollouts += 1
 
-        mean_diff, new_img = check_grasp_success(env, obs)
+        mean_diff, new_img, grasp_success = check_grasp_success(env, obs)
 
         if mean_diff is None:
             continue
@@ -414,7 +414,7 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
         #env.set_init_qpos(np.concatenate([drops_zones[drop_id], [0.0]]))
 
         # Determine success
-        if mean_diff > DIFF_THRESH:
+        if grasp_success:
             ro_fn = output_name+'_rollout'+f'{(successes+seed):010d}'
 
             data = {}
