@@ -51,8 +51,8 @@ Y_SCALE = -0.5207/152 # 0.5207 is length of bin
 X_SCALE = 1.0668/314 # 1.0668 is width of bin
 OBJ_POS_LOW = [-0.25,0.368,0.91] #[-0.35,0.25,0.91]
 OBJ_POS_HIGH = [0.25, 0.72, 0.91] #[0.35,0.65,0.91]
-DROP_ZONE_LOW = [-0.18, 0.5, 1.15]
-DROP_ZONE_HIGH = [0.18, 0.65, 1.15]
+DROP_ZONE_LOW = [-0.18, 0.5, 1.2]
+DROP_ZONE_HIGH = [0.18, 0.65, 1.2]
 MOVE_JOINT_VEL = [0.15, 0.35, 0.25, 0.35, 0.3, 0.3, 0.45, 1.0, 1.0]
 DIFF_THRESH = 0.45
 
@@ -65,6 +65,7 @@ MAX_GRIPPER_OPEN = 0.0002
 MIN_GRIPPER_CLOSED = 0.8228
 
 OUT_OF_WAY = np.array([0.3438, -0.9361,  0.0876, -2.8211,  0.0749,  0.5144,  1.8283])
+#OUT_OF_WAY = np.array([0.3438, -1.1,  0.0876, -2.5,  0.0749,  0.2,  1.8283])
 
 def is_moving(prev, cur, tol):
     return np.linalg.norm(cur-prev) > tol
@@ -87,6 +88,10 @@ def rollout_policy(policy,
 
     o = env.get_obs()
     env_info = env.get_env_infos()
+
+    env.squeeze_dims(env_info['rwd_dict'])
+    env.squeeze_dims(env_info['obs_dict'])
+
     observations.append(o)
     env_infos.append(env_info)
 
