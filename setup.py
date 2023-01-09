@@ -18,7 +18,7 @@ def read(fname):
 
 setup(
     name='mj_envs',
-    version='0.3.0',
+    version='0.4.0',
     packages=find_packages(),
     description='environments simulated in MuJoCo',
     long_description=read('README.md'),
@@ -34,10 +34,14 @@ setup(
         'matplotlib',
         'ffmpeg',
         'absl-py',
-        'pycapnp==1.1.0',
         'r3m @ git+https://github.com/facebookresearch/r3m.git',
         # 'data_tools @ git+https://github.com/fairinternal/data_tools.git',
         'h5py==3.7.0',
-        'alephzero', # real_sense subscribers dependency
     ],
+    extras_require={
+      'a0': [
+        'pycapnp==1.1.0',
+        'alephzero', # real_sense subscribers dependency
+        ]
+    }
 )

@@ -14,22 +14,26 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 0. We recommend installaition within a conda environement. If you don't have one yet, create one using
 ```
 conda create -n robohive python=3
+conda activate robohive
 ```
 
 1. Clone this repo on branch `branch_name` with pre-populated submodule dependencies
 
-a. Most users -
-```
-git clone -c submodule.mj_envs/sims/neuromuscular_sim.update=none --branch <branch_name> --recursive https://github.com/vikashplus/mj_envs.git
-```
-b. myoSuite developers: you must have access to neuromuscular_sim(private repo) -
-```
-git clone --branch <branch_name> --recursive https://github.com/vikashplus/mj_envs.git
-```
+   a. Most users -
+   ```
+   git clone -c submodule.mj_envs/sims/neuromuscular_sim.update=none --branch v0.4dev  --recursive https://github.com/vikashplus/mj_envs.git
+   ```
+
+   b. myoSuite developers: you must have access to neuromuscular_sim(private repo) -
+   ```
+   git clone --branch <branch_name> --recursive https://github.com/vikashplus/mj_envs.git
+   ```
+
 2. Install package using `pip`
 ```
 $ cd mj_envs
-$ pip install -e .
+$ pip install -e .[a0] #with a0 binding for realworld robot
+$ pip install -e .     #simulation only
 ```
 **OR**
 Add repo to pythonpath by updating `~/.bashrc` or `~/.bash_profile`
