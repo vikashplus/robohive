@@ -49,7 +49,7 @@ Robot configurations are specified using a config files. The file is essentially
         {'pos_range':(-2.9, 2.9), 'vel_range':(-2, 2), 'hdr_id':0, 'scale':1, 'offset':0, 'name':'panda0_joint1'},
         {'pos_range':(-1.8, 1.8), 'vel_range':(-2, 2), 'hdr_id':1, 'scale':1, 'offset':0, 'name':'panda0_joint2'},
     ],
-    'cams': []
+    'cam': []
 },
 
 # device2: interface, sensors, actuators, cams configs
@@ -61,7 +61,7 @@ Robot configurations are specified using a config files. The file is essentially
     'actuator':[
         {'pos_range':(0, 1), 'vel_range':(-2, 4), 'hdr_id':0, 'name':'robotiq_2f_85', 'scale':-0.08, 'offset':0.08},
     ],
-    'cams': []
+    'cam': []
 },
 
 # device3: interface, sensors, actuators, cams configs
@@ -69,7 +69,7 @@ Robot configurations are specified using a config files. The file is essentially
     'interface': {'type': 'realsense', 'rgb_topic':'image_rgb', 'd_topic':'image_d'},
     'sensor':[],
     'actuator':[]
-    'cams': [
+    'cam': [
         {'range':(0, 255), 'noise':0.00, 'hdr_id':'rgb', 'scale':1, 'offset':0, 'name':'/color/image_raw'},
         {'range':(0, 255), 'noise':0.00, 'hdr_id':'d', 'scale':1, 'offset':0, 'name':'/depth_uncolored/image_raw'},
     ],
