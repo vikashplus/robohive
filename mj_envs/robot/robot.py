@@ -438,7 +438,7 @@ class Robot():
                 current_sensor_value[cam_name] = data
 
                 # calibrate sensors
-                for cam in device['cams']:
+                for cam in device['cam']:
                     current_sensor_value[cam_name][cam['hdr_id']] = current_sensor_value[cam_name][cam['hdr_id']]*cam['scale'] + cam['offset']
                 device['sensor_data'] = current_sensor_value[cam_name]
                 device['sensor_time'] = current_sensor_value['time']
@@ -648,6 +648,7 @@ class Robot():
 
         return processed_controls
 
+
     # step the robot one step forward in time
     def step(self, ctrl_desired, step_duration, ctrl_normalized=True, realTimeSim=False, render_cbk=None):
         """
@@ -769,6 +770,7 @@ class Robot():
 
         return feasibe_pos, feasibe_vel
 
+
     # close connection and exit out of the robot
     def close(self):
         prompt("Closing {}".format(self.name), 'white', 'on_grey', flush=True)
@@ -776,9 +778,11 @@ class Robot():
             status = self.hardware_close()
             prompt("Closed (Status: {})".format(status), 'white', 'on_grey', flush=True)
 
+
     # destructor
     def __del__(self):
         self.close()
+
 
 def main():
     import gym
