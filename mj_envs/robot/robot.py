@@ -23,6 +23,10 @@ _ROBOT_VIZ = False
 # support loading multiple config files
 # seperate ROBOT_VIZ as its own class
 # remap_space() needs rigerous testing
+# Support for sensors that provide multiple reading values. Sensor indexing might not directly follow the sensor's list index in this case. This support will potentilly allow us to also list cams as sensors
+# Support for non uniform noise in sensor readings
+# Support for noisy actions + separate noise_scale for sensor and actuator
+# rename pos/vel to act/delta_act
 
 # NOTE/ GOOD PRACTICES ===========================
 # nq should be nv
@@ -377,7 +381,7 @@ class Robot():
         if self.is_hardware:
             # record sensor*device['scale']+device['offset']
             current_sen = self.hardware_get_sensors()
-            # update the sim (qpos, qvel) as per the hardware observations
+            # update the sim as per the hardware observations
             self.sensor2sim(current_sen, self.sim)
         else:
             current_sen['time']= self.sim.data.time # data time stamp
