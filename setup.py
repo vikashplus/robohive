@@ -16,10 +16,21 @@ if sys.version_info.major != 3:
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+def package_files(directory):
+    paths = []
+    for (path, directories, filenames) in os.walk(directory):
+        for filename in filenames:
+            paths.append(os.path.join('..', path, filename))
+    return paths
+
+extra_files = package_files('mj_envs')
+
 setup(
     name='mj_envs',
     version='0.4.0',
     packages=find_packages(),
+    package_data={"": extra_files},
+    include_package_data=True,
     description='environments simulated in MuJoCo',
     long_description=read('README.md'),
     url='https://github.com/vikashplus/mj_envs.git',
@@ -27,7 +38,7 @@ setup(
     install_requires=[
         'click',
         'gym==0.13',
-        'mujoco-py<2.2,>=2.1',
+#        'mujoco-py<2.2,>=2.1',
         'termcolor',
         'sk-video',
         'flatten_dict',

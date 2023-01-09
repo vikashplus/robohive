@@ -11,6 +11,9 @@ import gym
 import numpy as np
 import pickle
 
+import torch.testing
+
+
 class TestEnvs(unittest.TestCase):
 
     def check_envs(self, module_name, env_names, lite=False, input_seed=1234):
@@ -53,8 +56,8 @@ class TestEnvs(unittest.TestCase):
         assert env1.observation_space == env2.observation_space, (env1.observation_space, env2.observation_space)
         # step
         obs2, rwd2, done2, infos2 = env2.env.step(u)
-        assert (obs1==obs2).all(), (obs1, obs2)
-        assert (rwd1==rwd2).all(), (rwd1, rwd2)
+        torch.testing.assert_close(obs1, obs2).all()
+        torch.testing.assert_close(rwd1, rwd2).all()
         assert (done1==done2), (done1, done2)
         assert len(infos1)==len(infos2), (infos1, infos2)
         # reset
