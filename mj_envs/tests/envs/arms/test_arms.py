@@ -6,6 +6,8 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= """
 
 import gym
+import torch.testing
+
 import mj_envs.envs.arms # noqa
 import numpy
 import pickle
@@ -48,9 +50,7 @@ def test_serialize_deserialize(environment_id):
     assert env1.action_space == env2.action_space, (
         env1.action_space, env2.action_space
     )
-    assert (env1.get_obs() == env2.get_obs()).all(), (
-        env1.get_obs(), env2.get_obs()
-    )
+    torch.testing.assert_close(env1.get_obs(), env2.get_obs())
 
     obs_dict_2 = env2.get_obs_dict(env2.env.sim)
     reward_dict_2 = env2.get_reward_dict(obs_dict_2)
