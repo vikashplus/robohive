@@ -31,7 +31,7 @@ Helper script to examine an environment and associated policy for behaviors; \n
 USAGE:\n
     
     # Collect data
-    $ python mj_envs/utils/collect_modem_rollouts_real.py -e FrankaPickPlaceRandom_v2d-v0 -n 10 -r none  -o /mnt/nfs_data/plancaster/remodem/demonstrations -on robopen07 -s 1 
+    $ python mj_envs/utils/collect_modem_rollouts_real.py -e FrankaPickPlaceRandomReal_v2d-v0 -n 1 -r none  -o /mnt/nfs_code/robopen_users/plancaster/remodem/demonstrations/franka-FrankaPickPlaceRandomReal_v2d -on robopen07 -s 1
     
     # Convert to h5
     $ python mj_envs/utils/paths_utils.py -u pickle2h5 -p /mnt/nfs_data/plancaster/remodem/demonstrations -e FrankaPickPlaceRandom_v2d-v0 -on robopen07_heuristic_rollouts -od /mnt/nfs_data/plancaster/remodem/datasets -vo True -hf dataset -cp True
@@ -212,6 +212,9 @@ def move_joint_config(env, config):
     return obs, env_info
 
 def check_grasp_success(env, obs):
+        if obs is None:
+            obs = env.get_obs()
+        
         obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
         if obs_dict['qp'][0,0,7] < MAX_GRIPPER_OPEN:
             print('Policy didnt close gripper, resetting')
@@ -389,17 +392,20 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
         env.set_target_pos(target_pos)
         print('Real obs pos {} target pos {}'.format(real_obj_pos, target_pos))        
 
-        #align_action = np.concatenate([real_obj_pos, [ 3.14,0.0,0.0,0.0,0.0]])
-        #align_action[2] = 1.075
-        #cart_move( align_action, env)
+        rand_yaw = np.random.uniform(low = 0.0, high = 3.14)
+        pi.set_yaw(rand_yaw)
+        align_action = np.concatenate([real_obj_pos, [ 3.14,0.0,0.0,0.0,0.0]])
+        align_action[2] = 1.075
+        align_action[5] = rand_yaw
+        cart_move( align_action, env)
 
         print('Rolling out policy')
-        env.set_slow_vel_limit(np.array([0.15, 0.15, 0.2, 0.15, 0.2, 0.2, 0.45, 1.0, 1.0]))
+        env.set_slow_vel_limit(np.array([0.15, 0.10, 0.15, 0.10, 0.15, 0.2, 0.45, 1.0, 1.0]))
         obs, path = rollout_policy(pi,
                                    env,
                                    horizon=100)#env.spec.max_episode_steps,)
         env.set_slow_vel_limit(np.array([0.15, 0.3, 0.2, 0.25, 0.2, 0.2, 0.35, 1.0, 1.0],))
-
+        print('Path Length: {}'.format(len(path['actions'])))
         rollouts += 1
 
         mean_diff, new_img, grasp_success = check_grasp_success(env, obs)
@@ -450,9 +456,9 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
                 if depth_key in env.obs_keys:
                     depth_imgs = path['env_infos']['obs_dict'][depth_key]
                     for i in range(depth_imgs.shape[0]):
-                        depth_img = 255*depth_imgs[i]       
+                        depth_img = np.array(depth_imgs[i]/256, dtype=np.uint8)       
                         depth_img = Image.fromarray(depth_img)
-                        depth_img = depth_img.convert("L")
+                        #depth_img = depth_img.convert("L")
                         depth_img_fn = ro_fn + '_depth_'+cam+'_step'                            
                         depth_img.save(output_dir+'/frames/'+depth_img_fn+f'{i:05d}.png')
                         if len(data['frames']) <= i:

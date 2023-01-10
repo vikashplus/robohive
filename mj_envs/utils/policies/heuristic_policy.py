@@ -87,7 +87,7 @@ class HeuristicPolicyReal():
             # Reset
             self.stage = 0
             self.last_qp = None
-            self.yaw = np.random.uniform(low = 0.0, high = 3.14)
+            #self.yaw = np.random.uniform(low = 0.0, high = 3.14)
         elif self.stage == 0: # Wait until aligned xy
             # Advance to next stage?
             if (np.linalg.norm(obs_dict['object_err'][0,0,:2]) < REAL_BEGIN_DESCENT_THRESH and
@@ -137,6 +137,9 @@ class HeuristicPolicyReal():
         action = 2*(((action - self.env.pos_limit_low) / (self.env.pos_limit_high - self.env.pos_limit_low)) - 0.5)
 
         return action, {'evaluation': action}
+    
+    def set_yaw(self, yaw):
+        self.yaw = yaw
 
 if __name__ == '__main__':
     env_name = 'FrankaPickPlaceRandom-v0'
