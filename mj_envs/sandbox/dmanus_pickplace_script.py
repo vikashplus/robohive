@@ -11,19 +11,20 @@ EXAMPLE:\n
     - python tutorials/get_ik_minjerk_trajectory.py --sim_path envs/arms/franka/assets/franka_busbin_v0.xml\n
 """
 
-from mujoco_py import load_model_from_path, MjSim, MjViewer
-
+from mj_envs.physics.sim_scene import get_sim
 from mj_envs.utils.inverse_kinematics import IKResult, qpos_from_site_pose
 from mj_envs.utils.min_jerk import *
 from mj_envs.utils.quat_math import euler2quat, euler2mat
 from mj_envs.utils import tensor_utils
+from mj_envs.utils.xml_utils import reassign_parent
 import click
 import numpy as np
 import pickle
+import os
 
 # BIN_POS = np.array([-.235, 0.5, .85])
 BIN_POS = np.array([0, 0.5, 1.20])
-BIN_DIM = np.array([.2, .3, 0])/10
+BIN_DIM = np.array([.2, .3, 0])
 ARM_nJnt = 7+10
 drop_z = 0.400
 HAND_OPEN = np.array([4.61038e-05, -0.0378767, -0.0156091, -0.00280373, -5.5025e-08, -0.0156123, -0.00278982, -5.5025e-08, -0.0156123, -0.00278982])
@@ -31,16 +32,25 @@ HAND_CLOSE = np.array([0, 1.5199, 1.3678, 0.284, 0, 1.4029, 1.516, 0, 1.4848, 1.
 
 
 @click.command(help=DESC)
-@click.option('-s', '--sim_path', type=str, help='environment to load', required= True, default='envs/arms/franka/assets/franka_busbin_v0.xml')
+@click.option('-s', '--sim_path', type=str, help='environment to load', required= True, default='/../envs/fm/assets/franka_dmanus.xml')
 @click.option('-h', '--horizon', type=int, help='#steps in trajectories', default=50)
 @click.option('-f', '--frame_skip', type=int, help='frame_skip', default=40)
 def main(sim_path, horizon, frame_skip):
+
+    # Process model to use DManus as end effector
+    curr_dir = os.path.dirname(os.path.abspath(__file__))
+    raw_sim = get_sim(curr_dir+sim_path)
+    raw_xml = raw_sim.model.get_xml()
+    processed_xml = reassign_parent(xml_str=raw_xml, receiver_node="panda0_link7", donor_node="ee_mount")
+    processed_model_path = curr_dir+sim_path[:-4]+"_processed.xml"
+    with open(processed_model_path, 'w') as file:
+        file.write(processed_xml)
+
     # Prep
-    model = load_model_from_path(sim_path)
-    sim = MjSim(model)
-    viewer = MjViewer(sim)
+    sim = get_sim(processed_model_path)
     time_horizon = horizon * frame_skip * sim.model.opt.timestep
     dt = sim.model.opt.timestep*frame_skip
+    os.remove(processed_model_path)
 
 
     # setup
@@ -50,7 +60,6 @@ def main(sim_path, horizon, frame_skip):
     target_pos = BIN_POS
     target_elr = np.array([-1.57, 0 , -1.57])
     target_quat= euler2quat(target_elr)
-
 
     # reseed the arm for IK
     sim.data.qpos[:ARM_nJnt] = ARM_JNT0
@@ -76,7 +85,6 @@ def main(sim_path, horizon, frame_skip):
     ik_result_up_open.qpos[-10:] = HAND_OPEN
     ik_result_up_close.qpos[-10:] = HAND_CLOSE
     print("IK:: Status:{}, total steps:{}, err_norm:{}".format(ik_result_up_open.success, ik_result_up_open.steps, ik_result_up_open.err_norm))
-    print(ik_result_up_open.qpos[:ARM_nJnt])
 
     while True:
 
@@ -87,7 +95,7 @@ def main(sim_path, horizon, frame_skip):
             # sample targets
             target_pos = BIN_POS + np.random.uniform(high=BIN_DIM, low=-1*BIN_DIM) + np.array([0, 0, 0.10]) # add some z offfset
             # target_elr = np.random.uniform(high= [3.14, 0, 0], low=[3.14, 0, -3.14])
-            target_elr = np.random.uniform(high= [-1.57, 0 , -1.57], low=[-1.57, 0 , -1.57])
+            target_elr = np.array([-1.57, 0, -1.57]) + np.random.uniform(high=[0, 0 ,.5], low=[0, 0 ,-.5])
             target_quat= euler2quat(target_elr)
             target_mat = euler2mat(target_elr)
 
@@ -138,22 +146,16 @@ def main(sim_path, horizon, frame_skip):
             file_name = 'ik_traj.pickle'
             pickle.dump(paths, open(file_name, 'wb'))
             print("Saved: "+file_name)
-            # import ipdb; ipdb.set_trace()
-
 
         # propagate waypoint in sim
         waypoint_ind = int(sim.data.time/dt)
 
         sim.data.qpos[:ARM_nJnt] = waypoints[waypoint_ind]['position']
-        sim.forward()
-
-        # update time and render
-        sim.data.time += dt
-        viewer.render()
+        sim.advance(render=True)
 
         # reset time if time_horizon elapsed
         if sim.data.time>time_horizon*4:
-            sim.data.time = 0
+            sim.reset()
 
 
 if __name__ == '__main__':

@@ -11,11 +11,10 @@ EXAMPLE:\n
     - python tutorials/ik_minjerk_trajectory.py --sim_path envs/arms/franka/assets/franka_busbin_v0.xml\n
 """
 
-from mujoco_py import load_model_from_path, MjSim, MjViewer
-
+from mj_envs.physics.sim_scene import get_sim
 from mj_envs.utils.inverse_kinematics import qpos_from_site_pose
 from mj_envs.utils.min_jerk import *
-from mj_envs.utils.quat_math import euler2quat, euler2mat
+from mj_envs.utils.quat_math import euler2quat
 import click
 import numpy as np
 
@@ -29,9 +28,7 @@ ARM_nJnt = 7
 @click.option('-h', '--horizon', type=int, help='time (s) to simulate', default=2)
 def main(sim_path, horizon):
     # Prep
-    model = load_model_from_path(sim_path)
-    sim = MjSim(model)
-    viewer = MjViewer(sim)
+    sim = get_sim(model_handle=sim_path)
 
     # setup
     target_sid = sim.model.site_name2id("drop_target")
@@ -72,15 +69,11 @@ def main(sim_path, horizon):
         # propagate waypoint in sim
         waypoint_ind = int(sim.data.time/sim.model.opt.timestep)
         sim.data.ctrl[:ARM_nJnt] = waypoints[waypoint_ind]['position']
-        sim.step()
-
-        # update time and render
-        sim.data.time += sim.model.opt.timestep
-        viewer.render()
+        sim.advance(render=True)
 
         # reset time if horizon elapsed
         if sim.data.time>horizon:
-            sim.data.time = 0
+            sim.reset()
 
 if __name__ == '__main__':
     main()

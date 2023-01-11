@@ -21,11 +21,6 @@ import click
 import gym
 
 try:
-    import mujoco_py
-    from mujoco_py import load_model_from_path, MjSim, MjViewer, ignore_mujoco_warnings
-except ImportError as e:
-    raise ImportError("(HINT: you need to install mujoco_py, and also perform the setup instructions here: https://github.com/openai/mujoco-py/.)")
-try:
     from vtils.input.keyboard import KeyInput as KeyBoard
     from vtils.input.spacemouse import SpaceMouse
 except ImportError as e:
