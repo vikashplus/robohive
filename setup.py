@@ -33,6 +33,7 @@ setup(
     include_package_data=True,
     description='environments simulated in MuJoCo',
     long_description=read('README.md'),
+    long_description_content_type="text/markdown",
     url='https://github.com/vikashplus/mj_envs.git',
     author='Movement Control Lab, UW',
     install_requires=[
