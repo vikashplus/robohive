@@ -10,6 +10,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 import logging
 import os
 from typing import Any
+import numpy as np
 
 import mujoco_py
 from mujoco_py.builder import cymj, user_warning_raise_exception
@@ -104,9 +105,46 @@ class MjPySimScene(SimScene):
         lib.mjtTrn = _mjtTrn(lib)
         lib.mjtJoint = _mjtJoint(lib)
 
+        # patch jacobians to use non flattened arrays for compatibility with dm mujoco bindings
+        lib.mj_jac_orig = lib.mj_jac # save before overwritting
+        def _mj_jac(model, data, jacp, jacr, point, body):
+            lib.mj_jac_orig(model, data, np.ravel(jacp), np.ravel(jacr), point, body)
+        lib.mj_jac = _mj_jac
+
+        lib.mj_jacBody_orig = lib.mj_jacBody
+        def _mj_jacBody(model, data, jacp, jacr, body):
+            lib.mj_jacBody_orig(model, data, np.ravel(jacp), np.ravel(jacr), body)
+        lib.mj_jacBody = _mj_jacBody
+
+        lib.mj_jacBodyCom_orig = lib.mj_jacBodyCom
+        def _mj_jacBodyCom(model, data, jacp, jacr, body):
+            lib.mj_jacBodyCom_orig(model, data, np.ravel(jacp), np.ravel(jacr), body)
+        lib.mj_jacBodyCom = _mj_jacBodyCom
+
+        # lib.mj_jacSubtreeCom_orig = lib.mj_jacSubtreeCom
+        # def _mj_jacSubtreeCom(model, data, jacp, body):
+        #     lib.mj_jacSubtreeCom_orig(model, data, np.ravel(jacp), body)
+        # lib.mj_jacSubtreeCom = _mj_jacSubtreeCom
+
+        lib.mj_jacGeom_orig = lib.mj_jacGeom
+        def _mj_jacGeom(model, data, jacp, jacr, geom):
+            lib.mj_jacGeom_orig(model, data, np.ravel(jacp), np.ravel(jacr), geom)
+        lib.mj_jacGeom = _mj_jacGeom
+
+        lib.mj_jacSite_orig = lib.mj_jacSite
+        def _mj_jacSite(model, data, jacp, jacr, site):
+            lib.mj_jacSite_orig(model, data, np.ravel(jacp), np.ravel(jacr), site)
+        lib.mj_jacSite = _mj_jacSite
+
+        lib.mj_jacPointAxis_orig = lib.mj_jacPointAxis
+        def _mj_jacPointAxis(model, data, jacPoint, jacAxis, point, axis, body):
+            lib.mj_jacPointAxis_orig(model, data, np.ravel(jacPoint), np.ravel(jacAxis), point, axis, body)
+        lib.mj_jacPointAxis = _mj_jacPointAxis
+
+
     def get_mjlib(self) -> Any:
         """Returns an interface to the low-level MuJoCo API."""
-        mjlib =  _MjlibWrapper(mujoco_py.cymj)
+        mjlib = _MjlibWrapper(mujoco_py.cymj)
         self._patch_mjlib_accessors(mjlib)
         return mjlib
 
@@ -114,7 +152,7 @@ class MjPySimScene(SimScene):
         """Returns a handle that can be passed to mjlib methods."""
         return value
 
-    def advance(self, substeps: int = 1, render:bool = True):
+    def advance(self, substeps:int=1, render:bool = True):
         """Advances the simulation substeps times forward."""
         with mujoco_py.ignore_mujoco_warnings():
             functions = self.get_mjlib()
