@@ -103,6 +103,7 @@ def poll_spacemouse(input_device):
 @click.command(help=DESC)
 @click.option('-e', '--env_name', type=str, help='environment to load', default='rpFrankaRobotiqData-v0')
 @click.option('-ea', '--env_args', type=str, default=None, help=('env args. E.g. --env_args "{\'is_hardware\':True}"'))
+@click.option('-rn', '--reset_noise', type=float, default=0.0, help=('Amplitude of noise during reset'))
 @click.option('-i', '--input_device', type=click.Choice(['keyboard', 'spacemouse']), help='input to use for teleOp', default='keyboard')
 @click.option('-o', '--output', type=str, default="teleOp_trace.h5", help=('Output name'))
 @click.option('-h', '--horizon', type=int, help='Rollout horizon', default=100)
@@ -125,7 +126,7 @@ def poll_spacemouse(input_device):
 # @click.option('-ry', '--pitch_range', type=tuple, default=(-0.5, 0.5), help=('pitch range'))
 # @click.option('-rz', '--yaw_range', type=tuple, default=(-0.5, 0.5), help=('yaw range'))
 # @click.option('-gr', '--gripper_range', type=tuple, default=(0, 1), help=('z range'))
-def main(env_name, env_args, input_device, output, horizon, num_rollouts, output_format, camera, render, seed, goal_site, teleop_site, pos_scale, rot_scale, gripper_scale, vendor_id, product_id):
+def main(env_name, env_args, reset_noise, input_device, output, horizon, num_rollouts, output_format, camera, render, seed, goal_site, teleop_site, pos_scale, rot_scale, gripper_scale, vendor_id, product_id):
     # x_range, y_range, z_range, roll_range, pitch_range, yaw_range, gripper_range
 
     # seed and load environments
@@ -155,7 +156,8 @@ def main(env_name, env_args, input_device, output, horizon, num_rollouts, output
         # start a new rollout
         print("rollout {} start".format(i_rollout))
         group_key='Trial'+str(i_rollout); trace.create_group(group_key)
-        env.reset()
+        reset_noise = reset_noise*np.random.uniform(low=-1, high=1, size=env.init_qpos.shape)
+        env.reset(reset_qpos=env.init_qpos+reset_noise, blocking=True)
 
         # recover init state
         obs, rwd, done, env_info = env.forward()

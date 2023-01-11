@@ -57,6 +57,7 @@ def vrbehind2mj(pose):
 @click.command(help=DESC)
 @click.option('-e', '--env_name', type=str, help='environment to load', default='rpFrankaRobotiqData-v0')
 @click.option('-ea', '--env_args', type=str, default=None, help=('env args. E.g. --env_args "{\'is_hardware\':True}"'))
+@click.option('-rn', '--reset_noise', type=float, default=0.0, help=('Amplitude of noise during reset'))
 @click.option('-o', '--output', type=str, default="teleOp_trace.h5", help=('Output name'))
 @click.option('-h', '--horizon', type=int, help='Rollout horizon', default=100)
 @click.option('-n', '--num_rollouts', type=int, help='number of repeats for the rollouts', default=2)
@@ -76,7 +77,7 @@ def vrbehind2mj(pose):
 # @click.option('-ry', '--pitch_range', type=tuple, default=(-0.5, 0.5), help=('pitch range'))
 # @click.option('-rz', '--yaw_range', type=tuple, default=(-0.5, 0.5), help=('yaw range'))
 # @click.option('-gr', '--gripper_range', type=tuple, default=(0, 1), help=('z range'))
-def main(env_name, env_args, output, horizon, num_rollouts, output_format, camera, seed, render, goal_site, teleop_site, pos_scale, rot_scale, gripper_scale):
+def main(env_name, env_args, reset_noise, output, horizon, num_rollouts, output_format, camera, seed, render, goal_site, teleop_site, pos_scale, rot_scale, gripper_scale):
     # x_range, y_range, z_range, roll_range, pitch_range, yaw_range, gripper_range):
 
     # seed and load environments
@@ -112,15 +113,18 @@ def main(env_name, env_args, output, horizon, num_rollouts, output_format, camer
     gripper_state = delta_gripper = 0
 
     # Collect rollouts
-    env.reset(blocking=False) # blocking reset to prep the scene
     for i_rollout in range(num_rollouts):
 
         # start a new rollout
         print("rollout {} start".format(i_rollout))
         group_key='Trial'+str(i_rollout); trace.create_group(group_key)
+        # Reset
         exit_request = False
-        # Reset goal back to nominal position
+        reset_noise = reset_noise*np.random.uniform(low=-1, high=1, size=env.init_qpos.shape)
+        env.reset(reset_qpos=env.init_qpos+reset_noise, blocking=True)
+        # Reset goal site back to nominal position
         env.sim.model.site_pos[goal_sid] = env.sim.data.site_xpos[teleop_sid]
+        env.sim.model.site_quat[goal_sid] = mat2quat(np.reshape(env.sim.data.site_xmat[teleop_sid], [3,-1]))
 
         # recover init state
         obs, rwd, done, env_info = env.forward()
@@ -128,7 +132,7 @@ def main(env_name, env_args, output, horizon, num_rollouts, output_format, camer
         gripper_state = 0
 
         # start rolling out
-        for i_step in range(horizon):
+        for i_step in range(horizon+1):
 
             # poll input device --------------------------------------
             transformations, buttons = oculus_reader.get_transformations_and_buttons()
@@ -142,8 +146,6 @@ def main(env_name, env_args, output, horizon, num_rollouts, output_format, camer
             if exit_request:
                 print("Rollout done. ")
                 # user = input("Save rollout?")
-                # Reset env back to nominal and break out of this rollout gather
-                env.reset(blocking=False)
                 break
 
             # recover actions using input ----------------------------
