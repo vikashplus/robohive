@@ -104,6 +104,7 @@ def poll_spacemouse(input_device):
 @click.option('-e', '--env_name', type=str, help='environment to load', default='rpFrankaRobotiqData-v0')
 @click.option('-ea', '--env_args', type=str, default=None, help=('env args. E.g. --env_args "{\'is_hardware\':True}"'))
 @click.option('-rn', '--reset_noise', type=float, default=0.0, help=('Amplitude of noise during reset'))
+@click.option('-an', '--action_noise', type=float, default=0.0, help=('Amplitude of action noise during rollout'))
 @click.option('-i', '--input_device', type=click.Choice(['keyboard', 'spacemouse']), help='input to use for teleOp', default='keyboard')
 @click.option('-o', '--output', type=str, default="teleOp_trace.h5", help=('Output name'))
 @click.option('-h', '--horizon', type=int, help='Rollout horizon', default=100)
@@ -126,7 +127,7 @@ def poll_spacemouse(input_device):
 # @click.option('-ry', '--pitch_range', type=tuple, default=(-0.5, 0.5), help=('pitch range'))
 # @click.option('-rz', '--yaw_range', type=tuple, default=(-0.5, 0.5), help=('yaw range'))
 # @click.option('-gr', '--gripper_range', type=tuple, default=(0, 1), help=('z range'))
-def main(env_name, env_args, reset_noise, input_device, output, horizon, num_rollouts, output_format, camera, render, seed, goal_site, teleop_site, pos_scale, rot_scale, gripper_scale, vendor_id, product_id):
+def main(env_name, env_args, reset_noise, action_noise, input_device, output, horizon, num_rollouts, output_format, camera, render, seed, goal_site, teleop_site, pos_scale, rot_scale, gripper_scale, vendor_id, product_id):
     # x_range, y_range, z_range, roll_range, pitch_range, yaw_range, gripper_range
 
     # seed and load environments
@@ -200,6 +201,8 @@ def main(env_name, env_args, reset_noise, input_device, output, horizon, num_rol
             else:
                 act[:7] = ik_result.qpos[:7]
                 act[7:] = gripper_state
+                if action_noise:
+                    act = act + env.env.np_random.uniform(high=action_noise, low=-action_noise, size=len(act)).astype(act.dtype)
                 if env.normalize_act:
                     act = env.env.robot.normalize_actions(act)
 
