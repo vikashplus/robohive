@@ -58,12 +58,12 @@ class JointPDPolicy(toco.PolicyModule):
 
 
 class FrankaArm(hardwareBase):
-    def __init__(self, name, ip_address, gain_scale=1.0, **kwargs):
+    def __init__(self, name, ip_address, gain_scale=0.5, **kwargs):
         self.name = name
         self.ip_address = ip_address
         self.robot = None
         self.gain_scale = gain_scale
-        self.reset_gain_scale = 2.0
+        self.reset_gain_scale = 1.0
         self.policy = None
 
 
