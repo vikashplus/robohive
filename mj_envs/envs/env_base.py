@@ -170,12 +170,14 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             # Load tranfsormms
             if id_encoder[:3] == 'r3m':
                 if wxh == "224x224":
-                    self.rgb_transform = T.Compose([T.ToTensor()]) # ToTensor() divides by 255
+                    self.rgb_transform = T.Compose([T.ToTensor(),  # ToTensor() divides by 255
+                                                    T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
                 else:
                     print("HxW = 224x224 recommended")
                     self.rgb_transform = T.Compose([T.Resize(256),
-                                        T.CenterCrop(224),
-                                        T.ToTensor()]) # ToTensor() divides by 255
+                                                    T.CenterCrop(224),
+                                                    T.ToTensor(),  # ToTensor() divides by 255
+                                                    T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
 
     def step(self, a):
