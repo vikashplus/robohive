@@ -14,7 +14,7 @@ REAL_GRIPPER_FULL_OPEN = 0.00
 REAL_GRIPPER_FULL_CLOSE = 0.04
 GRIPPER_BUFF_N = 4
 GRIPPER_CLOSE_THRESH = 1e-8
-MOVE_THRESH = 0.005
+MOVE_THRESH = 0.001
 
 class HeuristicPolicy():
     def __init__(self, env, seed):
@@ -119,7 +119,10 @@ class HeuristicPolicyReal():
             action[6] = REAL_GRIPPER_FULL_OPEN
             action[7] = 0
         elif self.stage == 1 or self.stage == 2: # Move to pregrasp
-            action[:3] += obs_dict['object_err'][0,0,0:3]
+            action[:2] += 2*obs_dict['object_err'][0,0,0:2]
+            vel_alpha = (obs_dict['grasp_pos'][0,0,1]-0.368)/(0.72-0.368)
+            vel_limit_low = -0.075*vel_alpha+(1-vel_alpha)*-0.035
+            action[2] += max(min(obs_dict['object_err'][0,0,2],0.15),vel_limit_low)
             action[6] = REAL_GRIPPER_FULL_OPEN
             action[7] = 0
         elif self.stage == 3 or self.stage == 4: # Close gripper

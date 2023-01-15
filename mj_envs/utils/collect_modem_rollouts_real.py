@@ -46,15 +46,15 @@ USAGE:\n
 PIX_FROM_LEFT = 73
 PIX_FROM_TOP = 58
 X_DIST_FROM_CENTER = -1.0668/2
-Y_DIST_FROM_BASE = 0.7493
+Y_DIST_FROM_BASE = 0.72#0.7493
 Y_SCALE = -0.5207/152 # 0.5207 is length of bin 
 X_SCALE = 1.0668/314 # 1.0668 is width of bin
 OBJ_POS_LOW = [-0.25,0.368,0.91] #[-0.35,0.25,0.91]
 OBJ_POS_HIGH = [0.25, 0.72, 0.91] #[0.35,0.65,0.91]
-DROP_ZONE_LOW = [-0.18, 0.5, 1.15]
-DROP_ZONE_HIGH = [0.18, 0.65, 1.15]
-MOVE_JOINT_VEL = [0.1, 0.35, 0.15, 0.275, 0.3, 0.3, 0.45, 1.0, 1.0]
-DIFF_THRESH = 0.45
+DROP_ZONE_LOW = [-0.18, 0.43, 1.1]
+DROP_ZONE_HIGH = [0.18, 0.53, 1.1]
+MOVE_JOINT_VEL = [0.1, 0.2, 0.2, 0.2, 0.2, 0.2, 0.45, 1.0, 1.0]
+DIFF_THRESH = 0.1#0.45
 
 MASK_START_X = 148 #40
 MASK_END_X = 313 #400
@@ -132,8 +132,6 @@ def cart_move(action, env):
     action = 2*(((action-env.pos_limit_low)/(env.pos_limit_high-env.pos_limit_low))-0.5)
     old_vel_limit = env.vel_limit.copy()
 
-    env.set_vel_limit(np.array(MOVE_JOINT_VEL))
-
     for _ in range(1000):
 
         obs, _, _, env_info = env.step(action)
@@ -142,8 +140,6 @@ def cart_move(action, env):
         if last_pos is not None and not is_moving(last_pos, pos, 0.0001):
             break
         last_pos = pos
-
-    env.set_vel_limit(old_vel_limit)
 
 # Adapted from here: https://github.com/fairinternal/robopen/blob/bb856233b3d8df89698ef80bf3c63ceab445b4aa/closed_loop_perception/robodev/policy/predict_grasp_release.py
 def get_ccomp_grasp(img, out_dir, out_name):
@@ -172,11 +168,12 @@ def get_ccomp_grasp(img, out_dir, out_name):
         if pixels < 1000 and h < 40 and w < 40 and h > 4 and w > 4:
             filtered_boxes.append((x,y,w,h))
 
-    for x,y,w,h in filtered_boxes:
-        cv2.rectangle(img_masked, (x,y), (x+w, y+h), (0,0,255), 1)
+    random.shuffle(filtered_boxes)
+    #for x,y,w,h in filtered_boxes:
+    #    cv2.rectangle(img_masked, (x,y), (x+w, y+h), (0,0,255), 1)
 
-    rec_img_fn = os.path.join(out_dir, out_name+'recs.png')
-    cv2.imwrite(rec_img_fn, img_masked)
+    #rec_img_fn = os.path.join(out_dir, out_name+'recs.png')
+    #cv2.imwrite(rec_img_fn, img_masked)
 
     grasp_centers = []
     for x,y,w,h in filtered_boxes:
@@ -185,7 +182,7 @@ def get_ccomp_grasp(img, out_dir, out_name):
         if (grasp_x >= OBJ_POS_LOW[0] and grasp_x <= OBJ_POS_HIGH[0] and
             grasp_y >= OBJ_POS_LOW[1] and grasp_y <= OBJ_POS_HIGH[1]):
             grasp_centers.append((grasp_x,grasp_y))
-    return grasp_centers
+    return grasp_centers, filtered_boxes, img_masked
 
 def dump_path(path, pfn):
     with open(pfn, 'wb') as pf:
@@ -195,9 +192,6 @@ def move_joint_config(env, config):
     last_pos = None
 
     config = 2*(((config-env.jnt_low)/(env.jnt_high-env.jnt_low))-0.5)
-    old_vel_limit = env.vel_limit.copy()
-
-    env.set_vel_limit(np.array(MOVE_JOINT_VEL))
 
     for _ in range(1000):
 
@@ -207,29 +201,31 @@ def move_joint_config(env, config):
         if last_pos is not None and not is_moving(last_pos, pos, 0.0001):
             break
         last_pos = pos
-    env.set_vel_limit(old_vel_limit)
 
     return obs, env_info
 
-def check_grasp_success(env, obs):
+def check_grasp_success(env, obs, full_check=False):
         if obs is None:
             obs = env.get_obs()
         
         obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
         if obs_dict['qp'][0,0,7] < MAX_GRIPPER_OPEN:
             print('Policy didnt close gripper, resetting')
-            return None, None, False
+            return None, None, False, None, None
 
         print('moving up')
         des_grasp_pos = obs_dict['grasp_pos'][0,0,:].copy()
         des_grasp_y = des_grasp_pos[1]
-        des_grasp_pos[2] = 1.2        
+        des_grasp_height = 1.2        
         move_up_tries = 4
         for i in range(1,move_up_tries+1):
-            des_grasp_pos[1] = ((move_up_tries-i)/(move_up_tries))*des_grasp_y+((i)/(move_up_tries))*(0.5*(DROP_ZONE_HIGH[1]+DROP_ZONE_LOW[1])) 
+            
             move_up_steps = 0
             while(obs_dict['grasp_pos'][0,0,2] < 1.1 and move_up_steps < 25):
                 move_up_action = np.concatenate([des_grasp_pos, [3.14,0.0,0.0,obs_dict['qp'][0,0,7],0.0]])
+                des_grasp_pos[1] = ((move_up_tries-i)/(move_up_tries))*des_grasp_y+((i)/(move_up_tries))*(0.5*(DROP_ZONE_HIGH[1]+DROP_ZONE_LOW[1])) 
+                des_grasp_pos[1] = min(max(des_grasp_pos[1], obs_dict['grasp_pos'][0,0,1]-0.1),obs_dict['grasp_pos'][0,0,1]+0.1) 
+                move_up_action[2] = min(1.2, obs_dict['grasp_pos'][0,0,2]+0.1)
                 move_up_action = 2*(((move_up_action - env.pos_limit_low) / (env.pos_limit_high - env.pos_limit_low)) - 0.5)
                 obs, _, done, _ = env.step(move_up_action)
                 obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1))) 
@@ -243,8 +239,8 @@ def check_grasp_success(env, obs):
         grip_width = obs_dict['qp'][0,0,7]
         mean_diff = 0.0
 
-        if grip_width < MAX_GRIPPER_OPEN or grip_width > MIN_GRIPPER_CLOSED:
-            return None, None, False
+        if not full_check and (grip_width < MAX_GRIPPER_OPEN or grip_width > MIN_GRIPPER_CLOSED):
+            return None, None, False, None, None
 
         obs, env_info = move_joint_config(env, np.concatenate([OUT_OF_WAY, [obs_dict['qp'][0,0,7]]*2])) 
 
@@ -260,9 +256,7 @@ def check_grasp_success(env, obs):
                 break
 
         pre_drop_img = env_info['obs_dict'][top_cam_key]
-        bin_mask = np.zeros(pre_drop_img.shape, dtype=np.uint8)
-        bin_mask[MASK_START_Y:MASK_END_Y, MASK_START_X:MASK_END_X, :] = 255
-        pre_drop_img = cv2.bitwise_and(pre_drop_img, bin_mask).astype(float)
+
 
         print('Moving to drop zone')
         drop_zone_pos = np.random.uniform(low=DROP_ZONE_LOW, high=DROP_ZONE_HIGH)
@@ -299,18 +293,31 @@ def check_grasp_success(env, obs):
             obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
             extra_time -= 1
 
+        drop_pos = obs_dict['grasp_pos'][0,0]
+        drop_x = int(PIX_FROM_LEFT + (drop_pos[0]-X_DIST_FROM_CENTER)/X_SCALE)
+        drop_y = int(PIX_FROM_TOP + (drop_pos[1] - Y_DIST_FROM_BASE)/Y_SCALE)
+
+        success_mask = np.zeros(pre_drop_img.shape, dtype=np.uint8)
+        success_start_x = max(MASK_START_X, drop_x - 30)
+        success_end_x = min(MASK_END_X, drop_x + 30)
+        success_start_y = max(MASK_START_Y, drop_y - 30)
+        success_end_y = min(MASK_END_Y, drop_y+30)
+        print('drop_x {}, drop_y {}, start_x {}, end_x {}, start_y {}, end_y {}'.format( drop_x, drop_y, success_start_x, success_end_x, success_start_y, success_end_y))
+        success_mask[success_start_y:success_end_y, success_start_x:success_end_x, :] = 255
+        pre_drop_img = cv2.bitwise_and(pre_drop_img, success_mask)
+
         print('moving out of way after drop')
         obs, env_info = move_joint_config(env, np.concatenate([OUT_OF_WAY, [obs_dict['qp'][0,0,7]]*2])) 
         time.sleep(3)
         obs, env_info = move_joint_config(env, np.concatenate([OUT_OF_WAY, [obs_dict['qp'][0,0,7]]*2]))
 
         latest_img = env_info['obs_dict'][top_cam_key].copy()
-        post_drop_img = cv2.bitwise_and(latest_img, bin_mask).astype(float)
+        post_drop_img = cv2.bitwise_and(latest_img, success_mask)
 
-        mean_diff = np.mean(np.abs(post_drop_img-pre_drop_img))
+        mean_diff = np.mean(np.abs(post_drop_img.astype(float)-pre_drop_img.astype(float)))
         print('Mean img diff: {}'.format(mean_diff))    
 
-        return mean_diff, latest_img, mean_diff > DIFF_THRESH
+        return mean_diff, latest_img, mean_diff > DIFF_THRESH, pre_drop_img, post_drop_img
 
 # MAIN =========================================================
 @click.command(help=DESC)
@@ -356,8 +363,11 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
 
     latest_img  = None
 
+    grasp_centers = None
     filtered_boxes = None
-    random_grasp_prob = 0.25
+    img_masked = None
+
+    random_grasp_prob = 0.01
 
     while True:#successes < num_rollouts:
 
@@ -375,12 +385,20 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
 
         # Detect and set the object pose
         if latest_img is not None:
-            filtered_boxes = get_ccomp_grasp(latest_img, output_dir+'/debug', 'ccomp_grasp'+f'{(rollouts+seed):010d}')
-            random.shuffle(filtered_boxes)
+            grasp_centers, filtered_boxes, img_masked = get_ccomp_grasp(latest_img, output_dir+'/debug', 'ccomp_grasp'+f'{(rollouts+seed):010d}')
             latest_img = None
 
-        if np.random.rand() > random_grasp_prob and filtered_boxes is not None and len(filtered_boxes) > 0:
-            real_obj_pos = np.array([filtered_boxes[-1][0],filtered_boxes[-1][1], 0.91])
+        if np.random.rand() > random_grasp_prob and grasp_centers is not None and len(grasp_centers) > 0:
+            real_obj_pos = np.array([grasp_centers[-1][0],grasp_centers[-1][1], 0.91])
+            
+            rec_img = img_masked.copy()
+            x,y,w,h = filtered_boxes[-1]
+            cv2.rectangle(rec_img, (x,y), (x+w, y+h), (255,0,0), 1)
+
+            rec_img_fn = os.path.join(output_dir+'/debug','masked_latest.png')
+            cv2.imwrite(rec_img_fn, cv2.cvtColor(rec_img, cv2.COLOR_RGB2BGR))
+
+            grasp_centers.pop()
             filtered_boxes.pop()
             print('Vision obj pos')
         else:
@@ -400,15 +418,15 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
         cart_move( align_action, env)
 
         print('Rolling out policy')
-        env.set_slow_vel_limit(np.array([0.15, 0.10, 0.15, 0.10, 0.15, 0.2, 0.45, 1.0, 1.0]))
+
         obs, path = rollout_policy(pi,
                                    env,
                                    horizon=100)#env.spec.max_episode_steps,)
-        env.set_slow_vel_limit(np.array([0.15, 0.3, 0.2, 0.25, 0.2, 0.2, 0.35, 1.0, 1.0],))
+
         print('Path Length: {}'.format(len(path['actions'])))
         rollouts += 1
 
-        mean_diff, new_img, grasp_success = check_grasp_success(env, obs)
+        mean_diff, new_img, grasp_success, pre_drop_img, post_drop_img = check_grasp_success(env, obs, grasp_centers is None or len(grasp_centers) == 0 )
 
         if mean_diff is None:
             continue
@@ -421,7 +439,13 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
 
         # Determine success
         if grasp_success:
+
             ro_fn = output_name+'_rollout'+f'{(successes+seed):010d}'
+
+            pre_img_fn = os.path.join(output_dir+'/debug',ro_fn+'pre.png')
+            post_img_fn = os.path.join(output_dir+'/debug',ro_fn+'post.png')
+            cv2.imwrite(pre_img_fn, cv2.cvtColor(pre_drop_img, cv2.COLOR_RGB2BGR))
+            cv2.imwrite(post_img_fn, cv2.cvtColor(post_drop_img, cv2.COLOR_RGB2BGR))
 
             data = {}
 

@@ -59,8 +59,10 @@ class PickPlaceV0(env_base.MujocoEnv):
                geom_sizes={'high':[.05, .05, .05], 'low':[.2, 0.2, 0.2]},
                pos_limit_low=[-0.35, 0.25, 0.76, -3.14, 0, -3.14, 0.0, 0.0],
                pos_limit_high=[0.35, 0.75, 1.5, 3.14, 6.28, 3.14, 0.04, 1.0],
-               vel_limit=[0.15,0.3,0.2,0.3,0.2,0.2,0.35,1.0,1.0],
-               slow_vel_limit=[0.15,0.075,0.1,0.125,0.15,0.15,0.35,1.0,1.0],
+               vel_limit=[0.15, 0.25, 0.1, 0.25, 0.1, 0.25, 0.25, 1.0, 1.0],
+               slow_vel_limit=[0.1, 0.25, 0.1, 0.25, 0.1, 0.1, 0.25, 1.0, 1.0],
+               eef_vel_limit = [0.15, 0.15, 0.25],
+               slow_eef_vel_limit=[0.15, 0.15, 0.075],
                min_grab_height=0.905,
                max_slow_height=1.075,
                max_ik=3,
@@ -79,6 +81,8 @@ class PickPlaceV0(env_base.MujocoEnv):
         self.pos_limit_high = np.array(pos_limit_high)
         self.vel_limit = vel_limit
         self.slow_vel_limit = slow_vel_limit
+        self.eef_vel_limit = eef_vel_limit
+        self.slow_eef_vel_limit = slow_eef_vel_limit
         self.min_grab_height = min_grab_height
         self.max_slow_height = max_slow_height
         self.max_ik = max_ik
@@ -220,8 +224,12 @@ class PickPlaceV0(env_base.MujocoEnv):
             # Un-normalize cmd
             eef_cmd = (0.5*a.flatten()[-8:]+0.5)*(self.pos_limit_high-self.pos_limit_low)+self.pos_limit_low
             eef_cmd = np.clip(eef_cmd, self.pos_limit_low, self.pos_limit_high)
-
-            
+            cur_pos = self.sim_obsd.data.site_xpos[self.grasp_sid]
+            if self.robot.is_hardware:
+                if cur_pos[2] < self.max_slow_height:
+                    eef_cmd[:3] = np.clip(eef_cmd[:3], cur_pos-self.slow_eef_vel_limit, cur_pos+self.eef_vel_limit)
+                else:
+                    eef_cmd[:3] = np.clip(eef_cmd[:3], cur_pos-self.eef_vel_limit, cur_pos+self.eef_vel_limit)
             eef_pos = eef_cmd[:3]
             eef_elr = eef_cmd[3:6]
             eef_quat= euler2quat(eef_elr)
@@ -287,7 +295,8 @@ class PickPlaceV0(env_base.MujocoEnv):
 
         # finalize step
         env_info = self.get_env_infos()
-        done = self.robot.is_hardware and (not ik_success or invalid_grab or (eef_cmd is not None and bool(eef_cmd[7])))
+        done = self.robot.is_hardware and (not ik_success or invalid_grab or (eef_cmd is not None and eef_cmd[7] > 0.5))
+
         # returns obs(t+1), rwd(t+1), done(t+1), info(t+1)
         return obs, env_info['rwd_'+self.rwd_mode], bool(env_info['done']) or done, env_info
 
