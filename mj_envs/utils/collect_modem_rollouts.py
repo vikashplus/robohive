@@ -69,6 +69,7 @@ def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, outp
     while successes < num_rollouts:
 
         # examine policy's behavior to recover paths
+        env.set_time_step(0)
         paths = env.examine_policy(
             policy=pi,
             horizon=env.spec.max_episode_steps,
@@ -92,6 +93,7 @@ def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, outp
             data['states']['qp'] = paths[0]['env_infos']['obs_dict']['qp']
             data['states']['qv'] = paths[0]['env_infos']['obs_dict']['qv']
             data['states']['grasp_pos'] = paths[0]['env_infos']['obs_dict']['grasp_pos']
+            data['states']['time_step'] = paths[0]['env_infos']['obs_dict']['time_step']
             data['states']['object_err'] = paths[0]['env_infos']['obs_dict']['object_err']
             data['states']['target_err'] = paths[0]['env_infos']['obs_dict']['target_err']
 

@@ -418,7 +418,7 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
         cart_move( align_action, env)
 
         print('Rolling out policy')
-
+        env.set_time_step(0)
         obs, path = rollout_policy(pi,
                                    env,
                                    horizon=100)#env.spec.max_episode_steps,)
@@ -453,6 +453,7 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
             data['states']['qp'] = path['env_infos']['obs_dict']['qp']
             data['states']['qv'] = path['env_infos']['obs_dict']['qv']
             data['states']['grasp_pos'] = path['env_infos']['obs_dict']['grasp_pos']
+            data['states']['time_step'] = path['env_infos']['obs_dict']['time_step']
             data['states']['object_err'] = path['env_infos']['obs_dict']['object_err']
             data['states']['target_err'] = path['env_infos']['obs_dict']['target_err']
 
