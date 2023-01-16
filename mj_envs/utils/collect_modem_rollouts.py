@@ -39,10 +39,11 @@ USAGE:\n
 @click.option('-on', '--output_name', type=str, default=None, help=('The name to save the outputs as'))
 @click.option('-n', '--num_rollouts', type=int, help='number of rollouts to save', default=100)
 @click.option('-sp', '--sparse_reward', type=bool, default=True)
-def collect_rollouts_cli(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, sparse_reward):
-    collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, sparse_reward)
+@click.option('-an', '--act_noise', type=float, default=0.0)
+def collect_rollouts_cli(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, sparse_reward, act_noise):
+    collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, sparse_reward, act_noise)
 
-def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, sparse_reward):
+def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, sparse_reward, act_noise):
 
     # seed and load environments
     np.random.seed(seed)
@@ -52,7 +53,7 @@ def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, outp
         env = gym.make(env_name)        
     env.seed(seed)
 
-    pi = HeuristicPolicy(env, seed)
+    pi = HeuristicPolicy(env, seed, act_noise)
     output_name = 'heuristic'
 
     # resolve directory
