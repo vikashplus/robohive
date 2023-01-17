@@ -57,8 +57,8 @@ class PickPlaceV0(env_base.MujocoEnv):
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
                randomize=False,
                geom_sizes={'high':[.05, .05, .05], 'low':[.2, 0.2, 0.2]},
-               pos_limit_low=[-0.35, 0.25, 0.76, -3.14, 0.0, 0.0],
-               pos_limit_high=[0.35, 0.75, 1.5, 3.14, 0.04, 1.0],
+               pos_limit_low=[-0.35, 0.25, 0.76, -3.14, 0, -3.14, 0.0, 0.0],
+               pos_limit_high=[0.35, 0.75, 1.5, 3.14, 6.28, 3.14, 0.04, 1.0],
                vel_limit=[0.15, 0.25, 0.1, 0.25, 0.1, 0.25, 0.25, 1.0, 1.0],
                slow_vel_limit=[0.1, 0.25, 0.1, 0.25, 0.1, 0.1, 0.25, 1.0, 1.0],
                eef_vel_limit = [0.15, 0.15, 0.25],
@@ -100,8 +100,8 @@ class PickPlaceV0(env_base.MujocoEnv):
                        reward_mode=reward_mode,
                        frame_skip=frame_skip,
                        **kwargs)
-        self.action_space = gym.spaces.Box(-np.ones(6), 
-                                           np.ones(6), 
+        self.action_space = gym.spaces.Box(-np.ones(8), 
+                                           np.ones(8), 
                                            dtype=np.float32)
 
     def set_real_obj_pos(self, real_obj_pos):
@@ -219,10 +219,10 @@ class PickPlaceV0(env_base.MujocoEnv):
                 action = 2*(((action - self.jnt_low)/(self.jnt_high-self.jnt_low))-0.5)
         else:           
             ik_success = False
-            assert(a.flatten().shape[0]==6 or a.flatten().shape[0]==15)
+            assert(a.flatten().shape[0]==8 or a.flatten().shape[0]==17)
             
             # Un-normalize cmd
-            eef_cmd = (0.5*a.flatten()[-6:]+0.5)*(self.pos_limit_high-self.pos_limit_low)+self.pos_limit_low
+            eef_cmd = (0.5*a.flatten()[-8:]+0.5)*(self.pos_limit_high-self.pos_limit_low)+self.pos_limit_low
             eef_cmd = np.clip(eef_cmd, self.pos_limit_low, self.pos_limit_high)
             cur_pos = self.sim_obsd.data.site_xpos[self.grasp_sid]
             if self.robot.is_hardware:
@@ -231,7 +231,7 @@ class PickPlaceV0(env_base.MujocoEnv):
                 else:
                     eef_cmd[:3] = np.clip(eef_cmd[:3], cur_pos-self.eef_vel_limit, cur_pos+self.eef_vel_limit)
             eef_pos = eef_cmd[:3]
-            eef_elr = np.array([3.14, 0.0, eef_cmd[3]])
+            eef_elr = eef_cmd[3:6]
             eef_quat= euler2quat(eef_elr)
 
             for i in range(self.max_ik):
@@ -259,13 +259,13 @@ class PickPlaceV0(env_base.MujocoEnv):
 
             # Check that we are not initiating a grasp at too low of height
             if self.robot.is_hardware and (self.last_eef_cmd is not None and 
-                (eef_cmd[4] > self.last_eef_cmd[4] + sys.float_info.epsilon) and 
+                (eef_cmd[6] > self.last_eef_cmd[6] + sys.float_info.epsilon) and 
                 self.sim_obsd.data.site_xpos[self.grasp_sid][2] < self.min_grab_height):
                 print('Cant grasp this low, z = {}'.format(self.sim_obsd.data.site_xpos[self.grasp_sid][2]))
                 invalid_grab = True
 
             self.last_eef_cmd = eef_cmd
-            action[7:9] = eef_cmd[4]
+            action[7:9] = eef_cmd[6]
 
             if self.robot.is_hardware:
                 if self.sim_obsd.data.site_xpos[self.grasp_sid][2] < self.max_slow_height:
@@ -295,7 +295,7 @@ class PickPlaceV0(env_base.MujocoEnv):
 
         # finalize step
         env_info = self.get_env_infos()
-        done = self.robot.is_hardware and (not ik_success or invalid_grab or (eef_cmd is not None and eef_cmd[5] > 0.5))
+        done = self.robot.is_hardware and (not ik_success or invalid_grab or (eef_cmd is not None and eef_cmd[7] > 0.5))
 
         # returns obs(t+1), rwd(t+1), done(t+1), info(t+1)
         return obs, env_info['rwd_'+self.rwd_mode], bool(env_info['done']) or done, env_info
