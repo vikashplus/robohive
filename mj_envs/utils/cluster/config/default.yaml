@@ -3,7 +3,7 @@ defaults:
     - override hydra/output: local
 
 env_name: FrankaPickPlaceRandom_v2d-v0
-mode: evaluation # exploration
+mode: evaluation
 seed: 1
 render: none
 camera_name: None
@@ -11,7 +11,6 @@ output_dir: /checkpoint/plancaster/outputs/tdmpc/demonstrations/franka-FrankaPic
 output_name: None
 num_rollouts: 100
 sparse_reward: True
-act_noise: 0.0 #0.05
 
 # hydra
 hydra:

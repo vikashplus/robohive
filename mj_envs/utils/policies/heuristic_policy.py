@@ -17,11 +17,10 @@ GRIPPER_CLOSE_THRESH = 1e-8
 MOVE_THRESH = 0.001
 
 class HeuristicPolicy():
-    def __init__(self, env, seed, noise=0.0):
+    def __init__(self, env, seed):
         self.env = env
         self.gripper_buff = SIM_GRIPPER_FULL_OPEN*np.ones(GRIPPER_BUFF_N)
         self.yaw = 0.0
-        self.noise = noise
         np.random.seed(seed)
         
     def get_action(self, obs):
@@ -58,10 +57,9 @@ class HeuristicPolicy():
                 self.gripper_buff[i] = self.gripper_buff[i+1]
             self.gripper_buff[-1] = obs_dict['qp'][0,0,7]
 
-            if np.all(np.abs(self.gripper_buff - SIM_GRIPPER_FULL_OPEN) > 1e-4):
+            if np.all(self.gripper_buff - SIM_GRIPPER_FULL_OPEN > 1e-4):
                 # Move to target
                 action[:3] += obs_dict['target_err'][0,0,0:3]
-
             action[3] = self.yaw
             action[4] = SIM_GRIPPER_FULL_CLOSE
             action[5] = 0.0
@@ -70,10 +68,7 @@ class HeuristicPolicy():
         # Normalize action to be between -1 and 1
         action = 2*(((action - self.env.pos_limit_low) / (self.env.pos_limit_high - self.env.pos_limit_low)) - 0.5)
         
-        noised_action = action + self.noise*np.random.randn(action.shape[0])
-        noised_action = np.clip(noised_action, -1, 1)
-
-        return noised_action, {'evaluation': action}
+        return action, {'evaluation': action}
 
 class HeuristicPolicyReal():
     def __init__(self, env, seed):
