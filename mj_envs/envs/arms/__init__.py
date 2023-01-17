@@ -163,7 +163,7 @@ def register_pick_place_visual_envs(env_name, encoder_type):
         env_id='{}-v0'.format(env_name),
         variant_id='{}_v{}-v0'.format(env_name, encoder_type),
         variants={'obs_keys':
-                    ['qp', 'qv', 'grasp_pos', 'time_step', 'object_err', 'target_err',
+                    ['qp', 'qv', 'grasp_pos', 'object_err', 'target_err',
                     "rgb:left_cam:240x424:{}".format(encoder_type),
                     "d:left_cam:240x424:{}".format(encoder_type),
                     "rgb:right_cam:240x424:{}".format(encoder_type),

@@ -18,7 +18,7 @@ import sys
 class PickPlaceV0(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS = [
-        'qp', 'qv', 'grasp_pos', 'time_step', 'object_err', 'target_err'
+        'qp', 'qv', 'grasp_pos', 'object_err', 'target_err'
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
         "object_dist": -1.0,
@@ -92,7 +92,7 @@ class PickPlaceV0(env_base.MujocoEnv):
         
         self.jnt_low = self.sim.model.jnt_range[:self.sim.model.nu, 0]
         self.jnt_high = self.sim.model.jnt_range[:self.sim.model.nu, 1]
-        self.time_step = 0
+
         self.real_obj_pos = np.array([0.0,0.5,1.0])
 
         super()._setup(obs_keys=obs_keys,
@@ -119,13 +119,9 @@ class PickPlaceV0(env_base.MujocoEnv):
     def set_slow_vel_limit(self, slow_vel_limit):
          self.slow_vel_limit = slow_vel_limit
 
-    def set_time_step(self, time_step):
-        self.time_step = time_step
-
     def get_obs_dict(self, sim):
         obs_dict = {}
         obs_dict['t'] = np.array([self.sim.data.time])
-        obs_dict['time_step'] = np.array([self.time_step*self.dt])
         obs_dict['qp'] = sim.data.qpos.copy()
         obs_dict['qv'] = sim.data.qvel.copy()
         obs_dict['grasp_pos'] = sim.data.site_xpos[self.grasp_sid]
@@ -184,7 +180,7 @@ class PickPlaceV0(env_base.MujocoEnv):
 
         if reset_qpos is None:
             reset_qpos = self.init_qpos.copy()
-        self.time_step = 0
+        
         if self.randomize:
             first_obj_id = self.sim.model.joint_name2id(self.object_site_names[0])
             for body in self.object_site_names:
@@ -288,7 +284,6 @@ class PickPlaceV0(env_base.MujocoEnv):
                                             realTimeSim=self.mujoco_render_frames,
                                             render_cbk=self.mj_render if self.mujoco_render_frames else None)
 
-        self.time_step += 1
         # observation
         obs = self.get_obs()
 
