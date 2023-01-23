@@ -21,6 +21,9 @@ class TestArms(TestEnvs):
             'FrankaReachRandom_vr3m18-v0',
             'FrankaReachRandom_vr3m34-v0',
             'FrankaReachRandom_vr3m50-v0',
+            'FrankaReachRandom_vrrl18-v0',
+            'FrankaReachRandom_vrrl34-v0',
+            'FrankaReachRandom_vrrl50-v0',
             ]
         self.check_envs('Arms(visual)', env_names)
 
