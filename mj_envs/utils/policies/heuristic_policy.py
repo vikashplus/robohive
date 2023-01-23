@@ -19,7 +19,7 @@ MOVE_THRESH = 0.001
 class HeuristicPolicy():
     def __init__(self, env, seed):
         self.env = env
-        self.gripper_buff = SIM_GRIPPER_FULL_OPEN*np.ones((GRIPPER_BUFF_N,2))
+        self.gripper_buff = SIM_GRIPPER_FULL_OPEN*np.ones(GRIPPER_BUFF_N)
         self.yaw = 0.0
         np.random.seed(seed)
         
@@ -28,36 +28,42 @@ class HeuristicPolicy():
         # TODO Change obsvec2dict to handle obs vectors with single dim
         obs_dict = self.env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
 
-        action = np.concatenate([obs_dict['grasp_pos'][0,0,:], [3.14,0.0,self.yaw], obs_dict['qp'][0,0,7:9]])
+        action = np.concatenate([obs_dict['grasp_pos'][0,0,:], [self.yaw, obs_dict['qp'][0,0,7],0.0]])
         
         if np.linalg.norm(obs_dict['object_err'][0,0,:]) > BEGIN_GRASP_THRESH:
             # Reset gripper buff
-            self.gripper_buff = SIM_GRIPPER_FULL_OPEN*np.ones((GRIPPER_BUFF_N,2))
+            self.gripper_buff = SIM_GRIPPER_FULL_OPEN*np.ones(GRIPPER_BUFF_N)
 
             # Object not yet within gripper
             if np.linalg.norm(obs_dict['object_err'][0,0,:2]) > SIM_BEGIN_DESCENT_THRESH:
 
                 self.yaw = np.random.uniform(-3.14, 0.0)
                 # Gripper not yet aligned with object (also open gripper)
-                action[2] = SIM_ALIGN_HEIGHT
                 action[:2] += obs_dict['object_err'][0,0,0:2]
-                action[6:8] = SIM_GRIPPER_FULL_OPEN
+                action[2] = SIM_ALIGN_HEIGHT
+                action[3] = self.yaw
+                action[4] = SIM_GRIPPER_FULL_OPEN
+                action[5] = 0.0
         
             else:
                 # Gripper aligned with object, go down towards it (also open gripper)
                 action[:3] += obs_dict['object_err'][0,0,0:3]
-                action[6:8] = SIM_GRIPPER_FULL_OPEN
+                action[3] = self.yaw
+                action[4] = SIM_GRIPPER_FULL_OPEN
+                action[5] = 0.0
         else:
             # Close gripper, move to target once gripper has had chance to close
             for i in range(self.gripper_buff.shape[0]-1):
                 self.gripper_buff[i] = self.gripper_buff[i+1]
-            self.gripper_buff[-1] = obs_dict['qp'][0,0,7:9]
+            self.gripper_buff[-1] = obs_dict['qp'][0,0,7]
 
-            if np.all(np.linalg.norm(self.gripper_buff - SIM_GRIPPER_FULL_OPEN, axis=1) > 1e-4):
+            if np.all(np.abs(self.gripper_buff - SIM_GRIPPER_FULL_OPEN) > 1e-4):
                 # Move to target
                 action[:3] += obs_dict['target_err'][0,0,0:3]
 
-            action[6:8] = SIM_GRIPPER_FULL_CLOSE
+            action[3] = self.yaw
+            action[4] = SIM_GRIPPER_FULL_CLOSE
+            action[5] = 0.0
 
 
         # Normalize action to be between -1 and 1
@@ -80,7 +86,7 @@ class HeuristicPolicyReal():
         # TODO Change obsvec2dict to handle obs vectors with single dim
         obs_dict = self.env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
 
-        action = np.concatenate([obs_dict['grasp_pos'][0,0,:], [3.14,0.0,self.yaw], [obs_dict['qp'][0,0,7],0]])
+        action = np.concatenate([obs_dict['grasp_pos'][0,0,:], [self.yaw, obs_dict['qp'][0,0,7],0.0]])
 
         # Figure out which stage we are in
         if self.last_t > self.env.sim.data.time:
@@ -114,26 +120,30 @@ class HeuristicPolicyReal():
 
         #print('Stage {}, t {}'.format(self.stage, self.last_t))
         if self.stage == 0: # Align in xy
-            action[2] = REAL_ALIGN_HEIGHT
             action[:2] += obs_dict['object_err'][0,0,0:2]
-            action[6] = REAL_GRIPPER_FULL_OPEN
-            action[7] = 0
+            action[2] = REAL_ALIGN_HEIGHT
+            action[3] = self.yaw
+            action[4] = REAL_GRIPPER_FULL_OPEN
+            action[5] = 0.0
         elif self.stage == 1 or self.stage == 2: # Move to pregrasp
             action[:2] += 2*obs_dict['object_err'][0,0,0:2]
             vel_alpha = (obs_dict['grasp_pos'][0,0,1]-0.368)/(0.72-0.368)
             vel_limit_low = -0.075*vel_alpha+(1-vel_alpha)*-0.035
             action[2] += max(min(obs_dict['object_err'][0,0,2],0.15),vel_limit_low)
-            action[6] = REAL_GRIPPER_FULL_OPEN
-            action[7] = 0
+            action[3] = self.yaw
+            action[4] = REAL_GRIPPER_FULL_OPEN
+            action[5] = 0.0
         elif self.stage == 3 or self.stage == 4: # Close gripper
             action[:3] += obs_dict['object_err'][0,0,0:3]
-            action[6] = REAL_GRIPPER_FULL_CLOSE
-            action[7] = 0
+            action[3] = self.yaw
+            action[4] = REAL_GRIPPER_FULL_CLOSE
+            action[5] = 0.0
             #print('Grasp pos {}'.format(obs_dict['grasp_pos'][0,0,:]))
         elif self.stage == 5: # Move to target pose
             action[:3] += obs_dict['object_err'][0,0,0:3] #obs_dict['target_err'][0,0,0:3]
-            action[6] = REAL_GRIPPER_FULL_CLOSE
-            action[7] = 1
+            action[3] = self.yaw
+            action[4] = REAL_GRIPPER_FULL_CLOSE
+            action[5] = 1.0
 
 
         # Normalize action to be between -1 and 1

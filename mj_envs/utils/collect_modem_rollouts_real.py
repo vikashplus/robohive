@@ -222,7 +222,7 @@ def check_grasp_success(env, obs, full_check=False):
             
             move_up_steps = 0
             while(obs_dict['grasp_pos'][0,0,2] < 1.1 and move_up_steps < 25):
-                move_up_action = np.concatenate([des_grasp_pos, [3.14,0.0,0.0,obs_dict['qp'][0,0,7],0.0]])
+                move_up_action = np.concatenate([des_grasp_pos, [0.0,obs_dict['qp'][0,0,7],0.0]])
                 des_grasp_pos[1] = ((move_up_tries-i)/(move_up_tries))*des_grasp_y+((i)/(move_up_tries))*(0.5*(DROP_ZONE_HIGH[1]+DROP_ZONE_LOW[1])) 
                 des_grasp_pos[1] = min(max(des_grasp_pos[1], obs_dict['grasp_pos'][0,0,1]-0.1),obs_dict['grasp_pos'][0,0,1]+0.1) 
                 move_up_action[2] = min(1.2, obs_dict['grasp_pos'][0,0,2]+0.1)
@@ -264,7 +264,7 @@ def check_grasp_success(env, obs, full_check=False):
         last_pos = None
         drop_zone_steps = 0
         while(drop_zone_steps < 100):
-            drop_zone_action = np.concatenate([drop_zone_pos, [3.14,0.0,0.0,obs_dict['qp'][0,0,7],0.0]])
+            drop_zone_action = np.concatenate([drop_zone_pos, [0.0,obs_dict['qp'][0,0,7],0.0]])
             drop_zone_action = 2*(((drop_zone_action - env.pos_limit_low) / (env.pos_limit_high - env.pos_limit_low)) - 0.5)
             obs, _, done, _ = env.step(drop_zone_action)
             obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))    
@@ -412,9 +412,9 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
 
         rand_yaw = np.random.uniform(low = -3.14, high = 3.14)
         pi.set_yaw(rand_yaw)
-        align_action = np.concatenate([real_obj_pos, [ 3.14,0.0,0.0,0.0,0.0]])
+        align_action = np.concatenate([real_obj_pos, [0.0,0.0,0.0]])
         align_action[2] = 1.075
-        align_action[5] = rand_yaw
+        align_action[3] = rand_yaw
         cart_move( align_action, env)
 
         print('Rolling out policy')
