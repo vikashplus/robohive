@@ -87,10 +87,10 @@ def rollout_policy(policy,
     env_infos = []
 
     o = env.get_obs()
-    env_info = env.get_env_infos()
 
-    env.squeeze_dims(env_info['rwd_dict'])
-    env.squeeze_dims(env_info['obs_dict'])
+    env.squeeze_dims(env.rwd_dict)
+    env.squeeze_dims(env.obs_dict)
+    env_info = env.get_env_infos()
 
     observations.append(o)
     env_infos.append(env_info)
@@ -410,7 +410,7 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
         env.set_target_pos(target_pos)
         print('Real obs pos {} target pos {}'.format(real_obj_pos, target_pos))        
 
-        rand_yaw = np.random.uniform(low = 0.0, high = 3.14)
+        rand_yaw = np.random.uniform(low = -3.14, high = 3.14)
         pi.set_yaw(rand_yaw)
         align_action = np.concatenate([real_obj_pos, [ 3.14,0.0,0.0,0.0,0.0]])
         align_action[2] = 1.075
