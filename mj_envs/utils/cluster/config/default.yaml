@@ -7,7 +7,7 @@ mode: evaluation
 seed: 1
 render: none
 camera_name: None
-output_dir: /checkpoint/plancaster/outputs/tdmpc/demonstrations/franka-FrankaPickPlaceRandom_v2d
+output_dir: /checkpoint/plancaster/outputs/tdmpc/demonstrations/franka-FrankaPickPlaceRandom_v2d-yaw-only
 output_name: None
 num_rollouts: 100
 sparse_reward: True
