@@ -10,6 +10,7 @@ import numpy as np
 import os
 import time as timer
 import torch
+from torchvision.models import resnet50, ResNet50_Weights, resnet34, ResNet34_Weights, resnet18, ResNet18_Weights
 import torchvision.transforms as T
 
 from mj_envs.utils.obj_vec_dict import ObsVecDict
@@ -162,20 +163,31 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 self.rgb_encoder = load_r3m("resnet34")
             elif id_encoder == "r3m50":
                 self.rgb_encoder = load_r3m("resnet50")
+            elif id_encoder == "rrl18":
+                model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+                self.rgb_encoder = torch.nn.Sequential(*(list(model.children())[:-1])).float()
+            elif id_encoder == "rrl34":
+                model = resnet34(weights=ResNet34_Weights.IMAGENET1K_V1)
+                self.rgb_encoder = torch.nn.Sequential(*(list(model.children())[:-1])).float()
+            elif id_encoder == "rrl50":
+                model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)
+                self.rgb_encoder = torch.nn.Sequential(*(list(model.children())[:-1])).float()
             else:
                 raise ValueError("Unsupported visual encoder: {}".format(id_encoder))
             self.rgb_encoder.eval()
             self.rgb_encoder.to(self.device_encoder)
 
             # Load tranfsormms
-            if id_encoder[:3] == 'r3m':
+            if id_encoder[:3] == 'r3m' or id_encoder[:3] == 'rrl':
                 if wxh == "224x224":
-                    self.rgb_transform = T.Compose([T.ToTensor()]) # ToTensor() divides by 255
+                    self.rgb_transform = T.Compose([T.ToTensor(),  # ToTensor() divides by 255
+                                                    T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
                 else:
                     print("HxW = 224x224 recommended")
                     self.rgb_transform = T.Compose([T.Resize(256),
-                                        T.CenterCrop(224),
-                                        T.ToTensor()]) # ToTensor() divides by 255
+                                                    T.CenterCrop(224),
+                                                    T.ToTensor(),  # ToTensor() divides by 255
+                                                    T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
 
     def step(self, a):
@@ -276,10 +288,10 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                     rgb_encoded = img.reshape(-1)
                 elif rgb_encoder_id == '2d':
                     rgb_encoded = img
-                elif rgb_encoder_id[:3] == 'r3m':
+                elif rgb_encoder_id[:3] == 'r3m' or rgb_encoder_id[:3] == 'rrl':
                     with torch.no_grad():
                         rgb_encoded = 255.0 * self.rgb_transform(img[0]).reshape(-1, 3, 224, 224)
-                        rgb_encoded.to(self.device_encoder)
+                        rgb_encoded = rgb_encoded.to(self.device_encoder)
                         rgb_encoded = self.rgb_encoder(rgb_encoded).cpu().numpy()
                         rgb_encoded = np.squeeze(rgb_encoded)
                 else:
