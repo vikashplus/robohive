@@ -55,5 +55,5 @@ def register_visual_envs(env_id, encoder_type):
         silent=True
     )
 for env in ['TrifingerReachFixed-v0', 'TrifingerReachRandom-v0']:
-    for enc in ["r3m18", "r3m34", "r3m50", "flat"]:
+    for enc in ["r3m18", "r3m34", "r3m50", "rrl18", "rrl34", "rrl50", "flat"]:
         register_visual_envs(env, enc)
