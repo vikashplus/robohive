@@ -105,7 +105,8 @@ if __name__ == '__main__':
     # Test one of the newly minted env
     env = gym.make(variant_env_name)
     env.reset()
-    env.sim.render(mode='window')
+    env.mj_render()
+    # env.sim.render(mode='window')
     for _ in range(50):
         env.step(env.action_space.sample()) # take a random action
     env.close()

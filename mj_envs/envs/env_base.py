@@ -430,6 +430,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
 
     @property
+    def id(self):
+        return self.spec.id
+
+
+    @property
     def horizon(self):
         return self.spec.max_episode_steps # paths could have early termination before horizon
 
