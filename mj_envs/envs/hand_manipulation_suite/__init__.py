@@ -6,6 +6,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= """
 
 from gym.envs.registration import register
+from mj_envs.envs.env_variants import register_env_variant
 import os
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -61,6 +62,23 @@ register(
     }
 )
 from mj_envs.envs.hand_manipulation_suite.relocate_v1 import RelocateEnvV1
+
+# Reach to random target using visual inputs
+def register_visual_envs(env_name, encoder_type):
+    register_env_variant(
+        env_id='{}-v1'.format(env_name),
+        variant_id='{}_v{}-v1'.format(env_name, encoder_type),
+        variants={'obs_keys':
+                    ['hand_jnt',
+                    "rgb:vil_camera:224x224:{}".format(encoder_type),
+                    "rgb:fixed:224x224:{}".format(encoder_type)]
+        },
+        silent=True
+    )
+
+for env_name in ["door", "relocate", "hammer", "pen"]:
+    for enc in ["r3m18", "r3m34", "r3m50", "rrl18", "rrl34", "rrl50", "2d"]:
+        register_visual_envs(env_name, enc)
 
 
 # ==================================================================================
