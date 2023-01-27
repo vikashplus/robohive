@@ -13,6 +13,39 @@ class TestHMS(TestEnvs):
         ]
         self.check_envs('Hand Manipulation', env_names)
 
+    def test_hand_manipulation_suite_visual(self):
+        env_names = [
+            'door_vr3m18-v1',
+            'door_vr3m34-v1',
+            'door_vr3m50-v1',
+            'door_vrrl18-v1',
+            'door_vrrl34-v1',
+            'door_vrrl50-v1',
+            'door_v2d-v1',
+            'hammer_vr3m18-v1',
+            'hammer_vr3m34-v1',
+            'hammer_vr3m50-v1',
+            'hammer_vrrl18-v1',
+            'hammer_vrrl34-v1',
+            'hammer_vrrl50-v1',
+            'hammer_v2d-v1',
+            'relocate_vr3m18-v1',
+            'relocate_vr3m34-v1',
+            'relocate_vr3m50-v1',
+            'relocate_vrrl18-v1',
+            'relocate_vrrl34-v1',
+            'relocate_vrrl50-v1',
+            'relocate_v2d-v1',
+            'pen_vr3m18-v1',
+            'pen_vr3m34-v1',
+            'pen_vr3m50-v1',
+            'pen_vrrl18-v1',
+            'pen_vrrl34-v1',
+            'pen_vrrl50-v1',
+            'pen_v2d-v1'
+            ]
+        self.check_envs('Hand Manipulation(visual)', env_names)
+
     def test_dexman_suite(self):
         env_names = [
             'AdroitAirplaneTrackFixed-v0',
