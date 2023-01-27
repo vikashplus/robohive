@@ -549,18 +549,20 @@ class Robot():
 
 
     # Normalize actions from absolute space to unit space
-    def normalize_actions(self, controls, out_space='sim'):
+    def normalize_actions(self, controls, out_space='sim', unnormalize=False):
         """
         Normalize actions from absolute space to unit space
+        Recover actions from unit space to absolute space; if unnormalize==True
+        in_space for controls has to be 'sim'
         """
         act_id = -1
-        normalized_controls = controls.copy()
+        controls_out = controls.copy()
         for name, device in self.robot_config.items():
             if name == "default_robot":
                 if self._act_mode == "pos":
                     act_mid = np.mean(self.sim.model.actuator_ctrlrange, axis=-1)
                     act_rng = (self.sim.model.actuator_ctrlrange[:,1]-self.sim.model.actuator_ctrlrange[:,0])/2.0
-                    normalized_controls = (controls-act_mid)/act_rng
+                    controls_out = controls*act_rng+act_mid if unnormalize else (controls-act_mid)/act_rng
                 else:
                     raise TypeError("only pos act supported")
             else:
@@ -579,14 +581,18 @@ class Robot():
                     else:
                         raise TypeError("Unknown act mode: {}".format(self._act_mode))
 
-                    # normalize and enforce position limits
+                    # unnormalize/ normalize
                     control = controls[in_id]
-                    control =  (control-act_mid)/act_rng
-                    control = np.clip(control, -1, 1)
+                    if unnormalize:
+                        control = np.clip(control, -1, 1)
+                        control = controls*act_rng+act_mid
+                    else:
+                        control =  (control-act_mid)/act_rng
+                        control = np.clip(control, -1, 1)
 
                     # remap to desired space
-                    normalized_controls[out_id] = control
-        return normalized_controls
+                    controls_out[out_id] = control
+        return controls_out
 
 
     # enfoce limits
