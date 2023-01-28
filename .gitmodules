@@ -24,9 +24,6 @@
 	path = mj_envs/sims/YCB_sim
 	url = https://github.com/vikashplus/YCB_sim.git
 	branch = main
-[submodule "mj_envs/sims/neuromuscular_sim"]
-	path = mj_envs/sims/neuromuscular_sim
-	url = https://github.com/vikashplus/neuromuscular_sim.git
 [submodule "mj_envs/sims/object_sim"]
 	path = mj_envs/sims/object_sim
 	url = https://github.com/vikashplus/object_sim.git
@@ -39,3 +36,6 @@
 [submodule "mj_envs/sims/robotiq_sim"]
 	path = mj_envs/sims/robotiq_sim
 	url = https://github.com/vikashplus/robotiq_sim.git
+[submodule "mj_envs/sims/myo_sim"]
+	path = mj_envs/sims/myo_sim
+	url = https://github.com/vikashplus/myo_sim.git
