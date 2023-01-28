@@ -1,9 +1,9 @@
 <mujoco model="2nd hand model for pen reorient">
 
-    <include file="../../../../sims/neuromuscular_sim/hand/assets/myo_hand_assets.xml"/>
-    <include file="../../../../sims/neuromuscular_sim/hand/assets/myo_hand_body.xml"/>
-    <include file="../../../../sims/neuromuscular_sim/scene/myosuite_scene.xml"/>
-    <compiler meshdir='../../../../sims/neuromuscular_sim/' texturedir='../../../../sims/neuromuscular_sim/'/>
+    <include file="../../../../sims/myo_sim/hand/assets/myo_hand_assets.xml"/>
+    <include file="../../../../sims/myo_sim/hand/assets/myo_hand_body.xml"/>
+    <include file="../../../../sims/myo_sim/scene/myosuite_scene.xml"/>
+    <compiler meshdir='../../../../sims/myo_sim/' texturedir='../../../../sims/myo_sim/'/>
 
 
     <default>
