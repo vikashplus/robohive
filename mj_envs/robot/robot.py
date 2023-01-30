@@ -585,7 +585,7 @@ class Robot():
                     control = controls[in_id]
                     if unnormalize:
                         control = np.clip(control, -1, 1)
-                        control = controls*act_rng+act_mid
+                        control = control*act_rng+act_mid
                     else:
                         control =  (control-act_mid)/act_rng
                         control = np.clip(control, -1, 1)
