@@ -22,8 +22,8 @@ class PickPlaceV0(env_base.MujocoEnv):
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
         "object_dist": -1.0,
-        "target_dist": -1.0,
-        "bonus": 4.0,
+        "target_dist": -2.5,
+        "bonus": 10.0,
         "penalty": -50,
     }
 
@@ -144,7 +144,8 @@ class PickPlaceV0(env_base.MujocoEnv):
             # Optional Keys
             ('object_dist',   object_dist),
             ('target_dist',   target_dist),
-            ('bonus',   (object_dist<.1) + (target_dist<.1) + (target_dist<.05)),
+            #('bonus',   (object_dist<.1) + (target_dist<.1) + (target_dist<.05)),
+            ('bonus',   (target_dist<.1) + (target_dist<.05)),
             ('penalty', (object_dist>far_th)),
             # Must keys
             ('sparse',  target_dist<.075),
