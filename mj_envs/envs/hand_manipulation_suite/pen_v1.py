@@ -129,6 +129,6 @@ class PenEnvV1(env_base.MujocoEnv):
         qp = state_dict['qpos']
         qv = state_dict['qvel']
         desired_orien = state_dict['desired_orien']
-        self.set_state(qp, qv)
+        self.sim.set_state(qpos=qp, qvel=qv)
         self.sim.model.body_quat[self.target_obj_bid] = desired_orien
         self.sim.forward()

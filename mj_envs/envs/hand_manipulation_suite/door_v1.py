@@ -116,7 +116,7 @@ class DoorEnvV1(env_base.MujocoEnv):
         """
         qp = state_dict['qpos']
         qv = state_dict['qvel']
-        self.set_state(qp, qv)
+        self.sim.set_state(qpos=qp, qvel=qv)
         self.sim.model.body_pos[self.door_bid] = state_dict['door_body_pos']
         self.sim.forward()
 
