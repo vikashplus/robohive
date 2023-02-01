@@ -135,6 +135,6 @@ class HammerEnvV1(env_base.MujocoEnv):
         qp = state_dict['qpos']
         qv = state_dict['qvel']
         board_pos = state_dict['board_pos']
-        self.set_state(qp, qv)
+        self.sim.set_state(qpos=qp, qvel=qv)
         self.sim.model.body_pos[self.sim.model.body_name2id('nail_board')] = board_pos
         self.sim.forward()
