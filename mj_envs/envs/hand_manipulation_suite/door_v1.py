@@ -88,10 +88,11 @@ class DoorEnvV1(env_base.MujocoEnv):
         return rwd_dict
 
 
-    def reset_model(self):
-        qp = self.init_qpos.copy()
-        qv = self.init_qvel.copy()
-        self.set_state(qp, qv)
+    def reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
+        self.sim.reset()
+        qp = self.init_qpos.copy() if reset_qpos==None else reset_qpos
+        qv = self.init_qvel.copy() if reset_qvel==None else reset_qvel
+        self.sim.set_state(qpos=qp, qvel=qv)
 
         self.sim.model.body_pos[self.door_bid,0] = self.np_random.uniform(low=-0.3, high=-0.2)
         self.sim.model.body_pos[self.door_bid, 1] = self.np_random.uniform(low=0.25, high=0.35)
