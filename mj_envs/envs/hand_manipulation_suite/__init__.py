@@ -23,7 +23,7 @@ print("RS:> Registering Hand Envs")
 register(
     id='door-v1',
     entry_point='mj_envs.envs.hand_manipulation_suite:DoorEnvV1',
-    max_episode_steps=100,
+    max_episode_steps=200,
     kwargs={
         'model_path': curr_dir+'/assets/DAPG_door.xml',
     }
@@ -45,7 +45,7 @@ from mj_envs.envs.hand_manipulation_suite.hammer_v1 import HammerEnvV1
 register(
     id='pen-v1',
     entry_point='mj_envs.envs.hand_manipulation_suite:PenEnvV1',
-    max_episode_steps=50,
+    max_episode_steps=100,
     kwargs={
         'model_path': curr_dir+'/assets/DAPG_pen.xml',
     }
