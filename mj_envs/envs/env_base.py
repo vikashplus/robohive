@@ -475,10 +475,10 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.sim.set_state(qpos=qp, qvel=qv, act=act)
         self.sim_obsd.set_state(qpos=qp, qvel=qv, act=act)
         if self.sim.model.nmocap>0:
-            self.sim.model.mocap_pos[:] = state_dict['mocap_pos']
-            self.sim.model.mocap_quat[:] = state_dict['mocap_quat']
-            self.sim_obsd.model.mocap_pos[:] = state_dict['mocap_pos']
-            self.sim_obsd.model.mocap_quat[:] = state_dict['mocap_quat']
+            self.sim.data.mocap_pos[:] = state_dict['mocap_pos']
+            self.sim.data.mocap_quat[:] = state_dict['mocap_quat']
+            self.sim_obsd.data.mocap_pos[:] = state_dict['mocap_pos']
+            self.sim_obsd.data.mocap_quat[:] = state_dict['mocap_quat']
         if self.sim.model.nsite>0:
             self.sim.model.site_pos[:] = state_dict['site_pos']
             self.sim.model.site_quat[:] = state_dict['site_quat']
