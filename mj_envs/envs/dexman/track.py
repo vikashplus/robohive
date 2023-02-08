@@ -97,12 +97,43 @@ class TrackEnv(env_base.MujocoEnv):
             self.init_qpos[:] = self.sim.model.key_qpos[0,:]
 
 
+    def rotation_distance(q1, q2):
+        delta_quat = to_quat(q2) * to_quat(q1).inverse
+        return np.abs(delta_quat.angle)
+
+    def norm2(x):
+        return np.sum(np.square(x))
+
     def get_obs_dict(self, sim):
         obs_dict = {}
 
         hand_ref = []
         obj_ref = []
         hand_pregrasp = []
+
+        ## info about current hand pose + vel
+        obs_dict['curr_hand_qpos'] = sim.named.data.qpos[self._hand_name].copy()
+        obs_dict['curr_hand_qvel'] = sim.named.data.qpos[self._hand_name].copy() ## not used for now
+
+        ## info about target hand pose + vel
+        obs_dict['targ_hand_qpos'] = get_target_pose()
+        obs_dict['targ_hand_qvel'] = None ## not used for now
+
+        ## info about current object com + rotations
+        obs_dict['curr_obj_com'] = sim.named.data.xipos[self._object_name].copy()
+        obs_dict['curr_obj_rot'] = sim.named.data.xquat[self._object_name].copy()
+
+        ## info about target object com + rotations
+        obj_dict['targ_obj_com']  = self.target_motion.object_pos
+        obj_dict['targ_obj_rot']  = self.target_motion.object_rot
+
+        ## Errors
+        obj_dict['hand_qpos_err'] = np.linalg.norm(obs_dict['curr_hand_qpos']-obs_dict['targ_hand_qpos'], axis=1)
+        obj_dict['hand_qvel_err'] = np.linalg.norm(obs_dict['curr_hand_qvel']-obs_dict['targ_hand_qvel'], axis=1)
+
+        obj_dict['obj_com_err'] =  np.sqrt(norm2(obs_dict['curr_obj_com'] - obs_dict['targ_obj_com']))
+        obj_dict['obj_rot_err'] =  rotation_distance(obs_dict['curr_obj_rot'], obs_dict['targ_obj_rot']) / np.pi
+
 
         obs_dict['time'] = np.array([self.sim.data.time])
         obs_dict['qp'] = sim.data.qpos.copy()
