@@ -99,6 +99,11 @@ class TrackEnv(env_base.MujocoEnv):
 
     def get_obs_dict(self, sim):
         obs_dict = {}
+
+        hand_ref = []
+        obj_ref = []
+        hand_pregrasp = []
+
         obs_dict['time'] = np.array([self.sim.data.time])
         obs_dict['qp'] = sim.data.qpos.copy()
         obs_dict['qv'] = sim.data.qvel.copy()
@@ -129,6 +134,7 @@ class TrackEnv(env_base.MujocoEnv):
         elif self.target_type == 'random':
             return self.np_random.uniform(low=self.sim.model.actuator_ctrlrange[:,0], high=self.sim.model.actuator_ctrlrange[:,1])
         elif self.target_type == 'track':
+            # self.target_pose = self.referece[t]
             return self.target_pose # ToDo: Update the target pose as per the tracking trajectory
 
     def reset(self):
