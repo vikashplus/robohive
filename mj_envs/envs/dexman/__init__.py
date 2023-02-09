@@ -11,7 +11,21 @@ import os
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Register Single object env
-def register_Adroit_object(object_name):
+def register_Adroit_object_trackref(object_name, data_path=None):
+    # Track reference motion
+    register(
+        id='Adroit{}TrackRef-v0'.format(object_name.title()),
+        entry_point='mj_envs.envs.dexman.track:TrackEnv',
+        max_episode_steps=83, #50steps*40Skip*2ms = 4s
+        kwargs={
+                'model_path': '/assets/Adroit_object.xml',
+                'object_name': object_name,
+                'target_pose':curr_dir+data_path,
+            }
+    )
+
+# Register Single object env
+def register_Adroit_object(object_name, data_path=None):
     # Track reference motion
     register(
         id='Adroit{}TrackFixed-v0'.format(object_name.title()),
@@ -19,13 +33,17 @@ def register_Adroit_object(object_name):
         max_episode_steps=50, #50steps*40Skip*2ms = 4s
         kwargs={
                 'model_path': '/assets/Adroit_object.xml',
+                # 'data_path': curr_dir+data_path,
                 'object_name': object_name,
-                'target_pose': None, # TODO: pass reference trajectories
+                # 'target_pose': None, # TODO: pass reference trajectories
+                'target_pose': {'time':0.0,
+                                'robot':np.zeros((1, 30)),
+                                'object':np.ones((1, 7))}
             }
     )
 
 # Register Single object env
-def register_Franka_object(object_name):
+def register_Franka_object(object_name, data_path=None):
     # Track reference motion
     register(
         id='Franka{}TrackFixed-v0'.format(object_name.title()),
@@ -33,15 +51,20 @@ def register_Franka_object(object_name):
         max_episode_steps=50, #50steps*40Skip*2ms = 4s
         kwargs={
                 'model_path': '/assets/Franka_object.xml',
+                # 'data_path': curr_dir+data_path,
                 'object_name': object_name,
-                'target_pose': None, # TODO: pass reference trajectories
+                # 'target_pose': None, # TODO: pass reference trajectories
+                'target_pose': {'time':0.0,
+                                'robot':np.zeros((1,9)),
+                                'object':np.ones((1,7))}
             }
     )
 
 # Register all object envs
 OBJECTS = ('airplane','alarmclock','apple','banana','binoculars','bowl','camera','coffeemug','cubelarge','cubemedium','cubemiddle','cubesmall','cup','cylinderlarge','cylindermedium','cylindersmall','doorknob','duck','elephant','eyeglasses','flashlight','flute','fryingpan','gamecontroller','hammer','hand','headphones','human','knife','lightbulb','mouse','mug','phone','piggybank', 'pyramidlarge','pyramidmedium','pyramidsmall','rubberduck','scissors','spherelarge','spheremedium','spheresmall','stamp','stanfordbunny','stapler','table','teapot','toothbrush','toothpaste','toruslarge','torusmedium','torussmall','train','watch','waterbottle','wineglass','wristwatch')
 
+register_Adroit_object_trackref(object_name='banana', data_path='/assets/data/banana_pass1_new.npz')
 for obj in OBJECTS:
-    register_Adroit_object(obj)
-    register_Franka_object(obj)
+    register_Adroit_object(obj, data_path=None)
+    register_Franka_object(obj, data_path=None)
 
