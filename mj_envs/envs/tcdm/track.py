@@ -7,7 +7,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 import gym
 from mj_envs.envs import env_base
-from mj_envs.envs.dexman.reference_motion import ReferenceMotion
+from mj_envs.envs.tcdm.reference_motion import ReferenceMotion
 from mj_envs.utils.quat_math import quat2euler
 import numpy as np
 import os

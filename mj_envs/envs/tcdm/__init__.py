@@ -74,7 +74,7 @@ def register_adroit_object_trackref(task_name, object_name, motion_path=None):
     # print("'"+task_name+"'", end=", ")
     register(
         id=task_name,
-        entry_point='mj_envs.envs.dexman.track:TrackEnv',
+        entry_point='mj_envs.envs.tcdm.track:TrackEnv',
         max_episode_steps=75, #50steps*40Skip*2ms = 4s
         kwargs={
                 'model_path': '/assets/Adroit_object.xml',
@@ -88,12 +88,12 @@ for task_name, robot_name, object_name, motion_path in Adroit_task_spec:
 # Register object envs
 def register_Adroit_object(object_name):
     task_name = 'Adroit{}Fixed-v0'.format(object_name.title())
-    print("'"+task_name+"'", end=", ")
+    # print("'"+task_name+"'", end=", ")
 
     # Envs with fixed target
     register(
-        id='Adroit{}Fixed-v0'.format(object_name.title()),
-        entry_point='mj_envs.envs.dexman.track:TrackEnv',
+        id=task_name,
+        entry_point='mj_envs.envs.tcdm.track:TrackEnv',
         max_episode_steps=50, #50steps*40Skip*2ms = 4s
         kwargs={
                 'model_path': '/assets/Adroit_object.xml',
@@ -106,10 +106,10 @@ def register_Adroit_object(object_name):
 
     # Envs with random target
     task_name = 'Adroit{}Random-v0'.format(object_name.title())
-    print("'"+task_name+"'", end=", ")
+    # print("'"+task_name+"'", end=", ")
     register(
-        id='Adroit{}Random-v0'.format(object_name.title()),
-        entry_point='mj_envs.envs.dexman.track:TrackEnv',
+        id=task_name,
+        entry_point='mj_envs.envs.tcdm.track:TrackEnv',
         max_episode_steps=50, #50steps*40Skip*2ms = 4s
         kwargs={
                 'model_path': '/assets/Adroit_object.xml',
@@ -129,7 +129,7 @@ def register_Franka_object(object_name, data_path=None):
     # Track reference motion
     register(
         id='Franka{}TrackFixed-v0'.format(object_name.title()),
-        entry_point='mj_envs.envs.dexman.track:TrackEnv',
+        entry_point='mj_envs.envs.tcdm.track:TrackEnv',
         max_episode_steps=50, #50steps*40Skip*2ms = 4s
         kwargs={
                 'model_path': '/assets/Franka_object.xml',

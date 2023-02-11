@@ -11,7 +11,7 @@ import mj_envs.envs.myo.myochallenge # noqa
 import mj_envs.envs.fm # noqa
 import mj_envs.envs.hand_manipulation_suite # noqa
 import mj_envs.envs.multi_task # noqa
-import mj_envs.envs.dexman # noqa
+import mj_envs.envs.tcdm # noqa
 import mj_envs.envs.claws # noqa
 
 __version__ = "0.3.0"
