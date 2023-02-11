@@ -37,6 +37,7 @@ class TrackEnv(env_base.MujocoEnv):
     }
     def __init__(self, object_name, model_path, obsd_model_path=None, seed=None, **kwargs):
 
+        print(self.DEFAULT_CREDIT)
         curr_dir = os.path.dirname(os.path.abspath(__file__))
 
         # Process model_path to import the right object
@@ -81,18 +82,26 @@ class TrackEnv(env_base.MujocoEnv):
 
 
     def _setup(self,
-               target_pose,
+               reference,                       # reference target/motion for behaviors
+               motion_start_time:float=0,       # useful to skip initial motion
+               motion_extrapolation:bool=True,  # Hold the last frame if motion is over
                obs_keys=DEFAULT_OBS_KEYS,
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
                **kwargs):
 
         # prep reference
-        self.ref = ReferenceMotion(target_pose)
+        self.ref = ReferenceMotion(reference=reference, motion_extrapolation=motion_extrapolation)
+        self.motion_start_time = motion_start_time
+        self.target_sid = self.sim.model.site_name2id("target")
 
         super()._setup(obs_keys=obs_keys,
                        weighted_reward_keys=weighted_reward_keys,
                        frame_skip=10,
                        **kwargs)
+        # Adjust horizon if not motion_extrapolation
+        if motion_extrapolation == False:
+            self.spec.max_episode_steps = self.ref.horizon # doesn't work always. WIP
+        # Adjust init as per the specified key
         if self.sim.model.nkey>0:
             self.init_qpos[:] = self.sim.model.key_qpos[0,:]
 
@@ -110,12 +119,19 @@ class TrackEnv(env_base.MujocoEnv):
     #     delta_quat = self.to_quat(q2) * self.to_quat(q1).inverse
     #     return np.abs(delta_quat.angle)
 
+    def update_reference_insim(self, curr_ref):
+        if curr_ref.object is not None:
+            # print(curr_ref.object)
+            self.sim.model.site_pos[:] = curr_ref.object[:3]
+            self.sim_obsd.model.site_pos[:] = curr_ref.object[:3]
+            self.sim.forward()
 
     def get_obs_dict(self, sim):
         obs_dict = {}
 
         # get reference for current time (returns a named tuple)
-        curr_ref = self.ref.get_reference(sim.data.time)
+        curr_ref = self.ref.get_reference(sim.data.time+self.motion_start_time)
+        self.update_reference_insim(curr_ref)
 
         obs_dict['time'] = np.array([self.sim.data.time])
         obs_dict['qp'] = sim.data.qpos.copy()
@@ -129,7 +145,7 @@ class TrackEnv(env_base.MujocoEnv):
         obs_dict['curr_hand_qvel'] = sim.data.qvel[:-6].copy() ## not used for now
 
         ## info about target hand pose + vel
-        obs_dict['targ_hand_qpos'] = obs_dict['curr_hand_qpos']  #temp for testing... TBD by Vikash get_target_pose()
+        obs_dict['targ_hand_qpos'] = obs_dict['curr_hand_qpos']  #temp for testing... TBD by Vikash get_reference()
         obs_dict['targ_hand_qvel'] = obs_dict['curr_hand_qvel']  #temp for testing... ## not used for now
 
         ## info about current object com + rotations
@@ -147,10 +163,7 @@ class TrackEnv(env_base.MujocoEnv):
         obs_dict['hand_qvel_err'] = np.abs(obs_dict['curr_hand_qvel']-obs_dict['targ_hand_qvel'])
 
         obs_dict['obj_com_err'] =  np.abs(obs_dict['curr_obj_com'] - obs_dict['targ_obj_com'])
-        # import ipdb; ipdb.set_trace()
         # obs_dict['obj_rot_err'] =  self.rotation_distance(obs_dict['curr_obj_rot'], obs_dict['targ_obj_rot']) / np.pi
-
-
 
         return obs_dict
 
@@ -172,27 +185,8 @@ class TrackEnv(env_base.MujocoEnv):
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
 
-    # Returns reference for hand, obj
-    # def get_target_pose(self):
-    #     if self.target_type == 'fixed':
-    #         target_robot = self.target_pose['robot']
-    #         target_object = self.target_pose['object']
-
-    #     elif self.target_type == 'random':
-    #         target_robot = self.np_random.uniform(low=self.sim.model.actuator_ctrlrange[:,0], high=self.sim.model.actuator_ctrlrange[:,1])
-    #         target_object = self.np_random.uniform(low=self.sim.model.actuator_ctrlrange[:,0], high=self.sim.model.actuator_ctrlrange[:,1])
-    #         return
-
-    #     elif self.target_type == 'track':
-    #         # ind = 0 if self.time==0 else int(self.time/self.dt)
-    #         # return self.ref['object_translation'][ind]
-    #         # return self.target_pose # ToDo: Update the target pose as per the tracking trajectory
-    #         return self.np_random.uniform(low=self.sim.model.actuator_ctrlrange[:,0], high=self.sim.model.actuator_ctrlrange[:,1])
-
-    #     return target_robot, target_object
 
     def reset(self):
-        # self.target_pose = self.get_target_pose()
         self.ref.reset()
         obs = super().reset(self.init_qpos, self.init_qvel)
         return obs
