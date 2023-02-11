@@ -5,6 +5,7 @@ from mj_envs.tests.test_hand_manipulation_suite import TestHMS
 from mj_envs.tests.test_multitask import TestKitchen
 from mj_envs.tests.test_myo import TestMyo
 from mj_envs.tests.test_claws import TestClaws
+from mj_envs.tests.test_tcdm import TestTCDM
 
 
 if __name__ == '__main__':
