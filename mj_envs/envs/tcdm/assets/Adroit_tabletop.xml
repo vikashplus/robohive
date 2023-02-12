@@ -30,12 +30,18 @@
         <!-- Robot -->
         <body pos="0 -0.7 0.215" euler="-1.57 0 3.14">
             <inertial pos="0.001 -0.002 0.29" quat="0.982037 -0.0160006 0 -0.188007" mass="4" diaginertia="0.01 0.01 0.0075" />
-            <joint name="ARTx" pos="0 0 0.396" axis="1 0 0" type="slide" range="-0.25 0.25" damping="20" limited="true"/>
+            <!-- <joint name="ARTx" pos="0 0 0.396" axis="1 0 0" type="slide" range="-0.25 0.25" damping="20" limited="true"/>
             <joint name="ARTy" pos="0 0 0.396" axis="0 1 0" type="slide" range="-0.2 0.1" damping="20" limited="true"/>
             <joint name="ARTz" pos="0 0 0.396" axis="0 0 1" type="slide" range="-0.3 0.5" damping="20" limited="true"/>
             <joint name="ARRx" pos="0 0 0.396" axis="1 0 0" range="-1.75 1.75" damping="20" limited="true"/>
             <joint name="ARRy" pos="0 0 0.396" axis="0 1 0" range="-1.75 1.75" damping="20" limited="true"/>
-            <joint name="ARRz" pos="0 0 0.396" axis="0 0 1" range="-2.5 2.5" damping="20" limited="true"/>
+            <joint name="ARRz" pos="0 0 0.396" axis="0 0 1" range="-2.5 2.5" damping="20" limited="true"/> -->
+            <joint name="ARTx" pos="0 0 0" axis="1 0 0" type="slide" range="-0.25 0.25" damping="20" limited="true"/>
+            <joint name="ARTy" pos="0 0 0" axis="0 1 0" type="slide" range="-0.2 0.1" damping="20" limited="true"/>
+            <joint name="ARTz" pos="0 0 0" axis="0 0 1" type="slide" range="-0.3 0.5" damping="20" limited="true"/>
+            <joint name="ARRx" pos="0 0 0" axis="1 0 0" range="-1.75 1.75" damping="20" limited="true"/>
+            <joint name="ARRy" pos="0 0 0" axis="0 1 0" range="-1.75 1.75" damping="20" limited="true"/>
+            <joint name="ARRz" pos="0 0 0" axis="0 0 1" range="-2.5 2.5" damping="20" limited="true"/>
             <include file="../../../sims/Adroit/resources/chain.xml"/>
         </body>
 
@@ -45,7 +51,8 @@
         </body>
 
         <!-- tasks details added here via include-->
-        <site name='target' type='sphere' size='.03' pos='0 0 0.001' group='1' rgba='.1 .8 .2 .4'/>
+        <!-- <site name='target' type='sphere' size='.03' pos='0 0 0.001' group='1' rgba='.1 .8 .2 .4'/> -->
+        <site name='target' type='sphere' size='.03' pos='0 0 0.035' group='1' rgba='.1 .8 .2 .4'/>
 
     </worldbody>
 
