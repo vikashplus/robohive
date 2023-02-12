@@ -40,6 +40,8 @@ class ReferenceMotion():
         # load reference
         if isinstance(reference, str):
             self.reference = self.load(reference)
+            self.ref_file = {k: v for k, v in np.load('envs/tcdm/assets/tmp_data/Adroit_banana_pass_1.npz').items()}
+            self.reference['robot'] = self.ref_file['s'][int(self.ref_file['grasp_frame']):,:30]
         elif isinstance(reference, dict):
             self.reference = reference
         else:
