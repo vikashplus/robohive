@@ -12,7 +12,8 @@
     <include file="../../../sims/object_sim/OBJECT_NAME/assets.xml"/>
 
     <worldbody>
-        <body name="OBJECT_NAME" pos="0.00 0.0 .045" childclass="grab">
+        <!-- <body name="OBJECT_NAME" pos="0.00 0.0 .045" childclass="grab"> -->
+        <body name="OBJECT_NAME" pos="0.00 0.0 .035" childclass="grab">
             <joint name="OBJTx" pos="0 0 0" axis="1 0 0" type="slide"/>
             <joint name="OBJTy" pos="0 0 0" axis="0 1 0" type="slide"/>
             <joint name="OBJTz" pos="0 0 0" axis="0 0 1" type="slide"/>

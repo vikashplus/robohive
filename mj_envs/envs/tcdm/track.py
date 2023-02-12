@@ -188,12 +188,16 @@ class TrackEnv(env_base.MujocoEnv):
     def playback(self):
         # import ipdb; ipdb.set_trace()
         idxs = self.ref.find_timeslot_in_reference(self.time)
-        print(f"Time {self.time} {idxs} {self.ref.horizon}")
+        # print(f"Time {self.time} {idxs} {self.ref.horizon}")
         ref_mot = self.ref.get_reference(self.time)
         rob_mot = ref_mot[1]
         obj_mot = ref_mot[2]
+
+        objt = self.ref.ref_file['object_translation'][int(self.ref.ref_file['grasp_frame'])+idxs[0],:]
+        print(idxs,np.sum(objt - obj_mot[:3]),objt,obj_mot[:3])
         self.sim.data.qpos[:len(rob_mot)] = rob_mot
         self.sim.data.qpos[len(rob_mot):len(rob_mot)+3] = obj_mot[:3]
+        self.sim.data.qpos[len(rob_mot)+3:] = quat2euler(obj_mot[3:])
         self.sim.forward()
         self.sim.data.time = self.sim.data.time + 0.02#self.env.env.dt
 
