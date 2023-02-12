@@ -185,6 +185,19 @@ class TrackEnv(env_base.MujocoEnv):
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
 
+    def playback(self):
+        # import ipdb; ipdb.set_trace()
+        idxs = self.ref.find_timeslot_in_reference(self.time)
+        print(f"Time {self.time} {idxs} {self.ref.horizon}")
+        ref_mot = self.ref.get_reference(self.time)
+        rob_mot = ref_mot[1]
+        obj_mot = ref_mot[2]
+        self.sim.data.qpos[:len(rob_mot)] = rob_mot
+        self.sim.data.qpos[len(rob_mot):len(rob_mot)+3] = obj_mot[:3]
+        self.sim.forward()
+        self.sim.data.time = self.sim.data.time + 0.02#self.env.env.dt
+
+        return idxs[0] < self.ref.horizon-1
 
     def reset(self):
         self.ref.reset()
