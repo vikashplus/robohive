@@ -1,7 +1,7 @@
 import numpy as np
 from gym import utils
 from mjrl.envs import mujoco_env
-from mj_envs.utils.quat_math import quat2euler, euler2quat
+from mj_envs.utils.quatmath import quat2euler, euler2quat
 from mujoco_py import MjViewer
 import os
 
@@ -79,7 +79,6 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         self.action_space.low = -1.0 * np.ones_like(self.model.actuator_ctrlrange[:, 0])
 
     def step(self, a):
-        env_state = self.get_env_state()
         a = np.clip(a, -1.0, 1.0)
         try:
             starting_up = False
@@ -99,38 +98,28 @@ class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         ) / self.tar_length
 
         # pos cost
-        # dist = np.linalg.norm(obj_pos-desired_loc)
-        # reward = -dist
-        # # orien cost
-        # orien_similarity = np.dot(obj_orien, desired_orien)
-        # reward += orien_similarity
-
-        # if ADD_BONUS_REWARDS:
-        #     # bonus for being close to desired orientation
-        #     if dist < 0.075 and orien_similarity > 0.9:
-        #         reward += 10
-        #     if dist < 0.075 and orien_similarity > 0.95:
-        #         reward += 50
-
-        # # penalty for dropping the pen
-        # done = False
-        # if obj_pos[2] < 0.075:
-        #     reward -= 5
-        #     done = True if not starting_up else False
-
-        # reward from awac paper
         dist = np.linalg.norm(obj_pos - desired_loc)
+        reward = -dist
+        # orien cost
         orien_similarity = np.dot(obj_orien, desired_orien)
-        reward = float(dist <= 0.075) * float(orien_similarity >= 0.95) - 1.0
+        reward += orien_similarity
 
-        goal_achieved = True if (dist <= 0.075 and orien_similarity >= 0.95) else False
+        if ADD_BONUS_REWARDS:
+            # bonus for being close to desired orientation
+            if dist < 0.075 and orien_similarity > 0.9:
+                reward += 10
+            if dist < 0.075 and orien_similarity > 0.95:
+                reward += 50
 
-        return (
-            self.get_obs(),
-            reward,
-            False,
-            dict(goal_achieved=goal_achieved, env_state=env_state),
-        )
+        # penalty for dropping the pen
+        done = False
+        if obj_pos[2] < 0.075:
+            reward -= 5
+            done = True if not starting_up else False
+
+        goal_achieved = True if (dist < 0.075 and orien_similarity > 0.95) else False
+
+        return self.get_obs(), reward, done, dict(goal_achieved=goal_achieved)
 
     def get_obs(self):
         qp = self.data.qpos.ravel()

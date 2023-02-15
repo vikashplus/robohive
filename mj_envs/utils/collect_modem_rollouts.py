@@ -98,6 +98,34 @@ def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, outp
             data['infos'] = [{'success': reward} for reward in paths[0]['rewards']]
             
             data['frames'] = []
+
+            if env.rgb_encoder is None:
+                rgb_img = Image.fromarray(np.zeros((10,10,3),dtype=np.uint8))
+                rgb_img_fn = ro_fn + '_rgb_left_cam_step'
+                rgb_img.save(output_dir+'/frames/'+rgb_img_fn+f'{0:05d}.png')
+                for i in range(data['states']['qp'].shape[0]):
+                    data['frames'].append(Path(rgb_img_fn+f'{0:05d}.png'))                
+            else:
+                rgb_key = 'rgb:left_cam:224x224:2d'
+                rgb_imgs = paths[0]['env_infos']['obs_dict'][rgb_key]
+                depth_key = 'd:left_cam:224x224:2d'
+                depth_imgs = paths[0]['env_infos']['obs_dict'][depth_key]
+                for i in range(rgb_imgs.shape[0]):
+                    data['frames'].append([])
+                    
+                    rgb_img = Image.fromarray(rgb_imgs[i])
+                    rgb_img_fn = ro_fn + '_rgb_left_cam_step'
+                    rgb_img.save(output_dir+'/frames/'+rgb_img_fn+f'{i:05d}.png')
+                    data['frames'][i].append(Path(rgb_img_fn+f'{i:05d}.png'))
+
+                    depth_img = 255*depth_imgs[i]       
+                    depth_img = Image.fromarray(depth_img)
+                    depth_img = depth_img.convert("L")
+                    depth_img_fn = ro_fn + '_depth_left_cam_step'
+                    depth_img.save(output_dir+'/frames/'+depth_img_fn+f'{i:05d}.png')
+                    data['frames'][i].append(Path(depth_img_fn+f'{i:05d}.png'))
+
+            '''
             for cam in ['left_cam', 'right_cam', 'top_cam', 'Franka_wrist_cam']:
                 rgb_key = 'rgb:'+cam+':240x424:2d'
                 if rgb_key in env.obs_keys:
@@ -127,7 +155,8 @@ def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, outp
                         data['frames'][i].append(Path(depth_img_fn+f'{i:05d}.png'))
                 else:
                     print('WARN: Missing depth key: {}'.format(depth_key))                        
-         
+            '''
+
             torch.save(data, output_dir+'/'+ro_fn+'.pt')
             successes += 1
 

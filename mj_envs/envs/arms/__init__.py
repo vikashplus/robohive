@@ -164,14 +164,14 @@ def register_pick_place_visual_envs(env_name, encoder_type):
         variant_id='{}_v{}-v0'.format(env_name, encoder_type),
         variants={'obs_keys':
                     ['qp', 'qv', 'grasp_pos', 'object_err', 'target_err',
-                    "rgb:left_cam:240x424:{}".format(encoder_type),
-                    "d:left_cam:240x424:{}".format(encoder_type),
-                    "rgb:right_cam:240x424:{}".format(encoder_type),
-                    "d:right_cam:240x424:{}".format(encoder_type),
-                    "rgb:top_cam:240x424:{}".format(encoder_type),
-                    "d:top_cam:240x424:{}".format(encoder_type),
-                    "rgb:Franka_wrist_cam:240x424:{}".format(encoder_type),
-                    "d:Franka_wrist_cam:240x424:{}".format(encoder_type)]
+                    "rgb:left_cam:224x224:{}".format(encoder_type),
+                    "d:left_cam:224x224:{}".format(encoder_type)]#,
+                    #"rgb:right_cam:240x424:{}".format(encoder_type),
+                    #"d:right_cam:240x424:{}".format(encoder_type),
+                    #"rgb:top_cam:240x424:{}".format(encoder_type),
+                    #"d:top_cam:240x424:{}".format(encoder_type),
+                    #"rgb:Franka_wrist_cam:240x424:{}".format(encoder_type),
+                    #"d:Franka_wrist_cam:240x424:{}".format(encoder_type)]
         },
         silent=True
     )

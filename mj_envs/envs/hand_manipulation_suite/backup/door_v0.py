@@ -62,7 +62,6 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         self.door_bid = self.model.body_name2id("frame")
 
     def step(self, a):
-        env_state = self.get_env_state()
         a = np.clip(a, -1.0, 1.0)
         try:
             a = self.act_mid + a * self.act_rng  # mean center and scale
@@ -70,33 +69,29 @@ class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
             a = a  # only for the initialization phase
         self.do_simulation(a, self.frame_skip)
         ob = self.get_obs()
-        # handle_pos = self.data.site_xpos[self.handle_sid].ravel()
-        # palm_pos = self.data.site_xpos[self.grasp_sid].ravel()
-        # door_pos = self.data.qpos[self.door_hinge_did]
+        handle_pos = self.data.site_xpos[self.handle_sid].ravel()
+        palm_pos = self.data.site_xpos[self.grasp_sid].ravel()
+        door_pos = self.data.qpos[self.door_hinge_did]
 
         # get to handle
-        # reward = -0.1*np.linalg.norm(palm_pos-handle_pos)
-        # # open door
-        # reward += -0.1*(door_pos - 1.57)*(door_pos - 1.57)
-        # # velocity cost
-        # reward += -1e-5*np.sum(self.data.qvel**2)
+        reward = -0.1 * np.linalg.norm(palm_pos - handle_pos)
+        # open door
+        reward += -0.1 * (door_pos - 1.57) * (door_pos - 1.57)
+        # velocity cost
+        reward += -1e-5 * np.sum(self.data.qvel**2)
 
-        # if ADD_BONUS_REWARDS:
-        #     # Bonus
-        #     if door_pos > 0.2:
-        #         reward += 2
-        #     if door_pos > 1.0:
-        #         reward += 8
-        #     if door_pos > 1.35:
-        #         reward += 10
+        if ADD_BONUS_REWARDS:
+            # Bonus
+            if door_pos > 0.2:
+                reward += 2
+            if door_pos > 1.0:
+                reward += 8
+            if door_pos > 1.35:
+                reward += 10
 
-        # reward from awac paper
-        door_pos = self.data.qpos[self.door_hinge_did]
-        reward = float(door_pos >= 1.0) - 1.0
+        goal_achieved = True if door_pos >= 1.35 else False
 
-        goal_achieved = True if door_pos >= 1.0 else False
-
-        return ob, reward, False, dict(goal_achieved=goal_achieved, env_state=env_state)
+        return ob, reward, False, dict(goal_achieved=goal_achieved)
 
     def get_obs(self):
         # qpos for hand
