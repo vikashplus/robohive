@@ -44,11 +44,10 @@ class DMSimScene(SimScene):
     def advance(self, substeps: int = 1, render:bool = True):
         """Advances the simulation for one step."""
         # Step the simulation substeps (frame_skip) times.
-        for _ in range(substeps):
-            self.sim.step()
-            if render:
-                # self.renderer.refresh_window()
-                self.renderer.render_to_window()
+        self.sim.step(substeps)
+        if render:
+            # self.renderer.refresh_window()
+            self.renderer.render_to_window()
 
 
     def _create_renderer(self, sim: Any) -> DMRenderer:
