@@ -232,8 +232,9 @@ def qpos_from_site_pose(physics,
                     steps, err_norm, update_norm)
 
   if not success and steps == max_steps - 1:
-    logging.warning('Failed to converge after %i steps: err_norm=%3g',
-                    steps, err_norm)
+    #logging.warning('Failed to converge after %i steps: err_norm=%3g',
+    #                steps, err_norm)
+    pass
 
   if not inplace:
     # Our temporary copy of physics.data is about to go out of scope, and when

@@ -2,7 +2,7 @@ import numpy as np
 from gym import utils
 from mjrl.envs import mujoco_env
 from mujoco_py import MjViewer
-from mj_envs.utils.quat_math import *
+from mj_envs.utils.quatmath import *
 import os
 
 ADD_BONUS_REWARDS = True
@@ -62,7 +62,6 @@ class HammerEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         self.action_space.low = -1.0 * np.ones_like(self.model.actuator_ctrlrange[:, 0])
 
     def step(self, a):
-        env_state = self.get_env_state()
         a = np.clip(a, -1.0, 1.0)
         try:
             a = self.act_mid + a * self.act_rng  # mean center and scale
@@ -77,33 +76,28 @@ class HammerEnvV0(mujoco_env.MujocoEnv, utils.EzPickle):
         goal_pos = self.data.site_xpos[self.goal_sid].ravel()
 
         # get to hammer
-        # reward = - 0.1 * np.linalg.norm(palm_pos - obj_pos)
-        # # take hammer head to nail
-        # reward -= np.linalg.norm((tool_pos - target_pos))
-        # # make nail go inside
-        # reward -= 10 * np.linalg.norm(target_pos - goal_pos)
-        # # velocity penalty
-        # reward -= 1e-2 * np.linalg.norm(self.data.qvel.ravel())
+        reward = -0.1 * np.linalg.norm(palm_pos - obj_pos)
+        # take hammer head to nail
+        reward -= np.linalg.norm((tool_pos - target_pos))
+        # make nail go inside
+        reward -= 10 * np.linalg.norm(target_pos - goal_pos)
+        # velocity penalty
+        reward -= 1e-2 * np.linalg.norm(self.data.qvel.ravel())
 
-        # if ADD_BONUS_REWARDS:
-        #     # bonus for lifting up the hammer
-        #     if obj_pos[2] > 0.04 and tool_pos[2] > 0.04:
-        #         reward += 2
+        if ADD_BONUS_REWARDS:
+            # bonus for lifting up the hammer
+            if obj_pos[2] > 0.04 and tool_pos[2] > 0.04:
+                reward += 2
 
-        #     # bonus for hammering the nail
-        #     if (np.linalg.norm(target_pos - goal_pos) < 0.020):
-        #         reward += 25
-        #     if (np.linalg.norm(target_pos - goal_pos) < 0.010):
-        #         reward += 75
+            # bonus for hammering the nail
+            if np.linalg.norm(target_pos - goal_pos) < 0.020:
+                reward += 25
+            if np.linalg.norm(target_pos - goal_pos) < 0.010:
+                reward += 75
 
-        # sparse reward (undefined in awac paper)
-        reward = float(np.linalg.norm(target_pos - goal_pos) <= 0.020) - 1.0
+        goal_achieved = True if np.linalg.norm(target_pos - goal_pos) < 0.010 else False
 
-        goal_achieved = (
-            True if np.linalg.norm(target_pos - goal_pos) <= 0.020 else False
-        )
-
-        return ob, reward, False, dict(goal_achieved=goal_achieved, env_state=env_state)
+        return ob, reward, False, dict(goal_achieved=goal_achieved)
 
     def get_obs(self):
         # qpos for hand

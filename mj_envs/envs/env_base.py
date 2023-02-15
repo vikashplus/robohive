@@ -581,6 +581,14 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
             print("Episode %d" % ep, end=":> ")
             o = self.reset()
+
+            self.squeeze_dims(self.rwd_dict)
+            self.squeeze_dims(self.obs_dict)
+            env_info = self.get_env_infos()
+            
+            observations.append(o)
+            env_infos.append(env_info)
+
             done = False
             t = 0
             ep_rwd = 0.0
