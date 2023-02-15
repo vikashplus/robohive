@@ -99,7 +99,7 @@ def rollout_policy(policy,
     done = False
     t = 0
     ep_rwd = 0.0
-    while t < horizon and not solved and not done:
+    while t < horizon:# and not done:
         a = policy.get_action(o)[0]
         next_o, rwd, done, env_info = env.step(a)      
         #a = np.concatenate([env.last_ctrl, a])
@@ -164,11 +164,18 @@ def get_ccomp_grasp(img, out_dir, out_name):
     # first box is background
     boxes = boxes[1:]
     filtered_boxes = []
+    rec_img = img_masked.copy()
     for x,y,w,h,pixels in boxes:
-        if pixels < 1000 and h < 40 and w < 40 and h > 4 and w > 4:
+        if pixels > 15:#pixels < 1000 and h < 40 and w < 40 and h > 4 and w > 4:
             filtered_boxes.append((x,y,w,h))
+            cv2.rectangle(rec_img, (x,y), (x+w, y+h), (255,0,0), 1)
 
+    rec_img_fn = os.path.join(out_dir,'masked_all_recs.png')
+    cv2.imwrite(rec_img_fn, cv2.cvtColor(rec_img, cv2.COLOR_RGB2BGR))
+    
     random.shuffle(filtered_boxes)
+
+
     #for x,y,w,h in filtered_boxes:
     #    cv2.rectangle(img_masked, (x,y), (x+w, y+h), (0,0,255), 1)
 
@@ -211,6 +218,10 @@ def check_grasp_success(env, obs, full_check=False):
         obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
         if obs_dict['qp'][0,0,7] < MAX_GRIPPER_OPEN:
             print('Policy didnt close gripper, resetting')
+            return None, None, False, None, None
+
+        if obs_dict['grasp_pos'][0,0,2] < 1.05:
+            print('Policy didnt lift gripper, resetting')
             return None, None, False, None, None
 
         print('moving up')
@@ -279,7 +290,7 @@ def check_grasp_success(env, obs, full_check=False):
         if np.linalg.norm(obs_dict['grasp_pos'][0,0,:2] - drop_zone_pos[:2]) > 0.1:
             #return None, None
             print('Rand drop failed, moving to init qpos for drop')
-            obs, env_info = move_joint_config(env, np.concatenate([env.init_qpos, [obs_dict['qp'][0,0,7]]*2]))
+            obs, env_info = move_joint_config(env, np.concatenate([env.init_qpos[:7], [obs_dict['qp'][0,0,7]]*2]))
             obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
 
         open_qp = obs_dict['qp'][0,0,:9].copy()
@@ -329,7 +340,8 @@ def check_grasp_success(env, obs, full_check=False):
 @click.option('-o', '--output_dir', type=str, default='./', help=('Directory to save the outputs'))
 @click.option('-on', '--output_name', type=str, default=None, help=('The name to save the outputs as'))
 @click.option('-n', '--num_rollouts', type=int, help='number of rollouts to save', default=100)
-def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts):
+@click.option('-fc','--force_check', type=bool, default=False)
+def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, force_check):
 
     # seed and load environments
     np.random.seed(seed)
@@ -405,28 +417,29 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
             real_obj_pos = np.random.uniform(low=OBJ_POS_LOW, high=OBJ_POS_HIGH)
             print('Random obj pos')
 
-        target_pos = np.array([-0.38, 0.5, 1.2])
+        target_pos = np.array([0.0, 0.5, 1.2])
         env.set_real_obj_pos(real_obj_pos)
         env.set_target_pos(target_pos)
         print('Real obs pos {} target pos {}'.format(real_obj_pos, target_pos))        
 
         rand_yaw = np.random.uniform(low = -3.14, high = 3.14)
         pi.set_yaw(rand_yaw)
-        align_action = np.concatenate([real_obj_pos, [ 3.14,0.0,0.0,0.0,0.0]])
-        align_action[2] = 1.075
-        align_action[5] = rand_yaw
-        cart_move( align_action, env)
+
+        #align_action = np.concatenate([real_obj_pos, [ 3.14,0.0,0.0,0.0,0.0]])
+        #align_action[2] = 1.075
+        #align_action[5] = rand_yaw
+        #cart_move( align_action, env)
 
         print('Rolling out policy')
 
         obs, path = rollout_policy(pi,
                                    env,
-                                   horizon=100)#env.spec.max_episode_steps,)
+                                   horizon=env.spec.max_episode_steps)
 
         print('Path Length: {}'.format(len(path['actions'])))
         rollouts += 1
 
-        mean_diff, new_img, grasp_success, pre_drop_img, post_drop_img = check_grasp_success(env, obs, grasp_centers is None or len(grasp_centers) == 0 )
+        mean_diff, new_img, grasp_success, pre_drop_img, post_drop_img = check_grasp_success(env, obs, force_check or grasp_centers is None or len(grasp_centers) == 0 )
 
         if mean_diff is None:
             continue
@@ -480,6 +493,16 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
                 if depth_key in env.obs_keys:
                     depth_imgs = path['env_infos']['obs_dict'][depth_key]
                     for i in range(depth_imgs.shape[0]):
+                        '''
+                        import matplotlib.pyplot as plt
+                        print('min {}, max {}'.format(np.min(depth_imgs[i]), np.max(depth_imgs[i])))
+                        flat = depth_imgs[i].flatten()
+                        print('mean {}, std {}'.format(np.mean(flat), np.std(flat)))
+                        plt.hist(depth_imgs[i].flatten(),bins=25)
+                        plt.savefig('/tmp/depth_hist.png')
+                        exit()
+                        ''''
+
                         depth_img = np.array(depth_imgs[i]/256, dtype=np.uint8)       
                         depth_img = Image.fromarray(depth_img)
                         #depth_img = depth_img.convert("L")

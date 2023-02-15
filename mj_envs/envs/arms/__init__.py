@@ -128,7 +128,7 @@ register(
 register(
     id='FrankaPickPlaceRandomReal-v0',
     entry_point='mj_envs.envs.arms.pick_place_v0:PickPlaceV0',
-    max_episode_steps=150, #50steps*40Skip*2ms = 4s
+    max_episode_steps=75, #50steps*40Skip*2ms = 4s
     kwargs={
         'model_path': curr_dir+'/franka/assets/franka_busbin_v0.xml',
         'config_path': curr_dir+'/franka/assets/franka_busbin_v0.config',
