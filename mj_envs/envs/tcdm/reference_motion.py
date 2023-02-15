@@ -68,6 +68,8 @@ class ReferenceMotion():
         self.reference['time'] = np.around(self.reference['time'], _TIME_PRECISION) # round to help with comparisions
         robot_shape = self.reference['robot'].shape
         object_shape = self.reference['object'].shape
+        self.robot_dim = robot_shape[1]
+        self.object_dim = object_shape[1]
 
         # identify type
         if robot_shape[0] == 1 and object_shape[0] == 1:
