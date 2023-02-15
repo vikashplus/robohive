@@ -51,8 +51,7 @@
         </body>
 
         <!-- tasks details added here via include-->
-        <!-- <site name='target' type='sphere' size='.03' pos='0 0 0.001' group='1' rgba='.1 .8 .2 .4'/> -->
-        <site name='target' type='sphere' size='.03' pos='0 0 0.035' group='1' rgba='.1 .8 .2 .4'/>
+        <site name='target' type='sphere' size='.03' pos='0 0 0.001' group='1' rgba='.1 .8 .2 .4'/>
 
     </worldbody>
 

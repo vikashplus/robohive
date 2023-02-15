@@ -2,6 +2,7 @@ import enum
 from typing import Union
 import collections
 import numpy as np
+from mj_envs.utils.quat_math import euler2quat
 
 # Time precision to use. Avoids rounding/resolution efforts during comparisions
 _TIME_PRECISION = 4
@@ -10,6 +11,7 @@ _TIME_PRECISION = 4
 reference = collections.namedtuple('reference',
         ['time',        # int
          'robot',       # shape(N, n_robot_jnt) ==> robot trajectory
+         'robot_vel',   # shape(N, n_robot_jnt) ==> robot velocity
          'object',      # shape(M, n_objects_jnt) ==> object trajectory
          'robot_init',  # shape(n_objects_jnt) ==> initial robot pose
          'object_init'  # shape(n_objects_jnt) ==> initial object
@@ -41,7 +43,21 @@ class ReferenceMotion():
         if isinstance(reference, str):
             self.reference = self.load(reference)
             self.ref_file = {k: v for k, v in np.load('envs/tcdm/assets/tmp_data/Adroit_banana_pass_1.npz').items()}
-            self.reference['robot'] = self.ref_file['s'][int(self.ref_file['grasp_frame'])+3:,:30]
+
+            startIDX = int(self.ref_file['grasp_frame'])
+            self.reference['robot'] = self.ref_file['s'][startIDX:,:30]
+            self.reference['robot_vel'] = self.ref_file['sdot'][startIDX:,:30]
+
+            self.reference['object'] = np.hstack((self.ref_file['s'][startIDX:,30:33],
+                                                euler2quat(self.ref_file['s'][startIDX:,33:])))
+            # self.reference['human_joint_coords'] = self.ref_file['human_joint_coords'][startIDX:,:]
+            # self.reference['object_translation'] = self.ref_file['object_translation'][startIDX:,:]
+            # self.reference['object_orientation'] = self.ref_file['object_orientation'][startIDX:,:]
+            # self.reference['eef_pos'] = self.ref_file['eef_pos'][startIDX:,:]
+            # self.reference['eef_quat'] = self.ref_file['eef_quat'][startIDX:,:]
+            # self.reference['eef_velp'] = self.ref_file['eef_velp'][startIDX:,:]
+            # self.reference['eef_velr'] = self.ref_file['eef_velr'][startIDX:,:]
+
         elif isinstance(reference, dict):
             self.reference = reference
         else:
@@ -158,16 +174,19 @@ class ReferenceMotion():
         """
         if self.type == ReferenceType.FIXED:
             robot_ref = self.reference['robot'][0]
+            robot_vel_ref =self.reference['robot_vel'][0]
             object_ref = self.reference['object'][0]
         elif self.type == ReferenceType.RANDOM:
-            robot_ref = self.np_random.uniform(low=self.reference['robot'][0,:], high=self.reference['robot'][1,:])
-            object_ref = self.np_random.uniform(low=self.reference['object'][0,:], high=self.reference['object'][1,:])
+            robot_ref     = self.np_random.uniform(low=self.reference['robot'][0,:], high=self.reference['robot'][1,:])
+            robot_vel_ref = self.np_random.uniform(low=self.reference['robot_vel'][0,:], high=self.reference['robot_vel'][1,:])
+            object_ref    = self.np_random.uniform(low=self.reference['object'][0,:], high=self.reference['object'][1,:])
         elif self.type == ReferenceType.TRACK:
             ind, ind_next = self.find_timeslot_in_reference(time=time)
             if ind == ind_next:
                 # Exact frame[time] found for reference
-                robot_ref = self.reference['robot'][ind] if self.robot_horizon>1 else self.reference['robot'][0]
-                object_ref = self.reference['object'][ind] if self.object_horizon>1 else self.reference['object'][0]
+                robot_ref     = self.reference['robot'][ind] if self.robot_horizon>1 else self.reference['robot'][0]
+                robot_vel_ref = self.reference['robot_vel'][ind] if self.robot_horizon>1 else self.reference['robot_vel'][0]
+                object_ref    = self.reference['object'][ind] if self.object_horizon>1 else self.reference['object'][0]
             else:
                 # Linearly interpolate between frames to get references
                 # ref[time] = blend(ref[ind] + (1-blend)*ref[ind_next])
@@ -175,17 +194,20 @@ class ReferenceMotion():
                 blend = time - self.reference['time'][ind]/(self.reference['time'][ind_next]-self.reference['time'][ind])
                 if self.robot_horizon>1:
                     robot_ref = (1.0-blend)**self.reference['robot'][ind]+blend*self.reference['robot'][ind_next]
+                    robot_vel_ref = (1.0-blend)**self.reference['robot_vel'][ind]+blend*self.reference['robot_vel'][ind_next]
                 else:
                     robot_ref = self.reference['robot'][0]
+                    robot_vel_ref = self.reference['robot_vel'][0]
                 if self.object_horizon>1:
                     object_ref = (1.0-blend)*self.reference['object'][ind]+blend*self.reference['object'][ind_next]
                 else:
                     object_ref = self.reference['object'][0]
-                import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
 
 
         return reference(time = time,
             robot = robot_ref,
+            robot_vel = robot_vel_ref,
             object = object_ref,
             robot_init = self.reference['robot_init'],
             object_init = self.reference['object_init'],
