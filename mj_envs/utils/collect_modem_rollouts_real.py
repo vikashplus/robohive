@@ -43,8 +43,8 @@ USAGE:\n
     $ python mj_envs/utils/examine_rollout.py -e FrankaPickPlaceRandom_v2d-v0 -p /mnt/nfs_data/plancaster/remodem/demonstrations/robopen07_rollout0000000001.pickle -m playback -r none -ea "{'is_hardware':True,'real':True}" 
 '''
 
-PIX_FROM_LEFT = 73
-PIX_FROM_TOP = 58
+PIX_FROM_LEFT = 73-116
+PIX_FROM_TOP = 58-16
 X_DIST_FROM_CENTER = -1.0668/2
 Y_DIST_FROM_BASE = 0.72#0.7493
 Y_SCALE = -0.5207/152 # 0.5207 is length of bin 
@@ -56,10 +56,10 @@ DROP_ZONE_HIGH = [0.18, 0.53, 1.1]
 MOVE_JOINT_VEL = [0.1, 0.2, 0.2, 0.2, 0.2, 0.2, 0.45, 1.0, 1.0]
 DIFF_THRESH = 0.1#0.45
 
-MASK_START_X = 148 #40
-MASK_END_X = 313 #400
-MASK_START_Y = 57 #30
-MASK_END_Y = 170 #220
+MASK_START_X = 148-116 #40
+MASK_END_X = 313-116 #400
+MASK_START_Y = 57-16 #30
+MASK_END_Y = 170-16 #220
 
 MAX_GRIPPER_OPEN = 0.0002
 MIN_GRIPPER_CLOSED = 0.8228
@@ -166,7 +166,7 @@ def get_ccomp_grasp(img, out_dir, out_name):
     filtered_boxes = []
     rec_img = img_masked.copy()
     for x,y,w,h,pixels in boxes:
-        if pixels > 15:#pixels < 1000 and h < 40 and w < 40 and h > 4 and w > 4:
+        if pixels > 15 and h > 4 and w > 4:#pixels < 1000 and h < 40 and w < 40 and h > 4 and w > 4:
             filtered_boxes.append((x,y,w,h))
             cv2.rectangle(rec_img, (x,y), (x+w, y+h), (255,0,0), 1)
 
@@ -417,7 +417,7 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
             real_obj_pos = np.random.uniform(low=OBJ_POS_LOW, high=OBJ_POS_HIGH)
             print('Random obj pos')
 
-        target_pos = np.array([0.0, 0.5, 1.2])
+        target_pos = np.array([0.0, 0.5, 1.1])
         env.set_real_obj_pos(real_obj_pos)
         env.set_target_pos(target_pos)
         print('Real obs pos {} target pos {}'.format(real_obj_pos, target_pos))        
@@ -475,7 +475,7 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
             print('Saving frames')
             data['frames'] = []
             for cam in ['left_cam', 'right_cam', 'top_cam', 'Franka_wrist_cam']:
-                rgb_key = 'rgb:'+cam+':240x424:2d'
+                rgb_key = 'rgb:'+cam+':224x224:2d'
                 if rgb_key in env.obs_keys:
                     rgb_imgs = path['env_infos']['obs_dict'][rgb_key]
                     for i in range(rgb_imgs.shape[0]):
@@ -489,7 +489,7 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
                 else:
                     print('WARN: Missing rgb key: {}'.format(rgb_key))
                     
-                depth_key = 'd:'+cam+':240x424:2d'
+                depth_key = 'd:'+cam+':224x224:2d'
                 if depth_key in env.obs_keys:
                     depth_imgs = path['env_infos']['obs_dict'][depth_key]
                     for i in range(depth_imgs.shape[0]):
@@ -501,9 +501,10 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
                         plt.hist(depth_imgs[i].flatten(),bins=25)
                         plt.savefig('/tmp/depth_hist.png')
                         exit()
-                        ''''
+                        '''
 
-                        depth_img = np.array(depth_imgs[i]/256, dtype=np.uint8)       
+                        #depth_img = np.array(depth_imgs[i]/256, dtype=np.uint8)       
+                        depth_img = np.array(np.clip(depth_imgs[i],0,255), dtype=np.uint8)       
                         depth_img = Image.fromarray(depth_img)
                         #depth_img = depth_img.convert("L")
                         depth_img_fn = ro_fn + '_depth_'+cam+'_step'                            
@@ -528,7 +529,7 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
             #print('qp ee {}'.format(path['env_infos']['obs_dict']['qp_ee'].shape))
             #print('path[env_infos][obs_dict][t] {}'.format(path['env_infos']['obs_dict']['t'].shape))
             #print('path[actions] {}'.format(path['actions'].shape))
-            #print('rgb:left_cam:240x424:2d {}'.format(path['env_infos']['obs_dict']['rgb:left_cam:240x424:2d'].shape))
+            #print('rgb:left_cam:224x224:2d {}'.format(path['env_infos']['obs_dict']['rgb:left_cam:224x224:2d'].shape))
 
             #dataset = paths_utils.path2dataset(path)
 
@@ -549,8 +550,8 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
             data['infos'] = [{'success': reward} for reward in path['rewards']]
             
             data['frames'] = []
-            imgs = path['observations'][:,67:(67+240*424*3)]
-            imgs = imgs.reshape((data['states'].shape[0],-1,240,424,3))
+            imgs = path['observations'][:,67:(67+224*224*3)]
+            imgs = imgs.reshape((data['states'].shape[0],-1,224,224,3))
             imgs = imgs.astype(np.uint8)
             for i in range(imgs.shape[0]):
                 for j in range(imgs.shape[1]):

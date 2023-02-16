@@ -128,7 +128,7 @@ register(
 register(
     id='FrankaPickPlaceRandomReal-v0',
     entry_point='mj_envs.envs.arms.pick_place_v0:PickPlaceV0',
-    max_episode_steps=75, #50steps*40Skip*2ms = 4s
+    max_episode_steps=100, #50steps*40Skip*2ms = 4s
     kwargs={
         'model_path': curr_dir+'/franka/assets/franka_busbin_v0.xml',
         'config_path': curr_dir+'/franka/assets/franka_busbin_v0.config',
@@ -158,20 +158,22 @@ register(
 )
 
 # Reach to random target using visual inputs
-def register_pick_place_visual_envs(env_name, encoder_type):
+def register_pick_place_visual_envs(env_name, encoder_type, real=False):
+    obs_keys = ['qp', 'qv', 'grasp_pos', 'object_err', 'target_err',
+                "rgb:left_cam:224x224:{}".format(encoder_type),
+                "d:left_cam:224x224:{}".format(encoder_type),
+                "rgb:right_cam:224x224:{}".format(encoder_type),
+                "d:right_cam:224x224:{}".format(encoder_type)]
+    if real:
+        obs_keys.extend(["rgb:top_cam:224x224:{}".format(encoder_type),
+                         "d:top_cam:224x224:{}".format(encoder_type),
+                         "rgb:Franka_wrist_cam:224x224:{}".format(encoder_type),
+                         "d:Franka_wrist_cam:224x224:{}".format(encoder_type)])
+
     register_env_variant(
         env_id='{}-v0'.format(env_name),
         variant_id='{}_v{}-v0'.format(env_name, encoder_type),
-        variants={'obs_keys':
-                    ['qp', 'qv', 'grasp_pos', 'object_err', 'target_err',
-                    "rgb:left_cam:224x224:{}".format(encoder_type),
-                    "d:left_cam:224x224:{}".format(encoder_type)]#,
-                    #"rgb:right_cam:240x424:{}".format(encoder_type),
-                    #"d:right_cam:240x424:{}".format(encoder_type),
-                    #"rgb:top_cam:240x424:{}".format(encoder_type),
-                    #"d:top_cam:240x424:{}".format(encoder_type),
-                    #"rgb:Franka_wrist_cam:240x424:{}".format(encoder_type),
-                    #"d:Franka_wrist_cam:240x424:{}".format(encoder_type)]
+        variants={'obs_keys': obs_keys
         },
         silent=True
     )
@@ -179,7 +181,7 @@ for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
     register_pick_place_visual_envs('FrankaPickPlaceRandom', enc)
 
 for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
-    register_pick_place_visual_envs('FrankaPickPlaceRandomReal', enc)
+    register_pick_place_visual_envs('FrankaPickPlaceRandomReal', enc, real=True)
 
 for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
     register_pick_place_visual_envs('FrankaPickPlaceRandomMultiObj', enc)

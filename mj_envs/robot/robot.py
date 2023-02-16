@@ -428,9 +428,9 @@ class Robot():
                 assert device['interface']['type'] == 'realsense', "Check interface type for {}".format(cam)
                 data = device['robot'].get_sensors()
                 data_height = data['rgb'].shape[0]
-                assert data_height == height, "Incorrect image height: required:{}, found:{}".format(height, data_height)
+                #assert data_height == height, "Incorrect image height: required:{}, found:{}".format(height, data_height)
                 data_width = data['rgb'].shape[1]
-                assert data_width == width, "Incorrect image width: required:{}, found:{}".format(width, data_width)
+                #assert data_width == width, "Incorrect image width: required:{}, found:{}".format(width, data_width)
                 current_sensor_value[cam_name] = data
 
                 # calibrate sensors
@@ -438,8 +438,15 @@ class Robot():
                     current_sensor_value[cam_name][cam['hdr_id']] = current_sensor_value[cam_name][cam['hdr_id']]*cam['scale'] + cam['offset']
                 device['sensor_data'] = current_sensor_value[cam_name]
                 device['sensor_time'] = current_sensor_value['time']
-                imgs[ind, :, :, :] = current_sensor_value[cam_name]['rgb']
-                depths[ind, :, :] = current_sensor_value[cam_name]['d'][:,:,0] # assumes single channel depth
+
+                if data_height != height or data_width != width:
+                    lc = device['left_crop']
+                    tc = device['top_crop']
+                    imgs[ind, :, :, :] = current_sensor_value[cam_name]['rgb'][tc:tc+height,lc:lc+width,:]
+                    depths[ind, :, :] = current_sensor_value[cam_name]['d'][tc:tc+height,lc:lc+width,0] # assumes single channel depth
+                else:
+                    imgs[ind, :, :, :] = current_sensor_value[cam_name]['rgb']
+                    depths[ind, :, :] = current_sensor_value[cam_name]['d'][:,:,0] # assumes single channel depth
 
         else:
             imgs = np.zeros((len(cameras), height, width, 3), dtype=np.uint8)
