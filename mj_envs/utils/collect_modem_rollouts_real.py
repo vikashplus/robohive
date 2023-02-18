@@ -52,9 +52,9 @@ X_SCALE = 1.0668/314 # 1.0668 is width of bin
 OBJ_POS_LOW = [-0.25,0.368,0.91] #[-0.35,0.25,0.91]
 OBJ_POS_HIGH = [0.25, 0.72, 0.91] #[0.35,0.65,0.91]
 DROP_ZONE_LOW = [-0.18, 0.43, 1.1]
-DROP_ZONE_HIGH = [0.18, 0.53, 1.1]
+DROP_ZONE_HIGH = [0.18, 0.58, 1.1]
 MOVE_JOINT_VEL = [0.1, 0.2, 0.2, 0.2, 0.2, 0.2, 0.45, 1.0, 1.0]
-DIFF_THRESH = 0.1#0.45
+DIFF_THRESH = 0.15#0.45
 
 MASK_START_X = 148-116 #40
 MASK_END_X = 313-116 #400
@@ -211,6 +211,18 @@ def move_joint_config(env, config):
 
     return obs, env_info
 
+def open_gripper(env, obs):
+    obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
+    open_qp = obs_dict['qp'][0,0,:9].copy()
+    open_qp[7:9] = 0.0
+
+    start_time = time.time()
+
+    while((obs_dict['qp'][0,0,7] > 0.001) and time.time()-start_time < 30.0):
+        release_action = 2*(((open_qp - env.jnt_low)/(env.jnt_high-env.jnt_low))-0.5)
+        obs, _, done, env_info = env.step(release_action)
+        obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
+
 def check_grasp_success(env, obs, full_check=False):
         if obs is None:
             obs = env.get_obs()
@@ -222,6 +234,7 @@ def check_grasp_success(env, obs, full_check=False):
 
         if obs_dict['grasp_pos'][0,0,2] < 1.05:
             print('Policy didnt lift gripper, resetting')
+            open_gripper(env, obs)
             return None, None, False, None, None
 
         print('moving up')
@@ -251,6 +264,7 @@ def check_grasp_success(env, obs, full_check=False):
         mean_diff = 0.0
 
         if not full_check and (grip_width < MAX_GRIPPER_OPEN or grip_width > MIN_GRIPPER_CLOSED):
+            open_gripper(env, obs)
             return None, None, False, None, None
 
         obs, env_info = move_joint_config(env, np.concatenate([OUT_OF_WAY, [obs_dict['qp'][0,0,7]]*2])) 
@@ -298,7 +312,8 @@ def check_grasp_success(env, obs, full_check=False):
 
         print('Releasing')
         extra_time = 25
-        while((obs_dict['qp'][0,0,7] > 0.001) or extra_time > 0):
+        start_time = time.time()
+        while(((obs_dict['qp'][0,0,7] > 0.001) or extra_time > 0) and time.time()-start_time < 30.0):
             release_action = 2*(((open_qp - env.jnt_low)/(env.jnt_high-env.jnt_low))-0.5)
             obs, _, done, env_info = env.step(release_action)
             obs_dict = env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
@@ -313,6 +328,7 @@ def check_grasp_success(env, obs, full_check=False):
         success_end_x = min(MASK_END_X, drop_x + 30)
         success_start_y = max(MASK_START_Y, drop_y - 30)
         success_end_y = min(MASK_END_Y, drop_y+30)
+        print('drop_pos x: {}, drop_pos y: {}'.format(drop_zone_pos[0], drop_zone_pos[1]))
         print('drop_x {}, drop_y {}, start_x {}, end_x {}, start_y {}, end_y {}'.format( drop_x, drop_y, success_start_x, success_end_x, success_start_y, success_end_y))
         success_mask[success_start_y:success_end_y, success_start_x:success_end_x, :] = 255
         pre_drop_img = cv2.bitwise_and(pre_drop_img, success_mask)

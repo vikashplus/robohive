@@ -61,8 +61,10 @@ class PickPlaceV0(env_base.MujocoEnv):
                pos_limit_high=[0.35, 0.75, 1.5, 3.14, 6.28, 3.14, 0.04, 1.0],
                vel_limit=[0.15, 0.25, 0.1, 0.25, 0.1, 0.25, 0.2, 1.0, 1.0],
                slow_vel_limit=[0.1, 0.25, 0.1, 0.25, 0.1, 0.1, 0.2, 1.0, 1.0],
-               eef_vel_limit = [0.15, 0.15, 0.25],
-               slow_eef_vel_limit=[0.15, 0.15, 0.075],
+               #eef_vel_limit = [0.15, 0.15, 0.25],
+               #slow_eef_vel_limit=[0.15, 0.15, 0.075],
+               eef_vel_limit = [0.075, 0.075, 0.15],
+               slow_eef_vel_limit=[0.075, 0.075, 0.075],
                min_grab_height=0.905,
                max_slow_height=1.075,
                max_ik=3,
@@ -232,8 +234,11 @@ class PickPlaceV0(env_base.MujocoEnv):
             # Un-normalize cmd
             eef_cmd = (0.5*a.flatten()[-8:]+0.5)*(self.pos_limit_high-self.pos_limit_low)+self.pos_limit_low
             eef_cmd = np.clip(eef_cmd, self.pos_limit_low, self.pos_limit_high)
+            if self.robot.is_hardware:
+                eef_cmd[:3] = np.clip(eef_cmd[:3], [-0.25,0.368,0.9], [0.25,0.72,1.3])
             cur_pos = self.sim_obsd.data.site_xpos[self.grasp_sid]
             if self.robot.is_hardware:
+                eef_cmd[5] = np.clip(eef_cmd[5], -0.1,0.1)
                 if cur_pos[2] < self.max_slow_height:
                     eef_cmd[:3] = np.clip(eef_cmd[:3], cur_pos-self.slow_eef_vel_limit, cur_pos+self.eef_vel_limit)
                 else:
