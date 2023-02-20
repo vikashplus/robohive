@@ -106,24 +106,26 @@ def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, outp
                 for i in range(data['states']['qp'].shape[0]):
                     data['frames'].append(Path(rgb_img_fn+f'{0:05d}.png'))                
             else:
-                rgb_key = 'rgb:left_cam:224x224:2d'
-                rgb_imgs = paths[0]['env_infos']['obs_dict'][rgb_key]
-                depth_key = 'd:left_cam:224x224:2d'
-                depth_imgs = paths[0]['env_infos']['obs_dict'][depth_key]
-                for i in range(rgb_imgs.shape[0]):
-                    data['frames'].append([])
-                    
-                    rgb_img = Image.fromarray(rgb_imgs[i])
-                    rgb_img_fn = ro_fn + '_rgb_left_cam_step'
-                    rgb_img.save(output_dir+'/frames/'+rgb_img_fn+f'{i:05d}.png')
-                    data['frames'][i].append(Path(rgb_img_fn+f'{i:05d}.png'))
+                for cam in ['left_cam', 'right_cam']:
+                    rgb_key = 'rgb:'+cam+':224x224:2d'
+                    rgb_imgs = paths[0]['env_infos']['obs_dict'][rgb_key]
+                    depth_key = 'd:'+cam+':224x224:2d'
+                    depth_imgs = paths[0]['env_infos']['obs_dict'][depth_key]
+                    for i in range(rgb_imgs.shape[0]):
+                        if len(data['frames']) <= i:
+                            data['frames'].append([])
+                        
+                        rgb_img = Image.fromarray(rgb_imgs[i])
+                        rgb_img_fn = ro_fn + '_rgb_'+cam+'_step'
+                        rgb_img.save(output_dir+'/frames/'+rgb_img_fn+f'{i:05d}.png')
+                        data['frames'][i].append(Path(rgb_img_fn+f'{i:05d}.png'))
 
-                    depth_img = 255*depth_imgs[i]       
-                    depth_img = Image.fromarray(depth_img)
-                    depth_img = depth_img.convert("L")
-                    depth_img_fn = ro_fn + '_depth_left_cam_step'
-                    depth_img.save(output_dir+'/frames/'+depth_img_fn+f'{i:05d}.png')
-                    data['frames'][i].append(Path(depth_img_fn+f'{i:05d}.png'))
+                        depth_img = 255*depth_imgs[i]       
+                        depth_img = Image.fromarray(depth_img)
+                        depth_img = depth_img.convert("L")
+                        depth_img_fn = ro_fn + '_depth_'+cam+'_step'
+                        depth_img.save(output_dir+'/frames/'+depth_img_fn+f'{i:05d}.png')
+                        data['frames'][i].append(Path(depth_img_fn+f'{i:05d}.png'))
 
             '''
             for cam in ['left_cam', 'right_cam', 'top_cam', 'Franka_wrist_cam']:
