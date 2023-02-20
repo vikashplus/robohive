@@ -10,6 +10,9 @@ import gym
 import numpy as np
 
 from mj_envs.envs import env_base
+from mj_envs.utils.quat_math import euler2quat
+from mj_envs.utils.inverse_kinematics import qpos_from_site_pose
+from mujoco_py import load_model_from_path, MjSim
 
 class PushBaseV0(env_base.MujocoEnv):
 
@@ -51,6 +54,7 @@ class PushBaseV0(env_base.MujocoEnv):
                reward_mode="dense",
                obs_keys=DEFAULT_OBS_KEYS,
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
+               init_qpos=None,
                **kwargs,
         ):
 
@@ -59,12 +63,16 @@ class PushBaseV0(env_base.MujocoEnv):
         self.object_sid = self.sim.model.site_name2id(object_site_name)
         self.target_sid = self.sim.model.site_name2id(target_site_name)
         self.target_xyz_range = target_xyz_range
-
+        self.jnt_low = self.sim.model.jnt_range[:self.sim.model.nu, 0]
+        self.jnt_high = self.sim.model.jnt_range[:self.sim.model.nu, 1]
+        self.ik_sim = MjSim(self.sim.model)
         super()._setup(obs_keys=obs_keys,
                        weighted_reward_keys=weighted_reward_keys,
                        reward_mode=reward_mode,
                        frame_skip=frame_skip,
                        **kwargs)
+        if init_qpos is not None:
+            self.init_qpos[:len(init_qpos)] = np.array(init_qpos)[:]
 
     def get_obs_dict(self, sim):
         obs_dict = {}
@@ -98,5 +106,31 @@ class PushBaseV0(env_base.MujocoEnv):
     def reset(self):
         self.sim.model.site_pos[self.target_sid] = self.np_random.uniform(high=self.target_xyz_range['high'], low=self.target_xyz_range['low'])
         self.sim_obsd.model.site_pos[self.target_sid] = self.sim.model.site_pos[self.target_sid]
+        #self.init_qpos[:9] = np.array([0.4653,  0.5063,  0.0228, -2.1195, -0.6052,  0.7064 , 2.5362,  0.025 ,  0.025])
         obs = super().reset(self.init_qpos, self.init_qvel)
         return obs
+
+    def step(self, action):
+        '''
+        action = (0.5 * action + 0.5) * (self.jnt_high - self.jnt_low) + self.jnt_low
+        action = np.zeros(9)
+        eef_pos = np.array([-0.19,0.48,0.88])
+        eef_elr = np.array([3.14,0.5,0])
+        eef_quat = euler2quat(eef_elr)
+
+        self.ik_sim.data.qpos[:7] = np.random.normal(self.sim.data.qpos[:7], 0.0)
+        self.ik_sim.data.qpos[2] = 0.0
+        self.ik_sim.forward()
+        ik_result = qpos_from_site_pose(physics=self.ik_sim,
+                                        site_name=self.sim.model.site_id2name(self.grasp_sid),
+                                        target_pos=eef_pos,
+                                        target_quat=eef_quat,
+                                        inplace=False,
+                                        regularization_strength=1.0,
+                                        is_hardware=self.robot.is_hardware)
+        action = ik_result.qpos[:self.sim.model.nu]
+        action[7:9] = self.init_qpos[7:9]
+        print(action)
+        action = 2 * (((action - self.jnt_low) / (self.jnt_high - self.jnt_low)) - 0.5)
+        '''
+        return super().step(action)
