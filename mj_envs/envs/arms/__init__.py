@@ -124,6 +124,21 @@ register(
     }
 )
 
+register(
+    id='FrankaPlanarPush-v0',
+    entry_point='mj_envs.envs.arms.push_base_v0:PushBaseV0',
+    max_episode_steps=50, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_planar_push_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_bin_push_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_name': "obj0",
+        'target_site_name': "target",
+        'target_xyz_range': {'high':[0.22, 0.5, 1.02], 'low':[0.22, 0.5, 1.02]}#,
+        #'init_qpos': [0.4653, 0.5063, 0.0228, -2.1195, -0.6052, 0.7064, 2.5362, 0.025, 0.025]
+    }
+)
+
 # FRANKA PICK =======================================================================
 register(
     id='FrankaPickPlaceFixed-v0',
