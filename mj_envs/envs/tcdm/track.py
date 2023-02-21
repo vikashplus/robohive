@@ -13,7 +13,7 @@ import numpy as np
 import os
 import collections
 
-# from pyquaternion import Quaternion
+from pyquaternion import Quaternion
 
 # ToDo
 # - change target to reference
@@ -32,9 +32,9 @@ class TrackEnv(env_base.MujocoEnv):
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
         "pose": 1.0,
-        "object": 0,#1.0,
-        "bonus": 4.0,
-        "penalty": -50,
+        "object": 1.0,
+        "bonus": 1.0,#4.0,
+        "penalty": -2,
     }
     def __init__(self, object_name, model_path, obsd_model_path=None, seed=None, **kwargs):
 
@@ -82,7 +82,7 @@ class TrackEnv(env_base.MujocoEnv):
         self.lift_bonus_thresh =  0.02
 
         self._lift_z = self.sim.data.get_body_xipos(self._object_name)[2] + self.lift_bonus_thresh
-
+        self.initialized_pos = False
         self._setup(**kwargs)
 
 
@@ -106,13 +106,14 @@ class TrackEnv(env_base.MujocoEnv):
         # Adjust horizon if not motion_extrapolation
         if motion_extrapolation == False:
             self.spec.max_episode_steps = self.ref.horizon # doesn't work always. WIP
-
         # Adjust init as per the specified key
         ref0 = self.ref.get_reference(self.motion_start_time)
         self.init_qpos[:self.ref.robot_dim] = ref0.robot
         self.init_qpos[self.ref.robot_dim:self.ref.robot_dim+3] = ref0.object[:3]
         self.init_qpos[-3:] = quat2euler(ref0.object[3:])
 
+        # hack because in the super()._setup the initial posture is set to the average qpos and when a step is called, it ends in a `done` state
+        self.initialized_pos = True
         # if self.sim.model.nkey>0:
             # self.init_qpos[:] = self.sim.model.key_qpos[0,:]
 
@@ -145,6 +146,14 @@ class TrackEnv(env_base.MujocoEnv):
     def norm2(self, x):
         return np.sum(np.square(x))
 
+    def root_to_point(self, root_pos, root_rotation, point):
+        if isinstance(root_rotation, Quaternion) \
+                    or root_rotation.shape != (3,3):
+            root_rotation = self.to_quat(root_rotation).rotation_matrix
+        root_rotation_inv = root_rotation.T
+        delta = (point - root_pos).reshape((3,1))
+        return root_rotation_inv.dot(delta).reshape(-1)
+
     def get_obs_dict(self, sim):
         obs_dict = {}
 
@@ -172,6 +181,10 @@ class TrackEnv(env_base.MujocoEnv):
         obs_dict['curr_obj_com'] = sim.data.get_body_xipos(self._object_name).copy()
         obs_dict['curr_obj_rot'] = sim.data.get_body_xquat(self._object_name).copy()
 
+        obs_dict['wrist_err'] = sim.data.get_body_xipos('wrist')
+
+        obs_dict['base_error'] = obs_dict['curr_obj_com'] - obs_dict['wrist_err']
+
         ## info about target object com + rotations
         obs_dict['targ_obj_com']  = curr_ref.object[:3]
         obs_dict['targ_obj_rot']  = curr_ref.object[3:]
@@ -181,9 +194,22 @@ class TrackEnv(env_base.MujocoEnv):
         obs_dict['hand_qvel_err'] = obs_dict['curr_hand_qvel']-obs_dict['targ_hand_qvel']
 
         obs_dict['obj_com_err'] =  obs_dict['curr_obj_com'] - obs_dict['targ_obj_com']
-        if obs_dict['time'] == 0:
-            print(f"Time: {obs_dict['time']} Error Pose: {obs_dict['hand_qpos_err']}    Error Obj:{obs_dict['obj_com_err']}")
 
+        # import ipdb; ipdb.set_trace()
+        # poses_pos = self.sim.model.body_pos[2:26].copy()
+        # poses_rot = self.sim.model.body_quat[2:26].copy()
+        # # # calculate error terms
+        # ee_deltas = 0
+        # for i in range(1, len(poses_pos)):
+        #     rel_pos = self.root_to_point(poses_pos[0], poses_rot[0], poses_pos[i])
+        #     target_rel_pos = self.root_to_point(tgt_poses.pos[0], tgt_poses.rot[0],
+        #                                     tgt_poses.pos[i])
+        #     delta = rel_pos - target_rel_pos
+        #     ee_deltas += norm2([1, 1, np.sqrt(self.height_scale)] * delta)
+
+
+        # if obs_dict['time'] == 0:
+        # print(f"Time: {obs_dict['time']} Error Pose: {obs_dict['hand_qpos_err']}    Error Obj:{obs_dict['obj_com_err']}")
 
         # obs_dict['obj_rot_err'] =  self.rotation_distance(obs_dict['curr_obj_rot'], obs_dict['targ_obj_rot']) / np.pi
 
@@ -236,19 +262,25 @@ class TrackEnv(env_base.MujocoEnv):
         pose_reward  = self.qpos_reward_weight * qpos_reward
         vel_reward   = self.qvel_reward_weight * qvel_reward
 
+        # print(f"Time: {obs_dict['time']} Error Pose: {self.norm2(obs_dict['hand_qpos_err'])} {obs_dict['hand_qpos_err']}    Error Obj:{obs_dict['obj_com_err']}")
 
-        # import ipdb; ipdb.set_trace()
+        self.base_err_scale = 40
+        base_error = np.sqrt(self.norm2(obs_dict['base_error'] ))
+        base_reward = np.exp(-self.base_err_scale * base_error)
+
+        # print(base_error, base_reward)
+
         rwd_dict = collections.OrderedDict((
             # Optional Keys
             ('pose',   float(pose_reward+vel_reward)),
-            ('object' , float(obj_reward)),
+            ('object' , float(obj_reward+base_reward)),
             ('bonus',  self.lift_bonus_mag * float(lift_bonus)),
-            ('penalty', self.check_termination(obs_dict)),
+            ('penalty', float(self.check_termination(obs_dict))),
             # Must keys
             ('sparse',  0),
             ('solved',  0),
-            # ('done',    self.check_termination(obs_dict)),
-            ('done',   False),
+            ('done',    self.initialized_pos and self.check_termination(obs_dict)),
+            # ('done',   False),
         ))
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
 
@@ -259,13 +291,14 @@ class TrackEnv(env_base.MujocoEnv):
         idxs = self.ref.find_timeslot_in_reference(self.time)
         # print(f"Time {self.time} {idxs} {self.ref.horizon}")
         ref_mot = self.ref.get_reference(self.time)
-        rob_mot = ref_mot[1]
-        obj_mot = ref_mot[2]
+        rob_mot = ref_mot.robot
+        obj_mot = ref_mot.object
         # import ipdb; ipdb.set_trace()
         # objt = self.ref.ref_file['object_translation'][int(self.ref.ref_file['grasp_frame'])+idxs[0],:]
         # print(idxs,np.sum(objt - obj_mot[:3]),objt,obj_mot[:3])
         self.sim.data.qpos[:len(rob_mot)] = rob_mot
         self.sim.data.qpos[len(rob_mot):len(rob_mot)+3] = obj_mot[:3]
+
         self.sim.data.qpos[len(rob_mot)+3:] = quat2euler(obj_mot[3:])
         self.sim.forward()
         self.sim.data.time = self.sim.data.time + 0.02#self.env.env.dt
@@ -282,14 +315,17 @@ class TrackEnv(env_base.MujocoEnv):
 
     def check_termination(self, obs_dict):
 
-
         # TERMINATIONS FOR OBJ TRACK
         self.obj_com_term = 0.25
         obj_term = self.norm2(obs_dict['obj_com_err']) >= self.obj_com_term ** 2
 
         # TERMINATIONS FOR MIMIC
         self.qpos_fail_thresh = 2.5
-        qpos_term = self.norm2(obs_dict['hand_qpos_err']) >= self.qpos_fail_thresh ** 2
+        qpos_term = self.norm2(obs_dict['hand_qpos_err']) >= .75 # self.qpos_fail_thresh ** 2
 
-        # return obj_term or qpos_term
-        return qpos_term
+        base_term =np.sqrt(self.norm2(obs_dict['base_error'] )) >= .25
+        # print(np.sqrt(self.norm2(obs_dict['base_error'] )))
+
+        # return obj_term or qpos_term or base_term # combining termination for object + posture
+        return obj_term or base_term # termination only on object
+        # return qpos_term # termination only on posture
