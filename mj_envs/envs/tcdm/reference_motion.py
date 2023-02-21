@@ -43,20 +43,20 @@ class ReferenceMotion():
         if isinstance(reference, str):
             self.reference = self.load(reference)
             self.ref_file = {k: v for k, v in np.load('envs/tcdm/assets/tmp_data/Adroit_banana_pass_1.npz').items()}
-
-            startIDX = int(self.ref_file['grasp_frame'])
+            # import ipdb; ipdb.set_trace()
+            startIDX = 11 #int(self.ref_file['grasp_frame'])
             self.reference['robot'] = self.ref_file['s'][startIDX:,:30]
             self.reference['robot_vel'] = self.ref_file['sdot'][startIDX:,:30]
 
-            self.reference['object'] = np.hstack((self.ref_file['s'][startIDX:,30:33],
-                                                euler2quat(self.ref_file['s'][startIDX:,33:])))
-            # self.reference['human_joint_coords'] = self.ref_file['human_joint_coords'][startIDX:,:]
-            # self.reference['object_translation'] = self.ref_file['object_translation'][startIDX:,:]
-            # self.reference['object_orientation'] = self.ref_file['object_orientation'][startIDX:,:]
-            # self.reference['eef_pos'] = self.ref_file['eef_pos'][startIDX:,:]
-            # self.reference['eef_quat'] = self.ref_file['eef_quat'][startIDX:,:]
-            # self.reference['eef_velp'] = self.ref_file['eef_velp'][startIDX:,:]
-            # self.reference['eef_velr'] = self.ref_file['eef_velr'][startIDX:,:]
+            # self.reference['object'] = np.hstack((self.ref_file['s'][startIDX:,30:33],
+            #                                     euler2quat(self.ref_file['s'][startIDX:,33:])))
+            self.reference['human_joint_coords'] = self.ref_file['human_joint_coords'][startIDX:,:]
+            self.reference['object_translation'] = self.ref_file['object_translation'][startIDX:,:]
+            self.reference['object_orientation'] = self.ref_file['object_orientation'][startIDX:,:]
+            self.reference['eef_pos'] = self.ref_file['eef_pos'][startIDX:,:]
+            self.reference['eef_quat'] = self.ref_file['eef_quat'][startIDX:,:]
+            self.reference['eef_velp'] = self.ref_file['eef_velp'][startIDX:,:]
+            self.reference['eef_velr'] = self.ref_file['eef_velr'][startIDX:,:]
 
         elif isinstance(reference, dict):
             self.reference = reference
