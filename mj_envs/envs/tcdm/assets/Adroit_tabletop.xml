@@ -36,8 +36,9 @@
             <joint name="ARRx" pos="0 0 0.396" axis="1 0 0" range="-1.75 1.75" damping="20" limited="true"/>
             <joint name="ARRy" pos="0 0 0.396" axis="0 1 0" range="-1.75 1.75" damping="20" limited="true"/>
             <joint name="ARRz" pos="0 0 0.396" axis="0 0 1" range="-2.5 2.5" damping="20" limited="true"/> -->
-            <joint name="ARTx" pos="0 0 0" axis="1 0 0" type="slide" range="-0.25 0.25" damping="20" limited="true"/>
-            <joint name="ARTy" pos="0 0 0" axis="0 1 0" type="slide" range="-0.2 0.1" damping="20" limited="true"/>
+            <joint name="ARTx" pos="0 0 0" axis="1 0 0" type="slide" range="-0.25 0.35" damping="20" limited="true"/>
+            <!-- <joint name="ARTy" pos="0 0 0" axis="0 1 0" type="slide" range="-0.2 0.1" damping="20" limited="true"/> -->
+            <joint name="ARTy" pos="0 0 0" axis="0 1 0" type="slide" range="-0.2 0.3" damping="20" limited="true"/>
             <joint name="ARTz" pos="0 0 0" axis="0 0 1" type="slide" range="-0.3 0.5" damping="20" limited="true"/>
             <joint name="ARRx" pos="0 0 0" axis="1 0 0" range="-1.75 1.75" damping="20" limited="true"/>
             <joint name="ARRy" pos="0 0 0" axis="0 1 0" range="-1.75 1.75" damping="20" limited="true"/>
@@ -56,8 +57,9 @@
     </worldbody>
 
     <actuator>
-        <position name="A_ARTx" joint="ARTx" ctrllimited="true" ctrlrange="-0.25 0.25" kp="175" />
-        <position name="A_ARTy" joint="ARTy" ctrllimited="true" ctrlrange="-0.2 0.1" kp="175" />
+        <position name="A_ARTx" joint="ARTx" ctrllimited="true" ctrlrange="-0.25 0.35" kp="175" />
+        <!-- <position name="A_ARTy" joint="ARTy" ctrllimited="true" ctrlrange="-0.2 0.1" kp="175" /> -->
+        <position name="A_ARTy" joint="ARTy" ctrllimited="true" ctrlrange="-0.2 0.3" kp="175" />
         <position name="A_ARTz" joint="ARTz" ctrllimited="true" ctrlrange="-0.3 0.5" kp="175" />
         <position name="A_ARRx" joint="ARRx" ctrllimited="true" ctrlrange="-1.75 1.75" kp="150" />
         <position name="A_ARRy" joint="ARRy" ctrllimited="true" ctrlrange="-1.75 1.75" kp="150" />
