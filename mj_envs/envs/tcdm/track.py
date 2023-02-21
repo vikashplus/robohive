@@ -320,10 +320,12 @@ class TrackEnv(env_base.MujocoEnv):
         obj_term = self.norm2(obs_dict['obj_com_err']) >= self.obj_com_term ** 2
 
         # TERMINATIONS FOR MIMIC
-        self.qpos_fail_thresh = 2.5
-        qpos_term = self.norm2(obs_dict['hand_qpos_err']) >= .75 # self.qpos_fail_thresh ** 2
+        self.qpos_fail_thresh = .75
+        qpos_term = self.norm2(obs_dict['hand_qpos_err']) >= self.qpos_fail_thresh
 
-        base_term =np.sqrt(self.norm2(obs_dict['base_error'] )) >= .25
+        self.base_fail_thresh = .25
+        # base_term =np.sqrt(self.norm2(obs_dict['base_error'] )) >= self.base_fail_thresh
+        base_term =self.norm2(obs_dict['base_error'] ) >= self.base_fail_thresh ** 2
         # print(np.sqrt(self.norm2(obs_dict['base_error'] )))
 
         # return obj_term or qpos_term or base_term # combining termination for object + posture
