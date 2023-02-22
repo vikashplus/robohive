@@ -45,7 +45,7 @@ from mj_envs.envs.hand_manipulation_suite.hammer_v1 import HammerEnvV1
 register(
     id='pen-v1',
     entry_point='mj_envs.envs.hand_manipulation_suite:PenEnvV1',
-    max_episode_steps=50,
+    max_episode_steps=100,
     kwargs={
         'model_path': curr_dir+'/assets/DAPG_pen.xml',
     }
@@ -147,12 +147,12 @@ from mj_envs.envs.hand_manipulation_suite.baoding_v1 import BaodingFixedEnvV1
 # from mj_envs.envs.hand_manipulation_suite.hammer_v0 import HammerEnvV0
 
 # # Reposition a pen in hand
-# register(
-#     id='pen-v0',
-#     entry_point='mj_envs.envs.hand_manipulation_suite:PenEnvV0',
-#     max_episode_steps=50,
-# )
-# from mj_envs.envs.hand_manipulation_suite.pen_v0 import PenEnvV0
+register(
+    id='pen-v0',
+    entry_point='mj_envs.envs.hand_manipulation_suite:PenEnvV0',
+    max_episode_steps=100,
+)
+from mj_envs.envs.hand_manipulation_suite.pen_v0 import PenEnvV0
 
 # # Relcoate an object to the target
 # register(
