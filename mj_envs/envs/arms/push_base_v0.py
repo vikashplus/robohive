@@ -10,7 +10,7 @@ import gym
 import numpy as np
 
 from mj_envs.envs import env_base
-from mj_envs.utils.quat_math import euler2quat
+from mj_envs.utils.quat_math import euler2quat, mat2euler
 from mj_envs.utils.inverse_kinematics import qpos_from_site_pose
 from mujoco_py import load_model_from_path, MjSim
 
@@ -55,6 +55,8 @@ class PushBaseV0(env_base.MujocoEnv):
                obs_keys=DEFAULT_OBS_KEYS,
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
                init_qpos=None,
+               pos_limit_low=None,
+               pos_limit_high = None,
                **kwargs,
         ):
 
@@ -65,7 +67,11 @@ class PushBaseV0(env_base.MujocoEnv):
         self.target_xyz_range = target_xyz_range
         self.jnt_low = self.sim.model.jnt_range[:self.sim.model.nu, 0]
         self.jnt_high = self.sim.model.jnt_range[:self.sim.model.nu, 1]
+        assert not ((pos_limit_high is None) ^ (pos_limit_low is None)) # make sure either both are None or neither are None
+        self.pos_limit_low = np.array(pos_limit_low)
+        self.pos_limit_high = np.array(pos_limit_high)
         self.ik_sim = MjSim(self.sim.model)
+        self.last_ctrl = None
         super()._setup(obs_keys=obs_keys,
                        weighted_reward_keys=weighted_reward_keys,
                        reward_mode=reward_mode,
@@ -73,6 +79,11 @@ class PushBaseV0(env_base.MujocoEnv):
                        **kwargs)
         if init_qpos is not None:
             self.init_qpos[:len(init_qpos)] = np.array(init_qpos)[:]
+
+        if pos_limit_low is not None:
+            act_low = -np.ones(self.pos_limit_low.shape[0]) if self.normalize_act else self.pos_limit_low.copy()
+            act_high = np.ones(self.pos_limit_high.shape[0]) if self.normalize_act else self.pos_limit_high.copy()
+            self.action_space = gym.spaces.Box(act_low, act_high, dtype=np.float32)
 
     def get_obs_dict(self, sim):
         obs_dict = {}
@@ -110,12 +121,44 @@ class PushBaseV0(env_base.MujocoEnv):
         obs = super().reset(self.init_qpos, self.init_qvel)
         return obs
 
-    def step(self, action):
+    def step(self, a):
+        if a.flatten().shape[0] == self.sim.model.nu:
+            act_low = -np.ones(self.sim.model.nu) if self.normalize_act else self.sim.model.actuator_ctrlrange[:,0].copy()
+            act_high = np.ones(self.sim.model.nu) if self.normalize_act else self.sim.model.actuator_ctrlrange[:,1].copy()
+            action = np.clip(a, act_low, act_high)
+        else:
+            assert (a.flatten().shape[0] == 7)
+            eef_cmd = (0.5 * a.flatten() + 0.5) * (self.pos_limit_high - self.pos_limit_low) + self.pos_limit_low
+            if self.pos_limit_low is not None and self.pos_limit_high is not None:
+                eef_cmd = np.clip(eef_cmd, self.pos_limit_low, self.pos_limit_high)
+
+            eef_pos = eef_cmd[:3]
+            eef_elr = eef_cmd[3:6]
+            eef_quat = euler2quat(eef_elr)
+
+            self.ik_sim.data.qpos[:self.sim.model.nu] = self.sim.data.qpos[:self.sim.model.nu]
+            self.ik_sim.forward()
+            ik_result = qpos_from_site_pose(physics=self.ik_sim,
+                                            site_name=self.sim.model.site_id2name(self.grasp_sid),
+                                            target_pos=eef_pos,
+                                            target_quat=eef_quat,
+                                            inplace=False,
+                                            regularization_strength=1.0,
+                                            is_hardware=self.robot.is_hardware)
+            action = ik_result.qpos[:self.sim.model.nu]
+            action[7:9] = self.init_qpos[7:9]
+
+            if self.normalize_act:
+                action = 2 * (((action - self.jnt_low) / (self.jnt_high - self.jnt_low)) - 0.5)
+
+        #print(self.sim.data.site_xpos[self.grasp_sid])
+        #print(mat2euler(self.sim.data.site_xmat[self.grasp_sid].reshape(3,3)))
+        #exit()
         '''
         action = (0.5 * action + 0.5) * (self.jnt_high - self.jnt_low) + self.jnt_low
         action = np.zeros(9)
-        eef_pos = np.array([-0.19,0.48,0.88])
-        eef_elr = np.array([3.14,0.5,0])
+        eef_pos = np.array([-0.35,0.48,0.825])
+        eef_elr = np.array([3.14,0,0])
         eef_quat = euler2quat(eef_elr)
 
         self.ik_sim.data.qpos[:7] = np.random.normal(self.sim.data.qpos[:7], 0.0)
@@ -133,4 +176,24 @@ class PushBaseV0(env_base.MujocoEnv):
         print(action)
         action = 2 * (((action - self.jnt_low) / (self.jnt_high - self.jnt_low)) - 0.5)
         '''
-        return super().step(action)
+
+        self.last_ctrl = self.robot.step(ctrl_desired=action,
+                                        ctrl_normalized=self.normalize_act,
+                                        step_duration=self.dt,
+                                        realTimeSim=self.mujoco_render_frames,
+                                        render_cbk=self.mj_render if self.mujoco_render_frames else None)
+
+        # observation
+        obs = self.get_obs()
+
+        # rewards
+        self.expand_dims(self.obs_dict) # required for vectorized rewards calculations
+        self.rwd_dict = self.get_reward_dict(self.obs_dict)
+        self.squeeze_dims(self.rwd_dict)
+        self.squeeze_dims(self.obs_dict)
+
+        # finalize step
+        env_info = self.get_env_infos()
+
+        # returns obs(t+1), rwd(t+1), done(t+1), info(t+1)
+        return obs, env_info['rwd_'+self.rwd_mode], bool(env_info['done']), env_info
