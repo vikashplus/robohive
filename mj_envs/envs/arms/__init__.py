@@ -114,6 +114,8 @@ register(
 )
 
 register(
+    # Init position: [0.0142 0.3584 1.2545]
+    # Init euler: [0.35,3.14,1.57]
     id='FrankaHangPush-v0',
     entry_point='mj_envs.envs.arms.push_base_v0:PushBaseV0',
     max_episode_steps=50, #50steps*40Skip*2ms = 4s
@@ -123,8 +125,10 @@ register(
         'robot_site_name': "end_effector",
         'object_site_name': "obj0",
         'target_site_name': "target",
-        'target_xyz_range': {'high':[0.22, 0.5, 1.02], 'low':[0.22, 0.5, 1.02]}#,
-        #'init_qpos': [0.4653, 0.5063, 0.0228, -2.1195, -0.6052, 0.7064, 2.5362, 0.025, 0.025]
+        'target_xyz_range': {'high':[0.0, 0.7, 1.367], 'low':[0.0, 0.7, 1.367]},
+        'init_qpos': [0.0366, -0.9403, -0.0278, -2.7104, -0.0422,  0.5814,  0.0284, 0.025, 0.025],
+        'pos_limit_low': [-0.1, 0.3, 1.25, 0.35,3.14,1.57, 0.025],
+        'pos_limit_high': [0.1, 0.8, 1.5, 0.35,3.14,1.57, 0.025]
     }
 )
 
@@ -139,7 +143,9 @@ register(
         'object_site_name': "obj0",
         'target_site_name': "target",
         'target_xyz_range': {'high':[0.3, 0.5, 0.78], 'low':[0.3, 0.5, 0.78]},
-        'init_qpos': [0.5691, 0.697, 0.0563, -1.998, -0.0809, 1.1216, 2.2556, 0.03, 0.03]
+        'init_qpos': [0.5691, 0.697, 0.0563, -1.998, -0.0809, 1.1216, 2.2556, 0.03, 0.03],
+        'pos_limit_low': [-0.4, 0.3, 0.8, 3.14, 0, -0.3, 0.025],
+        'pos_limit_high': [0.4, 0.8, 0.9, 3.14, 0, 0.3, 0.025]
     }
 )
 

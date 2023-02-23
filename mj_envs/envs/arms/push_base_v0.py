@@ -122,11 +122,15 @@ class PushBaseV0(env_base.MujocoEnv):
         return obs
 
     def step(self, a):
+
         if a.flatten().shape[0] == self.sim.model.nu:
             act_low = -np.ones(self.sim.model.nu) if self.normalize_act else self.sim.model.actuator_ctrlrange[:,0].copy()
             act_high = np.ones(self.sim.model.nu) if self.normalize_act else self.sim.model.actuator_ctrlrange[:,1].copy()
             action = np.clip(a, act_low, act_high)
         else:
+            #print('Joints: {}'.format(self.sim.data.qpos[:9]))
+            #print('Position: {}'.format(self.sim.data.site_xpos[self.grasp_sid]))
+
             assert (a.flatten().shape[0] == 7)
             eef_cmd = (0.5 * a.flatten() + 0.5) * (self.pos_limit_high - self.pos_limit_low) + self.pos_limit_low
             if self.pos_limit_low is not None and self.pos_limit_high is not None:
@@ -134,6 +138,10 @@ class PushBaseV0(env_base.MujocoEnv):
 
             eef_pos = eef_cmd[:3]
             eef_elr = eef_cmd[3:6]
+
+            #eef_pos = np.array([0, 0.35, 1.25])
+            #eef_elr = np.array([0.35,3.14,1.57])
+
             eef_quat = euler2quat(eef_elr)
 
             self.ik_sim.data.qpos[:self.sim.model.nu] = self.sim.data.qpos[:self.sim.model.nu]

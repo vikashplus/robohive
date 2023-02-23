@@ -42,7 +42,7 @@
         </body>
 
         <!-- tasks details added here via include-->
-        <site name='target' type='sphere' size='.02' pos='0.0 -0.45 0.78' group='1' rgba='.8 .8 .2 1.0'/>
+        <site name='target' type='sphere' size='.02' pos='0.0 -0.45 0.78' group='1' rgba='.8 .8 .2 0.0'/>
 
         <body name="obj0" pos="-0.3 0.5 0.78">
             <inertial pos="0 0 0" mass="0.088" diaginertia="0.0001 0.0001 0.0001" />
