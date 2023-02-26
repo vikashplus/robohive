@@ -22,6 +22,12 @@ WHICH_TASK = Task.BAODING_CCW
 
 class BaodingFixedEnvV1(env_base.MujocoEnv):
 
+    DEFAULT_CREDIT = """\
+    DAPG: Demo Augmented Policy Gradient; Learning Complex Dexterous Manipulation with Deep Reinforcement Learning and Demonstrations
+        {Aravind Rajeshwaran*, Vikash Kumar*}, Abhiskek Gupta, John Schulman, Emanuel Todorov, and Sergey Levine
+        RSS-2018 | https://sites.google.com/view/deeprl-dexterous-manipulation
+    """
+
     DEFAULT_OBS_KEYS = [
         'hand_pos',
         'object1_pos', 'object1_velp',
@@ -57,7 +63,7 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
         # first construct the inheritance chain, which is just __init__ calls all the way down, with env_base
         # creating the sim / sim_obsd instances. Next we run through "setup"  which relies on sim / sim_obsd
         # created in __init__ to complete the setup.
-        super().__init__(model_path=model_path, obsd_model_path=obsd_model_path, seed=seed)
+        super().__init__(env_credits=self.DEFAULT_CREDIT, model_path=model_path, obsd_model_path=obsd_model_path, seed=seed)
 
         self._setup(**kwargs)
 

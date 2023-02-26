@@ -45,7 +45,7 @@ class BaodingEnvV1(BaseV0):
     def __init__(self, model_path, obsd_model_path=None, seed=None, **kwargs):
         # Two step construction (init+setup) is required for pickling to work correctly.
         gym.utils.EzPickle.__init__(self, model_path, obsd_model_path, seed, **kwargs)
-        super().__init__(model_path=model_path, obsd_model_path=obsd_model_path, seed=seed)
+        super().__init__(model_path=model_path, obsd_model_path=obsd_model_path, seed=seed, env_credits=self.MYO_CREDIT)
         self._setup(**kwargs)
 
     def _setup(self,

@@ -81,6 +81,12 @@ DEMO_RESET_QVEL = np.array(
 
 class KitchenFrankaFixed(KitchenBase):
 
+    ENV_CREDIT = """\
+    Relay Policy Learning: Solving Long-Horizon Tasks via Imitation and Reinforcement Learning
+        Abhishek Gupta, Vikash Kumar, Corey Lynch, Sergey Levine, Karol Hausman
+        CoRL-2019 | https://relay-policy-learning.github.io/
+    """
+
     OBJ_INTERACTION_SITES = (
         "knob1_site",
         "knob2_site",
@@ -159,7 +165,7 @@ class KitchenFrankaDemo(KitchenFrankaFixed):
         # first construct the inheritance chain, which is just __init__ calls all the way down, with env_base
         # creating the sim / sim_obsd instances. Next we run through "setup"  which relies on sim / sim_obsd
         # created in __init__ to complete the setup.
-        super().__init__(model_path=model_path, obsd_model_path=obsd_model_path, seed=seed)
+        super().__init__(model_path=model_path, obsd_model_path=obsd_model_path, seed=seed, env_credits=self.ENV_CREDIT)
 
         super()._setup(**kwargs)
 
@@ -187,7 +193,7 @@ class KitchenFrankaRandom(KitchenFrankaFixed):
         # first construct the inheritance chain, which is just __init__ calls all the way down, with env_base
         # creating the sim / sim_obsd instances. Next we run through "setup"  which relies on sim / sim_obsd
         # created in __init__ to complete the setup.
-        super().__init__(model_path=model_path, obsd_model_path=obsd_model_path, seed=seed)
+        super().__init__(model_path=model_path, obsd_model_path=obsd_model_path, seed=seed, env_credits=self.ENV_CREDIT)
 
         super()._setup(**kwargs)
 

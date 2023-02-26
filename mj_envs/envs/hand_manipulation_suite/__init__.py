@@ -10,7 +10,7 @@ from mj_envs.envs.env_variants import register_env_variant
 import os
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 
-print("RS:> Registering Hand Envs")
+print("RoboHive:> Registering Hand Envs")
 
 # ==================================================================================
 # V1 envs:

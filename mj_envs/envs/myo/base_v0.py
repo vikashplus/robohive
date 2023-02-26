@@ -5,9 +5,15 @@ Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gma
 
 from mj_envs.envs import env_base
 import numpy as np
-import gym
+
 
 class BaseV0(env_base.MujocoEnv):
+
+    MYO_CREDIT = """\
+    MyoSuite: A contact-rich simulation suite for musculoskeletal motor control
+        Vittorio Caggiano, Huawei Wang, Guillaume Durandau, Massimo Sartori, Vikash Kumar
+        L4DC-2019 | https://sites.google.com/view/myosuite
+    """
 
     MVC_rest = []
     f_load = {}

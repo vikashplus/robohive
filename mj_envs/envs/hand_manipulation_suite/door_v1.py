@@ -20,9 +20,15 @@ DEFAULT_RWD_KEYS_AND_WEIGHTS = {'reach':1.0, 'open':1.0, 'bonus':1.0}
 
 class DoorEnvV1(env_base.MujocoEnv):
 
+    DEFAULT_CREDIT = """\
+    DAPG: Demo Augmented Policy Gradient; Learning Complex Dexterous Manipulation with Deep Reinforcement Learning and Demonstrations
+        {Aravind Rajeshwaran*, Vikash Kumar*}, Abhiskek Gupta, John Schulman, Emanuel Todorov, and Sergey Levine
+        RSS-2018 | https://sites.google.com/view/deeprl-dexterous-manipulation
+    """
+
     def __init__(self, model_path, obsd_model_path=None, seed=None, **kwargs):
         gym.utils.EzPickle.__init__(self, model_path, obsd_model_path, seed, **kwargs)
-        super().__init__(model_path=model_path, obsd_model_path=obsd_model_path, seed=seed)
+        super().__init__(env_credits=self.DEFAULT_CREDIT, model_path=model_path, obsd_model_path=obsd_model_path, seed=seed)
         self._setup(**kwargs)
 
 

@@ -7,15 +7,14 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 from mj_envs.physics.sim_scene import get_sim
 from mj_envs.utils.quat_math import quat2euler
+from mj_envs.utils.prompt_utils import prompt
 import time
-from termcolor import cprint
 import numpy as np
 from collections import deque
 import os
 np.set_printoptions(precision=4)
 
 
-_VERBOSE = False
 _ROBOT_VIZ = False
 
 # TODO ===========================================
@@ -31,10 +30,6 @@ _ROBOT_VIZ = False
 # NOTE/ GOOD PRACTICES ===========================
 # nq should be nv
 # Order of sensors and actuators in config should follow XML order
-
-def prompt(data, color=None, on_color=None, flush=False, end="\n"):
-    if _VERBOSE:
-        cprint(data, color=color, on_color=on_color, flush=flush, end=end)
 
 
 class Robot():

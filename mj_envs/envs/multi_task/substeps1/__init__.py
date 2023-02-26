@@ -11,7 +11,7 @@ from gym.envs.registration import register
 CURR_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Appliences ============================================================================
-print("RS:> Registering Appliances Envs")
+print("RoboHive:> Registering Appliances Envs")
 
 from mj_envs.envs.multi_task.common.franka_appliance_v1 import FrankaAppliance
 # MICROWAVE
@@ -110,7 +110,7 @@ register(
 # In this version of the environment, the observations consist of the
 # distance between end effector and all relevent objects in the scene
 
-print("RS:> Registering Kitchen Envs")
+print("RoboHive:> Registering Kitchen Envs")
 from mj_envs.envs.multi_task.common.franka_kitchen_v1 import KitchenFrankaFixed, KitchenFrankaRandom, KitchenFrankaDemo
 
 MODEL_PATH = CURR_DIR + "/../common/kitchen/franka_kitchen.xml"

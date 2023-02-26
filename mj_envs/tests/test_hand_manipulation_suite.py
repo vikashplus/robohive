@@ -109,4 +109,6 @@ class TestHMS(TestEnvs):
         self.check_envs('DexMan', env_names)
 
 if __name__ == '__main__':
+    from mj_envs.utils.prompt_utils import set_prompt_verbosity, Prompt
+    set_prompt_verbosity(verbose_mode=Prompt.WARN)
     unittest.main()

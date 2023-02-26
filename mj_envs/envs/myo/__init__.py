@@ -45,7 +45,7 @@ def register_env_with_variants(id, entry_point, max_episode_steps, kwargs):
 
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 
-print("RS:> Registering Myo Envs")
+print("RoboHive:> Registering Myo Envs")
 
 # Finger-tip reaching ==============================
 register_env_with_variants(id='motorFingerReachFixed-v0',
