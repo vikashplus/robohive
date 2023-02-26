@@ -46,6 +46,9 @@ class RelocateEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
         self.rwd_dict = {}
         mujoco_env.MujocoEnv.__init__(self, sim=sim, frame_skip=5)
 
+        self.action_space.high = np.ones_like(sim.model.actuator_ctrlrange[:,1])
+        self.action_space.low  = -1.0 * np.ones_like(sim.model.actuator_ctrlrange[:,0])
+
     # step the simulation forward
     def step(self, a):
         # apply action and step
