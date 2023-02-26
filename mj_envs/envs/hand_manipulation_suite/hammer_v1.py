@@ -61,6 +61,8 @@ class HammerEnvV1(env_base.MujocoEnv):
             reward_mode=reward_mode,
             frame_skip=frame_skip,
             **kwargs)
+        self.init_qpos = np.zeros(self.init_qpos.shape)
+        self.init_qvel = np.zeros(self.init_qpos.shape)
 
 
     def get_reward_dict(self, obs_dict):
