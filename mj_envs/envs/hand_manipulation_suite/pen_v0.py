@@ -11,7 +11,7 @@ import collections
 from gym import utils
 from mjrl.envs import mujoco_env
 from mj_envs.utils.quat_math import euler2quat
-from mj_envs.utils.obj_vec_dict import ObsVecDict
+from envs.obj_vec_dict import ObsVecDict
 from mujoco_py import MjViewer
 
 OBS_KEYS = ['hand_jnt', 'obj_pos', 'obj_vel', 'obj_rot', 'obj_des_rot', 'obj_err_pos', 'obj_err_rot']
@@ -19,6 +19,13 @@ RWD_KEYS = ['pos_align', 'rot_align', 'drop', 'bonus']
 RWD_MODE = 'dense' # dense/ sparse
 
 class PenEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
+
+    DEFAULT_CREDIT = """\
+    DAPG: Demo Augmented Policy Gradient; Learning Complex Dexterous Manipulation with Deep Reinforcement Learning and Demonstrations
+        {Aravind Rajeshwaran*, Vikash Kumar*}, Abhiskek Gupta, John Schulman, Emanuel Todorov, and Sergey Levine
+        RSS-2018 | https://sites.google.com/view/deeprl-dexterous-manipulation
+    """
+
     def __init__(self, *args, **kwargs):
 
         # get sim

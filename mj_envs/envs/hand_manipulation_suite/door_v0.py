@@ -10,7 +10,7 @@ from gym import utils
 from mjrl.envs import mujoco_env
 from mujoco_py import MjViewer
 import os
-from mj_envs.utils.obj_vec_dict import ObsVecDict
+from envs.obj_vec_dict import ObsVecDict
 import collections
 
 # NOTES:
@@ -25,6 +25,13 @@ RWD_KEYS = ['reach', 'open', 'bonus']
 RWD_MODE = 'dense' # dense/ sparse
 
 class DoorEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
+
+    DEFAULT_CREDIT = """\
+    DAPG: Demo Augmented Policy Gradient; Learning Complex Dexterous Manipulation with Deep Reinforcement Learning and Demonstrations
+        {Aravind Rajeshwaran*, Vikash Kumar*}, Abhiskek Gupta, John Schulman, Emanuel Todorov, and Sergey Levine
+        RSS-2018 | https://sites.google.com/view/deeprl-dexterous-manipulation
+    """
+
     def __init__(self, *args, **kwargs):
 
         # get sim

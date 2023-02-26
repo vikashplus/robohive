@@ -10,7 +10,7 @@ from mj_envs.envs.env_variants import register_env_variant
 import os
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 
-print("RS:> Registering Arms Envs")
+print("RoboHive:> Registering Arms Envs")
 
 # FRANKA REACH =======================================================================
 from mj_envs.envs.arms.reach_base_v0 import ReachBaseV0

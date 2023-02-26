@@ -14,7 +14,7 @@ CURR_DIR = os.path.dirname(os.path.abspath(__file__))
 # In this version of the environment, the observations consist of the
 # distance between end effector and all relevent objects in the scene
 
-print("RS:> Registering Multi-Task (2 subtasks) Envs")
+print("RoboHive:> Registering Multi-Task (2 subtasks) Envs")
 from mj_envs.envs.multi_task.common.franka_kitchen_v1 import KitchenFrankaFixed, KitchenFrankaRandom, KitchenFrankaDemo
 
 MODEL_PATH = CURR_DIR + "/../common/kitchen/franka_kitchen.xml"

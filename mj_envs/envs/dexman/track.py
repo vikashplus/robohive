@@ -14,6 +14,12 @@ import collections
 
 class TrackEnv(env_base.MujocoEnv):
 
+    DEFAULT_CREDIT = """\
+    Learning Dexterous Manipulation from Exemplar Object Trajectories and Pre-Grasps
+        Sudeep Dasari, Abhinav Gupta, Vikash Kumar
+        ICRA-2023 | https://pregrasps.github.io
+    """
+
     DEFAULT_OBS_KEYS = [
         'qp', 'qv', 'pose_err'
     ]

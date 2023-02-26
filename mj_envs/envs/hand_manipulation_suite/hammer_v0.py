@@ -11,7 +11,7 @@ from mjrl.envs import mujoco_env
 from mujoco_py import MjViewer
 from mj_envs.utils.quat_math import *
 import os
-from mj_envs.utils.obj_vec_dict import ObsVecDict
+from envs.obj_vec_dict import ObsVecDict
 import collections
 
 ADD_BONUS_REWARDS = True
@@ -23,6 +23,13 @@ OBS_KEYS = ['hand_jnt', 'obj_vel', 'palm_pos', 'obj_pos', 'obj_rot', 'target_pos
 RWD_MODE = 'dense' # dense/ sparse
 
 class HammerEnvV0(mujoco_env.MujocoEnv, utils.EzPickle, ObsVecDict):
+
+    DEFAULT_CREDIT = """\
+    DAPG: Demo Augmented Policy Gradient; Learning Complex Dexterous Manipulation with Deep Reinforcement Learning and Demonstrations
+        {Aravind Rajeshwaran*, Vikash Kumar*}, Abhiskek Gupta, John Schulman, Emanuel Todorov, and Sergey Levine
+        RSS-2018 | https://sites.google.com/view/deeprl-dexterous-manipulation
+    """
+
     def __init__(self, *args, **kwargs):
 
         # get sim

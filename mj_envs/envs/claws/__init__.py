@@ -10,7 +10,7 @@ import os
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 from mj_envs.envs.env_variants import register_env_variant
 
-print("RS:> Registering Claw Envs")
+print("RoboHive:> Registering Claw Envs")
 
 # TRIFINGER REORIENT =======================================================================
 from mj_envs.envs.claws.reorient_v0 import ReorientBaseV0

@@ -13,9 +13,10 @@ import torch
 from torchvision.models import resnet50, ResNet50_Weights, resnet34, ResNet34_Weights, resnet18, ResNet18_Weights
 import torchvision.transforms as T
 
-from mj_envs.utils.obj_vec_dict import ObsVecDict
+from envs.obj_vec_dict import ObsVecDict
 from mj_envs.utils import tensor_utils
 from mj_envs.robot.robot import Robot
+from mj_envs.utils.prompt_utils import prompt, Prompt
 import skvideo.io
 from sys import platform
 
@@ -39,7 +40,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     Superclass for all MuJoCo environments.
     """
 
-    def __init__(self, model_path, obsd_model_path=None, seed=None):
+    DEFAULT_CREDIT = """\
+    RoboHive: A unified framework for robot learning | https://sites.google.com/view/robohive
+    """
+
+    def __init__(self,  model_path, obsd_model_path=None, seed=None, env_credits=DEFAULT_CREDIT):
         """
         Create a gym env
         INPUTS:
@@ -48,7 +53,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                             : observed model (useful to propagate noisy sensor through env)
                             : use model_path; if None
             seed: Random number generator seed
+
         """
+
+        prompt("RoboHive:> For environment credits, please cite -")
+        prompt(env_credits, color="cyan", type=Prompt.INFO)
 
         # Seed and initialize the random number generator
         self.seed(seed)
@@ -152,7 +161,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             wxh, id_encoder = id_encoders[0].split(':')
 
             # Load encoder
-            print("Using {} visual inputs with {} encoder".format(wxh, id_encoder))
+            prompt("Using {} visual inputs with {} encoder".format(wxh, id_encoder), type=Prompt.INFO)
             if id_encoder == "1d":
                 self.rgb_encoder = IdentityEncoder()
             elif id_encoder == "2d":
@@ -183,7 +192,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                     self.rgb_transform = T.Compose([T.ToTensor(),  # ToTensor() divides by 255
                                                     T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
                 else:
-                    print("HxW = 224x224 recommended")
+                    prompt("HxW = 224x224 recommended", type=Prompt.WARN)
                     self.rgb_transform = T.Compose([T.Resize(256),
                                                     T.CenterCrop(224),
                                                     T.ToTensor(),  # ToTensor() divides by 255
@@ -560,7 +569,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             agent_infos = []
             env_infos = []
 
-            print("Episode %d" % ep, end=":> ")
+            prompt("Episode %d" % ep, end=":> ", type=Prompt.INFO)
             o = self.reset()
             done = False
             t = 0
@@ -578,7 +587,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                         device_id=device_id)
 
                     frames[t,:,:,:] = curr_frame
-                    print(t, end=', ', flush=True)
+                    prompt(t, end=', ', flush=True, type=Prompt.INFO)
                 observations.append(o)
                 actions.append(a)
                 rewards.append(rwd)
@@ -587,7 +596,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 o = next_o
                 t = t+1
 
-            print("Total reward = %3.3f, Total time = %2.3f" % (ep_rwd, timer.time()-ep_t0))
+            prompt("Total reward = %3.3f, Total time = %2.3f" % (ep_rwd, timer.time()-ep_t0), type=Prompt.INFO)
             path = dict(
             observations=np.array(observations),
             actions=np.array(actions),
@@ -606,10 +615,10 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                     skvideo.io.vwrite(file_name, np.asarray(frames),outputdict={"-pix_fmt": "yuv420p"})
                 else:
                     skvideo.io.vwrite(file_name, np.asarray(frames))
-                print("saved", file_name)
+                prompt("saved", file_name, type=Prompt.INFO)
 
         self.mujoco_render_frames = False
-        print("Total time taken = %f"% (timer.time()-exp_t0))
+        prompt("Total time taken = %f"% (timer.time()-exp_t0), type=Prompt.INFO)
         return paths
 
 
@@ -650,7 +659,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
             group_key='Trial'+str(ep); trace.create_group(group_key)
 
-            print("Episode %d" % ep, end=":> ")
+            prompt("Episode %d" % ep, end=":> ", type=Prompt.INFO)
             o = self.reset()
             done = False
             t = 0
@@ -668,7 +677,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                         device_id=device_id)
 
                     frames[t,:,:,:] = curr_frame
-                    print(t, end=', ', flush=True)
+                    prompt(t, end=', ', flush=True, type=Prompt.INFO)
 
                 # log values
                 datum_dict = dict(
@@ -685,7 +694,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 t = t+1
                 ep_rwd += rwd
 
-            print("Total reward = %3.3f, Total time = %2.3f" % (ep_rwd, timer.time()-ep_t0))
+            prompt("Total reward = %3.3f, Total time = %2.3f" % (ep_rwd, timer.time()-ep_t0), type=Prompt.INFO)
 
             # save offscreen buffers as video
             if render =='offscreen':
@@ -695,10 +704,10 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                     skvideo.io.vwrite(file_name, np.asarray(frames),outputdict={"-pix_fmt": "yuv420p"})
                 else:
                     skvideo.io.vwrite(file_name, np.asarray(frames))
-                print("saved", file_name)
+                prompt("saved", file_name, type=Prompt.INFO)
 
         self.mujoco_render_frames = False
-        print("Total time taken = %f"% (timer.time()-exp_t0))
+        prompt("Total time taken = %f"% (timer.time()-exp_t0), type=Prompt.INFO)
         trace.save("env_base_trace.pickle", verify_length=True)
         trace.render("test_render.mp4", groups=":", datasets=["data/rgb_left","data/rgb_right","data/rgb_top","data/rgb_wrist"])
         quit()
