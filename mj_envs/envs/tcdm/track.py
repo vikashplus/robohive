@@ -31,9 +31,9 @@ class TrackEnv(env_base.MujocoEnv):
         'qp', 'qv', 'hand_qpos_err','hand_qvel_err','obj_com_err'
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
-        "pose": 1.0,
+        "pose": 0.0,#1.0,
         "object": 1.0,
-        "bonus": 1.0,#4.0,
+        "bonus": 1.0,
         "penalty": -2,
     }
     def __init__(self, object_name, model_path, obsd_model_path=None, seed=None, **kwargs):
@@ -79,7 +79,30 @@ class TrackEnv(env_base.MujocoEnv):
         if processed_obsd_model_path and processed_obsd_model_path!=processed_model_path:
             os.remove(processed_obsd_model_path)
 
+        ##########################################
         self.lift_bonus_thresh =  0.02
+        ### PRE-GRASP
+        self.obj_err_scale = 50
+        self.base_err_scale = 40
+        self.lift_bonus_mag = 1 #2.5
+
+        ### DEEPMIMIC
+        self.qpos_reward_weight = 0.35
+        self.qpos_err_scale = 5.0
+
+        self.qvel_reward_weight = 0.05
+        self.qvel_err_scale = 0.1
+
+        # TERMINATIONS FOR OBJ TRACK
+        self.obj_com_term = 0.5
+        # TERMINATIONS FOR HAND-OBJ DISTANCE
+        self.base_fail_thresh = .25
+        self.TermObj = True
+
+        # TERMINATIONS FOR MIMIC
+        self.qpos_fail_thresh = .75
+        self.TermPose = False
+        ##########################################
 
         self._lift_z = self.sim.data.get_body_xipos(self._object_name)[2] + self.lift_bonus_thresh
         self.initialized_pos = False
@@ -165,8 +188,6 @@ class TrackEnv(env_base.MujocoEnv):
         obs_dict['qp'] = sim.data.qpos.copy()
         obs_dict['qv'] = sim.data.qvel.copy()
         obs_dict['robot_err'] = obs_dict['qp'][:30].copy() - curr_ref.robot
-        # obs_dict['object_pos_err'] = obs_dict['qp'][30:33].copy() - curr_ref.object[:3]
-        # obs_dict['object_rot_err'] = obs_dict['qp'][33:].copy() - quat2euler(curr_ref.object[3:])
 
         ## info about current hand pose + vel
         obs_dict['curr_hand_qpos'] = sim.data.qpos[:-6].copy() ## assuming only 1 object and the last values are posision + rotation
@@ -195,38 +216,11 @@ class TrackEnv(env_base.MujocoEnv):
 
         obs_dict['obj_com_err'] =  obs_dict['curr_obj_com'] - obs_dict['targ_obj_com']
 
-        # import ipdb; ipdb.set_trace()
-        # poses_pos = self.sim.model.body_pos[2:26].copy()
-        # poses_rot = self.sim.model.body_quat[2:26].copy()
-        # # # calculate error terms
-        # ee_deltas = 0
-        # for i in range(1, len(poses_pos)):
-        #     rel_pos = self.root_to_point(poses_pos[0], poses_rot[0], poses_pos[i])
-        #     target_rel_pos = self.root_to_point(tgt_poses.pos[0], tgt_poses.rot[0],
-        #                                     tgt_poses.pos[i])
-        #     delta = rel_pos - target_rel_pos
-        #     ee_deltas += norm2([1, 1, np.sqrt(self.height_scale)] * delta)
-
-
-        # if obs_dict['time'] == 0:
-        # print(f"Time: {obs_dict['time']} Error Pose: {obs_dict['hand_qpos_err']}    Error Obj:{obs_dict['obj_com_err']}")
-
-        # obs_dict['obj_rot_err'] =  self.rotation_distance(obs_dict['curr_obj_rot'], obs_dict['targ_obj_rot']) / np.pi
-
-        # print(f"Error Pose: {obs_dict['hand_qpos_err']}    Error Obj:{obs_dict['obj_com_err']}")
         # self.sim.model.body_names --> body names
-        # import ipdb; ipdb.set_trace()
         return obs_dict
 
 
     def get_reward_dict(self, obs_dict):
-        # pose_dist = np.linalg.norm(obs_dict['robot_err'], axis=-1)
-        # pose_dist = np.linalg.norm(obs_dict['obj_com_err'], axis=-1).flatten()
-        # far_th = 10
-
-        self.obj_err_scale = 50
-        self.lift_bonus_mag = 1 #2.5
-
         # get targets from reference object
         tgt_obj_com = obs_dict['targ_obj_com'].flatten()
         tgt_obj_rot = obs_dict['targ_obj_rot'].flatten()
@@ -237,34 +231,25 @@ class TrackEnv(env_base.MujocoEnv):
 
         # calculate both object "matching"
         obj_com_err = np.sqrt(self.norm2(tgt_obj_com - obj_com))
-        obj_rot_err = 0 #self.rotation_distance(obj_rot, tgt_obj_rot, False) / np.pi
+        obj_rot_err = self.rotation_distance(obj_rot, tgt_obj_rot, False) / np.pi
         obj_reward = np.exp(-self.obj_err_scale * (obj_com_err + 0.1 * obj_rot_err))
 
         # calculate lift bonus
         lift_bonus = (tgt_obj_com[2] >= self._lift_z) and (obj_com[2] >= self._lift_z)
 
-        reward = obj_reward + self.lift_bonus_mag * float(lift_bonus)
+        # reward = obj_reward + self.lift_bonus_mag * float(lift_bonus)
 
-        ##########################################
-        # ## DEEPMIMIC
-        self.qpos_reward_weight = 0.35
-        self.qpos_err_scale = 5.0
-
-        self.qvel_reward_weight = 0.05
-        self.qvel_err_scale = 0.1
-        # # # calculate reward terms
-
+        # calculate reward terms
         qpos_reward = np.exp(-self.qpos_err_scale * self.norm2(obs_dict['hand_qpos_err']))
         qvel_reward = np.exp(-self.qvel_err_scale * self.norm2(obs_dict['hand_qvel_err']))
 
 
-        # # # weight and sum individual reward terms
+        # weight and sum individual reward terms
         pose_reward  = self.qpos_reward_weight * qpos_reward
         vel_reward   = self.qvel_reward_weight * qvel_reward
 
         # print(f"Time: {obs_dict['time']} Error Pose: {self.norm2(obs_dict['hand_qpos_err'])} {obs_dict['hand_qpos_err']}    Error Obj:{obs_dict['obj_com_err']}")
 
-        self.base_err_scale = 40
         base_error = np.sqrt(self.norm2(obs_dict['base_error'] ))
         base_reward = np.exp(-self.base_err_scale * base_error)
 
@@ -315,19 +300,15 @@ class TrackEnv(env_base.MujocoEnv):
 
     def check_termination(self, obs_dict):
 
-        # TERMINATIONS FOR OBJ TRACK
-        self.obj_com_term = 0.25
-        obj_term = self.norm2(obs_dict['obj_com_err']) >= self.obj_com_term ** 2
+        if self.TermObj: # termination on object
+            obj_term = self.norm2(obs_dict['obj_com_err']) >= self.obj_com_term ** 2
+            base_term =self.norm2(obs_dict['base_error'] ) >= self.base_fail_thresh ** 2
+        else:
+            obj_term, base_term = False, False
 
-        # TERMINATIONS FOR MIMIC
-        self.qpos_fail_thresh = .75
-        qpos_term = self.norm2(obs_dict['hand_qpos_err']) >= self.qpos_fail_thresh
+        if self.TermPose: # termination on posture
+            qpos_term = self.norm2(obs_dict['hand_qpos_err']) >= self.qpos_fail_thresh
+        else:
+            qpos_term = False
 
-        self.base_fail_thresh = .25
-        # base_term =np.sqrt(self.norm2(obs_dict['base_error'] )) >= self.base_fail_thresh
-        base_term =self.norm2(obs_dict['base_error'] ) >= self.base_fail_thresh ** 2
-        # print(np.sqrt(self.norm2(obs_dict['base_error'] )))
-
-        # return obj_term or qpos_term or base_term # combining termination for object + posture
-        return obj_term or base_term # termination only on object
-        # return qpos_term # termination only on posture
+        return obj_term or qpos_term or base_term # combining termination for object + posture
