@@ -29,7 +29,8 @@ def configure_jobs(job_data):
                      output_dir=job_data.output_dir, 
                      output_name=job_data.output_name, 
                      num_rollouts=job_data.num_rollouts,
-                     sparse_reward=job_data.sparse_reward)
+                     sparse_reward=job_data.sparse_reward,
+                     policy_path=job_data.policy_path)
 
 if __name__ == "__main__":
     configure_jobs()

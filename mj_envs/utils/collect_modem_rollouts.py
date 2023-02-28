@@ -39,10 +39,11 @@ USAGE:\n
 @click.option('-on', '--output_name', type=str, default=None, help=('The name to save the outputs as'))
 @click.option('-n', '--num_rollouts', type=int, help='number of rollouts to save', default=100)
 @click.option('-sp', '--sparse_reward', type=bool, default=True)
-def collect_rollouts_cli(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, sparse_reward):
-    collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, sparse_reward)
+@click.option('-pp', '--policy_path', type=str, default=None )
+def collect_rollouts_cli(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, sparse_reward, policy_path):
+    collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, sparse_reward, policy_path)
 
-def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, sparse_reward):
+def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, output_name, num_rollouts, sparse_reward, policy_path):
 
     # seed and load environments
     np.random.seed(seed)
@@ -52,8 +53,13 @@ def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, outp
         env = gym.make(env_name)        
     env.seed(seed)
 
-    pi = HeuristicPolicy(env, seed)
-    output_name = 'heuristic'
+    if policy_path is not None:
+        assert(os.path.exists(policy_path))
+        pi = pickle.load(open(policy_path, 'rb'))
+        output_name = 'policy'
+    else:
+        pi = HeuristicPolicy(env, seed)
+        output_name = 'heuristic'
 
     # resolve directory
     if (os.path.isdir(output_dir) == False):
@@ -64,6 +70,14 @@ def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, outp
 
     rollouts = 0
     successes = 0
+
+    # Find env cams
+    cams = set()
+    for key in env.obs_keys:
+        splits = key.split(':')
+        if len(splits) == 4 and 'cam' in splits[1]:
+            cams.add(splits[1])
+    cams = list(cams)
 
     while successes < num_rollouts:
 
@@ -106,7 +120,7 @@ def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, outp
                 for i in range(data['states']['qp'].shape[0]):
                     data['frames'].append(Path(rgb_img_fn+f'{0:05d}.png'))                
             else:
-                for cam in ['left_cam', 'right_cam']:
+                for cam in cams:
                     rgb_key = 'rgb:'+cam+':224x224:2d'
                     rgb_imgs = paths[0]['env_infos']['obs_dict'][rgb_key]
                     depth_key = 'd:'+cam+':224x224:2d'

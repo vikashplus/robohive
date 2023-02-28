@@ -105,6 +105,7 @@ register(
         'config_path': curr_dir+'/franka/assets/franka_bin_push_v0.config',
         'robot_site_name': "end_effector",
         'object_site_name': "obj0",
+        'object_init_perturb': {'high':[0.0, 0.02, 0.01], 'low':[-0.01, -0.02, 0.0]},
         'target_site_name': "target",
         'target_xyz_range': {'high':[0.22, 0.5, 1.02], 'low':[0.22, 0.5, 1.02]},
         'init_qpos': [0.4653, 0.5063, 0.0228, -2.1195, -0.6052, 0.7064, 2.5362, 0.025, 0.025],
@@ -124,6 +125,7 @@ register(
         'config_path': curr_dir+'/franka/assets/franka_bin_push_v0.config',
         'robot_site_name': "end_effector",
         'object_site_name': "obj0",
+        'object_init_perturb': {'high':[0.01, 0.01, 0.01], 'low':[-0.01, -0.01, 0.0]},
         'target_site_name': "target",
         'target_xyz_range': {'high':[0.0, 0.7, 1.367], 'low':[0.0, 0.7, 1.367]},
         'init_qpos': [0.0366, -0.9403, -0.0278, -2.7104, -0.0422,  0.5814,  0.0284, 0.025, 0.025],
@@ -141,14 +143,46 @@ register(
         'config_path': curr_dir+'/franka/assets/franka_bin_push_v0.config',
         'robot_site_name': "end_effector",
         'object_site_name': "obj0",
+        'object_init_perturb': {'high':[0.01, 0.02, 0.01], 'low':[-0.01, -0.02, 0.0]},
         'target_site_name': "target",
-        'target_xyz_range': {'high':[0.3, 0.5, 0.78], 'low':[0.3, 0.5, 0.78]},
+        'target_xyz_range': {'high':[0.1, 0.48, 0.78], 'low':[0.1, 0.48, 0.78]},
         'init_qpos': [0.5691, 0.697, 0.0563, -1.998, -0.0809, 1.1216, 2.2556, 0.03, 0.03],
         'pos_limit_low': [-0.4, 0.3, 0.8, 3.14, 0, -0.3, 0.025],
         'pos_limit_high': [0.4, 0.8, 0.9, 3.14, 0, 0.3, 0.025]
     }
 )
 
+# Reach to random target using visual inputs
+def register_push_visual_envs(env_name, encoder_type, real=False):
+    obs_keys = ['qp', 'qv', 'grasp_pos', 'object_err', 'target_err',
+                "rgb:top_cam:224x224:{}".format(encoder_type),
+                "d:top_cam:224x224:{}".format(encoder_type),
+                "rgb:Franka_wrist_cam:224x224:{}".format(encoder_type),
+                "d:Franka_wrist_cam:224x224:{}".format(encoder_type)]
+    if real:
+        add_obs_keys = ["rgb:left_cam:224x224:{}".format(encoder_type),
+                         "d:left_cam:224x224:{}".format(encoder_type),
+                         "rgb:right_cam:224x224:{}".format(encoder_type),
+                         "d:right_cam:224x224:{}".format(encoder_type)]
+        obs_keys = add_obs_keys + obs_keys
+       
+    register_env_variant(
+        env_id='{}-v0'.format(env_name),
+        variant_id='{}_v{}-v0'.format(env_name, encoder_type),
+        variants={'obs_keys': obs_keys
+        },
+        silent=True
+    )
+
+for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
+    register_push_visual_envs('FrankaBinPush', enc)
+
+for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
+    register_push_visual_envs('FrankaHangPush', enc)
+
+for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
+    register_push_visual_envs('FrankaPlanarPush', enc)
+    
 # FRANKA PICK =======================================================================
 register(
     id='FrankaPickPlaceFixed-v0',

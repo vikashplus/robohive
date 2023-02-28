@@ -44,7 +44,7 @@
         <!-- tasks details added here via include-->
         <site name='target' type='sphere' size='.02' pos='0.0 -0.45 0.78' group='1' rgba='.8 .8 .2 0.0'/>
 
-        <body name="obj0" pos="-0.3 0.5 0.78">
+        <body name="obj0" pos="-0.3 0.48 0.78">
             <inertial pos="0 0 0" mass="0.088" diaginertia="0.0001 0.0001 0.0001" />
             <geom type="box" size="0.06 0.02 0.021" pos="0.0 0.0 0.0" euler="0 0 1.57" group="1" rgba=".3 .7 .8 1" mass=".100"/>
             <site name="obj0" size="0.01" pos="0 0 0"/>

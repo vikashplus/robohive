@@ -582,6 +582,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             print("Episode %d" % ep, end=":> ")
             o = self.reset()
 
+            try:
+                o = o[:policy.n]
+            except:
+                pass
+
             self.squeeze_dims(self.rwd_dict)
             self.squeeze_dims(self.obs_dict)
             env_info = self.get_env_infos()
@@ -607,7 +612,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                     )
                     frames[t,:,:,:] = curr_frame[0]
                     print(t, end=', ', flush=True)
-                observations.append(o)
+                try:
+                    next_o = next_o[:policy.n]
+                except:
+                    pass
+                observations.append(next_o)
                 actions.append(a)
                 rewards.append(rwd)
                 # agent_infos.append(agent_info)

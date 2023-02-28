@@ -17,7 +17,7 @@ from mujoco_py import load_model_from_path, MjSim
 class PushBaseV0(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS = [
-        'qp', 'qv', 'object_err', 'target_err'
+        'qp', 'qv', 'grasp_pos', 'object_err', 'target_err'
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
         "object_dist": -1.0,
@@ -57,11 +57,13 @@ class PushBaseV0(env_base.MujocoEnv):
                init_qpos=None,
                pos_limit_low=None,
                pos_limit_high = None,
+               object_init_perturb=None,
                **kwargs,
         ):
 
         # ids
         self.grasp_sid = self.sim.model.site_name2id(robot_site_name)
+        self.object_site_name = object_site_name
         self.object_sid = self.sim.model.site_name2id(object_site_name)
         self.target_sid = self.sim.model.site_name2id(target_site_name)
         self.target_xyz_range = target_xyz_range
@@ -70,6 +72,7 @@ class PushBaseV0(env_base.MujocoEnv):
         assert not ((pos_limit_high is None) ^ (pos_limit_low is None)) # make sure either both are None or neither are None
         self.pos_limit_low = np.array(pos_limit_low)
         self.pos_limit_high = np.array(pos_limit_high)
+        self.object_init_perturb = object_init_perturb
         self.ik_sim = MjSim(self.sim.model)
         self.last_ctrl = None
         super()._setup(obs_keys=obs_keys,
@@ -90,6 +93,7 @@ class PushBaseV0(env_base.MujocoEnv):
         obs_dict['t'] = np.array([self.sim.data.time])
         obs_dict['qp'] = sim.data.qpos.copy()
         obs_dict['qv'] = sim.data.qvel.copy()
+        obs_dict['grasp_pos'] = sim.data.site_xpos[self.grasp_sid]
         obs_dict['object_err'] = sim.data.site_xpos[self.object_sid]-sim.data.site_xpos[self.grasp_sid]
         obs_dict['target_err'] = sim.data.site_xpos[self.target_sid]-sim.data.site_xpos[self.object_sid]
         return obs_dict
@@ -107,7 +111,7 @@ class PushBaseV0(env_base.MujocoEnv):
             ('bonus',   (object_dist<.1) + (target_dist<.1) + (target_dist<.05)),
             ('penalty', (object_dist>far_th)),
             # Must keys
-            ('sparse',  -1.0*target_dist),
+            ('sparse',  1.0*(target_dist<.050)),
             ('solved',  target_dist<.050),
             ('done',    object_dist > far_th),
         ))
@@ -117,8 +121,13 @@ class PushBaseV0(env_base.MujocoEnv):
     def reset(self):
         self.sim.model.site_pos[self.target_sid] = self.np_random.uniform(high=self.target_xyz_range['high'], low=self.target_xyz_range['low'])
         self.sim_obsd.model.site_pos[self.target_sid] = self.sim.model.site_pos[self.target_sid]
+        
+        reset_qpos = self.init_qpos.copy()
+        obj_jid = self.sim.model.joint_name2id(self.object_site_name)
+        reset_qpos[obj_jid:obj_jid+3] += self.np_random.uniform(low=self.object_init_perturb['low'], high=self.object_init_perturb['high'])
+
         #self.init_qpos[:9] = np.array([0.4653,  0.5063,  0.0228, -2.1195, -0.6052,  0.7064 , 2.5362,  0.025 ,  0.025])
-        obs = super().reset(self.init_qpos, self.init_qvel)
+        obs = super().reset(reset_qpos, self.init_qvel)
         return obs
 
     def step(self, a):
