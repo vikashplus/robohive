@@ -21,10 +21,10 @@ conda activate robohive
 
    a. Most users -
    ```
-   git clone -c submodule.mj_envs/sims/neuromuscular_sim.update=none --branch v0.4dev  --recursive https://github.com/vikashplus/mj_envs.git
+   git clone -c submodule.mj_envs/sims/myo_sim.update=none --branch v0.4dev  --recursive https://github.com/vikashplus/mj_envs.git
    ```
 
-   b. myoSuite developers: you must have access to neuromuscular_sim(private repo) -
+   b. myoSuite developers: you must have access to myo_sim(private repo) -
    ```
    git clone --branch <branch_name> --recursive https://github.com/vikashplus/mj_envs.git
    ```
