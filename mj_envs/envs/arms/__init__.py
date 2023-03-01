@@ -153,18 +153,15 @@ register(
 )
 
 # Reach to random target using visual inputs
-def register_push_visual_envs(env_name, encoder_type, real=False):
-    obs_keys = ['qp', 'qv', 'grasp_pos', 'object_err', 'target_err',
-                "rgb:top_cam:224x224:{}".format(encoder_type),
-                "d:top_cam:224x224:{}".format(encoder_type),
-                "rgb:Franka_wrist_cam:224x224:{}".format(encoder_type),
-                "d:Franka_wrist_cam:224x224:{}".format(encoder_type)]
+def register_push_visual_envs(env_name, encoder_type, cams, real=False, real_cams=None):
+    obs_keys = ['qp', 'qv', 'grasp_pos', 'object_err', 'target_err']
+    for cam in cams:
+        obs_keys.append('rgb:'+cam+':224x224:{}'.format(encoder_type))
+        obs_keys.append('d:'+cam+':224x224:{}'.format(encoder_type))
     if real:
-        add_obs_keys = ["rgb:left_cam:224x224:{}".format(encoder_type),
-                         "d:left_cam:224x224:{}".format(encoder_type),
-                         "rgb:right_cam:224x224:{}".format(encoder_type),
-                         "d:right_cam:224x224:{}".format(encoder_type)]
-        obs_keys = add_obs_keys + obs_keys
+        for cam in real_cams:
+            obs_keys.append('rgb:'+cam+':224x224:{}'.format(encoder_type))
+            obs_keys.append('d:'+cam+':224x224:{}'.format(encoder_type))
        
     register_env_variant(
         env_id='{}-v0'.format(env_name),
@@ -173,15 +170,16 @@ def register_push_visual_envs(env_name, encoder_type, real=False):
         },
         silent=True
     )
+push_cams =  ['top_cam', 'Franka_wrist_cam']
+for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
+    register_push_visual_envs('FrankaBinPush', enc, cams=push_cams)
 
 for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
-    register_push_visual_envs('FrankaBinPush', enc)
+    register_push_visual_envs('FrankaHangPush', enc, cams=push_cams)
 
+planar_push_cams = ['right_cam', 'Franka_wrist_cam']
 for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
-    register_push_visual_envs('FrankaHangPush', enc)
-
-for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
-    register_push_visual_envs('FrankaPlanarPush', enc)
+    register_push_visual_envs('FrankaPlanarPush', enc, cams=planar_push_cams)
     
 # FRANKA PICK =======================================================================
 register(
