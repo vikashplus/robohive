@@ -179,8 +179,8 @@ class PickPlaceV0(env_base.MujocoEnv):
             for body in self.object_site_names:
                 obj_jid = self.sim.model.joint_name2id(body)
                 base_jid = first_obj_id + 7*(obj_jid-first_obj_id)
-                reset_qpos[base_jid:base_jid+3] += self.np_random.uniform(low=[-.01, -.01, -.01], high=[.01, .01, .01])
-                reset_qpos[base_jid+3:base_jid+7] = euler2quat(self.np_random.uniform(low=(-np.pi/2, -np.pi/2, -np.pi/2), high=(np.pi/2, np.pi/2, np.pi/2)) ) # random quat
+                reset_qpos[base_jid:base_jid+3] += self.np_random.uniform(low=[-.22, -.14, 0], high=[.22, .14, 0])
+                reset_qpos[base_jid+3:base_jid+7] = euler2quat(self.np_random.uniform(low=(0, 0, -np.pi/2), high=(0, 0, np.pi/2)) ) # random quat
             
             if len(self.object_site_names) > 1:
                 # Randomize target object
@@ -227,7 +227,7 @@ class PickPlaceV0(env_base.MujocoEnv):
                 action = (0.5*action+0.5)*(self.jnt_high-self.jnt_low)+self.jnt_low
                 action = np.clip(action, self.sim_obsd.data.qpos[:9]-self.vel_limit, self.sim_obsd.data.qpos[:9]+self.vel_limit)
                 action = 2*(((action - self.jnt_low)/(self.jnt_high-self.jnt_low))-0.5)
-        else:           
+        else:
             ik_success = False
             assert(a.flatten().shape[0]==8 or a.flatten().shape[0]==17)
             
