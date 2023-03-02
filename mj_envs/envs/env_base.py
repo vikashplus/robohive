@@ -13,7 +13,7 @@ import torch
 from torchvision.models import resnet50, ResNet50_Weights, resnet34, ResNet34_Weights, resnet18, ResNet18_Weights
 import torchvision.transforms as T
 
-from .obj_vec_dict import ObsVecDict
+from mj_envs.envs.obj_vec_dict import ObsVecDict
 from mj_envs.utils import tensor_utils
 from mj_envs.robot.robot import Robot
 from mj_envs.utils.prompt_utils import prompt, Prompt
