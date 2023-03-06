@@ -246,7 +246,6 @@ class PickPlaceV0(env_base.MujocoEnv):
         
         ik_success = True
         eef_cmd = None
-        invalid_grab = False
 
         if a.shape[0] == self.sim.model.nu:
             action = a
@@ -276,13 +275,14 @@ class PickPlaceV0(env_base.MujocoEnv):
                 eef_cmd = np.clip(eef_cmd, cur_pos-self.eef_vel_limit, cur_pos+self.eef_vel_limit)
 
             if self.last_eef_cmd is not None:
-                eef_cmd[:6] = 0.1*eef_cmd[:6] + 0.9*self.last_eef_cmd[:6]
+                eef_cmd[:6] = 0.25*eef_cmd[:6] + 0.75*self.last_eef_cmd[:6]
             eef_pos = eef_cmd[:3]
             eef_elr = eef_cmd[3:6]
             eef_quat= euler2quat(eef_elr)
 
             ik_result = self.get_ik_action(eef_pos, eef_quat)
-            if not ik_result.success:
+            ik_success = ik_result.success
+            if not ik_success:
                 eef_cmd = self.last_eef_cmd
                 eef_pos = eef_cmd[:3]
                 eef_elr = eef_cmd[3:6]
@@ -292,14 +292,15 @@ class PickPlaceV0(env_base.MujocoEnv):
             action = ik_result.qpos[:self.sim.model.nu]
             
             # Check that we are not initiating a grasp at too low of height
-            if self.robot.is_hardware and (self.last_eef_cmd is not None and 
-                (eef_cmd[6] > self.last_eef_cmd[6] + sys.float_info.epsilon) and 
+            if self.robot.is_hardware and ( 
+                (eef_cmd[6] > sys.float_info.epsilon) and 
                 self.sim_obsd.data.site_xpos[self.grasp_sid][2] < self.min_grab_height):
                 print('Cant grasp this low, z = {}'.format(self.sim_obsd.data.site_xpos[self.grasp_sid][2]))
-                invalid_grab = True
+                action[7:9] = 0.0
+            else:
+                action[7:9] = eef_cmd[6]
 
             self.last_eef_cmd = eef_cmd
-            action[7:9] = eef_cmd[6]
 
             if self.robot.is_hardware:
                 if self.sim_obsd.data.site_xpos[self.grasp_sid][2] < self.max_slow_height:
@@ -310,13 +311,11 @@ class PickPlaceV0(env_base.MujocoEnv):
             if self.normalize_act:
                 action = 2*(((action - self.jnt_low)/(self.jnt_high-self.jnt_low))-0.5)
 
-        if (not self.robot.is_hardware or
-            (ik_success and not invalid_grab)):
-            self.last_ctrl = self.robot.step(ctrl_desired=action,
-                                            ctrl_normalized=self.normalize_act,
-                                            step_duration=self.dt,
-                                            realTimeSim=self.mujoco_render_frames,
-                                            render_cbk=self.mj_render if self.mujoco_render_frames else None)
+        self.last_ctrl = self.robot.step(ctrl_desired=action,
+                                        ctrl_normalized=self.normalize_act,
+                                        step_duration=self.dt,
+                                        realTimeSim=self.mujoco_render_frames,
+                                        render_cbk=self.mj_render if self.mujoco_render_frames else None)
 
         # observation
         obs = self.get_obs()
@@ -329,7 +328,7 @@ class PickPlaceV0(env_base.MujocoEnv):
 
         # finalize step
         env_info = self.get_env_infos()
-        done = self.robot.is_hardware and (not ik_success or invalid_grab or (eef_cmd is not None and eef_cmd[7] > 0.5))
+        done = False#self.robot.is_hardware and (not ik_success or (eef_cmd is not None and eef_cmd[7] > 0.5))
 
         # returns obs(t+1), rwd(t+1), done(t+1), info(t+1)
         return obs, env_info['rwd_'+self.rwd_mode], bool(env_info['done']) or done, env_info

@@ -118,7 +118,7 @@ class HeuristicPolicyReal():
                 self.stage = 2
         elif self.stage == 2: # Wait until pregrasp has stabilized
             # Advance to next stage?
-            if (self.last_qp is not None and np.linalg.norm(obs_dict['qp'][0,0,:] - self.last_qp) < 0.01):#MOVE_THRESH):
+            if (self.last_qp is not None and np.linalg.norm(obs_dict['qp'][0,0,:] - self.last_qp) < 0.001):#MOVE_THRESH):
                 self.stage = 3
         elif self.stage == 3: # Wait for gripper to start closing
             # Advance to next stage?
@@ -142,7 +142,8 @@ class HeuristicPolicyReal():
             #action[:2] += 2*obs_dict['object_err'][0,0,0:2]
             action[:2] += 1.5*obs_dict['object_err'][0,0,0:2]
             vel_alpha = (obs_dict['grasp_pos'][0,0,1]-0.368)/(0.72-0.368)
-            vel_limit_low = -0.075*vel_alpha+(1-vel_alpha)*-0.035
+            #vel_limit_low = -0.075*vel_alpha+(1-vel_alpha)*-0.035
+            vel_limit_low = -0.15
             action[2] += max(min(obs_dict['object_err'][0,0,2],0.15),vel_limit_low)
             action[6] = REAL_GRIPPER_FULL_OPEN
             action[7] = 0

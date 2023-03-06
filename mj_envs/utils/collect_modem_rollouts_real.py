@@ -52,7 +52,7 @@ X_SCALE = 1.0668/314 # 1.0668 is width of bin
 OBJ_POS_LOW = [-0.25,0.368,0.91] #[-0.35,0.25,0.91]
 OBJ_POS_HIGH = [0.25, 0.72, 0.91] #[0.35,0.65,0.91]
 DROP_ZONE_LOW = [-0.18, 0.43, 1.1]
-DROP_ZONE_HIGH = [0.18, 0.58, 1.1]
+DROP_ZONE_HIGH = [0.18, 0.63, 1.1]
 MOVE_JOINT_VEL = [0.1, 0.2, 0.2, 0.2, 0.2, 0.2, 0.45, 1.0, 1.0]
 DIFF_THRESH = 0.15#0.45
 
@@ -438,7 +438,7 @@ def main(env_name, mode, seed, render, camera_name, output_dir, output_name, num
         env.set_target_pos(target_pos)
         print('Real obs pos {} target pos {}'.format(real_obj_pos, target_pos))        
 
-        rand_yaw = np.random.uniform(low = -3.14, high = 3.14)
+        rand_yaw = np.random.uniform(low = -3.14, high = 0)
         pi.set_yaw(rand_yaw)
 
         #align_action = np.concatenate([real_obj_pos, [ 3.14,0.0,0.0,0.0,0.0]])
