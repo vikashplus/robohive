@@ -156,10 +156,14 @@ class HeuristicPolicyReal():
             action[6] = REAL_GRIPPER_FULL_CLOSE
             action[7] = 0
 
-        #elif self.stage == 5: # Move to target pose
-        #    action[:3] += obs_dict['object_err'][0,0,0:3] #obs_dict['target_err'][0,0,0:3]
-        #    action[6] = REAL_GRIPPER_FULL_CLOSE
-        #    action[7] = 1
+        action = np.clip(action, self.env.pos_limit_low, self.env.pos_limit_high)
+        cur_rot = mat2euler(self.env.sim_obsd.data.site_xmat[self.env.grasp_sid].reshape(3,3).transpose())
+        cur_rot[np.abs(cur_rot-action[3:6])>np.abs(cur_rot+2*np.pi-action[3:6])] += 2*np.pi
+        cur_rot[np.abs(cur_rot-action[3:6])>np.abs(cur_rot-2*np.pi-action[3:6])] -= 2*np.pi
+        cur_pos = np.concatenate([self.env.sim_obsd.data.site_xpos[self.env.grasp_sid],
+                                    cur_rot,
+                                    [self.env.sim_obsd.data.qpos[7],0]])
+        action = np.clip(action, cur_pos-self.env.eef_vel_limit, cur_pos+self.env.eef_vel_limit)
 
 
         # Normalize action to be between -1 and 1
