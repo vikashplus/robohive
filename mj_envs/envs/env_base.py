@@ -460,6 +460,15 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         site_quat = self.sim.model.site_quat[:].copy() if self.sim.model.nsite>0 else None
         body_pos = self.sim.model.body_pos[:].copy()
         body_quat = self.sim.model.body_quat[:].copy()
+
+        last_eef_cmd = None
+        if hasattr(self, 'last_eef_cmd'):
+            last_eef_cmd = self.last_eef_cmd
+
+        last_ctrl = None
+        if hasattr(self, 'last_ctrl'):
+            last_ctrl = self.last_ctrl
+
         return dict(qpos=qp,
                     qvel=qv,
                     act=act,
@@ -468,7 +477,9 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                     site_pos=site_pos,
                     site_quat=site_quat,
                     body_pos=body_pos,
-                    body_quat=body_quat)
+                    body_quat=body_quat,
+                    last_eef_cmd=last_eef_cmd,
+                    last_ctrl=last_ctrl)
 
 
     def set_env_state(self, state_dict):
@@ -488,6 +499,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             self.sim.model.site_quat[:] = state_dict['site_quat']
         self.sim.model.body_pos[:] = state_dict['body_pos']
         self.sim.model.body_quat[:] = state_dict['body_quat']
+        self.last_eef_cmd = state_dict['last_eef_cmd']
+        self.last_ctrl = state_dict['last_ctrl']
         self.sim.forward()
 
 
