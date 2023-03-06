@@ -52,8 +52,8 @@ def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, outp
     else:
         env = gym.make(env_name)        
     env.seed(seed)
-
-    if policy_path is not None:
+ 
+    if policy_path != 'None':
         assert(os.path.exists(policy_path))
         pi = pickle.load(open(policy_path, 'rb'))
         output_name = 'policy'
@@ -89,7 +89,7 @@ def collect_rollouts(env_name, mode, seed, render, camera_name, output_dir, outp
             frame_size=(640,480),
             mode=mode,
             output_dir=output_dir+'/',
-            filename=output_name,
+            filename=output_name+str(successes),
             camera_name=camera_name,
             render=render)
         rollouts += 1

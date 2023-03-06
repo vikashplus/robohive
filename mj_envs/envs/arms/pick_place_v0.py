@@ -10,7 +10,7 @@ import gym
 import numpy as np
 
 from mj_envs.envs import env_base
-from mj_envs.utils.quat_math import euler2quat
+from mj_envs.utils.quat_math import euler2quat, mat2euler
 from mj_envs.utils.inverse_kinematics import qpos_from_site_pose
 from mujoco_py import load_model_from_path, MjSim
 import sys
@@ -57,14 +57,12 @@ class PickPlaceV0(env_base.MujocoEnv):
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
                randomize=False,
                geom_sizes={'high':[.05, .05, .05], 'low':[.2, 0.2, 0.2]},
-               pos_limit_low=[-0.35, 0.25, 0.76, -3.14, 0, -3.14, 0.0, 0.0],
-               pos_limit_high=[0.35, 0.75, 1.5, 3.14, 6.28, 3.14, 0.04, 1.0],
+               pos_limit_low=[-0.35, 0.25, 0.76, -np.pi, 0, -np.pi, 0.0, 0.0],
+               pos_limit_high=[0.35, 0.75, 1.5, np.pi, 2*np.pi, 0, 0.04, 1.0],
                vel_limit=[0.15, 0.25, 0.1, 0.25, 0.1, 0.25, 0.2, 1.0, 1.0],
                slow_vel_limit=[0.1, 0.25, 0.1, 0.25, 0.1, 0.1, 0.2, 1.0, 1.0],
-               #eef_vel_limit = [0.15, 0.15, 0.25],
-               #slow_eef_vel_limit=[0.15, 0.15, 0.075],
-               eef_vel_limit = [0.075, 0.075, 0.15],
-               slow_eef_vel_limit=[0.075, 0.075, 0.075],
+               eef_vel_limit = [0.075, 0.075, 0.15,0.3,0.3,0.3,0.04,1.0],
+               slow_eef_vel_limit=[0.075, 0.075, 0.075,0.3,0.3,0.3,0.04,1.0],
                min_grab_height=0.905,
                max_slow_height=1.075,
                max_ik=3,
@@ -207,9 +205,38 @@ class PickPlaceV0(env_base.MujocoEnv):
             obs = self.get_obs()
         else:
             obs = super().reset(reset_qpos, reset_qvel)
+
+        cur_pos = self.sim.data.site_xpos[self.grasp_sid]
+        cur_rot = mat2euler(self.sim.data.site_xmat[self.grasp_sid].reshape(3,3).transpose())
+        cur_rot[np.abs(cur_rot-np.array([np.pi,0.0,0.0]))>np.abs(cur_rot+2*np.pi-np.array([np.pi,0.0,0.0]))] += 2*np.pi
+        cur_rot[np.abs(cur_rot-np.array([np.pi,0.0,0.0]))>np.abs(cur_rot-2*np.pi-np.array([np.pi,0.0,0.0]))] -= 2*np.pi
+        self.last_eef_cmd = np.concatenate([cur_pos,
+                                            cur_rot,
+                                            [self.sim.data.qpos[7],
+                                            0.0]])
+        
         return obs
 
+    def get_ik_action(self, eef_pos, eef_quat):
+        for i in range(self.max_ik):
 
+            self.ik_sim.data.qpos[:7] = np.random.normal(self.sim.data.qpos[:7], i*0.1)
+
+            self.ik_sim.data.qpos[2] = 0.0
+            self.ik_sim.forward()
+
+            ik_result = qpos_from_site_pose(physics = self.ik_sim,
+                                            site_name = self.sim.model.site_id2name(self.grasp_sid),
+                                            target_pos= eef_pos,
+                                            target_quat= eef_quat,
+                                            inplace=False,
+                                            regularization_strength=1.0,
+                                            is_hardware=self.robot.is_hardware)
+
+            if ik_result.success:
+                break
+        return ik_result
+    
     def step(self, a):
         """
         Step the simulation forward (t => t+1)
@@ -236,41 +263,34 @@ class PickPlaceV0(env_base.MujocoEnv):
             eef_cmd = np.clip(eef_cmd, self.pos_limit_low, self.pos_limit_high)
             if self.robot.is_hardware:
                 eef_cmd[:3] = np.clip(eef_cmd[:3], [-0.25,0.368,0.9], [0.25,0.72,1.3])
-            cur_pos = self.sim_obsd.data.site_xpos[self.grasp_sid]
-            if self.robot.is_hardware:
-                eef_cmd[5] = np.clip(eef_cmd[5], -0.1,0.1)
-                if cur_pos[2] < self.max_slow_height:
-                    eef_cmd[:3] = np.clip(eef_cmd[:3], cur_pos-self.slow_eef_vel_limit, cur_pos+self.eef_vel_limit)
-                else:
-                    eef_cmd[:3] = np.clip(eef_cmd[:3], cur_pos-self.eef_vel_limit, cur_pos+self.eef_vel_limit)
+            cur_rot = mat2euler(self.sim_obsd.data.site_xmat[self.grasp_sid].reshape(3,3).transpose())
+            cur_rot[np.abs(cur_rot-eef_cmd[3:6])>np.abs(cur_rot+2*np.pi-eef_cmd[3:6])] += 2*np.pi
+            cur_rot[np.abs(cur_rot-eef_cmd[3:6])>np.abs(cur_rot-2*np.pi-eef_cmd[3:6])] -= 2*np.pi
+            cur_pos = np.concatenate([self.sim_obsd.data.site_xpos[self.grasp_sid],
+                                      cur_rot,
+                                      [self.sim_obsd.data.qpos[7],0]])
+                
+            if cur_pos[2] < self.max_slow_height and self.robot.is_hardware:
+                eef_cmd = np.clip(eef_cmd, cur_pos-self.slow_eef_vel_limit, cur_pos+self.eef_vel_limit)
+            else:
+                eef_cmd = np.clip(eef_cmd, cur_pos-self.eef_vel_limit, cur_pos+self.eef_vel_limit)
+
+            if self.last_eef_cmd is not None:
+                eef_cmd[:6] = 0.1*eef_cmd[:6] + 0.9*self.last_eef_cmd[:6]
             eef_pos = eef_cmd[:3]
             eef_elr = eef_cmd[3:6]
             eef_quat= euler2quat(eef_elr)
 
-            for i in range(self.max_ik):
-
-                self.ik_sim.data.qpos[:7] = np.random.normal(self.sim.data.qpos[:7], i*0.1)
-
-                if self.robot.is_hardware:
-                    self.ik_sim.data.qpos[2] = 0.0
-                    self.ik_sim.forward()
-
-                ik_result = qpos_from_site_pose(physics = self.ik_sim,
-                                                site_name = self.sim.model.site_id2name(self.grasp_sid),
-                                                target_pos= eef_pos,
-                                                target_quat= eef_quat,
-                                                inplace=False,
-                                                regularization_strength=1.0,
-                                                is_hardware=self.robot.is_hardware)
-                action = ik_result.qpos[:self.sim.model.nu]
-                if ik_result.success:
-                    ik_success = True
-                    break
-
-            if not ik_success:
-                #print('IK failed')
-                pass
-
+            ik_result = self.get_ik_action(eef_pos, eef_quat)
+            if not ik_result.success:
+                eef_cmd = self.last_eef_cmd
+                eef_pos = eef_cmd[:3]
+                eef_elr = eef_cmd[3:6]
+                eef_quat = euler2quat(eef_elr)
+                ik_result = self.get_ik_action(eef_pos, eef_quat)
+            
+            action = ik_result.qpos[:self.sim.model.nu]
+            
             # Check that we are not initiating a grasp at too low of height
             if self.robot.is_hardware and (self.last_eef_cmd is not None and 
                 (eef_cmd[6] > self.last_eef_cmd[6] + sys.float_info.epsilon) and 

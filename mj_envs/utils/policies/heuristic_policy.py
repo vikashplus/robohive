@@ -2,17 +2,19 @@ import gym
 from mj_envs.utils.paths_utils import plot as plotnsave_paths
 import numpy as np
 import pickle
+from mj_envs.utils.quat_math import mat2euler, quat2euler
 
 BEGIN_GRASP_THRESH = 0.08
+SIM_BEGIN_GRASP_THRESH = 0.06
 SIM_BEGIN_DESCENT_THRESH = 0.05
 REAL_BEGIN_DESCENT_THRESH = 0.08
-SIM_ALIGN_HEIGHT = 1.185
+SIM_ALIGN_HEIGHT = 1.075
 REAL_ALIGN_HEIGHT = 1.075
 SIM_GRIPPER_FULL_OPEN = 0.04
 SIM_GRIPPER_FULL_CLOSE = 0.00
 REAL_GRIPPER_FULL_OPEN = 0.00
 REAL_GRIPPER_FULL_CLOSE = 0.04
-GRIPPER_BUFF_N = 4
+GRIPPER_BUFF_N = 8
 GRIPPER_CLOSE_THRESH = 1e-8
 MOVE_THRESH = 0.001
 
@@ -28,16 +30,22 @@ class HeuristicPolicy():
         # TODO Change obsvec2dict to handle obs vectors with single dim
         obs_dict = self.env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
 
-        action = np.concatenate([obs_dict['grasp_pos'][0,0,:], [3.14,0.0,self.yaw], obs_dict['qp'][0,0,7:9]])
+        action = np.concatenate([obs_dict['grasp_pos'][0,0,:], [np.pi,0.0,self.yaw], obs_dict['qp'][0,0,7:9]])
         
-        if np.linalg.norm(obs_dict['object_err'][0,0,:]) > BEGIN_GRASP_THRESH:
+        if np.linalg.norm(obs_dict['object_err'][0,0,:]) > SIM_BEGIN_GRASP_THRESH:
             # Reset gripper buff
             self.gripper_buff = SIM_GRIPPER_FULL_OPEN*np.ones((GRIPPER_BUFF_N,2))
 
             # Object not yet within gripper
             if np.linalg.norm(obs_dict['object_err'][0,0,:2]) > SIM_BEGIN_DESCENT_THRESH:
 
-                self.yaw = np.random.uniform(-3.14, 0.0)
+                #self.yaw = np.random.uniform(-3.14, 0.0)
+                #print(quat2euler(np.concatenate([[self.env.sim_obsd.data.qpos[15]],self.env.sim_obsd.data.qpos[12:15]])))
+                self.yaw = quat2euler(np.concatenate([[self.env.sim_obsd.data.qpos[15]],self.env.sim_obsd.data.qpos[12:15]]))[0]
+                cur_yaw = mat2euler(self.env.sim.data.site_xmat[self.env.grasp_sid].reshape(3,3).transpose())[2]
+
+                if np.abs(self.yaw-cur_yaw) > np.abs(self.yaw-np.pi-cur_yaw):
+                    self.yaw -= np.pi
                 # Gripper not yet aligned with object (also open gripper)
                 action[2] = SIM_ALIGN_HEIGHT
                 action[:2] += obs_dict['object_err'][0,0,0:2]
@@ -56,9 +64,20 @@ class HeuristicPolicy():
             if np.all(np.linalg.norm(self.gripper_buff - SIM_GRIPPER_FULL_OPEN, axis=1) > 1e-4):
                 # Move to target
                 action[:3] += obs_dict['target_err'][0,0,0:3]
+            else:
+                action[:3] += obs_dict['object_err'][0,0,0:3]
 
             action[6:8] = SIM_GRIPPER_FULL_CLOSE
 
+        action = np.clip(action, self.env.pos_limit_low, self.env.pos_limit_high)
+    
+        cur_rot = mat2euler(self.env.sim_obsd.data.site_xmat[self.env.grasp_sid].reshape(3,3).transpose())
+        cur_rot[np.abs(cur_rot-action[3:6])>np.abs(cur_rot+2*np.pi-action[3:6])] += 2*np.pi
+        cur_rot[np.abs(cur_rot-action[3:6])>np.abs(cur_rot-2*np.pi-action[3:6])] -= 2*np.pi
+        cur_pos = np.concatenate([self.env.sim_obsd.data.site_xpos[self.env.grasp_sid],
+                                    cur_rot,
+                                    [self.env.sim_obsd.data.qpos[7],0]])
+        action = np.clip(action, cur_pos-self.env.eef_vel_limit, cur_pos+self.env.eef_vel_limit)
 
         # Normalize action to be between -1 and 1
         action = 2*(((action - self.env.pos_limit_low) / (self.env.pos_limit_high - self.env.pos_limit_low)) - 0.5)
@@ -80,7 +99,7 @@ class HeuristicPolicyReal():
         # TODO Change obsvec2dict to handle obs vectors with single dim
         obs_dict = self.env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
 
-        action = np.concatenate([obs_dict['grasp_pos'][0,0,:], [3.14,0.0,self.yaw], [obs_dict['qp'][0,0,7],0]])
+        action = np.concatenate([obs_dict['grasp_pos'][0,0,:], [np.pi,0.0,self.yaw], [obs_dict['qp'][0,0,7],0]])
 
         # Figure out which stage we are in
         if self.last_t > self.env.sim.data.time:
