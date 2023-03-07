@@ -10,8 +10,6 @@ import numpy as np
 import os
 import time as timer
 import torch
-from torchvision.models import resnet50, ResNet50_Weights, resnet34, ResNet34_Weights, resnet18, ResNet18_Weights
-import torchvision.transforms as T
 
 from mj_envs.envs.obj_vec_dict import ObsVecDict
 from mj_envs.utils import tensor_utils
@@ -19,8 +17,6 @@ from mj_envs.robot.robot import Robot
 from mj_envs.utils.prompt_utils import prompt, Prompt
 import skvideo.io
 from sys import platform
-
-from r3m import load_r3m
 from mj_envs.physics.sim_scene import get_sim
 
 # TODO
@@ -159,6 +155,15 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.rgb_transform = None
         if len(id_encoders) > 0:
             wxh, id_encoder = id_encoders[0].split(':')
+
+            if "rrl" in id_encoder or "resnet" in id_encoder:
+                import torchvision.transforms as T
+                from torchvision.models import resnet50, ResNet50_Weights, resnet34, ResNet34_Weights, resnet18, ResNet18_Weights
+
+            if "r3m" in id_encoder:
+                import torchvision.transforms as T
+                from r3m import load_r3m
+
 
             # Load encoder
             prompt("Using {} visual inputs with {} encoder".format(wxh, id_encoder), type=Prompt.INFO)
