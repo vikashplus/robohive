@@ -58,6 +58,9 @@ class PushBaseV0(env_base.MujocoEnv):
                pos_limit_low=None,
                pos_limit_high = None,
                object_init_perturb=None,
+               vel_limit=[0.15, 0.25, 0.1, 0.25, 0.1, 0.25, 0.2, 1.0, 1.0],
+               eef_vel_limit = [0.075, 0.075, 0.15,0.3,0.3,0.3,0.04],
+               max_ik=3,
                **kwargs,
         ):
 
@@ -74,7 +77,11 @@ class PushBaseV0(env_base.MujocoEnv):
         self.pos_limit_high = np.array(pos_limit_high)
         self.object_init_perturb = object_init_perturb
         self.ik_sim = MjSim(self.sim.model)
+        self.last_eef_cmd = None 
         self.last_ctrl = None
+        self.vel_limit = vel_limit
+        self.eef_vel_limit = eef_vel_limit
+        self.max_ik = max_ik
         super()._setup(obs_keys=obs_keys,
                        weighted_reward_keys=weighted_reward_keys,
                        reward_mode=reward_mode,
@@ -128,7 +135,36 @@ class PushBaseV0(env_base.MujocoEnv):
 
         #self.init_qpos[:9] = np.array([0.4653,  0.5063,  0.0228, -2.1195, -0.6052,  0.7064 , 2.5362,  0.025 ,  0.025])
         obs = super().reset(reset_qpos, self.init_qvel)
+
+        cur_pos = self.sim.data.site_xpos[self.grasp_sid]
+        cur_rot = mat2euler(self.sim.data.site_xmat[self.grasp_sid].reshape(3,3).transpose())
+        cur_rot[np.abs(cur_rot-np.array([np.pi,0.0,0.0]))>np.abs(cur_rot+2*np.pi-np.array([np.pi,0.0,0.0]))] += 2*np.pi
+        cur_rot[np.abs(cur_rot-np.array([np.pi,0.0,0.0]))>np.abs(cur_rot-2*np.pi-np.array([np.pi,0.0,0.0]))] -= 2*np.pi
+        self.last_eef_cmd = np.concatenate([cur_pos,
+                                            cur_rot,
+                                            [self.sim.data.qpos[7]]])
+
         return obs
+
+    def get_ik_action(self, eef_pos, eef_quat):
+        for i in range(self.max_ik):
+
+            self.ik_sim.data.qpos[:7] = np.random.normal(self.sim.data.qpos[:7], i*0.1)
+
+            self.ik_sim.data.qpos[2] = 0.0
+            self.ik_sim.forward()
+
+            ik_result = qpos_from_site_pose(physics = self.ik_sim,
+                                            site_name = self.sim.model.site_id2name(self.grasp_sid),
+                                            target_pos= eef_pos,
+                                            target_quat= eef_quat,
+                                            inplace=False,
+                                            regularization_strength=1.0,
+                                            is_hardware=self.robot.is_hardware)
+
+            if ik_result.success:
+                break
+        return ik_result
 
     def step(self, a):
 
@@ -136,6 +172,10 @@ class PushBaseV0(env_base.MujocoEnv):
             act_low = -np.ones(self.sim.model.nu) if self.normalize_act else self.sim.model.actuator_ctrlrange[:,0].copy()
             act_high = np.ones(self.sim.model.nu) if self.normalize_act else self.sim.model.actuator_ctrlrange[:,1].copy()
             action = np.clip(a, act_low, act_high)
+
+            action = (0.5*action+0.5)*(self.jnt_high-self.jnt_low)+self.jnt_low
+            action = np.clip(action, self.sim_obsd.data.qpos[:9]-self.vel_limit, self.sim_obsd.data.qpos[:9]+self.vel_limit)
+            action = 2*(((action - self.jnt_low)/(self.jnt_high-self.jnt_low))-0.5)            
         else:
             #print('Joints: {}'.format(self.sim.data.qpos[:9]))
             #print('Position: {}'.format(self.sim.data.site_xpos[self.grasp_sid]))
@@ -145,54 +185,35 @@ class PushBaseV0(env_base.MujocoEnv):
             if self.pos_limit_low is not None and self.pos_limit_high is not None:
                 eef_cmd = np.clip(eef_cmd, self.pos_limit_low, self.pos_limit_high)
 
+            cur_rot = mat2euler(self.sim_obsd.data.site_xmat[self.grasp_sid].reshape(3,3).transpose())
+            cur_rot[np.abs(cur_rot-eef_cmd[3:6])>np.abs(cur_rot+2*np.pi-eef_cmd[3:6])] += 2*np.pi
+            cur_rot[np.abs(cur_rot-eef_cmd[3:6])>np.abs(cur_rot-2*np.pi-eef_cmd[3:6])] -= 2*np.pi
+            cur_pos = np.concatenate([self.sim_obsd.data.site_xpos[self.grasp_sid],
+                                      cur_rot,
+                                      [self.sim_obsd.data.qpos[7]]])
+            eef_cmd = np.clip(eef_cmd, cur_pos-self.eef_vel_limit, cur_pos+self.eef_vel_limit)
+            if self.last_eef_cmd is not None:
+                eef_cmd[:6] = 0.25*eef_cmd[:6] + 0.75*self.last_eef_cmd[:6]
+
             eef_pos = eef_cmd[:3]
             eef_elr = eef_cmd[3:6]
+            eef_quat= euler2quat(eef_elr)
 
-            #eef_pos = np.array([0, 0.35, 1.25])
-            #eef_elr = np.array([0.35,3.14,1.57])
-
-            eef_quat = euler2quat(eef_elr)
-
-            self.ik_sim.data.qpos[:self.sim.model.nu] = self.sim.data.qpos[:self.sim.model.nu]
-            self.ik_sim.forward()
-            ik_result = qpos_from_site_pose(physics=self.ik_sim,
-                                            site_name=self.sim.model.site_id2name(self.grasp_sid),
-                                            target_pos=eef_pos,
-                                            target_quat=eef_quat,
-                                            inplace=False,
-                                            regularization_strength=1.0,
-                                            is_hardware=self.robot.is_hardware)
+            ik_result = self.get_ik_action(eef_pos, eef_quat)
+            ik_success = ik_result.success
+            if not ik_success:
+                eef_cmd = self.last_eef_cmd
+                eef_pos = eef_cmd[:3]
+                eef_elr = eef_cmd[3:6]
+                eef_quat = euler2quat(eef_elr)
+                ik_result = self.get_ik_action(eef_pos, eef_quat)
+            
             action = ik_result.qpos[:self.sim.model.nu]
             action[7:9] = self.init_qpos[7:9]
-
+            self.last_eef_cmd = eef_cmd            
+            action = np.clip(action, self.sim_obsd.data.qpos[:9]-self.vel_limit, self.sim_obsd.data.qpos[:9]+self.vel_limit)
             if self.normalize_act:
                 action = 2 * (((action - self.jnt_low) / (self.jnt_high - self.jnt_low)) - 0.5)
-
-        #print(self.sim.data.site_xpos[self.grasp_sid])
-        #print(mat2euler(self.sim.data.site_xmat[self.grasp_sid].reshape(3,3)))
-        #exit()
-        '''
-        action = (0.5 * action + 0.5) * (self.jnt_high - self.jnt_low) + self.jnt_low
-        action = np.zeros(9)
-        eef_pos = np.array([-0.35,0.48,0.825])
-        eef_elr = np.array([3.14,0,0])
-        eef_quat = euler2quat(eef_elr)
-
-        self.ik_sim.data.qpos[:7] = np.random.normal(self.sim.data.qpos[:7], 0.0)
-        self.ik_sim.data.qpos[2] = 0.0
-        self.ik_sim.forward()
-        ik_result = qpos_from_site_pose(physics=self.ik_sim,
-                                        site_name=self.sim.model.site_id2name(self.grasp_sid),
-                                        target_pos=eef_pos,
-                                        target_quat=eef_quat,
-                                        inplace=False,
-                                        regularization_strength=1.0,
-                                        is_hardware=self.robot.is_hardware)
-        action = ik_result.qpos[:self.sim.model.nu]
-        action[7:9] = self.init_qpos[7:9]
-        print(action)
-        action = 2 * (((action - self.jnt_low) / (self.jnt_high - self.jnt_low)) - 0.5)
-        '''
 
         self.last_ctrl = self.robot.step(ctrl_desired=action,
                                         ctrl_normalized=self.normalize_act,
