@@ -437,7 +437,7 @@ class Robot():
                 current_sensor_value[cam_name] = data
 
                 # calibrate sensors
-                for cam in device['cam']:
+                for cam in device['cams']:
                     current_sensor_value[cam_name][cam['hdr_id']] = current_sensor_value[cam_name][cam['hdr_id']]*cam['scale'] + cam['offset']
                 device['sensor_data'] = current_sensor_value[cam_name]
                 device['sensor_time'] = current_sensor_value['time']

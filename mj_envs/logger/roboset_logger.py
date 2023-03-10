@@ -51,7 +51,7 @@ class RoboSet_Trace(Trace):
             dataset['config'] = config
 
         if 'user_cmt' in path.keys():
-            dataset['config/solved'] = np.array(np.float16(path['user_cmt']))
+            dataset['config/solved'] = np.array(path['user_cmt'], dtype=np.float16)
 
         return dataset
 
