@@ -58,7 +58,7 @@ class ColorThreshold():
 @click.command(help=DESC)
 @click.option('-e', '--env_name', type=str, help='environment to load', required= True)
 @click.option('-s', '--seed', type=int, help='seed for generating environment instances', default=123)
-@click.option('-c', '--cam_name', tpye=str, help='camera to get images from', default='top_cam')
+@click.option('-c', '--cam_name', type=str, help='camera to get images from', default='top_cam')
 def test_color_threshold_real(env_name, seed, cam_name):
 
     # seed and load environments
@@ -83,104 +83,6 @@ def test_color_threshold_real(env_name, seed, cam_name):
         rgb_img = env_info['obs_dict'][rgb_key]
         print(ct.detect_success())
 
-    while successes < num_rollouts:
-
-        # examine policy's behavior to recover paths
-        paths = env.examine_policy(
-            policy=pi,
-            horizon=env.spec.max_episode_steps,
-            num_episodes=1,
-            frame_size=(640,480),
-            mode=mode,
-            output_dir=output_dir+'/',
-            filename=output_name+str(successes),
-            camera_name=camera_name,
-            render=render)
-        rollouts += 1
-
-        # evaluate paths
-        success_percentage = env.env.evaluate_success(paths)
-        if success_percentage > 0.5:
-            ro_fn = 'rollout'+f'{(successes+seed):010d}'
-
-            data = {}
-
-            data['states'] = {}
-            data['states']['qp'] = paths[0]['env_infos']['obs_dict']['qp']
-            data['states']['qv'] = paths[0]['env_infos']['obs_dict']['qv']
-            data['states']['grasp_pos'] = paths[0]['env_infos']['obs_dict']['grasp_pos']
-            data['states']['object_err'] = paths[0]['env_infos']['obs_dict']['object_err']
-            data['states']['target_err'] = paths[0]['env_infos']['obs_dict']['target_err']
-
-            data['actions'] = paths[0]['actions']
-            data['infos'] = [{'success': reward} for reward in paths[0]['rewards']]
-            
-            data['frames'] = []
-
-            if env.rgb_encoder is None:
-                rgb_img = Image.fromarray(np.zeros((10,10,3),dtype=np.uint8))
-                rgb_img_fn = ro_fn + '_rgb_left_cam_step'
-                rgb_img.save(output_dir+'/frames/'+rgb_img_fn+f'{0:05d}.png')
-                for i in range(data['states']['qp'].shape[0]):
-                    data['frames'].append(Path(rgb_img_fn+f'{0:05d}.png'))                
-            else:
-                for cam in cams:
-                    rgb_key = 'rgb:'+cam+':224x224:2d'
-                    rgb_imgs = paths[0]['env_infos']['obs_dict'][rgb_key]
-                    depth_key = 'd:'+cam+':224x224:2d'
-                    depth_imgs = paths[0]['env_infos']['obs_dict'][depth_key]
-                    for i in range(rgb_imgs.shape[0]):
-                        if len(data['frames']) <= i:
-                            data['frames'].append([])
-                        
-                        rgb_img = Image.fromarray(rgb_imgs[i])
-                        rgb_img_fn = ro_fn + '_rgb_'+cam+'_step'
-                        rgb_img.save(output_dir+'/frames/'+rgb_img_fn+f'{i:05d}.png')
-                        data['frames'][i].append(Path(rgb_img_fn+f'{i:05d}.png'))
-
-                        depth_img = 255*depth_imgs[i]       
-                        depth_img = Image.fromarray(depth_img)
-                        depth_img = depth_img.convert("L")
-                        depth_img_fn = ro_fn + '_depth_'+cam+'_step'
-                        depth_img.save(output_dir+'/frames/'+depth_img_fn+f'{i:05d}.png')
-                        data['frames'][i].append(Path(depth_img_fn+f'{i:05d}.png'))
-
-            '''
-            for cam in ['left_cam', 'right_cam', 'top_cam', 'Franka_wrist_cam']:
-                rgb_key = 'rgb:'+cam+':240x424:2d'
-                if rgb_key in env.obs_keys:
-                    rgb_imgs = paths[0]['env_infos']['obs_dict'][rgb_key]
-                    for i in range(rgb_imgs.shape[0]):
-                        rgb_img = Image.fromarray(rgb_imgs[i])
-                        rgb_img_fn = ro_fn + '_rgb_'+cam+'_step'
-                        
-                        rgb_img.save(output_dir+'/frames/'+rgb_img_fn+f'{i:05d}.png')
-                        if len(data['frames']) <= i:
-                            data['frames'].append([])
-                        data['frames'][i].append(Path(rgb_img_fn+f'{i:05d}.png'))
-                else:
-                    print('WARN: Missing rgb key: {}'.format(rgb_key))
-                    
-                depth_key = 'd:'+cam+':240x424:2d'
-                if depth_key in env.obs_keys:
-                    depth_imgs = paths[0]['env_infos']['obs_dict'][depth_key]
-                    for i in range(depth_imgs.shape[0]):
-                        depth_img = 255*depth_imgs[i]       
-                        depth_img = Image.fromarray(depth_img)
-                        depth_img = depth_img.convert("L")
-                        depth_img_fn = ro_fn + '_depth_'+cam+'_step'                            
-                        depth_img.save(output_dir+'/frames/'+depth_img_fn+f'{i:05d}.png')
-                        if len(data['frames']) <= i:
-                            data['frames'].append([])
-                        data['frames'][i].append(Path(depth_img_fn+f'{i:05d}.png'))
-                else:
-                    print('WARN: Missing depth key: {}'.format(depth_key))                        
-            '''
-
-            torch.save(data, output_dir+'/'+ro_fn+'.pt')
-            successes += 1
-
-            print('Success {} ({}/{})'.format(successes/rollouts,successes,rollouts))
-
+  
 if __name__ == '__main__':
-    collect_rollouts_cli()
+    test_color_threshold_real()

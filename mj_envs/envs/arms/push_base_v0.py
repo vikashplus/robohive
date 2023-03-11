@@ -60,6 +60,7 @@ class PushBaseV0(env_base.MujocoEnv):
                object_init_perturb=None,
                vel_limit=[0.15, 0.25, 0.1, 0.25, 0.1, 0.25, 0.2, 1.0, 1.0],
                eef_vel_limit = [0.075, 0.075, 0.15,0.3,0.3,0.3,0.04],
+               success_mask = None,
                max_ik=3,
                **kwargs,
         ):
@@ -81,6 +82,7 @@ class PushBaseV0(env_base.MujocoEnv):
         self.last_ctrl = None
         self.vel_limit = vel_limit
         self.eef_vel_limit = eef_vel_limit
+        self.success_mask = success_mask
         self.max_ik = max_ik
         super()._setup(obs_keys=obs_keys,
                        weighted_reward_keys=weighted_reward_keys,
