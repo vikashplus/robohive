@@ -116,7 +116,7 @@ class Trace:
     # Render frames/videos
     def render(self, output_dir, output_format, groups:list, datasets:list, input_fps:int=25):
         # output_dir:       path for output
-        # output_type:      rgb/ mp4
+        # output_format:    rgb/ mp4
         # groups:           Groups to render: Pass ":" for rendering given dataset from all groups
         # datasets:         List(datasets) to render Example ['left', 'right', 'top', 'Franka_wrist']
         #                   dataset can be np.ndarray([N,H,W,3])stacked or a list Nx[HxWx3]
@@ -267,7 +267,7 @@ class Trace:
             for grp_k, grp_v in self.trace.items():
                 trial = paths_h5.create_group(grp_k)
                 for dst_k, dst_v in grp_v.items():
-                    trial.create_dataset(dst_k, data=dst_v, compression='gzip', compression_opts=compression_opts)
+                    trial.create_dataset(dst_k, data=dst_v, compression=compressions, compression_opts=compression_opts)
         else:
             pickle.dump(self.root, open(trace_name, 'wb'))
         print("Saved: "+trace_name)
