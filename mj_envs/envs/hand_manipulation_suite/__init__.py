@@ -68,8 +68,9 @@ def register_visual_envs(env_name, encoder_type):
     register_env_variant(
         env_id='{}-v1'.format(env_name),
         variant_id='{}_v{}-v1'.format(env_name, encoder_type),
-        variants={'obs_keys':
-                    ['hand_jnt',
+        variants={'proprio_keys':
+                    ['hand_jnt'],
+                'visual_keys':[
                     "rgb:vil_camera:224x224:{}".format(encoder_type),
                     "rgb:fixed:224x224:{}".format(encoder_type)]
         },

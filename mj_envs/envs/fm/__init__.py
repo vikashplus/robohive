@@ -78,7 +78,7 @@ register(
         'nq_arm':7,
         'nq_ee':1,
         'name_ee':'end_effector',
-        'obs_keys':[
+        'visual_keys':[
             # customize the visual keys
             "rgb:left_cam:{}:{}".format(img_res, encoder_type),
             "rgb:right_cam:{}:{}".format(img_res, encoder_type),
