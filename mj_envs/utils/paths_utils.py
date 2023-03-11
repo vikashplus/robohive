@@ -337,7 +337,7 @@ def pickle2h5(rollout_path, output_dir=None, verify_output=False, h5_format:str=
         paths_h5 = h5py.File(output_path, "w")
 
         # Robohive path format
-        if h5_format == "path":
+        if h5_format == "robohive":
             for i_path, path in enumerate(paths):
                 print("parsing rollout", i_path)
                 trial = paths_h5.create_group('Trial'+str(i_path))
@@ -374,7 +374,7 @@ def pickle2h5(rollout_path, output_dir=None, verify_output=False, h5_format:str=
                     break
 
         else:
-            TypeError('Unsupported h5_format')
+            raise TypeError('Unsupported h5_format')
 
         # close the h5 writer for this path
         print('Saving:  ', output_path)
@@ -391,7 +391,7 @@ def pickle2h5(rollout_path, output_dir=None, verify_output=False, h5_format:str=
 DESC="""
 Script to recover images and videos from the saved pickle files
  - python utils/paths_utils.py -u render -p paths.pickle -rf mp4 -cn right
- - python utils/paths_utils.py -u pickle2h5 -p paths.pickle -vo True -cp True -hf dataset
+ - python utils/paths_utils.py -u pickle2h5 -p paths.pickle -vo True -cp True -hf robohive
  """
 @click.command(help=DESC)
 @click.option('-u', '--util', type=click.Choice(['plot_horizon', 'plot', 'render', 'pickle2h5', 'h5schema']), help='pick utility', required=True)
