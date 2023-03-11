@@ -10,7 +10,7 @@ import unittest
 import gym
 import numpy as np
 import pickle
-
+import copy
 import torch.testing
 
 
@@ -33,6 +33,9 @@ class TestEnvs(unittest.TestCase):
         # step
         u = 0.01*np.random.uniform(low=0, high=1, size=env1.env.sim.model.nu) # small controls
         obs1, rwd1, done1, infos1 = env1.env.step(u.copy())
+        infos1 = copy.deepcopy(infos1) #info points to internal variables.
+        proprio1 = env1.env.get_proprioception()
+        exterio1 = env1.env.get_exteroception()
         assert len(obs1>0)
         # assert len(rwd1>0)
         # test dicts
@@ -56,10 +59,16 @@ class TestEnvs(unittest.TestCase):
         assert env1.observation_space == env2.observation_space, (env1.observation_space, env2.observation_space)
         # step
         obs2, rwd2, done2, infos2 = env2.env.step(u)
+        infos2 = copy.deepcopy(infos2)
+        proprio2 = env2.env.get_proprioception()
+        exterio2 = env2.env.get_exteroception()
         torch.testing.assert_close(obs1, obs2)
+        torch.testing.assert_close(proprio1, proprio2)
+        torch.testing.assert_close(exterio1, exterio2)
         torch.testing.assert_close(rwd1, rwd2)
         assert (done1==done2), (done1, done2)
         assert len(infos1)==len(infos2), (infos1, infos2)
+        torch.testing.assert_close(infos1, infos2)
         # reset
         env2.reset()
 
