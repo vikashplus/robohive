@@ -21,15 +21,9 @@ from mj_envs.physics.sim_scene import get_sim
 
 # TODO
 # remove rwd_mode
-# convet obs_keys to obs_keys_wt
+# convert obs_keys to obs_keys_wt
 # batch images before passing them through the encoder
-
-class IdentityEncoder(torch.nn.Module):
-    def __init__(self):
-        super(IdentityEncoder, self).__init__()
-
-    def forward(self, x):
-        return x
+# should path methods(compute_path_rewards, truncate_paths, evaluate_success) be moved to paths_utils?
 
 class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     """
@@ -65,16 +59,19 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.sim_obsd.forward()
         ObsVecDict.__init__(self)
 
+
     def _setup(self,
-               obs_keys,
-               weighted_reward_keys,
-               reward_mode = "dense",
-               frame_skip = 1,
-               normalize_act = True,
-               obs_range = (-10, 10),
-               rwd_viz = False,
-               device_id = 0, # device id for rendering
-               **kwargs,
+               obs_keys,                # Keys from obs_dict that forms the obs vector returned by get_obs()
+               weighted_reward_keys,    # Keys and weight that sums up to build the reward
+               proprio_keys = None,     # Keys from obs_dict that forms the proprioception vector returned by get_proprio()
+               visual_keys = None,      # Keys that specify visual_dict returned by get_visual()
+               reward_mode = "dense",   # Configure env to return dense/sparse rewards
+               frame_skip = 1,          # Number of mujoco frames/steps per env step
+               normalize_act = True,    # Ask env to normalize the action space
+               obs_range = (-10, 10),   # Permissible range of values in obs vector returned by get_obs()
+               rwd_viz = False,         # Visualize rewards (WIP, needs vtils)
+               device_id = 0,           # Device id for rendering
+               **kwargs,                # Additional arguments
         ):
 
         if self.sim is None or self.sim_obsd is None:
@@ -121,7 +118,17 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         # resolve obs
         self.obs_dict = {}
         self.obs_keys = obs_keys
-        self._setup_rgb_encoders(obs_keys, device=None)
+
+        # resolve proprio
+        self.proprio_dict = {}
+        self.proprio_keys = proprio_keys
+
+        # resolve visuals
+        self.visual_dict = {}
+        self.visual_keys = visual_keys
+        self._setup_rgb_encoders(self.visual_keys, device=None)
+
+        # reset to get the env ready
         observation, _reward, done, _info = self.step(np.zeros(self.sim.model.nu))
         # Question: Should we replace above with following? Its specially helpful for hardware as it forces a env reset before continuing, without which the hardware will make a big jump from its position to the position asked by step.
         # observation = self.reset()
@@ -131,10 +138,14 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         return
 
-    def _setup_rgb_encoders(self, obs_keys, device=None):
+
+    def _setup_rgb_encoders(self, visual_keys, device=None):
         """
         Setup the supported visual encoders: 1d /2d / r3m18/ r3m34/ r3m50
         """
+        if self.visual_keys == None:
+            return
+
         if device is None:
             self.device_encoder = "cuda" if torch.cuda.is_available() else "cpu"
         else:
@@ -142,7 +153,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         # ensure that all keys use the same encoder and image sizes
         id_encoders = []
-        for key in obs_keys:
+        for key in visual_keys:
             if key.startswith('rgb'):
                 id_encoder = key.split(':')[-2]+":"+key.split(':')[-1] # HxW:encoder
                 id_encoders.append(id_encoder)
@@ -151,6 +162,13 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             assert unique_encoder, "Env only supports single encoder. Multiple in use ({})".format(id_encoders)
 
         # prepare encoder and transforms
+        class IdentityEncoder(torch.nn.Module):
+            def __init__(self):
+                super(IdentityEncoder, self).__init__()
+
+            def forward(self, x):
+                return x
+
         self.rgb_encoder = None
         self.rgb_transform = None
         if len(id_encoders) > 0:
@@ -163,7 +181,6 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             if "r3m" in id_encoder:
                 import torchvision.transforms as T
                 from r3m import load_r3m
-
 
             # Load encoder
             prompt("Using {} visual inputs with {} encoder".format(wxh, id_encoder), type=Prompt.INFO)
@@ -255,9 +272,9 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         return obs, env_info['rwd_'+self.rwd_mode], bool(env_info['done']), env_info
 
 
-    def get_obs(self):
+    def get_obs(self, update_proprioception=True, update_exteroception=False):
         """
-        Get observations from the environemnt.
+        Get state based observations from the environemnt.
         Uses robot to get sensors, reconstructs the sim and recovers the sensors.
         """
         # get sensor data from robot
@@ -269,18 +286,25 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         # get obs_dict using the observed information
         self.obs_dict = self.get_obs_dict(self.sim_obsd)
 
-        if self.rgb_encoder:
-            visual_obs_dict = self.get_visual_obs_dict(sim=self.sim_obsd)
-            self.obs_dict.update(visual_obs_dict)
+        # get proprioception
+        if update_proprioception:
+            self.proprio_dict = self.get_proprioception(self.obs_dict)
+
+        # Don't update extero keys by default for efficiency
+        # User should make an explicit call to get_visual_dict when needed
+        if update_exteroception:
+            self.visual_dict = self.get_visuals(sim=self.sim_obsd)
 
         # recoved observation vector from the obs_dict
         t, obs = self.obsdict2obsvec(self.obs_dict, self.obs_keys)
         return obs
 
 
-    def get_visual_obs_dict(self, sim, device_id=None):
+    def get_visuals(self, sim=None, visual_keys=None, device_id=None)->dict:
         """
-        Recover visual observation dict corresponding to the visual keys in obs_keys
+        Recover visual dict corresponding to the visual keys
+        visual_keys
+            = self.visual_keys if None
         Acceptable visual keys:
             - 'rgb:cam_name:HxW:1d'
             - 'rgb:cam_name:HxW:2d'
@@ -288,13 +312,26 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             - 'rgb:cam_name:HxW:r3m34'
             - 'rgb:cam_name:HxW:r3m50'
         """
+        # return if no visual configured
+        if self.visual_keys == None:
+            return None
+
+        # default to observed sim
+        if sim is None:
+            sim = self.sim_obsd
+
+        # default to all visual keys
+        if visual_keys == None:
+            visual_keys = self.visual_keys
+
+        # default to env device
         if device_id is None:
             device_id = self.device_id
 
-        visual_obs_dict = {}
-        visual_obs_dict['time'] = np.array([self.sim.data.time])
-        # find keys with rgb tags
-        for key in self.obs_keys:
+        # collect visuals
+        visual_dict = {}
+        visual_dict['time'] = np.array([self.sim.data.time])
+        for key in visual_keys:
             if key.startswith('rgb'):
                 _, cam, wxh, rgb_encoder_id = key.split(':')
                 height = int(wxh.split('x')[0])
@@ -309,9 +346,9 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                                   )
                 # encode images
                 if rgb_encoder_id == '1d':
-                    rgb_encoded = img.reshape(-1)
+                    rgb_encoded = img[0].reshape(-1)
                 elif rgb_encoder_id == '2d':
-                    rgb_encoded = img
+                    rgb_encoded = img[0]
                 elif rgb_encoder_id[:3] == 'r3m' or rgb_encoder_id[:3] == 'rrl':
                     with torch.no_grad():
                         rgb_encoded = 255.0 * self.rgb_transform(img[0]).reshape(-1, 3, 224, 224)
@@ -321,22 +358,54 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 else:
                     raise ValueError("Unsupported visual encoder: {}".format(rgb_encoder_id))
 
-                visual_obs_dict.update({key:rgb_encoded})
+                visual_dict.update({key:rgb_encoded})
                 # add depth observations if requested in the keys (assumption d will always be accompanied by rgb keys)
                 d_key = 'd:'+key[4:]
                 if d_key in self.obs_keys:
-                    visual_obs_dict.update({d_key:dpt})
+                    visual_dict.update({d_key:dpt})
 
-        return visual_obs_dict
+        return visual_dict
 
 
-    # VIK??? Its getting called twice. Once in step and sampler calls it as well
+    def get_proprioception(self, obs_dict=None)->dict:
+        """
+        Get robot proprioception data. Usually incudes robot's onboard kinesthesia sensors (pos, vel, accn, etc)
+        """
+        # return if no proprio configured
+        if self.proprio_keys == None:
+            return None
+
+        # pull out prioprio from the obs_dict
+        if obs_dict==None: obs_dict = self.obs_dict
+        obsvec = np.zeros(0)
+        for key in self.proprio_keys:
+            obsvec = np.concatenate([obsvec, obs_dict[key]])
+        return obs_dict['time'], obsvec
+
+
+    def get_exteroception(self, **kwargs)->dict:
+        """
+        Get robot exterioception data. Usually incudes robot's onboard (visual, tactile, acoustic) sensors
+        """
+        return self.get_visuals(**kwargs)
+
+
+    # VIK??? Its getting called twice for mjrl agent. Once in step and sampler calls it as well
     def get_env_infos(self):
         """
         Get information about the environment.
-        - Essential keys are added below. Users can add more keys
+        - NOTE: Returned dict contains pointers that will be updated by the env. Deepcopy returned data if you want it to persist
+        - Essential keys are added below. Users can add more keys by overriding this function in their task-env
         - Requires necessary keys (dense, sparse, solved, done) in rwd_dict to be populated
+        - Visual_dict can be {} if users hasn't explicitely updated it explicitely for current time
         """
+
+        # resolve if current visuals are available
+        if "time" in self.visual_dict.keys() and self.visual_dict['time']==self.obs_dict['time']:
+            visual_dict = self.visual_dict
+        else:
+            visual_dict = {}
+
         env_info = {
             'time': self.obs_dict['time'][()],          # MDP(t)
             'rwd_dense': self.rwd_dict['dense'][()],    # MDP(t)
@@ -344,74 +413,12 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             'solved': self.rwd_dict['solved'][()],      # MDP(t)
             'done': self.rwd_dict['done'][()],          # MDP(t)
             'obs_dict': self.obs_dict,                  # MDP(t)
+            'visual_dict': visual_dict,                 # MDP(t), will be {} if user hasn't explicitely updated self.visual_dict at the current time
+            'proprio_dict': self.proprio_dict,          # MDP(t)
             'rwd_dict': self.rwd_dict,                  # MDP(t)
             'state': self.get_env_state(),              # MDP(t)
         }
         return env_info
-
-
-    # Methods on paths =======================================================
-
-    def compute_path_rewards(self, paths):
-        """
-        Compute vectorized rewards for paths and check for done conditions
-        path has two keys: observations and actions
-        path["observations"] : (num_traj, horizon, obs_dim)
-        path["rewards"] should have shape (num_traj, horizon)
-        """
-        obs_dict = self.obsvec2obsdict(paths["observations"])
-        rwd_dict = self.get_reward_dict(obs_dict)
-
-        rewards = rwd_dict[self.rwd_mode]
-        done = rwd_dict['done']
-        # time align rewards. last step is redundant
-        done[...,:-1] = done[...,1:]
-        rewards[...,:-1] = rewards[...,1:]
-        paths["done"] = done if done.shape[0] > 1 else done.ravel()
-        paths["rewards"] = rewards if rewards.shape[0] > 1 else rewards.ravel()
-        return paths
-
-
-    def truncate_paths(self, paths):
-        """
-        truncate paths as per done condition
-        """
-        hor = paths[0]['rewards'].shape[0]
-        for path in paths:
-            if path['done'][-1] == False:
-                path['terminated'] = False
-                terminated_idx = hor
-            elif path['done'][0] == False:
-                terminated_idx = sum(~path['done'])+1
-                for key in path.keys():
-                    path[key] = path[key][:terminated_idx+1, ...]
-                path['terminated'] = True
-        return paths
-
-
-    def evaluate_success(self, paths, logger=None, successful_steps=5):
-        """
-        Evaluate paths and log metrics to logger
-        """
-        num_success = 0
-        num_paths = len(paths)
-
-        # Record success if solved for provided successful_steps
-        for path in paths:
-            if np.sum(path['env_infos']['solved'] * 1.0) > successful_steps:
-                # sum of truth values may not work correctly if dtype=object, need to * 1.0
-                num_success += 1
-        success_percentage = num_success*100.0/num_paths
-
-        # log stats
-        if logger:
-            rwd_sparse = np.mean([np.mean(p['env_infos']['rwd_sparse']) for p in paths]) # return rwd/step
-            rwd_dense = np.mean([np.sum(p['env_infos']['rwd_dense'])/self.horizon for p in paths]) # return rwd/step
-            logger.log_kv('rwd_sparse', rwd_sparse)
-            logger.log_kv('rwd_dense', rwd_dense)
-            logger.log_kv('success_percentage', success_percentage)
-
-        return success_percentage
 
 
     def seed(self, seed=None):
@@ -495,7 +502,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
         qp = state_dict['qpos']
         qv = state_dict['qvel']
-        act = state_dict['act']
+        act = state_dict['act'] if 'act' in state_dict.keys() else None
         self.sim.set_state(qpos=qp, qvel=qv, act=act)
         self.sim_obsd.set_state(qpos=qp, qvel=qv, act=act)
         if self.sim.model.nmocap>0:
@@ -514,6 +521,70 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.sim_obsd.model.body_pos[:] = state_dict['body_pos']
         self.sim_obsd.model.body_quat[:] = state_dict['body_quat']
         self.sim_obsd.forward()
+
+
+    # Methods on paths (should it be a part of path_utils?) =================================
+
+    def compute_path_rewards(self, paths):
+        """
+        Compute vectorized rewards for paths and check for done conditions
+        path has two keys: observations and actions
+        path["observations"] : (num_traj, horizon, obs_dim)
+        path["rewards"] should have shape (num_traj, horizon)
+        """
+        obs_dict = self.obsvec2obsdict(paths["observations"])
+        rwd_dict = self.get_reward_dict(obs_dict)
+
+        rewards = rwd_dict[self.rwd_mode]
+        done = rwd_dict['done']
+        # time align rewards. last step is redundant
+        done[...,:-1] = done[...,1:]
+        rewards[...,:-1] = rewards[...,1:]
+        paths["done"] = done if done.shape[0] > 1 else done.ravel()
+        paths["rewards"] = rewards if rewards.shape[0] > 1 else rewards.ravel()
+        return paths
+
+
+    def truncate_paths(self, paths):
+        """
+        truncate paths as per done condition
+        """
+        hor = paths[0]['rewards'].shape[0]
+        for path in paths:
+            if path['done'][-1] == False:
+                path['terminated'] = False
+                terminated_idx = hor
+            elif path['done'][0] == False:
+                terminated_idx = sum(~path['done'])+1
+                for key in path.keys():
+                    path[key] = path[key][:terminated_idx+1, ...]
+                path['terminated'] = True
+        return paths
+
+
+    def evaluate_success(self, paths, logger=None, successful_steps=5):
+        """
+        Evaluate paths and log metrics to logger
+        """
+        num_success = 0
+        num_paths = len(paths)
+
+        # Record success if solved for provided successful_steps
+        for path in paths:
+            if np.sum(path['env_infos']['solved'] * 1.0) > successful_steps:
+                # sum of truth values may not work correctly if dtype=object, need to * 1.0
+                num_success += 1
+        success_percentage = num_success*100.0/num_paths
+
+        # log stats
+        if logger:
+            rwd_sparse = np.mean([np.mean(p['env_infos']['rwd_sparse']) for p in paths]) # return rwd/step
+            rwd_dense = np.mean([np.sum(p['env_infos']['rwd_dense'])/self.horizon for p in paths]) # return rwd/step
+            logger.log_kv('rwd_sparse', rwd_sparse)
+            logger.log_kv('rwd_dense', rwd_dense)
+            logger.log_kv('success_percentage', success_percentage)
+
+        return success_percentage
 
 
     # Vizualization utilities ================================================
@@ -645,8 +716,10 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             - return resulting paths
         """
 
-        from mj_envs.logger.roboset_logger import RoboSet_Trace as Trace
-        trace = Trace("Rollout")
+        # from mj_envs.logger.roboset_logger import RoboSet_Trace as Trace
+        from mj_envs.logger.grouped_datasets import Trace
+
+        trace = Trace(self.id+"_rollouts")
 
         exp_t0 = timer.time()
 
@@ -660,20 +733,24 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         # start rollouts
         for ep in range(num_episodes):
+
+            # initialize -----------------------------
             ep_t0 = timer.time()
-
             group_key='Trial'+str(ep); trace.create_group(group_key)
-
-            prompt("Episode %d" % ep, end=":> ", type=Prompt.INFO)
-            o = self.reset()
+            prompt(f"Episode {ep}", end=":> ", type=Prompt.INFO)
+            obs = self.reset()
             done = False
             t = 0
             ep_rwd = 0.0
+
+            # Rollout --------------------------------
+            obs, rwd, done, env_info = self.forward() # t=0
             while t < horizon and done is False:
-                a = policy.get_action(o)[0] if mode == 'exploration' else policy.get_action(o)[1]['evaluation']
-                next_o, rwd, done, env_infos = self.step(a)
-                ep_rwd += rwd
-                # render offscreen visuals
+
+                # Get step's actions ----------------------
+                act = policy.get_action(obs)[0] if mode == 'exploration' else policy.get_action(obs)[1]['evaluation']
+
+                # render offscreen visuals ----------------------
                 if render =='offscreen':
                     curr_frame = self.sim.renderer.render_offscreen(
                         width=frame_size[0],
@@ -684,22 +761,23 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                     frames[t,:,:,:] = curr_frame
                     prompt(t, end=', ', flush=True, type=Prompt.INFO)
 
-                # log values
+                # log values at time=t ----------------------------------
                 datum_dict = dict(
                         time=t,
-                        observations=o,
-                        actions=a,
+                        observations=obs,
+                        actions=act.copy(),
                         rewards=rwd,
-                        env_infos=env_infos,
+                        env_infos=env_info,
                         done=done,
                     )
-                trace.append_datums(group_key=group_key,
-                    dataset_key_val=datum_dict)
-                o = next_o
+                trace.append_datums(group_key=group_key, dataset_key_val=datum_dict)
+
+                # step env using actions from t=>t+1 ----------------------
+                obs, rwd, done, env_info = self.step(act)
                 t = t+1
                 ep_rwd += rwd
 
-            prompt("Total reward = %3.3f, Total time = %2.3f" % (ep_rwd, timer.time()-ep_t0), type=Prompt.INFO)
+            prompt(f"Episode {ep}:> Finished in {(timer.time()-ep_t0):0.4} sec. Total rewards {ep_rwd}", type=Prompt.INFO)
 
             # save offscreen buffers as video
             if render =='offscreen':
@@ -713,8 +791,21 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         self.mujoco_render_frames = False
         prompt("Total time taken = %f"% (timer.time()-exp_t0), type=Prompt.INFO)
-        trace.save("env_base_trace.pickle", verify_length=True)
-        trace.render("test_render.mp4", groups=":", datasets=["data/rgb_left","data/rgb_right","data/rgb_top","data/rgb_wrist"])
+        print(trace)
+        trace.save(self.id+"_trace.pickle", verify_length=True)
+        trace.save(self.id+"_trace.h5", verify_length=True)
+        print(trace)
+        render_keys = ['env_infos/visual_dict/rgb:top_cam:256x256:2d',
+                       'env_infos/visual_dict/rgb:left_cam:256x256:2d',
+                       'env_infos/visual_dict/rgb:right_cam:256x256:2d',
+                       'env_infos/visual_dict/rgb:Franka_wrist_cam:256x256:2d'
+                       ]
+        trace.render(output_dir='.', output_format="mp4", groups="Trial0", datasets=render_keys, input_fps=1/self.dt)
+
+        # Does this belong here? Rendering should be a post processing step once the logs has been saved.
+        # Note that the saved logs are read as pickle/h5, we can't call trace.render on them.
+        # trace.render("test_render.mp4", groups=":", datasets=["data/rgb_left","data/rgb_right","data/rgb_top","data/rgb_wrist"], output_format="mp4")
+
         quit()
         # return trace
 
@@ -725,11 +816,9 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
         Get observation dictionary
         Implement this in each subclass.
-        Note: for visual keys (rgb:cam_name:HxW:encoder) use get_visual_obs_dict()
-            to get visual inputs, process it (typically passed through an encoder
-            to reduce dims), and then update the obs_dict. For example -
-            > visual_obs_dict = self.get_visual_obs_dict(sim=sim)
-            > obs_dict.update(visual_obs_dict)
+        Note: Visual observations are automatically calculated via call to get_visual_obs_dict() from within get_obs()
+            visual obs can be specified via visual keys of the form rgb:cam_name:HxW:encoder where cam_name is the name
+            of the camera, HxW is the frame size and encode is the encoding of the image (can be 1d/2d as well as image encoders like rrl/r3m etc)
         """
         raise NotImplementedError
 
