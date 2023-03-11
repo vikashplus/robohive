@@ -61,9 +61,9 @@ def main(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat
         assert rollout_path is not None, "Rollout path is required for mode:{} ".format(mode)
         if output_dir == './': # overide the default
             output_dir = os.path.dirname(rollout_path)
-        if output_name is None:
+        if output_name is None: # default to the rollout name
             rollout_name = os.path.split(rollout_path)[-1]
-        output_name, output_type = os.path.splitext(rollout_name)
+            output_name, output_type = os.path.splitext(rollout_name)
         paths = Trace.load(rollout_path)
 
     # Resolve rendering
@@ -93,7 +93,10 @@ def main(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat
                 path_horizon = path_data['time'].shape[0]-1
                 # reset to init state
                 if "state" in path_data['env_infos'].keys():
+                    state = {}
+                    for k in path_data['env_infos']['state'].keys(): state[k] = path_data['env_infos']['state'][k][0]
                     env.reset(reset_qpos=path_data['env_infos']['state']['qpos'][0], reset_qvel=path_data['env_infos']['state']['qvel'][0])
+                    env.env.set_env_state(state)
                 else:
                     env.reset()
             elif rollout_format=='RoboSet':
@@ -109,6 +112,7 @@ def main(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat
                 raise TypeError("Unknown rollout_format")
 
             # Rollout path --------------------------------
+            ep_rwd = 0.0
             obs, rwd, done, env_info = env.forward()
             for i_step in range(path_horizon+1):
 
@@ -120,6 +124,7 @@ def main(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat
 
                 # Directly create the scene
                 elif mode=='render':
+                    env.sim.data.time = path_data['time'][i_step]
                     if rollout_format=='RoboSet':
                         env.sim.data.qpos[:nq_arm]= path_data['qp_arm'][i_step]
                         env.sim.data.qpos[nq_arm]= path_data['qp_ee'][i_step] # assumption
@@ -194,6 +199,7 @@ def main(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat
                     obs, rwd, done, env_info = env.forward()
                 elif i_step < path_horizon: #incase last step actions (nans) can cause issues in step
                     obs, rwd, done, env_info = env.step(act)
+                ep_rwd += rwd
 
             # save offscreen buffers as video and clear the dataset
             if render == 'offscreen':
@@ -201,7 +207,7 @@ def main(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat
                 trace.remove_dataset(group_keys=[path_name], dataset_key=camera_name)
 
             # Finish rollout
-            print("-- Finished %s rollout in %2.3fs" % (path_name, time.time()-ep_t0))
+            print(f"Finishing {path_name} rollout in {(time.time()-ep_t0):0.4} sec. Total rewards {ep_rwd}")
 
         # Finish loop
         print("Finished rollout loop:{}".format(i_loop))
