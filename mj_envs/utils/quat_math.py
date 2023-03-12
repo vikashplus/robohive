@@ -44,6 +44,18 @@ def axis_angle2quat(axis, angle):
     s = np.sin(angle/2)
     return np.array([c, s*axis[0], s*axis[1], s*axis[2]])
 
+def quatMagnitude(quat):
+    """ Return the magnitude of the quaterionion (in radiants)
+     """
+    norm = np.linalg.norm(quat)
+    angle = 2.0*np.arctan2(norm,quat[0])
+    angle_wrap = ((angle + np.pi) % (2 * np.pi)) - np.pi
+
+    if angle_wrap == -np.pi:
+        angle_wrap = np.pi
+
+    return angle_wrap
+
 def euler2mat(euler):
     """ Convert Euler Angles to Rotation Matrix """
     euler = np.asarray(euler, dtype=np.float64)

@@ -8,12 +8,10 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 import gym
 from mj_envs.envs import env_base
 from mj_envs.envs.tcdm.reference_motion import ReferenceMotion
-from mj_envs.utils.quat_math import quat2euler
+from mj_envs.utils.quat_math import quat2euler, euler2quat, diffQuat, quatMagnitude
 import numpy as np
 import os
 import collections
-
-from pyquaternion import Quaternion
 
 # ToDo
 # - change target to reference
@@ -141,21 +139,12 @@ class TrackEnv(env_base.MujocoEnv):
             # self.init_qpos[:] = self.sim.model.key_qpos[0,:]
 
 
-    def to_quat(self, arr):
-        if isinstance(arr, Quaternion):
-            return arr.unit
-        if len(arr.shape) == 2:
-            return Quaternion(matrix=arr).unit
-        elif len(arr.shape) == 1 and arr.shape[0] == 9:
-            return Quaternion(matrix=arr.reshape((3,3))).unit
-        return Quaternion(array=arr).unit
-
     def rotation_distance(self, q1, q2, euler=True):
         if euler:
-            delta_quat = self.to_quat(q2) * self.to_quat(q1).inverse
-            return np.abs(delta_quat.angle)
-        else:
-            return np.abs((Quaternion(q2.flatten())*Quaternion(q1.flatten()).inverse).angle)
+            q1 = euler2quat(q1)
+            q2 = euler2quat(q2)
+
+        return np.abs(quatMagnitude(diffQuat(q2,q1)))
 
 
 
@@ -168,14 +157,6 @@ class TrackEnv(env_base.MujocoEnv):
 
     def norm2(self, x):
         return np.sum(np.square(x))
-
-    def root_to_point(self, root_pos, root_rotation, point):
-        if isinstance(root_rotation, Quaternion) \
-                    or root_rotation.shape != (3,3):
-            root_rotation = self.to_quat(root_rotation).rotation_matrix
-        root_rotation_inv = root_rotation.T
-        delta = (point - root_pos).reshape((3,1))
-        return root_rotation_inv.dot(delta).reshape(-1)
 
     def get_obs_dict(self, sim):
         obs_dict = {}
