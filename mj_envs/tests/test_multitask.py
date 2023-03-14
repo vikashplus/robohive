@@ -2,7 +2,7 @@ import unittest
 from mj_envs.tests.test_envs import TestEnvs
 
 class TestKitchen(TestEnvs):
-    def tesat_kitchen(self):
+    def test_kitchen(self):
         env_names = [
         'kitchen-v3',
         'kitchen_rgb-v3',
