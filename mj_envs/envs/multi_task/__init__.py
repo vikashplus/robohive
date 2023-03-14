@@ -10,3 +10,5 @@ import mj_envs.envs.multi_task
 import mj_envs.envs.multi_task.substeps1
 import mj_envs.envs.multi_task.substeps2
 import mj_envs.envs.multi_task.substeps9
+
+import mj_envs.envs.multi_task.substeps1.franka_kitchen
