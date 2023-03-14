@@ -197,7 +197,7 @@ class KitchenFrankaRandom(KitchenFrankaFixed):
 
         super()._setup(**kwargs)
 
-    def reset(self, reset_qpos=None, reset_qvel=None):
+    def reset(self, reset_qpos=None, reset_qvel=None, reset_franka_wrt_kitchen=True):
         if reset_qpos is None:
             reset_qpos = self.init_qpos.copy()
             reset_qpos[self.robot_dofs] += (
@@ -205,4 +205,10 @@ class KitchenFrankaRandom(KitchenFrankaFixed):
                 * (self.np_random.uniform(size=len(self.robot_dofs)) - 0.5)
                 * (self.robot_ranges[:, 1] - self.robot_ranges[:, 0])
             )
+
+        # reset franka wrt kitchen
+        if reset_franka_wrt_kitchen:
+            bid = self.sim.model.body_name2id("chef")
+            self.sim.model.body_pos[bid] = np.array([0, 0, 1.8]) + self.np_random.uniform(-0.1, 0.1, (3,))
+
         return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel)
