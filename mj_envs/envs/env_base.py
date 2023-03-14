@@ -231,7 +231,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                                                    ])
 
 
-    def step(self, a):
+    def step(self, a, **kwargs):
         """
         Step the simulation forward (t => t+1)
         Uses robot interface to safely step the forward respecting pos/ vel limits
@@ -243,10 +243,10 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                                         step_duration=self.dt,
                                         realTimeSim=self.mujoco_render_frames,
                                         render_cbk=self.mj_render if self.mujoco_render_frames else None)
-        return self.forward()
+        return self.forward(**kwargs)
 
 
-    def forward(self):
+    def forward(self, **kwargs):
         """
         Forward propagate env to recover env details
         Returns current obs(t), rwd(t), done(t), info(t)
@@ -257,7 +257,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             self.mj_render()
 
         # observation
-        obs = self.get_obs()
+        obs = self.get_obs(**kwargs)
 
         # rewards
         self.expand_dims(self.obs_dict) # required for vectorized rewards calculations
@@ -288,7 +288,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         # get proprioception
         if update_proprioception:
-            self.proprio_dict = self.get_proprioception(self.obs_dict)
+            self.proprio_dict = self.get_proprioception(self.obs_dict)[2]
 
         # Don't update extero keys by default for efficiency
         # User should make an explicit call to get_visual_dict when needed
@@ -377,10 +377,14 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         # pull out prioprio from the obs_dict
         if obs_dict==None: obs_dict = self.obs_dict
-        obsvec = np.zeros(0)
+        proprio_vec = np.zeros(0)
+        proprio_dict = {}
+
         for key in self.proprio_keys:
-            obsvec = np.concatenate([obsvec, obs_dict[key]])
-        return obs_dict['time'], obsvec
+            proprio_vec = np.concatenate([proprio_vec, obs_dict[key]])
+            proprio_dict[key] = obs_dict[key]
+
+        return obs_dict['time'], proprio_vec, proprio_dict
 
 
     def get_exteroception(self, **kwargs)->dict:
@@ -744,7 +748,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             ep_rwd = 0.0
 
             # Rollout --------------------------------
-            obs, rwd, done, env_info = self.forward() # t=0
+            obs, rwd, done, env_info = self.forward(update_exteroception=True) # t=0
             while t < horizon and done is False:
 
                 # Get step's actions ----------------------
@@ -773,7 +777,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 trace.append_datums(group_key=group_key, dataset_key_val=datum_dict)
 
                 # step env using actions from t=>t+1 ----------------------
-                obs, rwd, done, env_info = self.step(act)
+                obs, rwd, done, env_info = self.step(act, update_exteroception=True)
                 t = t+1
                 ep_rwd += rwd
 
