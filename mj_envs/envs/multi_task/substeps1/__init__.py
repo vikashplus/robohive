@@ -107,8 +107,9 @@ register(
 
 
 # Kitchen-V3 ============================================================================
-# In this version of the environment, the observations consist of the
-# distance between end effector and all relevent objects in the scene
+# The observations consist of info on robot, objects, and goals
+# Distance between end effector and all relevent objects in the scene is also appended
+# No task specific feature is leaked into the observation forcing multi-task generalization
 
 print("RoboHive:> Registering Kitchen Envs")
 from mj_envs.envs.multi_task.common.franka_kitchen_v1 import KitchenFrankaFixed, KitchenFrankaRandom, KitchenFrankaDemo

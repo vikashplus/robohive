@@ -20,13 +20,26 @@ class KitchenBase(env_base.MujocoEnv):
         "objs_jnt": 1.0,
         "obj_goal": 1.0,
         "goal_err": 1.0,
-        "approach_err": 1.0,
+        "approach_err": 1.0,# task specific
     }
+
+    DEFAULT_VISUAL_KEYS = [
+        'rgb:top_cam:256x256:2d',
+        'rgb:left_cam:256x256:2d',
+        'rgb:right_cam:256x256:2d',
+        'rgb:Franka_wrist_cam:256x256:2d']
+
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
         "obj_goal": 1.0,
         "bonus": 0.5,
         "pose": 0.0,  # 0.01
         "approach": 0.5,
+    }
+
+    DEFAULT_PROPRIO_KEYS_AND_WEIGHTS = {
+        "robot_jnt": 1.0,   # radian
+        "robot_vel": 1.0,   # radian
+        "end_effector": 1.0 # meters
     }
 
     def _setup(self,
@@ -37,6 +50,7 @@ class KitchenBase(env_base.MujocoEnv):
                interact_site="end_effector",
                obj_init=None,
                obs_keys_wt=list(DEFAULT_OBS_KEYS_AND_WEIGHTS.keys()),
+               proprio_keys_wt=list(DEFAULT_PROPRIO_KEYS_AND_WEIGHTS.keys()),
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
                # different defaults than what is used in env_base and robot
                frame_skip=40,
@@ -45,7 +59,6 @@ class KitchenBase(env_base.MujocoEnv):
                robot_name="Franka_kitchen_sim",
                **kwargs,
     ):
-
         if VIZ:
             from vtils.plotting.srv_dict import srv_dict
 
@@ -97,6 +110,7 @@ class KitchenBase(env_base.MujocoEnv):
         self.set_obj_goal(obj_goal=self.input_obj_goal, interact_site=interact_site)
 
         super()._setup(obs_keys=obs_keys_wt,
+                       proprio_keys=proprio_keys_wt,
                        weighted_reward_keys=weighted_reward_keys,
                        frame_skip=frame_skip,
                        act_mode=act_mode,
@@ -105,7 +119,10 @@ class KitchenBase(env_base.MujocoEnv):
                        **kwargs)
 
 
-        self.init_qpos[:] = self.sim.model.key_qpos[0].copy()
+        # Recover init from the saved qposes and input specs
+        keyFrame_id = 0
+        self.init_qpos[:] = self.sim.model.key_qpos[keyFrame_id].copy()
+        self.init_qvel[:] = self.sim.model.key_qvel[keyFrame_id].copy()
         if obj_init:
             self.set_obj_init(self.input_obj_init)
 
