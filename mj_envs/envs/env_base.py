@@ -405,7 +405,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
 
         # resolve if current visuals are available
-        if "time" in self.visual_dict.keys() and self.visual_dict['time']==self.obs_dict['time']:
+        if self.visual_dict and "time" in self.visual_dict.keys() and self.visual_dict['time']==self.obs_dict['time']:
             visual_dict = self.visual_dict
         else:
             visual_dict = {}
@@ -795,16 +795,16 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         self.mujoco_render_frames = False
         prompt("Total time taken = %f"% (timer.time()-exp_t0), type=Prompt.INFO)
-        print(trace)
-        trace.save(self.id+"_trace.pickle", verify_length=True)
-        trace.save(self.id+"_trace.h5", verify_length=True)
-        print(trace)
+        # print(trace)
+        # trace.save(self.id+"_trace.pickle", verify_length=True)
+        trace.save(output_dir+self.id+"_trace.h5", verify_length=True)
+        # print(trace)
         render_keys = ['env_infos/visual_dict/rgb:top_cam:256x256:2d',
                        'env_infos/visual_dict/rgb:left_cam:256x256:2d',
                        'env_infos/visual_dict/rgb:right_cam:256x256:2d',
                        'env_infos/visual_dict/rgb:Franka_wrist_cam:256x256:2d'
                        ]
-        trace.render(output_dir='.', output_format="mp4", groups="Trial0", datasets=render_keys, input_fps=1/self.dt)
+        trace.render(output_dir=output_dir, output_format="mp4", groups="Trial0", datasets=render_keys, input_fps=1/self.dt)
 
         # Does this belong here? Rendering should be a post processing step once the logs has been saved.
         # Note that the saved logs are read as pickle/h5, we can't call trace.render on them.
