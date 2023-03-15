@@ -7,7 +7,7 @@ import numpy as np
 # MyoChallenge Die: Trial env
 register(id='myoChallengeDieReorientDemo-v0',
         entry_point='mj_envs.envs.myo.myochallenge.reorient_v0:ReorientEnvV0',
-        max_episode_steps=50,
+        max_episode_steps=150,
         kwargs={
             'model_path': curr_dir+'/../assets/hand/myo_hand_die.xml',
             'normalize_act': True,
@@ -20,7 +20,7 @@ register(id='myoChallengeDieReorientDemo-v0',
 # MyoChallenge Die: Phase1 env
 register(id='myoChallengeDieReorientP1-v0',
         entry_point='mj_envs.envs.myo.myochallenge.reorient_v0:ReorientEnvV0',
-        max_episode_steps=50,
+        max_episode_steps=150,
         kwargs={
             'model_path': curr_dir+'/../assets/hand/myo_hand_die.xml',
             'normalize_act': True,
@@ -32,7 +32,7 @@ register(id='myoChallengeDieReorientP1-v0',
 # MyoChallenge Die: Phase2 env
 register(id='myoChallengeDieReorientP2-v0',
         entry_point='mj_envs.envs.myo.myochallenge.reorient_v0:ReorientEnvV0',
-        max_episode_steps=50,
+        max_episode_steps=150,
         kwargs={
             'model_path': curr_dir+'/../assets/hand/myo_hand_die.xml',
             'normalize_act': True,

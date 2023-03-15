@@ -16,6 +16,7 @@ USAGE:\n
 
 import gym
 from mj_envs.utils.paths_utils import plot as plotnsave_paths
+from mj_envs.utils.tensor_utils import split_tensor_dict_list
 from mj_envs.utils import tensor_utils
 import click
 import numpy as np
@@ -110,6 +111,11 @@ def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera
 
             # initialize env to the starting position
             if path:
+                path['actions'] = path['action']
+                # recover env initial state
+                state_t = split_tensor_dict_list(path['env_infos']['state'])
+                env.env.set_env_state(state_t[0])
+                # reset env
                 if output_type=='.h5':
                     reset_qpos = env.init_qpos.copy()
                     reset_qpos[:7] = data['qp_arm'][0]
@@ -137,9 +143,7 @@ def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera
 
                 # Directly create the scene
                 elif mode=='render':
-                    env.sim.data.qpos[:]= path['env_infos']['state']['qpos'][i_step]
-                    env.sim.data.qvel[:]= path['env_infos']['state']['qvel'][i_step]
-                    env.sim.forward()
+                    env.env.set_env_state(state_t[i_step])
                     env.mj_render()
 
                     # copy over from exiting path
@@ -173,7 +177,7 @@ def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera
                 rewards.append(r)
                 if compress_paths:
                     obs.append([]); o = onext # don't save obs
-                    del info['state']  # don't save state
+                    if 'state' in info.keys(): del info['state']  # don't save state
                 else:
                     obs.append(o); o = onext
                 env_infos.append(info)
