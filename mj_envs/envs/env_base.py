@@ -61,17 +61,17 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
 
     def _setup(self,
-               obs_keys,                # Keys from obs_dict that forms the obs vector returned by get_obs()
-               weighted_reward_keys,    # Keys and weight that sums up to build the reward
-               proprio_keys = None,     # Keys from obs_dict that forms the proprioception vector returned by get_proprio()
-               visual_keys = None,      # Keys that specify visual_dict returned by get_visual()
-               reward_mode = "dense",   # Configure env to return dense/sparse rewards
-               frame_skip = 1,          # Number of mujoco frames/steps per env step
-               normalize_act = True,    # Ask env to normalize the action space
-               obs_range = (-10, 10),   # Permissible range of values in obs vector returned by get_obs()
-               rwd_viz = False,         # Visualize rewards (WIP, needs vtils)
-               device_id = 0,           # Device id for rendering
-               **kwargs,                # Additional arguments
+               obs_keys:dict,               # Keys from obs_dict that forms the obs vector returned by get_obs()
+               weighted_reward_keys:dict,   # Keys and weight that sums up to build the reward
+               proprio_keys:list = None,    # Keys from obs_dict that forms the proprioception vector returned by get_proprio()
+               visual_keys:list = None,     # Keys that specify visual_dict returned by get_visual()
+               reward_mode:str = "dense",   # Configure env to return dense/sparse rewards
+               frame_skip:int = 1,          # Number of mujoco frames/steps per env step
+               normalize_act:bool = True,   # Ask env to normalize the action space
+               obs_range:tuple = (-10, 10), # Permissible range of values in obs vector returned by get_obs()
+               rwd_viz:bool = False,        # Visualize rewards (WIP, needs vtils)
+               device_id:int = 0,           # Device id for rendering
+               **kwargs,                    # Additional arguments
         ):
 
         if self.sim is None or self.sim_obsd is None:
@@ -121,11 +121,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         # resolve proprio
         self.proprio_dict = {}
-        self.proprio_keys = proprio_keys
+        self.proprio_keys = proprio_keys if type(proprio_keys)==list or proprio_keys==None else [proprio_keys]
 
         # resolve visuals
         self.visual_dict = {}
-        self.visual_keys = visual_keys
+        self.visual_keys = visual_keys if type(visual_keys)==list or visual_keys==None else [visual_keys]
         self._setup_rgb_encoders(self.visual_keys, device=None)
 
         # reset to get the env ready
@@ -300,7 +300,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         return obs
 
 
-    def get_visuals(self, sim=None, visual_keys=None, device_id=None)->dict:
+    def get_visuals(self, sim=None, visual_keys:list=None, device_id:int=None)->dict:
         """
         Recover visual dict corresponding to the visual keys
         visual_keys
@@ -804,6 +804,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                        'env_infos/visual_dict/rgb:right_cam:256x256:2d',
                        'env_infos/visual_dict/rgb:Franka_wrist_cam:256x256:2d'
                        ]
+        trace.close()
         trace.render(output_dir=output_dir, output_format="mp4", groups="Trial0", datasets=render_keys, input_fps=1/self.dt)
 
         # Does this belong here? Rendering should be a post processing step once the logs has been saved.
