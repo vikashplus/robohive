@@ -21,7 +21,7 @@ class Trace:
         self.name = name
         self.root = {name: {}}
         self.trace = self.root[name]
-
+        self.index = 0
 
     # Create a group in your logs
     def create_group(self, name):
@@ -66,8 +66,10 @@ class Trace:
 
 
     # Get data
-    def get(self, group_key, dataset_key, dataset_ind=None):
+    def get(self, group_key, dataset_key=None, dataset_ind=None):
         if dataset_ind is None:
+            return self.trace[group_key]
+        elif dataset_ind is None:
             return self.trace[group_key][dataset_key]
         else:
             return self.trace[group_key][dataset_key][dataset_ind]
@@ -174,6 +176,35 @@ class Trace:
                 print("\nSaved: " + file_name_mp4)
 
 
+    def __getitem__(self, index):
+        assert index<len(self)
+        keys = list(self.trace.keys())
+        key = keys[index]
+        value = self.trace[key]
+        return {key: value}
+
+
+    def __iter__(self):
+        return self
+
+
+    def __next__(self):
+        if self.index >= len(self):
+            self.index = 0
+            raise StopIteration
+
+        item = self[self.index]
+        # keys = list(self.trace.keys())
+        # value = self.trace[keys[self.index]]
+        self.index += 1
+        return item
+
+
+    # return length
+    def __len__(self) -> str:
+        return len(self.trace.keys())
+
+
     # Display data
     def __repr__(self) -> str:
         disp = "Trace_name: {}\n".format(self.root.keys())
@@ -230,6 +261,9 @@ class Trace:
     def close(self,
             u_res=np.uint8, i_res=np.int8, f_res=np.float16,
             verify_length=False):
+        """
+        Close the logs by stacking, flattening, and numpyfies. This an irreversible change
+        """
 
         # stack all records
         self.stack()
