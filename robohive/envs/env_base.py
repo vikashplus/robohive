@@ -1,7 +1,7 @@
 """ =================================================
 Copyright (C) 2018 Vikash Kumar
 Author  :: Vikash Kumar (vikashplus@gmail.com)
-Source  :: https://github.com/vikashplus/mj_envs
+Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
@@ -373,7 +373,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
         # return if no proprio configured
         if self.proprio_keys == None:
-            return None
+            return None, None, None
 
         # pull out prioprio from the obs_dict
         if obs_dict==None: obs_dict = self.obs_dict
@@ -720,7 +720,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             - return resulting paths
         """
 
-        # from mj_envs.logger.roboset_logger import RoboSet_Trace as Trace
+        # from robohive.logger.roboset_logger import RoboSet_Trace as Trace
         from robohive.logger.grouped_datasets import Trace
 
         trace = Trace(self.id+"_rollouts")
