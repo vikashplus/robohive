@@ -126,7 +126,7 @@ class KitchenBase(env_base.MujocoEnv):
         )
         obs_dict["pose_err"] = self.robot_meanpos - obs_dict["robot_jnt"]
         obs_dict["end_effector"] = self.sim.data.site_xpos[self.grasp_sid]
-        obs_dict["qpos"] = self.sim.data.qpos.copy()
+        # obs_dict["qpos"] = self.sim.data.qpos.copy() # introduced in 7469d12d04e6c7a4079c8a8e6a723ee3789ed54f, not being used
         for site in self.obj_interaction_sites:
             site_id = self.sim.model.site_name2id(site)
             obs_dict[site + "_err"] = (

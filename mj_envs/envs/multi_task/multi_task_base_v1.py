@@ -10,6 +10,7 @@ import gym
 import numpy as np
 
 from mj_envs.envs import env_base
+from mj_envs.utils.quat_math import mat2euler
 
 VIZ = False
 
@@ -39,7 +40,7 @@ class KitchenBase(env_base.MujocoEnv):
     DEFAULT_PROPRIO_KEYS_AND_WEIGHTS = {
         "robot_jnt": 1.0,   # radian
         "robot_vel": 1.0,   # radian
-        "end_effector": 1.0 # meters
+        "ee_pose": 1.0      # [meters, radians]
     }
 
     def _setup(self,
@@ -83,6 +84,7 @@ class KitchenBase(env_base.MujocoEnv):
         self.obj = {}
         obj_dof_adrs = []
         obj_dof_ranges = []
+        obj_dof_type = []
         for goal_adr, jnt_name in enumerate(obj_jnt_names):
             jnt_id = self.sim.model.joint_name2id(jnt_name)
             self.obj[jnt_name] = {}
@@ -93,11 +95,9 @@ class KitchenBase(env_base.MujocoEnv):
             self.obj[jnt_name]["dof_adr"] = self.sim.model.jnt_dofadr[jnt_id]
             obj_dof_adrs.append(self.sim.model.jnt_dofadr[jnt_id])
             obj_dof_ranges.append(self.sim.model.jnt_range[jnt_id])
+            obj_dof_type.append(self.sim.model.jnt_type[jnt_id]) # record joint type (later used to determine goal_th)
         self.obj["dof_adrs"] = np.array(obj_dof_adrs)
-        self.obj["dof_ranges"] = np.array(obj_dof_ranges)
-        self.obj["dof_ranges"] = (
-            self.obj["dof_ranges"][:, 1] - self.obj["dof_ranges"][:, 0]
-        )
+        self.obj["dof_proximity"] = self.get_dof_proximity(obj_dof_ranges, obj_dof_type)
 
         # configure env-obj_goal
         if interact_site == "end_effector":
@@ -126,6 +126,31 @@ class KitchenBase(env_base.MujocoEnv):
         if obj_init:
             self.set_obj_init(self.input_obj_init)
 
+
+    def get_dof_proximity(self, obj_dof_ranges, obj_dof_type):
+        """
+        Get proximity of obj joints based on their joint type and ranges
+        """
+        small_angular_th = 0.15
+        large_angular_th = np.radians(15)
+        small_linear_th = 0.15
+        large_linear_th = 0.05
+
+        n_dof = len(obj_dof_type)
+        dof_prox = np.zeros(n_dof)
+
+        for i_dof in range(n_dof):
+            dof_span = obj_dof_ranges[i_dof][1] - obj_dof_ranges[i_dof][0]
+            # pick proximity dist based on joint type and scale
+            if obj_dof_type[i_dof] == self.sim.lib.mjtJoint.mjJNT_HINGE:
+                dof_prox[i_dof] = small_angular_th*dof_span if dof_span<np.pi else large_angular_th
+            elif obj_dof_type[i_dof] == self.sim.lib.mjtJoint.mjJNT_SLIDE:
+                dof_prox[i_dof] = small_linear_th*dof_span if dof_span<1.0 else large_linear_th
+            else:
+                raise TypeError("Unsupported Joint Type")
+        return dof_prox
+
+
     def get_obs_dict(self, sim):
         obs_dict = {}
         obs_dict["time"] = np.array([sim.data.time])
@@ -143,6 +168,9 @@ class KitchenBase(env_base.MujocoEnv):
         )
         obs_dict["pose_err"] = self.robot_meanpos - obs_dict["robot_jnt"]
         obs_dict["end_effector"] = self.sim.data.site_xpos[self.grasp_sid]
+        ee_pos = self.sim.data.site_xpos[self.grasp_sid]
+        ee_euler = mat2euler(np.reshape(sim.data.site_xmat[self.grasp_sid],(3,3)))
+        obs_dict["ee_pose"] = np.concatenate([ee_pos, ee_euler])
         obs_dict["qpos"] = self.sim.data.qpos.copy()
         for site in self.obj_interaction_site:
             site_id = self.sim.model.site_name2id(site)
@@ -159,16 +187,17 @@ class KitchenBase(env_base.MujocoEnv):
             (
                 # Optional Keys
                 ("obj_goal", -np.sum(goal_dist, axis=-1)),
-                (
-                    "bonus",
-                    np.product(goal_dist < 0.75 * self.obj["dof_ranges"], axis=-1)
-                    + np.product(goal_dist < 0.25 * self.obj["dof_ranges"], axis=-1),
+                ("bonus",
+                    np.product(goal_dist < 5 * self.obj["dof_proximity"], axis=-1)
+                    # np.product(goal_dist < 0.75 * self.obj["dof_ranges"], axis=-1)
+                    + np.product(goal_dist < 1.67 * self.obj["dof_proximity"], axis=-1),
+                    # + np.product(goal_dist < 0.25 * self.obj["dof_ranges"], axis=-1),
                 ),
                 ("pose", -np.sum(np.abs(obs_dict["pose_err"]), axis=-1)),
                 ("approach", -np.linalg.norm(obs_dict["approach_err"], axis=-1)),
                 # Must keys
                 ("sparse", -np.sum(goal_dist, axis=-1)),
-                ("solved", np.all(goal_dist < 0.15 * self.obj["dof_ranges"])),
+                ("solved", np.all(goal_dist < self.obj["dof_proximity"])),
                 ("done", False),
             )
         )

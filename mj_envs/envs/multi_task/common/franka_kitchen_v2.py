@@ -38,7 +38,7 @@ class FrankaKitchen(KitchenBase):
         "robot_jnt":1.0,
         "objs_jnt":1.0,
         "obj_goal":1.0,
-        "end_effector":1.0}
+        "ee_pose":1.0}
     for obj_site in OBJ_INTERACTION_SITES: DEFAULT_OBS_KEYS_N_WT[obj_site+"_err"]=1.0
 
     OBJ_JNT_NAMES = (
