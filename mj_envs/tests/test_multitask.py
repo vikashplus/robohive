@@ -34,7 +34,7 @@ class TestKitchen(TestEnvs):
         ]
         self.check_envs('Kitchen', env_names, lite=False)
 
-    def test_kitech_v4(self):
+    def test_kitchen_v4(self):
         env_names = [
             'FK1_RelaxFixed-v4', 'FK1_MicroOpenFixed-v4', 'FK1_MicroCloseFixed-v4', 'FK1_RdoorOpenFixed-v4', 'FK1_RdoorCloseFixed-v4', 'FK1_LdoorOpenFixed-v4', 'FK1_LdoorCloseFixed-v4', 'FK1_SdoorOpenFixed-v4', 'FK1_SdoorCloseFixed-v4', 'FK1_LightOnFixed-v4', 'FK1_LightOffFixed-v4', 'FK1_Knob4OnFixed-v4', 'FK1_Knob4OffFixed-v4', 'FK1_Knob3OnFixed-v4', 'FK1_Knob3OffFixed-v4', 'FK1_Knob2OnFixed-v4', 'FK1_Knob2OffFixed-v4', 'FK1_Knob1OnFixed-v4', 'FK1_Knob1OffFixed-v4', 'FK1_Stove1KettleFixed-v4', 'FK1_Stove4KettleFixed-v4'
         ]
