@@ -1,41 +1,41 @@
 [submodule "dependencies/Adroit"]
-	path = mj_envs/sims/Adroit
+	path = robohive/sims/Adroit
 	url = https://github.com/vikashplus/Adroit.git
     branch = mj_envs
 [submodule "mj_envs/sims/furniture_sim"]
-	path = mj_envs/sims/furniture_sim
+	path = robohive/sims/furniture_sim
 	url = https://github.com/vikashplus/furniture_sim.git
 [submodule "mj_envs/sims/franka_sim"]
-	path = mj_envs/sims/franka_sim
+	path = robohive/sims/franka_sim
 	url = https://github.com/vikashplus/franka_sim.git
 [submodule "mj_envs/sims/scene_sim"]
-	path = mj_envs/sims/scene_sim
+	path = robohive/sims/scene_sim
 	url = https://github.com/vikashplus/scene_sim.git
 [submodule "mj_envs/sims/sawyer_sim"]
-	path = mj_envs/sims/sawyer_sim
+	path = robohive/sims/sawyer_sim
 	url = https://github.com/vikashplus/sawyer_sim.git
 [submodule "mj_envs/sims/fetch_sim"]
-	path = mj_envs/sims/fetch_sim
+	path = robohive/sims/fetch_sim
 	url = https://github.com/vikashplus/fetch_sim.git
 [submodule "mj_envs/sims/dmanus_sim"]
-	path = mj_envs/sims/dmanus_sim
+	path = robohive/sims/dmanus_sim
 	url = https://github.com/vikashplus/dmanus_sim.git
 [submodule "mj_envs/sims/YCB_sim"]
-	path = mj_envs/sims/YCB_sim
+	path = robohive/sims/YCB_sim
 	url = https://github.com/vikashplus/YCB_sim.git
 	branch = main
 [submodule "mj_envs/sims/object_sim"]
-	path = mj_envs/sims/object_sim
+	path = robohive/sims/object_sim
 	url = https://github.com/vikashplus/object_sim.git
 [submodule "mj_envs/sims/trifinger_sim"]
-	path = mj_envs/sims/trifinger_sim
+	path = robohive/sims/trifinger_sim
 	url = https://github.com/vikashplus/trifinger_sim.git
 [submodule "mj_envs/sims/robel_sim"]
-	path = mj_envs/sims/robel_sim
+	path = robohive/sims/robel_sim
 	url = https://github.com/vikashplus/robel_sim.git
 [submodule "mj_envs/sims/robotiq_sim"]
-	path = mj_envs/sims/robotiq_sim
+	path = robohive/sims/robotiq_sim
 	url = https://github.com/vikashplus/robotiq_sim.git
 [submodule "mj_envs/sims/myo_sim"]
-	path = mj_envs/sims/myo_sim
+	path = robohive/sims/myo_sim
 	url = https://github.com/vikashplus/myo_sim.git
