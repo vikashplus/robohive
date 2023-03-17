@@ -5,4 +5,4 @@ Human demos for the kitchen scene are collected using [MuJoCo-VR](https://github
 1. Download and unzip the demonstration file
 2. Clone and add [MuJoCo-VR](https://github.com/vikashplus/puppet) to your PYTHONPATH
 3. You can render/playback the demo dataset on an env using
-```python mj_envs/envs/relay_kitchen/assets/parse_demos.py -e kitchen-v2 --demo_dir mj_envs/envs/relay_kitchen/assets/kitchen_demos_multitask/SELECTED_DEMO_DIR/ --view playback --skip 40```
+```python robohive/envs/relay_kitchen/assets/parse_demos.py -e kitchen-v2 --demo_dir robohive/envs/relay_kitchen/assets/kitchen_demos_multitask/SELECTED_DEMO_DIR/ --view playback --skip 40```

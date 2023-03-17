@@ -49,7 +49,7 @@ print("RoboHive:> Registering Myo Envs")
 
 # Finger-tip reaching ==============================
 register_env_with_variants(id='motorFingerReachFixed-v0',
-        entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
+        entry_point='robohive.envs.myo.reach_v0:ReachEnvV0',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/finger/motor_finger_v0.xml',
@@ -59,7 +59,7 @@ register_env_with_variants(id='motorFingerReachFixed-v0',
         }
     )
 register_env_with_variants(id='motorFingerReachRandom-v0',
-        entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
+        entry_point='robohive.envs.myo.reach_v0:ReachEnvV0',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/finger/motor_finger_v0.xml',
@@ -69,7 +69,7 @@ register_env_with_variants(id='motorFingerReachRandom-v0',
         }
     )
 register_env_with_variants(id='myoFingerReachFixed-v0',
-        entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
+        entry_point='robohive.envs.myo.reach_v0:ReachEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/finger/myo_finger_v0.xml',
@@ -78,7 +78,7 @@ register_env_with_variants(id='myoFingerReachFixed-v0',
         }
     )
 register_env_with_variants(id='myoFingerReachRandom-v0',
-        entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
+        entry_point='robohive.envs.myo.reach_v0:ReachEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/finger/myo_finger_v0.xml',
@@ -89,7 +89,7 @@ register_env_with_variants(id='myoFingerReachRandom-v0',
 
 # Elbow posing ==============================
 register_env_with_variants(id='myoElbowPose1D6MFixed-v0',
-        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
+        entry_point='robohive.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/arm/myo_elbow_1dof6muscles.xml',
@@ -101,7 +101,7 @@ register_env_with_variants(id='myoElbowPose1D6MFixed-v0',
         }
     )
 register_env_with_variants(id='myoElbowPose1D6MRandom-v0',
-        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
+        entry_point='robohive.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/arm/myo_elbow_1dof6muscles.xml',
@@ -116,7 +116,7 @@ register_env_with_variants(id='myoElbowPose1D6MRandom-v0',
 
 # Elbow Exo posing ==============================
 register_env_with_variants(id='myoElbowPose1D6MExoFixed-v0',
-        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
+        entry_point='robohive.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/arm/myo_elbow_1dof6muscles_1dofexo.xml',
@@ -134,7 +134,7 @@ register_env_with_variants(id='myoElbowPose1D6MExoFixed-v0',
         }
     )
 register_env_with_variants(id='myoElbowPose1D6MExoRandom-v0',
-        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
+        entry_point='robohive.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/arm/myo_elbow_1dof6muscles_1dofexo.xml',
@@ -157,7 +157,7 @@ register_env_with_variants(id='myoElbowPose1D6MExoRandom-v0',
 
 # Finger-Joint posing ==============================
 register_env_with_variants(id='motorFingerPoseFixed-v0',
-        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
+        entry_point='robohive.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/finger/motor_finger_v0.xml',
@@ -172,7 +172,7 @@ register_env_with_variants(id='motorFingerPoseFixed-v0',
         }
 )
 register_env_with_variants(id='motorFingerPoseRandom-v0',
-        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
+        entry_point='robohive.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/finger/motor_finger_v0.xml',
@@ -187,7 +187,7 @@ register_env_with_variants(id='motorFingerPoseRandom-v0',
         }
     )
 register_env_with_variants(id='myoFingerPoseFixed-v0',
-        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
+        entry_point='robohive.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/finger/myo_finger_v0.xml',
@@ -201,7 +201,7 @@ register_env_with_variants(id='myoFingerPoseFixed-v0',
         }
     )
 register_env_with_variants(id='myoFingerPoseRandom-v0',
-        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
+        entry_point='robohive.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/finger/myo_finger_v0.xml',
@@ -219,7 +219,7 @@ register_env_with_variants(id='myoFingerPoseRandom-v0',
 
 # Remove this when the ASL envs stablizes
 register_env_with_variants(id='myoHandPoseFixed-v0', # revisit
-        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
+        entry_point='robohive.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/hand/myo_hand_pose.xml',
@@ -250,7 +250,7 @@ ASL_qpos[9]='0 0 0 0.5624 0.28272 -0.75573 -1.309 1.30045 -0.006982 1.45492 0.99
 # ASl Eval envs for each numerals
 for k in ASL_qpos.keys():
     register_env_with_variants(id='myoHandPose'+str(k)+'Fixed-v0',
-            entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
+            entry_point='robohive.envs.myo.pose_v0:PoseEnvV0',
             max_episode_steps=100,
             kwargs={
                 'model_path': curr_dir+'/assets/hand/myo_hand_pose.xml',
@@ -270,7 +270,7 @@ for i_n, n  in enumerate(jnt_namesHand):
     Rpos[n]=(np.min(m[:,i_n]), np.max(m[:,i_n]))
 
 register_env_with_variants(id='myoHandPoseRandom-v0',  #reconsider
-        entry_point='mj_envs.envs.myo.pose_v0:PoseEnvV0',
+        entry_point='robohive.envs.myo.pose_v0:PoseEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/hand/myo_hand_pose.xml',
@@ -286,7 +286,7 @@ register_env_with_variants(id='myoHandPoseRandom-v0',  #reconsider
 
 # Gait Torso Reaching ==============================
 register_env_with_variants(id='myoLegReachFixed-v0',
-        entry_point='mj_envs.envs.myo.walk_v0:ReachEnvV0',
+        entry_point='robohive.envs.myo.walk_v0:ReachEnvV0',
         max_episode_steps=150,
         kwargs={
             'model_path': curr_dir+'/../../sims/myo_sim/gait/myolegs.xml',
@@ -303,7 +303,7 @@ register_env_with_variants(id='myoLegReachFixed-v0',
 
 # Hand-Joint Reaching ==============================
 register_env_with_variants(id='myoHandReachFixed-v0',
-        entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
+        entry_point='robohive.envs.myo.reach_v0:ReachEnvV0',
         max_episode_steps=100,
         kwargs={
             'model_path': curr_dir+'/assets/hand/myo_hand_pose.xml',
@@ -319,7 +319,7 @@ register_env_with_variants(id='myoHandReachFixed-v0',
         }
     )
 register_env_with_variants(id='myoHandReachRandom-v0',
-    entry_point='mj_envs.envs.myo.reach_v0:ReachEnvV0',
+    entry_point='robohive.envs.myo.reach_v0:ReachEnvV0',
     max_episode_steps=100,
     kwargs={
         'model_path': curr_dir+'/assets/hand/myo_hand_pose.xml',
@@ -338,7 +338,7 @@ register_env_with_variants(id='myoHandReachRandom-v0',
 
 # Hand-Joint key turn ==============================
 register_env_with_variants(id='myoHandKeyTurnFixed-v0',
-        entry_point='mj_envs.envs.myo.key_turn_v0:KeyTurnEnvV0',
+        entry_point='robohive.envs.myo.key_turn_v0:KeyTurnEnvV0',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/hand/myo_hand_keyturn.xml',
@@ -346,7 +346,7 @@ register_env_with_variants(id='myoHandKeyTurnFixed-v0',
         }
     )
 register_env_with_variants(id='myoHandKeyTurnRandom-v0',
-        entry_point='mj_envs.envs.myo.key_turn_v0:KeyTurnEnvV0',
+        entry_point='robohive.envs.myo.key_turn_v0:KeyTurnEnvV0',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/hand/myo_hand_keyturn.xml',
@@ -359,7 +359,7 @@ register_env_with_variants(id='myoHandKeyTurnRandom-v0',
 
 # Hold objects ==============================
 register_env_with_variants(id='myoHandObjHoldFixed-v0',
-        entry_point='mj_envs.envs.myo.obj_hold_v0:ObjHoldFixedEnvV0',
+        entry_point='robohive.envs.myo.obj_hold_v0:ObjHoldFixedEnvV0',
         max_episode_steps=75,
         kwargs={
             'model_path': curr_dir+'/assets/hand/myo_hand_hold.xml',
@@ -367,7 +367,7 @@ register_env_with_variants(id='myoHandObjHoldFixed-v0',
         }
     )
 register_env_with_variants(id='myoHandObjHoldRandom-v0', # revisit
-        entry_point='mj_envs.envs.myo.obj_hold_v0:ObjHoldRandomEnvV0',
+        entry_point='robohive.envs.myo.obj_hold_v0:ObjHoldRandomEnvV0',
         max_episode_steps=75,
         kwargs={
             'model_path': curr_dir+'/assets/hand/myo_hand_hold.xml',
@@ -378,7 +378,7 @@ register_env_with_variants(id='myoHandObjHoldRandom-v0', # revisit
 
 # Pen twirl ==============================
 register_env_with_variants(id='myoHandPenTwirlFixed-v0',
-            entry_point='mj_envs.envs.myo.pen_v0:PenTwirlFixedEnvV0',
+            entry_point='robohive.envs.myo.pen_v0:PenTwirlFixedEnvV0',
             max_episode_steps=50,
             kwargs={
                 'model_path': curr_dir+'/assets/hand/myo_hand_pen.xml',
@@ -387,7 +387,7 @@ register_env_with_variants(id='myoHandPenTwirlFixed-v0',
             }
     )
 register_env_with_variants(id='myoHandPenTwirlRandom-v0',
-        entry_point='mj_envs.envs.myo.pen_v0:PenTwirlRandomEnvV0',
+        entry_point='robohive.envs.myo.pen_v0:PenTwirlRandomEnvV0',
         max_episode_steps=50,
         kwargs={
             'model_path': curr_dir+'/assets/hand/myo_hand_pen.xml',
@@ -399,7 +399,7 @@ register_env_with_variants(id='myoHandPenTwirlRandom-v0',
 
 # Die reorient ==============================
 register_env_with_variants(id='myoHandDieReorientFixed-v0',
-        entry_point='mj_envs.envs.myo.reorient_v0:ReorientEnvV0',
+        entry_point='robohive.envs.myo.reorient_v0:ReorientEnvV0',
         max_episode_steps=50,
         kwargs={
             'model_path': curr_dir+'/assets/hand/myo_hand_die.xml',
@@ -410,7 +410,7 @@ register_env_with_variants(id='myoHandDieReorientFixed-v0',
     )
 
 register_env_with_variants(id='myoHandDieReorientRandom-v0',
-        entry_point='mj_envs.envs.myo.reorient_v0:ReorientEnvV0',
+        entry_point='robohive.envs.myo.reorient_v0:ReorientEnvV0',
         max_episode_steps=50,
         kwargs={
             'model_path': curr_dir+'/assets/hand/myo_hand_die.xml',
@@ -422,7 +422,7 @@ register_env_with_variants(id='myoHandDieReorientRandom-v0',
 
 # Baoding ==============================
 register_env_with_variants(id='myoHandBaodingFixed-v1',
-        entry_point='mj_envs.envs.myo.baoding_v1:BaodingEnvV1',
+        entry_point='robohive.envs.myo.baoding_v1:BaodingEnvV1',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/hand/myo_hand_baoding.xml',
@@ -430,7 +430,7 @@ register_env_with_variants(id='myoHandBaodingFixed-v1',
         }
     )
 register_env_with_variants(id='myoHandBaodingRandom-v1',
-        entry_point='mj_envs.envs.myo.baoding_v1:BaodingEnvV1',
+        entry_point='robohive.envs.myo.baoding_v1:BaodingEnvV1',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/hand/myo_hand_baoding.xml',
@@ -438,7 +438,7 @@ register_env_with_variants(id='myoHandBaodingRandom-v1',
         }
     )
 register_env_with_variants(id='myoHandBaodingFixed4th-v1',
-        entry_point='mj_envs.envs.myo.baoding_v1:BaodingEnvV1',
+        entry_point='robohive.envs.myo.baoding_v1:BaodingEnvV1',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/hand/myo_hand_baoding.xml',
@@ -447,7 +447,7 @@ register_env_with_variants(id='myoHandBaodingFixed4th-v1',
         }
     )
 register_env_with_variants(id='myoHandBaodingFixed8th-v1',
-        entry_point='mj_envs.envs.myo.baoding_v1:BaodingEnvV1',
+        entry_point='robohive.envs.myo.baoding_v1:BaodingEnvV1',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/assets/hand/myo_hand_baoding.xml',

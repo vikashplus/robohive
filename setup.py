@@ -1,7 +1,7 @@
 """ =================================================
 Copyright (C) 2018 Vikash Kumar
 Author  :: Vikash Kumar (vikashplus@gmail.com)
-Source  :: https://github.com/vikashplus/mj_envs
+Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
@@ -23,10 +23,10 @@ def package_files(directory):
             paths.append(os.path.join('..', path, filename))
     return paths
 
-extra_files = package_files('mj_envs')
+extra_files = package_files('robohive')
 
 setup(
-    name='mj_envs',
+    name='robohive',
     version='0.4.0',
     packages=find_packages(),
     package_data={"": extra_files},
@@ -34,7 +34,7 @@ setup(
     description='environments simulated in MuJoCo',
     long_description=read('README.md'),
     long_description_content_type="text/markdown",
-    url='https://github.com/vikashplus/mj_envs.git',
+    url='https://github.com/vikashplus/robohive.git',
     author='Movement Control Lab, UW',
     install_requires=[
         'click',

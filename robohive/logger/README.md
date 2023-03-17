@@ -38,7 +38,7 @@ Note that this is a special case of RoboHive logger as:
 ### 1. Record rollouts
 Record grouped datasets as they are generated
 ```
-from mj_envs.logger.grouped_datasets import Trace as Trace
+from robohive.logger.grouped_datasets import Trace as Trace
 import numpy as np
 
 # create logger

@@ -1,14 +1,14 @@
 """ =================================================
 Copyright (C) 2018 Vikash Kumar
 Author  :: Vikash Kumar (vikashplus@gmail.com)
-Source  :: https://github.com/vikashplus/mj_envs
+Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
 import os
 
 from gym.envs.registration import register
-# from mj_envs.envs.relay_kitchen.kitchen_multitask_v1 import KitchenTasksV0  #??? uses mjrl, remove dependency
+# from robohive.envs.relay_kitchen.kitchen_multitask_v1 import KitchenTasksV0  #??? uses mjrl, remove dependency
 from robohive.envs.relay_kitchen.franka_kitchen_v1 import KitchenFrankaFixed, KitchenFrankaRandom, KitchenFrankaDemo
 
 print("RoboHive:> Registering Kitchen Envs")
@@ -21,13 +21,13 @@ CONFIG_PATH = CURR_DIR + "/assets/franka_kitchen.config"
 # Kitchen
 register(
     id="kitchen-v0",
-    entry_point="mj_envs.envs.relay_kitchen:KitchenTasksV0",
+    entry_point="robohive.envs.relay_kitchen:KitchenTasksV0",
     max_episode_steps=280,
 )
 
-DEMO_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFrankaDemo"
-RANDOM_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFrankaRandom"
-FIXED_ENTRY_POINT = "mj_envs.envs.relay_kitchen:KitchenFrankaFixed"
+DEMO_ENTRY_POINT = "robohive.envs.relay_kitchen:KitchenFrankaDemo"
+RANDOM_ENTRY_POINT = "robohive.envs.relay_kitchen:KitchenFrankaRandom"
+FIXED_ENTRY_POINT = "robohive.envs.relay_kitchen:KitchenFrankaFixed"
 ENTRY_POINT = RANDOM_ENTRY_POINT
 
 # Kitchen
@@ -478,7 +478,7 @@ from robohive.envs.relay_kitchen.franka_appliance_v1 import FrankaAppliance
 obs_keys_wt = {"robot_jnt": 1.0, "objs_jnt": 1.0, "obj_goal": 1.0, "end_effector": 1.0, "microhandle_site_err":1}
 register(
     id="franka_micro_open-v3",
-    entry_point="mj_envs.envs.relay_kitchen:FrankaAppliance",
+    entry_point="robohive.envs.relay_kitchen:FrankaAppliance",
     max_episode_steps=75,
     kwargs={
         "model_path": CURR_DIR + "/assets/franka_microwave.xml",
@@ -492,7 +492,7 @@ register(
 )
 register(
     id="franka_micro_close-v3",
-    entry_point="mj_envs.envs.relay_kitchen:FrankaAppliance",
+    entry_point="robohive.envs.relay_kitchen:FrankaAppliance",
     max_episode_steps=50,
     kwargs={
         "model_path": CURR_DIR + "/assets/franka_microwave.xml",
@@ -506,7 +506,7 @@ register(
 )
 register(
     id="franka_micro_random-v3",
-    entry_point="mj_envs.envs.relay_kitchen:FrankaAppliance",
+    entry_point="robohive.envs.relay_kitchen:FrankaAppliance",
     max_episode_steps=50,
     kwargs={
         "model_path": CURR_DIR + "/assets/franka_microwave.xml",
@@ -524,7 +524,7 @@ register(
 obs_keys_wt = {"robot_jnt": 1.0, "objs_jnt": 1.0, "obj_goal": 1.0, "end_effector": 1.0, "slide_site_err":1}
 register(
     id="franka_slide_open-v3",
-    entry_point="mj_envs.envs.relay_kitchen:FrankaAppliance",
+    entry_point="robohive.envs.relay_kitchen:FrankaAppliance",
     max_episode_steps=50,
     kwargs={
         "model_path": CURR_DIR + "/assets/franka_slidecabinet.xml",
@@ -538,7 +538,7 @@ register(
 )
 register(
     id="franka_slide_close-v3",
-    entry_point="mj_envs.envs.relay_kitchen:FrankaAppliance",
+    entry_point="robohive.envs.relay_kitchen:FrankaAppliance",
     max_episode_steps=50,
     kwargs={
         "model_path": CURR_DIR + "/assets/franka_slidecabinet.xml",
@@ -552,7 +552,7 @@ register(
 )
 register(
     id="franka_slide_random-v3",
-    entry_point="mj_envs.envs.relay_kitchen:FrankaAppliance",
+    entry_point="robohive.envs.relay_kitchen:FrankaAppliance",
     max_episode_steps=50,
     kwargs={
         "model_path": CURR_DIR + "/assets/franka_slidecabinet.xml",

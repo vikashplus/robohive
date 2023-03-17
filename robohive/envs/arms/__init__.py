@@ -1,7 +1,7 @@
 """ =================================================
 Copyright (C) 2018 Vikash Kumar
 Author  :: Vikash Kumar (vikashplus@gmail.com)
-Source  :: https://github.com/vikashplus/mj_envs
+Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
@@ -18,7 +18,7 @@ from robohive.envs.arms.reach_base_v0 import ReachBaseV0
 # Reach to fixed target
 register(
     id='FrankaReachFixed-v0',
-    entry_point='mj_envs.envs.arms.reach_base_v0:ReachBaseV0',
+    entry_point='robohive.envs.arms.reach_base_v0:ReachBaseV0',
     max_episode_steps=50, #50steps*40Skip*2ms = 4s
     kwargs={
         'model_path': curr_dir+'/franka/assets/franka_reach_v0.xml',
@@ -32,7 +32,7 @@ register(
 # Reach to random target
 register(
     id='FrankaReachRandom-v0',
-    entry_point='mj_envs.envs.arms.reach_base_v0:ReachBaseV0',
+    entry_point='robohive.envs.arms.reach_base_v0:ReachBaseV0',
     max_episode_steps=50, #50steps*40Skip*2ms = 4s
     kwargs={
         'model_path': curr_dir+'/franka/assets/franka_reach_v0.xml',
@@ -68,7 +68,7 @@ from robohive.envs.arms.push_base_v0 import PushBaseV0
 # Push object to target
 register(
     id='FrankaPushFixed-v0',
-    entry_point='mj_envs.envs.arms.push_base_v0:PushBaseV0',
+    entry_point='robohive.envs.arms.push_base_v0:PushBaseV0',
     max_episode_steps=50, #50steps*40Skip*2ms = 4s
     kwargs={
         'model_path': curr_dir+'/franka/assets/franka_ycb_v0.xml',
@@ -83,7 +83,7 @@ register(
 # Push object to target
 register(
     id='FrankaPushRandom-v0',
-    entry_point='mj_envs.envs.arms.push_base_v0:PushBaseV0',
+    entry_point='robohive.envs.arms.push_base_v0:PushBaseV0',
     max_episode_steps=50, #50steps*40Skip*2ms = 4s
     kwargs={
         'model_path': curr_dir+'/franka/assets/franka_ycb_v0.xml',
@@ -98,7 +98,7 @@ register(
 # FRANKA PICK =======================================================================
 register(
     id='FrankaPickPlaceFixed-v0',
-    entry_point='mj_envs.envs.arms.pick_place_v0:PickPlaceV0',
+    entry_point='robohive.envs.arms.pick_place_v0:PickPlaceV0',
     max_episode_steps=50, #50steps*40Skip*2ms = 4s
     kwargs={
         'model_path': curr_dir+'/franka/assets/franka_busbin_v0.xml',
@@ -111,7 +111,7 @@ register(
 )
 register(
     id='FrankaPickPlaceRandom-v0',
-    entry_point='mj_envs.envs.arms.pick_place_v0:PickPlaceV0',
+    entry_point='robohive.envs.arms.pick_place_v0:PickPlaceV0',
     max_episode_steps=50, #50steps*40Skip*2ms = 4s
     kwargs={
         'model_path': curr_dir+'/franka/assets/franka_busbin_v0.xml',
@@ -132,7 +132,7 @@ from robohive.envs.arms.reach_base_v0 import ReachBaseV0
 # Reach to fixed target
 register(
     id='FetchReachFixed-v0',
-    entry_point='mj_envs.envs.arms.reach_base_v0:ReachBaseV0',
+    entry_point='robohive.envs.arms.reach_base_v0:ReachBaseV0',
     max_episode_steps=50, #50steps*40Skip*2ms = 4s
     kwargs={
         'model_path': curr_dir+'/fetch/assets/fetch_reach_v0.xml',
@@ -146,7 +146,7 @@ register(
 # Reach to random target
 register(
     id='FetchReachRandom-v0',
-    entry_point='mj_envs.envs.arms.reach_base_v0:ReachBaseV0',
+    entry_point='robohive.envs.arms.reach_base_v0:ReachBaseV0',
     max_episode_steps=50, #50steps*40Skip*2ms = 4s
     kwargs={
         'model_path': curr_dir+'/fetch/assets/fetch_reach_v0.xml',

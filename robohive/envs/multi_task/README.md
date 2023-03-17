@@ -22,25 +22,25 @@ This suite is designed to study generalization in multi-task settings. RoboHive'
 
 
 ### FrankaKitchen-v3(RoboHive+R3M) &rarr; _Depricated_
-- A part of [RoboHive-V0.0.5](https://github.com/vikashplus/mj_envs/releases/tag/v0.0.5) pre-release that was used for the [R3M project](https://sites.google.com/view/robot-r3m/) to study visual generalization in FrankaKitchen domain.
+- A part of [RoboHive-V0.0.5](https://github.com/vikashplus/robohive/releases/tag/v0.0.5) pre-release that was used for the [R3M project](https://sites.google.com/view/robot-r3m/) to study visual generalization in FrankaKitchen domain.
 - To study visual generalization creates and introduces a new dataset [R3M(bc_data_clean)](https://github.com/facebookresearch/r3m/tree/eval/evaluation#downloading-demonstration-data). This dataset is generated using successful pretrained state based single task policies, and is of fairly high quality.
-- R3M uses [v3(R3M)](https://github.com/vikashplus/mj_envs/blob/5a8cb3944824abe155efe9bcaf110c46c19c5564/mj_envs/envs/relay_kitchen/__init__.py#L145-L149) envs
-    - [issue] as its not easy (yet) to programatically pick env entrypoints, R3M [overrides](https://github.com/vikashplus/mj_envs/commit/5a8cb3944824abe155efe9bcaf110c46c19c5564) the default behavior of the environments from a fixed kitchen to one where the kitchen randomly moves around, making the tasks visually more challenging and ready for visual generalization studies.
+- R3M uses [v3(R3M)](https://github.com/vikashplus/robohive/blob/5a8cb3944824abe155efe9bcaf110c46c19c5564/robohive/envs/relay_kitchen/__init__.py#L145-L149) envs
+    - [issue] as its not easy (yet) to programatically pick env entrypoints, R3M [overrides](https://github.com/vikashplus/robohive/commit/5a8cb3944824abe155efe9bcaf110c46c19c5564) the default behavior of the environments from a fixed kitchen to one where the kitchen randomly moves around, making the tasks visually more challenging and ready for visual generalization studies.
     - [issue] The default behavior of the env is changed, but the envs are still named as `-v3`
     - [issue] R3M uses 3 camera views. Two of which are names cameras. The third however is the `default` camera of the environment. Default cameras behavior changes acorss commits making it hard to reproduce results.
 - Env_details
     - Observations:
 
 ### FrankaKitchen-v3(RoboHive) &rarr; _Depricated_
-- A part of [RoboHive-V0.1](https://github.com/vikashplus/mj_envs/releases/tag/v0.1) pre-release
+- A part of [RoboHive-V0.1](https://github.com/vikashplus/robohive/releases/tag/v0.1) pre-release
 - Builds off directly from the original _FrankaKitchen (Realy Policy Learning)_ release. Creates a few internal versions
-    - [v1](https://github.com/vikashplus/mj_envs/blob/5a8cb3944824abe155efe9bcaf110c46c19c5564/mj_envs/envs/relay_kitchen/__init__.py#L17-L22)- for porting envs to RoboHive ecosystem.
+    - [v1](https://github.com/vikashplus/robohive/blob/5a8cb3944824abe155efe9bcaf110c46c19c5564/robohive/envs/relay_kitchen/__init__.py#L17-L22)- for porting envs to RoboHive ecosystem.
         - [Issue] called v0 in codebase
-    - [v2](https://github.com/vikashplus/mj_envs/blob/5a8cb3944824abe155efe9bcaf110c46c19c5564/mj_envs/envs/relay_kitchen/__init__.py#L24-L142)- for making them ready for multi-task studies.
+    - [v2](https://github.com/vikashplus/robohive/blob/5a8cb3944824abe155efe9bcaf110c46c19c5564/robohive/envs/relay_kitchen/__init__.py#L24-L142)- for making them ready for multi-task studies.
         - [Issue] uses observation that are task specific, therefore not ideal for multi-task generalizaiton
         - [Issue] introduces a few different entry points to control different kitchen and arms behaviors at reset - KitchenFrankaFixed, KitchenFrankaDemo, KitchenFrankaRandom, KitchenFrankaRandomDesk. Picking entry point requires manaul edits
         - [Issue] All entrypoints are called with the same env name making it hard to distinguish different env variants
-    - [v3](https://github.com/vikashplus/mj_envs/blob/5a8cb3944824abe155efe9bcaf110c46c19c5564/mj_envs/envs/relay_kitchen/__init__.py#L145-L149)- makes it ready for multi-task settings by standardising observations.
+    - [v3](https://github.com/vikashplus/robohive/blob/5a8cb3944824abe155efe9bcaf110c46c19c5564/robohive/envs/relay_kitchen/__init__.py#L145-L149)- makes it ready for multi-task settings by standardising observations.
         - [Issue] Introduces a few different entry points to control different kitchen and arms behaviors at reset - KitchenFrankaFixed, KitchenFrankaDemo, KitchenFrankaRandom, KitchenFrankaRandomDesk. Picking entry point requires manaul edits
         - [Issue] All entrypoints are called with the same env name making it hard to distinguish different env variants
 

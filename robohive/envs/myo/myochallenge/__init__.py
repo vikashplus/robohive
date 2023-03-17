@@ -6,7 +6,7 @@ import numpy as np
 
 # MyoChallenge Die: Trial env
 register(id='myoChallengeDieReorientDemo-v0',
-        entry_point='mj_envs.envs.myo.myochallenge.reorient_v0:ReorientEnvV0',
+        entry_point='robohive.envs.myo.myochallenge.reorient_v0:ReorientEnvV0',
         max_episode_steps=150,
         kwargs={
             'model_path': curr_dir+'/../assets/hand/myo_hand_die.xml',
@@ -19,7 +19,7 @@ register(id='myoChallengeDieReorientDemo-v0',
     )
 # MyoChallenge Die: Phase1 env
 register(id='myoChallengeDieReorientP1-v0',
-        entry_point='mj_envs.envs.myo.myochallenge.reorient_v0:ReorientEnvV0',
+        entry_point='robohive.envs.myo.myochallenge.reorient_v0:ReorientEnvV0',
         max_episode_steps=150,
         kwargs={
             'model_path': curr_dir+'/../assets/hand/myo_hand_die.xml',
@@ -31,7 +31,7 @@ register(id='myoChallengeDieReorientP1-v0',
     )
 # MyoChallenge Die: Phase2 env
 register(id='myoChallengeDieReorientP2-v0',
-        entry_point='mj_envs.envs.myo.myochallenge.reorient_v0:ReorientEnvV0',
+        entry_point='robohive.envs.myo.myochallenge.reorient_v0:ReorientEnvV0',
         max_episode_steps=150,
         kwargs={
             'model_path': curr_dir+'/../assets/hand/myo_hand_die.xml',
@@ -49,7 +49,7 @@ register(id='myoChallengeDieReorientP2-v0',
 
 # MyoChallenge Baoding: Phase1 env
 register(id='myoChallengeBaodingP1-v1',
-        entry_point='mj_envs.envs.myo.myochallenge.baoding_v1:BaodingEnvV1',
+        entry_point='robohive.envs.myo.myochallenge.baoding_v1:BaodingEnvV1',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/../assets/hand/myo_hand_baoding.xml',
@@ -62,7 +62,7 @@ register(id='myoChallengeBaodingP1-v1',
 
 # MyoChallenge Baoding: Phase1 env
 register(id='myoChallengeBaodingP2-v1',
-        entry_point='mj_envs.envs.myo.myochallenge.baoding_v1:BaodingEnvV1',
+        entry_point='robohive.envs.myo.myochallenge.baoding_v1:BaodingEnvV1',
         max_episode_steps=200,
         kwargs={
             'model_path': curr_dir+'/../assets/hand/myo_hand_baoding.xml',

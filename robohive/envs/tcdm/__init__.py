@@ -1,7 +1,7 @@
 """ =================================================
 Copyright (C) 2018 Vikash Kumar
 Author  :: Vikash Kumar (vikashplus@gmail.com), Sudeep Dasari (sdasari@andrew.cmu.edu )
-Source  :: https://github.com/vikashplus/mj_envs
+Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
@@ -74,7 +74,7 @@ def register_adroit_object_trackref(task_name, object_name, motion_path=None):
     # print("'"+task_name+"'", end=", ")
     register(
         id=task_name,
-        entry_point='mj_envs.envs.tcdm.track:TrackEnv',
+        entry_point='robohive.envs.tcdm.track:TrackEnv',
         max_episode_steps=75, #50steps*40Skip*2ms = 4s
         kwargs={
                 'model_path': '/assets/Adroit_object.xml',
@@ -93,13 +93,14 @@ def register_Adroit_object(object_name):
     # Envs with fixed target
     register(
         id=task_name,
-        entry_point='mj_envs.envs.tcdm.track:TrackEnv',
+        entry_point='robohive.envs.tcdm.track:TrackEnv',
         max_episode_steps=50, #50steps*40Skip*2ms = 4s
         kwargs={
                 'model_path': '/assets/Adroit_object.xml',
                 'object_name': object_name,
                 'reference': {'time':0.0,
                                 'robot':np.zeros((1, 30)),
+                                'robot_vel':np.zeros((1,30)),
                                 'object':np.ones((1, 7))}
             }
     )
@@ -109,13 +110,14 @@ def register_Adroit_object(object_name):
     # print("'"+task_name+"'", end=", ")
     register(
         id=task_name,
-        entry_point='mj_envs.envs.tcdm.track:TrackEnv',
+        entry_point='robohive.envs.tcdm.track:TrackEnv',
         max_episode_steps=50, #50steps*40Skip*2ms = 4s
         kwargs={
                 'model_path': '/assets/Adroit_object.xml',
                 'object_name': object_name,
                 'reference': {'time':0.0,
                                 'robot':np.zeros((1, 30)),
+                                'robot_vel':np.zeros((1,30)),
                                 'object':np.ones((1, 7))}
             }
     )
@@ -129,7 +131,7 @@ def register_Franka_object(object_name, data_path=None):
     # Track reference motion
     register(
         id='Franka{}TrackFixed-v0'.format(object_name.title()),
-        entry_point='mj_envs.envs.tcdm.track:TrackEnv',
+        entry_point='robohive.envs.tcdm.track:TrackEnv',
         max_episode_steps=50, #50steps*40Skip*2ms = 4s
         kwargs={
                 'model_path': '/assets/Franka_object.xml',
@@ -138,6 +140,7 @@ def register_Franka_object(object_name, data_path=None):
                 # 'reference': None, # TODO: pass reference trajectories
                 'reference': {'time':0.0,
                                 'robot':np.zeros((1,9)),
+                                'robot_vel':np.zeros((1,30)),
                                 'object':np.ones((1,7))}
             }
     )

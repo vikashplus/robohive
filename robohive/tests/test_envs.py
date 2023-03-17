@@ -1,7 +1,7 @@
 """ =================================================
 Copyright (C) 2018 Vikash Kumar
 Author  :: Vikash Kumar (vikashplus@gmail.com)
-Source  :: https://github.com/vikashplus/mj_envs
+Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
@@ -19,7 +19,7 @@ class TestEnvs(unittest.TestCase):
     def check_envs(self, module_name, env_names, lite=False, input_seed=1234):
         print("\nTesting module:: ", module_name)
         for env_name in env_names:
-            print("Testing env: ", env_name)
+            print("Testing env: ", env_name, flush=True)
             self.check_env(env_name, input_seed)
 
 
