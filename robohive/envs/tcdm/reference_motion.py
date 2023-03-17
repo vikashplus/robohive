@@ -14,8 +14,8 @@ reference = collections.namedtuple('reference',
          'robot',       # shape(N, n_robot_jnt) ==> robot trajectory
          'robot_vel',   # shape(N, n_robot_jnt) ==> robot velocity
          'object',      # shape(M, n_objects_jnt) ==> object trajectory
-         'robot_init',  # shape(n_objects_jnt) ==> initial robot pose
-         'object_init'  # shape(n_objects_jnt) ==> initial object
+         'robot_init',  # shape(n_objects_jnt) ==> initial robot pose (can be different from robot(0,n_robot_jnt))
+         'object_init'  # shape(n_objects_jnt) ==> initial object (can be different from object(0,n_object_jnt))
          ])
 
 
@@ -43,8 +43,6 @@ class ReferenceMotion():
         # load reference
         if isinstance(reference, str):
             self.reference = self.load(reference)
-            self.reference['robot_vel'] = np.zeros((1,30))
-
         elif isinstance(reference, dict):
             self.reference = reference
         else:
@@ -163,7 +161,7 @@ class ReferenceMotion():
         """
         if self.type == ReferenceType.FIXED:
             robot_ref = self.reference['robot'][0]
-            robot_vel_ref =self.reference['robot_vel'][0]
+            robot_vel_ref = self.reference['robot_vel'][0]
             object_ref = self.reference['object'][0]
         elif self.type == ReferenceType.RANDOM:
             robot_ref     = self.np_random.uniform(low=self.reference['robot'][0,:], high=self.reference['robot'][1,:])
@@ -191,8 +189,6 @@ class ReferenceMotion():
                     object_ref = (1.0-blend)*self.reference['object'][ind]+blend*self.reference['object'][ind_next]
                 else:
                     object_ref = self.reference['object'][0]
-        # import ipdb; ipdb.set_trace()
-
 
         return reference(time = time,
             robot = robot_ref,
