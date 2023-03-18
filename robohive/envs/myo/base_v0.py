@@ -75,7 +75,7 @@ class BaseV0(env_base.MujocoEnv):
             self.EIPpos = self.sim.model.actuator_name2id('EIP')
 
     # step the simulation forward
-    def step(self, a):
+    def step(self, a, **kwargs):
         muscle_a = a.copy()
 
         # Explicitely project normalized space (-1,1) to actuator space (0,1) if muscles
@@ -118,7 +118,7 @@ class BaseV0(env_base.MujocoEnv):
                                         render_cbk=self.mj_render if self.mujoco_render_frames else None)
 
         # observation
-        obs = self.get_obs()
+        obs = self.get_obs(**kwargs)
 
         # rewards
         self.expand_dims(self.obs_dict) # required for vectorized rewards calculations
