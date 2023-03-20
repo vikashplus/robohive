@@ -43,6 +43,8 @@ class ReferenceMotion():
         # load reference
         if isinstance(reference, str):
             self.reference = self.load(reference)
+            if 'robot_vel' not in self.reference.keys():
+                self.reference['robot_vel'] = np.zeros(self.reference['robot'].shape)
         elif isinstance(reference, dict):
             self.reference = reference
         else:
@@ -94,6 +96,7 @@ class ReferenceMotion():
         """
         assert 'time' in reference.keys(), "Missing keys in reference"
         assert 'robot' in reference.keys(), "Missing keys in reference"
+        assert 'robot_vel' in reference.keys(), "Missing keys in reference"
         assert 'object' in reference.keys(), "Missing keys in reference"
         assert reference['robot'].ndim == 2, "Check robot reference, must be shape(N, n_robot_jnt)"
         assert reference['object'].ndim == 2, "Check object reference, must be shape(N, n_object_jnt)"

@@ -143,7 +143,8 @@ class TrackEnv(env_base.MujocoEnv):
         if euler:
             q1 = euler2quat(q1)
             q2 = euler2quat(q2)
-        return np.abs(quatDiff2Vel(q2,q1,1))
+
+        return np.abs(quatDiff2Vel(q2,q1,1)[0])
 
 
     def update_reference_insim(self, curr_ref):
