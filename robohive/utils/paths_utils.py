@@ -317,6 +317,8 @@ def robohive2roboset(rollout_path, output_dir=None, max_paths=1e6):
     #check if file is of h5 format 
     if not isinstance(obj, h5py.Group):
         raise TypeError("File type not supported")
+    if 'env_infos' not in obj[list(enumerate(obj))[0][1]].keys():
+        raise TypeError("Format is not RoboHive")
     if output_dir == None:
         output_dir = os.path.dirname(rollout_path)
     rollout_name = os.path.split(rollout_path)[-1]
