@@ -289,7 +289,7 @@ def path2dataset(path:dict, config_path=None)->dict:
 
 
 # Print h5 schema
-def print_h5_schema(obj, max_paths=1e6):
+def print_h5_schema(obj):
     "Recursively find all keys in an h5py.Group."
     keys = (obj.name,)
     if isinstance(obj, h5py.Group):
