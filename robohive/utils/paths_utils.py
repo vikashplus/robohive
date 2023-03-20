@@ -14,6 +14,7 @@ import skvideo.io
 from PIL import Image
 import click
 from robohive.utils.dict_utils import flatten_dict, dict_numpify
+from robohive.logger.grouped_datasets import Trace
 import json
 
 
@@ -288,7 +289,7 @@ def path2dataset(path:dict, config_path=None)->dict:
 
 
 # Print h5 schema
-def print_h5_schema(obj):
+def print_h5_schema(obj, max_paths=1e6):
     "Recursively find all keys in an h5py.Group."
     keys = (obj.name,)
     if isinstance(obj, h5py.Group):
@@ -300,6 +301,64 @@ def print_h5_schema(obj):
                 keys = keys + (value.name,)
     return keys
 
+#Take a h5 file with robohive format and save it as roboset
+#TODO: @jdvakil add config/derived for datasets 
+def robohive2roboset(rollout_path, output_dir=None, max_paths=1e6):
+    """
+    rollout_path : path of the h5 file
+    output_dir   : directory to save the new roboset h5
+    max_paths    : number of rollouts to convert 
+    """
+    
+    #check if file exists
+    if not os.path.isfile(rollout_path):
+        raise TypeError("File doesn't exist") 
+    obj = h5py.File(rollout_path, "r")
+    #check if file is of h5 format 
+    if not isinstance(obj, h5py.Group):
+        raise TypeError("File type not supported")
+    if output_dir == None:
+        output_dir = os.path.dirname(rollout_path)
+    rollout_name = os.path.split(rollout_path)[-1]
+    file_name, file_type = os.path.splitext(rollout_name)
+    output_name = os.path.join(output_dir, (file_name + "_roboset"))
+    trace = Trace('roboset')
+    datum = {}
+    derived = {}
+    count = 0
+    for trial, value in obj.items():
+        trace.create_group(trial)
+        datum = {
+            "time"      : value['time'],
+            "rgb_left"  : value['env_infos/obs_dict/rgb:left_cam:240x424:2d'],
+            "rgb_right" : value['env_infos']['obs_dict']['rgb:right_cam:240x424:2d'],
+            "rgb_top"   : value['env_infos']['obs_dict']['rgb:top_cam:240x424:2d'], 
+            "rgb_wrist" : value['env_infos']['obs_dict']['rgb:Franka_wrist_cam:240x424:2d'],
+            "d_left"    : value['env_infos']['obs_dict']['d:left_cam:240x424:2d'],
+            "d_right"   : value['env_infos']['obs_dict']['d:right_cam:240x424:2d'],
+            "d_top"     : value['env_infos']['obs_dict']['d:top_cam:240x424:2d'],
+            "d_wrist"   : value['env_infos']['obs_dict']['d:Franka_wrist_cam:240x424:2d'],
+            "qp_arm"    : value['env_infos']['obs_dict']['qp_arm'],
+            "qp_ee"     : value['env_infos']['obs_dict']['qp_ee'],
+            "qv_arm"    : value['env_infos']['obs_dict']['qv_arm'],
+            "qv_ee"     : value['env_infos']['obs_dict']['qv_ee'],
+        }
+
+        if 'pos_ee' in value['env_infos/obs_dict'].keys():
+            derived['pos_ee'] = value["env_infos/obs_dict/pos_ee"]
+        if 'rot_ee' in value['env_infos/obs_dict'].keys():
+            derived['rot_ee'] = value["env_infos/obs_dict/rot_ee"]
+
+        trace.append_datum_post_process(group_key=trial, dataset_key='derived', dataset_val=derived)
+        trace.append_datum_post_process(group_key=f'{trial}', dataset_key='data', dataset_val=datum)
+        
+        for _, comment in enumerate(value['user_cmt']):
+            trace.create_dataset(group_key=trial, dataset_key='config/solved', dataset_val=np.float16(comment))
+        count = count + 1
+        if count >= max_paths:
+            break
+    trace.flatten()
+    trace.save(trace_name=f"{output_name}.h5")
 
 # convert paths from pickle to h5 format
 def pickle2h5(rollout_path, output_dir=None, verify_output=False, h5_format:str='robohive', compress_path=False, config_path=None, max_paths=1e6):
@@ -394,7 +453,7 @@ Script to recover images and videos from the saved pickle files
  - python utils/paths_utils.py -u pickle2h5 -p paths.pickle -vo True -cp True -hf robohive
  """
 @click.command(help=DESC)
-@click.option('-u', '--util', type=click.Choice(['plot_horizon', 'plot', 'render', 'pickle2h5', 'h5schema']), help='pick utility', required=True)
+@click.option('-u', '--util', type=click.Choice(['plot_horizon', 'plot', 'render', 'pickle2h5', 'h5schema', 'robohive2roboset']), help='pick utility', required=True)
 @click.option('-p', '--path', type=click.Path(exists=True), help='absolute path of the rollout (h5/pickle)', default=None)
 @click.option('-e', '--env', type=str, help='Env name', default=None)
 @click.option('-on', '--output_name', type=str, default=None, help=('Output name'))
@@ -422,6 +481,8 @@ def util_path_cli(util, path, env, output_name, output_dir, verify_output, rende
         with h5py.File(path, "r") as h5file:
             print("Printing schema read from output: ", path)
             keys = print_h5_schema(h5file)
+    elif util=="robohive2roboset":
+        robohive2roboset(rollout_path=path, output_dir=output_dir, max_paths=max_paths)
     else:
         raise TypeError("Unknown utility requested")
 
