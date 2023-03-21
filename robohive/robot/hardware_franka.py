@@ -88,9 +88,13 @@ class FrankaArm(hardwareBase):
             if policy==None:
                 # Create policy instance
                 s_initial = self.get_sensors()
+                
+                #multiply the gainscale of the second joint by 2
+                kp_new = self.gain_scale * torch.Tensor(self.robot.metadata.default_Kq)
+                kp_new[1]*=2.0
                 policy = JointPDPolicy(
                     desired_joint_pos=s_initial['joint_pos'],
-                    kp=self.gain_scale * torch.Tensor(self.robot.metadata.default_Kq),
+                    kp= kp_new,  #self.gain_scale * torch.Tensor(self.robot.metadata.default_Kq),
                     kd=self.gain_scale * torch.Tensor(self.robot.metadata.default_Kqd),
                 )
 
