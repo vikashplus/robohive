@@ -177,11 +177,21 @@ class Trace:
 
 
     def __getitem__(self, index):
-        assert index<len(self)
-        keys = list(self.trace.keys())
-        key = keys[index]
-        value = self.trace[key]
-        return {key: value}
+        """
+            Enables indexing using either index(int) or keys(Trial0)
+            Example: Data = Trace(); Data[0] == Data['Trial0']
+        """
+        if type(index) == str:
+            assert index in self.trace.keys(), f"Index({index}) not in existing keys({list(self.trace.keys())})"
+            return self.trace[index]
+        elif type(index) == int:
+            assert index<len(self), f"Index({index}) outside the max lenght({len(self)})"
+            keys = list(self.trace.keys())
+            key = keys[index]
+            value = self.trace[key]
+            return value
+        else:
+            raise TypeError(f"index has to be str(TrailX), or int. {index} found")
 
 
     def __iter__(self):
