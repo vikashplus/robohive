@@ -5,6 +5,8 @@ import pickle
 from mj_envs.utils.quat_math import mat2euler, quat2euler
 import cv2
 import os
+from mj_envs.utils import tensor_utils
+import random 
 
 BEGIN_GRASP_THRESH = 0.08
 SIM_BEGIN_GRASP_THRESH = 0.06
@@ -98,7 +100,7 @@ class HeuristicPolicyReal():
                  obj_pos_high=[0.25, 0.72, 0.91],
                  pix_from_left = -43,
                  pix_from_top = 42,
-                 x_dist_from_center = 0.5334,
+                 x_dist_from_center = -0.5334,
                  y_dist_from_base = 0.72,
                  y_scale = -0.00342565789, 
                  x_scale = 0.00339745222,
@@ -143,11 +145,11 @@ class HeuristicPolicyReal():
         bin_mask = np.zeros(img.shape, dtype=np.uint8)
 
         bin_mask[self.mask_start_y:self.mask_end_y, self.mask_start_x:self.mask_end_x, :] = 255
-        img_masked = cv2.bitwise_and(img, bin_mask)
+        self.img_masked = cv2.bitwise_and(img, bin_mask)
         #img_masked_fn = os.path.join(out_dir, out_name+'_masked.png')
-        #cv2.imwrite(img_masked_fn, img_masked)
+        #cv2.imwrite(img_masked_fn, self.img_masked)
 
-        gray_img = cv2.cvtColor(img_masked, cv2.COLOR_BGR2GRAY)
+        gray_img = cv2.cvtColor(self.img_masked, cv2.COLOR_BGR2GRAY)
         binary_img = cv2.adaptiveThreshold(gray_img, 
                                         255, 
                                         cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
@@ -158,34 +160,35 @@ class HeuristicPolicyReal():
 
         # first box is background
         boxes = boxes[1:]
-        filtered_boxes = []
-        rec_img = img_masked.copy()
+        self.filtered_boxes = []
+        rec_img = self.img_masked.copy()
         for x,y,w,h,pixels in boxes:
             if pixels > 15 and h > 4 and w > 4:#pixels < 1000 and h < 40 and w < 40 and h > 4 and w > 4:
-                filtered_boxes.append((x,y,w,h))
+                self.filtered_boxes.append((x,y,w,h))
                 cv2.rectangle(rec_img, (x,y), (x+w, y+h), (255,0,0), 1)
 
         if out_dir is not None:
             rec_img_fn = os.path.join(out_dir,'masked_all_recs.png')
-        cv2.imwrite(rec_img_fn, cv2.cvtColor(rec_img, cv2.COLOR_RGB2BGR))
+            cv2.imwrite(rec_img_fn, cv2.cvtColor(rec_img, cv2.COLOR_RGB2BGR))
         
-        random.shuffle(filtered_boxes)
+        
+        random.shuffle(self.filtered_boxes)
 
 
-        #for x,y,w,h in filtered_boxes:
-        #    cv2.rectangle(img_masked, (x,y), (x+w, y+h), (0,0,255), 1)
+        #for x,y,w,h in self.filtered_boxes:
+        #    cv2.rectangle(self.img_masked, (x,y), (x+w, y+h), (0,0,255), 1)
 
         #rec_img_fn = os.path.join(out_dir, out_name+'recs.png')
-        #cv2.imwrite(rec_img_fn, img_masked)
+        #cv2.imwrite(rec_img_fn, self.img_masked)
 
-        grasp_centers = []
-        for x,y,w,h in filtered_boxes:
+        self.grasp_centers = []
+        for x,y,w,h in self.filtered_boxes:
             grasp_x = self.x_scale*((x+(w/2.0)) - self.pix_from_left)+self.x_dist_from_center
             grasp_y = self.y_scale*((y+(h/2.0)) - self.pix_from_top) + self.y_dist_from_base
             if (grasp_x >= self.obj_pos_low[0] and grasp_x <= self.obj_pos_high[0] and
                 grasp_y >= self.obj_pos_low[1] and grasp_y <= self.obj_pos_high[1]):
-                grasp_centers.append((grasp_x,grasp_y))
-        return grasp_centers, filtered_boxes, img_masked
+                self.grasp_centers.append((grasp_x,grasp_y))
+        return self.grasp_centers, self.filtered_boxes, self.img_masked
 
     def do_rollout(self, horizon):
         obs = self.env.reset()
@@ -211,7 +214,7 @@ class HeuristicPolicyReal():
                 x,y,w,h = self.filtered_boxes[-1]
                 cv2.rectangle(rec_img, (x,y), (x+w, y+h), (255,0,0), 1)
 
-                rec_img_fn = os.path.join(self.output_dir+'/debug','masked_latest.png')
+                rec_img_fn = os.path.join(self.output_dir,'masked_latest.png')
                 cv2.imwrite(rec_img_fn, cv2.cvtColor(rec_img, cv2.COLOR_RGB2BGR))
 
             self.grasp_centers.pop()
@@ -235,9 +238,10 @@ class HeuristicPolicyReal():
         rewards=[]
         env_infos = []
 
+        obs = self.env.get_obs()
+
         self.env.squeeze_dims(self.env.rwd_dict)
         self.env.squeeze_dims(self.env.obs_dict)
-        obs = self.env.get_obs()
         env_info = self.env.get_env_infos()
 
         observations.append(obs)

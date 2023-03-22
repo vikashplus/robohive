@@ -59,7 +59,8 @@ class PushBaseV0(env_base.MujocoEnv):
                pos_limit_high = None,
                object_init_perturb=None,
                vel_limit=[0.15, 0.25, 0.1, 0.25, 0.1, 0.25, 0.2, 1.0, 1.0],
-               eef_vel_limit = [0.075, 0.075, 0.15,0.3,0.3,0.3,0.04],
+               #eef_vel_limit = [0.075, 0.075, 0.15,0.3,0.3,0.3,0.04],
+               eef_vel_limit = [0.15, 0.15, 0.15,0.3,0.3,0.3,0.04],
                success_mask = None,
                max_ik=3,
                **kwargs,
@@ -136,7 +137,12 @@ class PushBaseV0(env_base.MujocoEnv):
         reset_qpos[obj_jid:obj_jid+3] += self.np_random.uniform(low=self.object_init_perturb['low'], high=self.object_init_perturb['high'])
 
         #self.init_qpos[:9] = np.array([0.4653,  0.5063,  0.0228, -2.1195, -0.6052,  0.7064 , 2.5362,  0.025 ,  0.025])
-        obs = super().reset(reset_qpos, self.init_qvel)
+
+        if self.robot.is_hardware:
+            self.robot.reset(reset_qpos, self.init_qvel, pause_in=False)
+            obs = self.get_obs()
+        else:
+            obs = super().reset(reset_qpos, self.init_qvel)
 
         cur_pos = self.sim.data.site_xpos[self.grasp_sid]
         cur_rot = mat2euler(self.sim.data.site_xmat[self.grasp_sid].reshape(3,3).transpose())

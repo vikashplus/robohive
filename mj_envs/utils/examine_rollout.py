@@ -24,7 +24,7 @@ import h5py
 import time
 import os
 import skvideo.io
-
+from mj_envs.utils.quat_math import mat2euler
 
 @click.command(help=DESC)
 @click.option('-e', '--env_name', type=str, help='environment to load', required=True)
@@ -113,7 +113,8 @@ def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera
                     reset_qpos = env.init_qpos.copy()
                     reset_qpos[:7] = data['qp_arm'][0]
                     reset_qpos[7] = data['qp_ee'][0]
-                    env.reset(reset_qpos=reset_qpos)
+                    #env.reset(reset_qpos=reset_qpos)
+                    env.reset()
                 elif output_type=='.pickle' and "state" in path['env_infos'].keys():
                     env.reset(reset_qpos=path['env_infos']['state']['qpos'][0], reset_qvel=path['env_infos']['state']['qvel'][0])
                 else:
@@ -151,9 +152,11 @@ def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera
                 # Apply actions in open loop
                 elif mode=='playback':
                     if output_type=='.h5':
-                        a = np.concatenate([data['ctrl_arm'][i_step], data['ctrl_ee'][i_step]])
+                        #a = np.concatenate([data['ctrl_arm'][i_step], data['ctrl_ee'][i_step]])
+                        a = np.concatenate([data['ctrl_cart'][i_step], data['ctrl_ee'][i_step]])
                     else:
                         a = path['actions'][i_step] if output_type=='.pickle' else path['data']['ctrl_arm']
+                    print('cur {}'.format(mat2euler(np.reshape(env.sim.data.site_xmat[env.grasp_sid], [3,-1]))))
                     onext, r, d, info = env.step(a) # t ==> t+1
 
                 # Recover actions from states

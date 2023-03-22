@@ -223,6 +223,7 @@ class PickPlaceV0(env_base.MujocoEnv):
             self.ik_sim.data.qpos[:7] = np.random.normal(self.sim.data.qpos[:7], i*0.1)
 
             self.ik_sim.data.qpos[2] = 0.0
+            self.ik_sim.data.qpos[3] = -2.0
             self.ik_sim.forward()
 
             ik_result = qpos_from_site_pose(physics = self.ik_sim,

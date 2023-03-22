@@ -40,10 +40,12 @@ class ColorThreshold():
         self.render = render
 
     def detect_success(self, img):
+        assert(len(img.shape)==3 and img.shape[2]==3, 'Incorrect img dims: {}'.format(img.shape))
         cropped_img = img[self.top_crop:self.bottom_crop, self.left_crop:self.right_crop, :]
+        cropped_img = cv2.cvtColor(cropped_img, cv2.COLOR_RGB2BGR)
         luv_img = cv2.cvtColor(np.array(cropped_img).astype('float32')/255, cv2.COLOR_RGB2Luv)
         luv_vec = np.mean(luv_img[:,:,1:],axis=(0,1))
-        luv_angle = np.dot(luv_vec,self.target_uv) / (np.linalg.norm(luv_vec)*np.linalg.norm(self.target_uv))
+        luv_angle = np.abs(np.dot(luv_vec,self.target_uv) / (np.linalg.norm(luv_vec)*np.linalg.norm(self.target_uv)))
 
         if self.render:
             bin_mask = 128*np.ones(img.shape, dtype=np.uint8)
@@ -52,7 +54,7 @@ class ColorThreshold():
             cv2.imshow("Success Detection", img_masked)
             cv2.waitKey(1)
 
-        return luv_angle < self.thresh_val
+        return luv_angle < self.thresh_val, luv_angle
 
 # MAIN =========================================================
 @click.command(help=DESC)
