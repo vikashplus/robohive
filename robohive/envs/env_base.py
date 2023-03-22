@@ -776,6 +776,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                     )
                 trace.append_datums(group_key=group_key, dataset_key_val=datum_dict)
 
+
                 # step env using actions from t=>t+1 ----------------------
                 obs, rwd, done, env_info = self.step(act, update_exteroception=True)
                 t = t+1
@@ -806,21 +807,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         self.mujoco_render_frames = False
         prompt("Total time taken = %f"% (timer.time()-exp_t0), type=Prompt.INFO)
-        # print(trace)
-        # trace.save(self.id+"_trace.pickle", verify_length=True)
-        # trace.save(output_dir+self.id+"_trace.h5", verify_length=True)
-        print(trace)
-        if self.visual_keys:
-            trace.close()
-            render_keys = ['env_infos/visual_dict/'+ key for key in self.visual_keys]
-            trace.render(output_dir=output_dir, output_format="mp4", groups=":", datasets=render_keys, input_fps=1/self.dt)
-
-        # Does this belong here? Rendering should be a post processing step once the logs has been saved.
-        # Note that the saved logs are read as pickle/h5, we can't call trace.render on them.
-        # trace.render("test_render.mp4", groups=":", datasets=["data/rgb_left","data/rgb_right","data/rgb_top","data/rgb_wrist"], output_format="mp4")
-
-        quit()
-        # return trace
+        trace.stack()
+        return trace
 
 
     # methods to override ====================================================
