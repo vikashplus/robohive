@@ -80,8 +80,16 @@ class BinPickV0(env_base.MujocoEnv):
                obs_keys=DEFAULT_OBS_KEYS,
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
                randomize=False,
+               pos_limits = {'low': [-0.25, 0.368, 0.9, -np.pi, 0, -np.pi, 0.0],
+                             'high':[0.25,  0.72,  1.3, np.pi, 2*np.pi, 0, 0.835]},
+               vel_limits = {'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.1, 0.2, 0.835],
+                             'jnt_slow': [0.1, 0.25, 0.1, 0.25, 0.1, 0.1, 0.2, 0.835],
+                             'eef': [0.075, 0.075, 0.15, 0.3, 0.3, 0.3, 0.835],
+                             'eef_slow': [0.075, 0.075, 0.075, 0.3, 0.3, 0.3, 0.835]},
                obj_pos_limits = {'low': [0.36, -0.22, 0.855],
                                  'high': [0.64, 0.22, 0.855]},
+               min_grab_height=0.905,
+               max_slow_height=1.075,
                **kwargs,
         ):
 
@@ -92,7 +100,11 @@ class BinPickV0(env_base.MujocoEnv):
         self.target_sid = self.sim.model.site_name2id(target_site_name)
         self.target_xyz_range = target_xyz_range
         self.randomize = randomize
+        self.pos_limits = pos_limits
+        self.vel_limits = vel_limits
         self.obj_pos_limits = obj_pos_limits
+        self.min_grab_height = min_grab_height
+        self.max_slow_height = max_slow_height
         super()._setup(obs_keys=obs_keys,
                        weighted_reward_keys=weighted_reward_keys,
                        reward_mode=reward_mode,
