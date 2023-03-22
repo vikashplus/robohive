@@ -781,9 +781,20 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 t = t+1
                 ep_rwd += rwd
 
+            # record last step and finalize the rollout --------------------------------
+            act = np.nan*np.ones(self.action_space.shape)
+            datum_dict = dict(
+                        time=t,
+                        observations=obs,
+                        actions=act.copy(),
+                        rewards=rwd,
+                        env_infos=env_info,
+                        done=done,
+                    )
+            trace.append_datums(group_key=group_key, dataset_key_val=datum_dict)
             prompt(f"Episode {ep}:> Finished in {(timer.time()-ep_t0):0.4} sec. Total rewards {ep_rwd}", type=Prompt.INFO)
 
-            # save offscreen buffers as video
+            # save offscreen buffers as video --------------------------------
             if render =='offscreen':
                 file_name = output_dir + filename + str(ep) + ".mp4"
                 # check if the platform is OS -- make it compatible with quicktime
@@ -797,15 +808,12 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         prompt("Total time taken = %f"% (timer.time()-exp_t0), type=Prompt.INFO)
         # print(trace)
         # trace.save(self.id+"_trace.pickle", verify_length=True)
-        trace.save(output_dir+self.id+"_trace.h5", verify_length=True)
-        # print(trace)
-        render_keys = ['env_infos/visual_dict/rgb:top_cam:256x256:2d',
-                       'env_infos/visual_dict/rgb:left_cam:256x256:2d',
-                       'env_infos/visual_dict/rgb:right_cam:256x256:2d',
-                       'env_infos/visual_dict/rgb:Franka_wrist_cam:256x256:2d'
-                       ]
-        trace.close()
-        trace.render(output_dir=output_dir, output_format="mp4", groups="Trial0", datasets=render_keys, input_fps=1/self.dt)
+        # trace.save(output_dir+self.id+"_trace.h5", verify_length=True)
+        print(trace)
+        if self.visual_keys:
+            trace.close()
+            render_keys = ['env_infos/visual_dict/'+ key for key in self.visual_keys]
+            trace.render(output_dir=output_dir, output_format="mp4", groups=":", datasets=render_keys, input_fps=1/self.dt)
 
         # Does this belong here? Rendering should be a post processing step once the logs has been saved.
         # Note that the saved logs are read as pickle/h5, we can't call trace.render on them.
