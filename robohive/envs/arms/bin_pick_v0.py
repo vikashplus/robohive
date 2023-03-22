@@ -80,6 +80,8 @@ class BinPickV0(env_base.MujocoEnv):
                obs_keys=DEFAULT_OBS_KEYS,
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
                randomize=False,
+               obj_pos_limits = {'low': [0.36, -0.22, 0.855],
+                                 'high': [0.64, 0.22, 0.855]},
                **kwargs,
         ):
 
@@ -90,7 +92,7 @@ class BinPickV0(env_base.MujocoEnv):
         self.target_sid = self.sim.model.site_name2id(target_site_name)
         self.target_xyz_range = target_xyz_range
         self.randomize = randomize
-
+        self.obj_pos_limits = obj_pos_limits
         super()._setup(obs_keys=obs_keys,
                        weighted_reward_keys=weighted_reward_keys,
                        reward_mode=reward_mode,
@@ -141,7 +143,8 @@ class BinPickV0(env_base.MujocoEnv):
 
             # Randomize obj pose
             obj_jid = self.sim.model.joint_name2id(self.object_site_name)
-            reset_qpos[obj_jid:obj_jid+3] += self.np_random.uniform(low=[-.22, -.14, 0], high=[.22, .14, 0])
+            reset_qpos[obj_jid:obj_jid+3] = self.np_random.uniform(low=self.obj_pos_limits['low'],
+                                                                   high=self.obj_pos_limits['high'])
             reset_qpos[obj_jid+3:obj_jid+7] = euler2quat(self.np_random.uniform(low=(0, 0, -np.pi/2), high=(0, 0, np.pi/2)) ) # random quat                       
 
             self.sim.forward()
