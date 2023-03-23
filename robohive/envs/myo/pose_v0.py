@@ -8,7 +8,6 @@ import gym
 import numpy as np
 
 from robohive.envs.myo.base_v0 import BaseV0
-from robohive.envs.env_base import get_sim
 
 class PoseEnvV0(BaseV0):
 

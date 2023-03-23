@@ -17,7 +17,7 @@ from robohive.robot.robot import Robot
 from robohive.utils.prompt_utils import prompt, Prompt
 import skvideo.io
 from sys import platform
-from robohive.physics.sim_scene import get_sim
+from robohive.physics.sim_scene import SimScene
 
 # TODO
 # remove rwd_mode
@@ -53,8 +53,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.seed(seed)
 
         # sims
-        self.sim = get_sim(model_path)
-        self.sim_obsd = get_sim(obsd_model_path) if obsd_model_path else self.sim
+        self.sim = SimScene.get_sim(model_path)
+        self.sim_obsd = SimScene.get_sim(obsd_model_path) if obsd_model_path else self.sim
         self.sim.forward()
         self.sim_obsd.forward()
         ObsVecDict.__init__(self)

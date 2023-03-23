@@ -11,7 +11,7 @@ EXAMPLE:\n
     - python tutorials/get_ik_minjerk_trajectory.py --sim_path envs/arms/franka/assets/franka_busbin_v0.xml\n
 """
 
-from robohive.physics.sim_scene import get_sim
+from robohive.physics.sim_scene import SimScene
 from robohive.utils.inverse_kinematics import IKResult, qpos_from_site_pose
 from robohive.utils.min_jerk import *
 from robohive.utils.quat_math import euler2quat, euler2mat
@@ -39,7 +39,7 @@ def main(sim_path, horizon, frame_skip):
 
     # Process model to use DManus as end effector
     curr_dir = os.path.dirname(os.path.abspath(__file__))
-    raw_sim = get_sim(curr_dir+sim_path)
+    raw_sim = SimScene.get_sim(curr_dir+sim_path)
     raw_xml = raw_sim.model.get_xml()
     processed_xml = reassign_parent(xml_str=raw_xml, receiver_node="panda0_link7", donor_node="ee_mount")
     processed_model_path = curr_dir+sim_path[:-4]+"_processed.xml"
@@ -47,7 +47,7 @@ def main(sim_path, horizon, frame_skip):
         file.write(processed_xml)
 
     # Prep
-    sim = get_sim(processed_model_path)
+    sim = SimScene.get_sim(processed_model_path)
     time_horizon = horizon * frame_skip * sim.model.opt.timestep
     dt = sim.model.opt.timestep*frame_skip
     os.remove(processed_model_path)

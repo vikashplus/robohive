@@ -5,7 +5,7 @@ Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
-from robohive.physics.sim_scene import get_sim
+from robohive.physics.sim_scene import SimScene
 from robohive.utils.quat_math import quat2euler
 from robohive.utils.prompt_utils import prompt
 import time
@@ -71,7 +71,7 @@ class Robot():
         if mj_sim is None:
             # (creates new robot everytime to facilitate parallelization)
             prompt("Preparing robot-sim from %s" % model_path)
-            self.sim =get_sim(model_path=model_path)
+            self.sim =SimScene.get_sim(model_path=model_path)
         else:
             # use provided sim
             self.sim = mj_sim
