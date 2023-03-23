@@ -13,7 +13,7 @@ import numpy as np
 
 from robohive.envs import env_base
 from robohive.physics.sim_scene import get_sim
-from robohive.utils.quat_math import euler2quat, mat2euler
+from robohive.utils.quat_math import euler2quat, mat2euler, quat2euler
 from robohive.utils.xml_utils import reassign_parent
 from robohive.utils.inverse_kinematics import qpos_from_site_pose
 
@@ -205,8 +205,7 @@ class BinPickV0(env_base.MujocoEnv):
                                             target_pos= eef_pos,
                                             target_quat= eef_quat,
                                             inplace=False,
-                                            regularization_strength=1.0,
-                                            is_hardware=self.robot.is_hardware)
+                                            regularization_strength=1.0)
 
             if ik_result.success:
                 break
@@ -230,7 +229,9 @@ class BinPickV0(env_base.MujocoEnv):
         else:  
             # Un-normalize cmd
             eef_cmd = (0.5*a+0.5)*(self.pos_limits['eef_high']-self.pos_limits['eef_low'])+self.pos_limits['eef_low']
-            eef_cmd = np.clip(eef_cmd, low=self.pos_limits['eef_low'], high=self.pos_limits['eef_high'])
+            eef_cmd = np.clip(eef_cmd,
+                              self.pos_limits['eef_low'],
+                              self.pos_limits['eef_high'])
 
             # Get current position and rotation of eef
             cur_rot = mat2euler(self.sim.data.site_xmat[self.grasp_sid].reshape(3,3).transpose())
@@ -242,9 +243,13 @@ class BinPickV0(env_base.MujocoEnv):
                 
             # Enforce cartesian velocity limits
             if cur_pose[2] < self.max_slow_height:# and self.robot.is_hardware:
-                eef_cmd = np.clip(eef_cmd, cur_pose-self.vel_limits['eef_slow'], cur_pose+self.vel_limits['eef_slow'])
+                eef_cmd = np.clip(eef_cmd,
+                                  cur_pose-self.vel_limits['eef_slow'],
+                                  cur_pose+self.vel_limits['eef_slow'])
             else:
-                eef_cmd = np.clip(eef_cmd, cur_pose-self.vel_limits['eef'], cur_pose+self.vel_limits['eef'])
+                eef_cmd = np.clip(eef_cmd,
+                                  cur_pose-self.vel_limits['eef'],
+                                  cur_pose+self.vel_limits['eef'])
 
             # Exponential moving average to limit jerk
             assert self.last_eef_cmd is not None
@@ -268,7 +273,7 @@ class BinPickV0(env_base.MujocoEnv):
             
             # Check that we are not initiating a grasp at too low of height
             if ((eef_cmd[6] > sys.float_info.epsilon) and 
-                self.sim.data.site_xpos[self.grasp_sid][2] < self.min_grab_height):
+                self.sim.data.site_xpos[self.grasp_sid][2] < self.min_grab_height and self.robot.is_hardware):
                 print('Cant grasp this low, z = {}'.format(self.sim.data.site_xpos[self.grasp_sid][2]))
                 action[7:self.sim.model.nu] = 0.0
             else:
@@ -280,11 +285,11 @@ class BinPickV0(env_base.MujocoEnv):
             #if self.robot.is_hardware:
             if cur_pose[2] < self.max_slow_height:
                 action = np.clip(action, 
-                                self.sim.data.qpos[:self.sim.model.nu]-self.vel_limits['jnt_slow'], 
-                                self.sim.data.qpos[:self.sim.model.nu]+self.vel_limits['jnt_slow'])
+                                 self.sim.data.qpos[:self.sim.model.nu]-self.vel_limits['jnt_slow'],
+                                 self.sim.data.qpos[:self.sim.model.nu]+self.vel_limits['jnt_slow'])
             else:
                 action = np.clip(action, 
-                                 self.sim.data.qpos[:self.sim.model.nu]-self.vel_limits['jnt'], 
+                                 self.sim.data.qpos[:self.sim.model.nu]-self.vel_limits['jnt'],
                                  self.sim.data.qpos[:self.sim.model.nu]+self.vel_limits['jnt'])
 
             if self.normalize_act:
@@ -293,5 +298,99 @@ class BinPickV0(env_base.MujocoEnv):
         return super().step(action, **kwargs)
         
 class BinPickPolicy():
-    def __init__(self, env, seed):
+    def __init__(self,
+                 env,
+                 seed,
+                 move_thresh=0.01,
+                 begin_descent_thresh=0.05,
+                 begin_grasp_thresh=0.08,
+                 align_height=1.075):
+
         self.env = env
+        self.seed = seed
+        self.yaw = np.random.uniform(low=self.env.pos_limits['jnt_low'][6],
+                                     high=self.env.pos_limits['jnt_high'][6])
+        self.last_t = 0.0
+        self.stage = 0
+
+        self.last_qp = None
+        self.move_thresh = move_thresh
+
+        self.begin_descent_thresh = begin_descent_thresh
+        self.begin_grasp_thresh = begin_grasp_thresh
+        self.align_height = align_height
+        self.gripper_close_thresh = 1e-8 if self.env.robot.is_hardware else 0.01
+
+    def is_moving(self, qp):
+        assert(self.last_qp is not None and qp is not None)
+        return np.linalg.norm(qp - self.last_qp) > self.move_thresh
+    def get_action(self, obs):
+        obs_dict = self.env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
+
+        if not self.env.robot.is_hardware:
+            self.yaw = -np.pi/4-quat2euler(obs_dict['qp'][0,0,-4:])[-1]
+            while self.yaw < self.env.pos_limits['eef_low'][5]:
+                self.yaw += 2*np.pi
+            while self.yaw > self.env.pos_limits['eef_high'][5]:
+                self.yaw -= 2*np.pi
+
+        action = np.concatenate([obs_dict['grasp_pos'][0, 0, :], [np.pi, 0.0, self.yaw], [obs_dict['qp'][0, 0, 7]]])
+
+        if self.last_t > self.env.sim.data.time:
+            # Reset
+            self.stage = 0
+            self.last_qp = None
+        elif self.stage == 0: # Wait until aligned xy
+            # Advance to next stage?
+            if (np.linalg.norm(obs_dict['object_err'][0,0,:2]) < self.begin_descent_thresh and
+               (self.last_qp is not None and not self.is_moving(obs_dict['qp'][0,0,:]))):
+                self.stage = 1
+        elif self.stage == 1:# Wait until close pregrasp
+            if (np.linalg.norm(obs_dict['object_err'][0,0,:3]) < self.begin_grasp_thresh or
+               (self.last_qp is not None and not self.is_moving(obs_dict['qp'][0,0,:]))):
+                self.stage = 2
+        elif self.stage == 2: # Wait until pregrasp has stabilized
+            # Advance to next stage?
+            if self.last_qp is not None and not self.is_moving(obs_dict['qp'][0,0,:]):
+                self.stage = 3
+        elif self.stage == 3: # Wait for gripper to start closing
+            # Advance to next stage?
+            if self.last_qp is not None and obs_dict['qp'][0,0,7] > self.last_qp[7]:
+                self.stage = 4
+        elif self.stage == 4: # Wait for gripper to stop closing
+            if self.last_qp is not None and np.abs(self.last_qp[7] - obs_dict['qp'][0,0,7]) < self.gripper_close_thresh:
+                self.stage = 5
+
+        self.last_t = self.env.sim.data.time
+        self.last_qp = obs_dict['qp'][0,0,:]
+
+        #print('Stage {}, t {}'.format(self.stage, self.last_t))
+        if self.stage == 0: # Align in xy
+            action[2] = self.align_height
+            action[:2] += 1.5*obs_dict['object_err'][0,0,0:2]
+            action[6] = 0.0
+        elif self.stage == 1 or self.stage == 2: # Move to pregrasp
+            action[:2] += 1.5*obs_dict['object_err'][0,0,0:2]
+            action[2] += obs_dict['object_err'][0,0,2]
+            action[6] = 0.0
+        elif self.stage == 3 or self.stage == 4: # Close gripper
+            action[:3] += obs_dict['object_err'][0,0,0:3]
+            action[6] = 0.835
+        elif self.stage == 5: # Move to target pose
+            action[:3] += obs_dict['target_err'][0,0,0:3]
+            action[6] = 0.835
+
+        action = np.clip(action, self.env.pos_limits['eef_low'], self.env.pos_limits['eef_high'])
+
+        cur_rot = mat2euler(self.env.sim.data.site_xmat[self.env.grasp_sid].reshape(3,3).transpose())
+        cur_rot[np.abs(cur_rot-action[3:6])>np.abs(cur_rot+2*np.pi-action[3:6])] += 2*np.pi
+        cur_rot[np.abs(cur_rot-action[3:6])>np.abs(cur_rot-2*np.pi-action[3:6])] -= 2*np.pi
+        cur_pos = np.concatenate([self.env.sim.data.site_xpos[self.env.grasp_sid],
+                                  cur_rot,
+                                  [self.env.sim.data.qpos[7]]])
+        action = np.clip(action, cur_pos-self.env.vel_limits['eef'], cur_pos+self.env.vel_limits['eef'])
+
+        # Normalize action to be between -1 and 1
+        action = 2*(((action - self.env.pos_limits['eef_low']) / (self.env.pos_limits['eef_high'] - self.env.pos_limits['eef_low'])) - 0.5)
+
+        return action, {'evaluation': action}

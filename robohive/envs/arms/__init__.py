@@ -136,7 +136,7 @@ register(
         'object_site_name': "obj0",
         'target_site_name': "drop_target",
         'randomize': True,
-        'target_xyz_range': {'high':[0.0, 0.5, 1.1], 'low':[0.0, 0.5, 1.1]}
+        'target_xyz_range': {'high':[0.5, 0.0, 1.1], 'low':[0.5, 0.0, 1.1]}
     }
 
 )
