@@ -1,8 +1,12 @@
-from robohive.logger.grouped_datasets import Trace
+from robohive.logger.grouped_datasets import Trace, TraceType
 import numpy as np
 import json
 
 class RoboSet_Trace(Trace):
+
+    def __init__(self, trace_type=TraceType.ROBOSET, **kwargs):
+        super().__init__(trace_type=trace_type, **kwargs)
+
 
     # parse path from robohive format into robopen dataset format
     def path2dataset(self, path:dict, config_path=None)->dict:
