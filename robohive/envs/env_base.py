@@ -751,6 +751,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             obs, rwd, done, env_info = self.forward(update_exteroception=True) # t=0
             while t < horizon and done is False:
 
+                # print(t, t*self.dt, self.time, t*self.dt-self.time)
                 # Get step's actions ----------------------
                 act = policy.get_action(obs)[0] if mode == 'exploration' else policy.get_action(obs)[1]['evaluation']
 
@@ -767,7 +768,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
                 # log values at time=t ----------------------------------
                 datum_dict = dict(
-                        time=t,
+                        time=self.time,
                         observations=obs,
                         actions=act.copy(),
                         rewards=rwd,
@@ -785,7 +786,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             # record last step and finalize the rollout --------------------------------
             act = np.nan*np.ones(self.action_space.shape)
             datum_dict = dict(
-                        time=t,
+                        time=self.time,
                         observations=obs,
                         actions=act.copy(),
                         rewards=rwd,
