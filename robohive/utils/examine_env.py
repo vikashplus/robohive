@@ -12,6 +12,7 @@ import numpy as np
 import pickle
 import time
 import os
+import importlib
 
 DESC = '''
 Helper script to examine an environment and associated policy for behaviors; \n
@@ -31,6 +32,13 @@ class rand_policy():
     def get_action(self, obs):
         # return self.env.np_random.uniform(high=self.env.action_space.high, low=self.env.action_space.low)
         return self.env.action_space.sample(), {'mode': 'random samples'}
+
+def load_class_from_str(module_name, class_name):
+    try:
+        m = __import__(module_name, globals(), locals(), class_name)
+        return getattr(m, class_name)
+    except (ImportError, AttributeError):
+        return None
 
 # MAIN =========================================================
 @click.command(help=DESC)
@@ -56,13 +64,20 @@ def main(env_name, policy_path, mode, seed, num_episodes, render, camera_name, o
 
     # resolve policy and outputs
     if policy_path is not None:
-        pi = pickle.load(open(policy_path, 'rb'))
-        if output_dir == './': # overide the default
-            output_dir, pol_name = os.path.split(policy_path)
-            output_name = os.path.splitext(pol_name)[0]
-        if output_name is None:
-            pol_name = os.path.split(policy_path)[1]
-            output_name = os.path.splitext(pol_name)[0]
+
+        policy_tokens = policy_path.split('.')
+        pi = load_class_from_str('.'.join(policy_tokens[:-1]), policy_tokens[-1])
+
+        if pi is not None:
+            pi = pi(env, seed)
+        else:
+            pi = pickle.load(open(policy_path, 'rb'))
+            if output_dir == './': # overide the default
+                output_dir, pol_name = os.path.split(policy_path)
+                output_name = os.path.splitext(pol_name)[0]
+            if output_name is None:
+                pol_name = os.path.split(policy_path)[1]
+                output_name = os.path.splitext(pol_name)[0]
     else:
         pi = rand_policy(env, seed)
         mode = 'exploration'
