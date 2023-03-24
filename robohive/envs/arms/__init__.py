@@ -76,7 +76,7 @@ register(
         'robot_site_name': "end_effector",
         'object_site_name': "sugarbox",
         'target_site_name': "target",
-        'target_xyz_range': {'high':[-.4, 0.5, 0.78], 'low':[-.4, 0.5, 0.78]}
+        'target_xyz_range': {'high':[0.5, 0.4, 0.78], 'low':[0.5, 0.4, 0.78]}
     }
 )
 
@@ -91,7 +91,79 @@ register(
         'robot_site_name': "end_effector",
         'object_site_name': "sugarbox",
         'target_site_name': "target",
-        'target_xyz_range': {'high':[0.4, 0.5, 0.78], 'low':[-.4, .4, 0.78]}
+        'target_xyz_range': {'high':[0.5, 0.4, 0.78], 'low':[0.4, -0.4, 0.78]}
+    }
+)
+
+register(
+    # Init position: [0.51,0.23,0.98]
+    # Init euler: [-np.pi/4+0.3, np.pi+0.3, -3*np.pi/4,]
+    id='FrankaBinPush-v0',
+    entry_point='robohive.envs.arms.push_base_v0:PushBaseV0',
+    max_episode_steps=50, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_bin_push_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_bin_push_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_name': "obj0",
+        'obj_pos_limits': {'high':[0.52, 0.126, 0.955], 'low':[0.48, 0.125, 0.945]},
+        'target_site_name': "target",
+        'target_xyz_range': {'high':[0.5, -0.22, 1.085], 'low':[0.5, -0.22, 1.085]},
+        'pos_limits': {'eef_low': [0.315, -0.22, 0.89, -0.485, 3.14, -2.36, 0.4],
+                       'eef_high': [0.695, 0.275, 1.125, -0.485, 3.14, -2.36, 0.4]
+                       },
+        'vel_limits': {'eef':[0.15, 0.15, 0.15],
+                        'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.25, 0.2, 1.0]
+                        },
+        'init_qpos': [0.534, 0.401, 0.0, -1.971, -0.457, 0.490, 1.617, 0.4, 0.4],
+    }
+)
+
+register(
+    # Init position: [0.36, 0.0,  1.34]
+    # Init euler: [3.14, 0.5, -0.8,]
+    id='FrankaHangPush-v0',
+    entry_point='robohive.envs.arms.push_base_v0:PushBaseV0',
+    max_episode_steps=50, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_hang_push_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_hang_push_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_name': "obj0",
+        'obj_pos_limits': {'high':[0.46, 0.01, 1.31], 'low':[0.44, -0.01, 1.3]},
+        'target_site_name': "target",
+        'target_xyz_range': {'high':[0.621, 0.0, 1.333], 'low':[0.621, 0.0, 1.333]},
+        'pos_limits': {'eef_low': [0.3, -0.1, 1.25, 3.14, 0.5, -0.8, 0.2],
+                       'eef_high': [0.8, 0.1, 1.5, 3.14, 0.5, -0.8, 0.2]
+                       },
+        'vel_limits': {'eef':[0.15, 0.15, 0.15],
+                        'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.25, 0.2, 1.0]
+                        },
+        'init_qpos': [0.0227, -0.9291, -0.014, -2.5568, -0.029, 0.5052, -0.783, 0.2, 0.2],
+    }
+)
+
+register(
+    # Init position: [0.36, 0.0,  1.34]
+    # Init euler: [3.14, 0.5, -0.8,]
+    id='FrankaPlanarPush-v0',
+    entry_point='robohive.envs.arms.push_base_v0:PushBaseV0',
+    max_episode_steps=50, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_planar_push_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_planar_push_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_name': "obj0",
+        'obj_pos_limits': {'high':[0.50, 0.31, 0.855], 'low':[0.46, 0.29, 0.845]},
+        'target_site_name': "target",
+        'target_xyz_range': {'high':[0.48, -0.1, 0.845], 'low':[0.48, -0.1, 0.845]},
+        'pos_limits': {'eef_low': [0.3, -0.4, 0.865, 3.14, 0.0, 0.28, 0.2],
+                       'eef_high': [0.8, 0.4, 0.965, 3.14, 0.0, 1.28, 0.2]
+                       },
+        'vel_limits': {'eef':[0.15, 0.15, 0.15],
+                        'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.25, 0.2, 1.0]
+                        },
+        'init_qpos': [0.665, 0.567,  0.0, -1.999, 0.0,  0.9172, 1.4541, 0.2, 0.2],
     }
 )
 

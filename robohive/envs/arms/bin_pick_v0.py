@@ -228,7 +228,9 @@ class BinPickV0(env_base.MujocoEnv):
                 action = 2*(((action - self.pos_limits['jnt_low'])/(self.pos_limits['jnt_high']-self.pos_limits['jnt_low']))-0.5)            
         else:  
             # Un-normalize cmd
-            eef_cmd = (0.5*a+0.5)*(self.pos_limits['eef_high']-self.pos_limits['eef_low'])+self.pos_limits['eef_low']
+            eef_cmd = a
+            if self.normalize_act:
+                eef_cmd = (0.5*eef_cmd+0.5)*(self.pos_limits['eef_high']-self.pos_limits['eef_low'])+self.pos_limits['eef_low']
             eef_cmd = np.clip(eef_cmd,
                               self.pos_limits['eef_low'],
                               self.pos_limits['eef_high'])
