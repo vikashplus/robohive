@@ -479,6 +479,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         Get full state of the environemnt
         Default implemention provided. Override if env has custom state
         """
+        time = self.sim.data.time
         qp = self.sim.data.qpos.ravel().copy()
         qv = self.sim.data.qvel.ravel().copy()
         act = self.sim.data.act.ravel().copy() if self.sim.model.na>0 else None
@@ -488,7 +489,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         site_quat = self.sim.model.site_quat[:].copy() if self.sim.model.nsite>0 else None
         body_pos = self.sim.model.body_pos[:].copy()
         body_quat = self.sim.model.body_quat[:].copy()
-        return dict(qpos=qp,
+        return dict(time=time,
+                    qpos=qp,
                     qvel=qv,
                     act=act,
                     mocap_pos=mocap_pos,
@@ -504,11 +506,12 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         Set full state of the environemnt
         Default implemention provided. Override if env has custom state
         """
+        time = state_dict['time']
         qp = state_dict['qpos']
         qv = state_dict['qvel']
         act = state_dict['act'] if 'act' in state_dict.keys() else None
-        self.sim.set_state(qpos=qp, qvel=qv, act=act)
-        self.sim_obsd.set_state(qpos=qp, qvel=qv, act=act)
+        self.sim.set_state(time=time, qpos=qp, qvel=qv, act=act)
+        self.sim_obsd.set_state(time=time, qpos=qp, qvel=qv, act=act)
         if self.sim.model.nmocap>0:
             self.sim.data.mocap_pos[:] = state_dict['mocap_pos']
             self.sim.data.mocap_quat[:] = state_dict['mocap_quat']

@@ -486,6 +486,7 @@ class Robot():
 
     # synchronize states between two sims
     def sync_sims(self, source_sim, destination_sim, model=True, data=True):
+        destination_sim.data.time = source_sim.data.time
         if data:
             destination_sim.data.qpos[:] = source_sim.data.qpos[:].copy()
             destination_sim.data.qvel[:] = source_sim.data.qvel[:].copy()
