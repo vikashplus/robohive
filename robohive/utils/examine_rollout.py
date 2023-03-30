@@ -14,14 +14,12 @@ USAGE:\n
     $ python examine_rollout.py --env_name door-v0 --rollout_path my_rollouts.pickle --repeat 10 \n
 '''
 
-import gym
 from robohive.utils.paths_utils import plot as plotnsave_paths
-from robohive.utils.tensor_utils import split_tensor_dict_list
+from robohive.logger.grouped_datasets import Trace
 from robohive.utils import tensor_utils
+import gym
 import click
 import numpy as np
-import pickle
-import h5py
 import time
 import os
 import skvideo.io
@@ -31,6 +29,7 @@ from sys import platform
 @click.command(help=DESC)
 @click.option('-e', '--env_name', type=str, help='environment to load', required=True)
 @click.option('-p', '--rollout_path', type=str, help='absolute path of the rollout', default=None)
+@click.option('-f', '--rollout_format', type=click.Choice(['RoboHive', 'RoboSet']), help='Data format', default='RoboHive')
 @click.option('-m', '--mode', type=click.Choice(['record', 'render', 'playback', 'recover']), help='How to examine rollout', default='playback')
 @click.option('-h', '--horizon', type=int, help='Rollout horizon, when mode is record', default=-1)
 @click.option('-s', '--seed', type=int, help='seed for generating environment instances', default=123)
@@ -46,39 +45,40 @@ from sys import platform
 @click.option('-ea', '--env_args', type=str, default=None, help=('env args. E.g. --env_args "{\'is_hardware\':True}"'))
 @click.option('-ns', '--noise_scale', type=float, default=0.0, help=('Noise amplitude in randians}"'))
 
-def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera_name, frame_size, output_dir, output_name, save_paths, compress_paths, plot_paths, env_args, noise_scale):
+def main(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat, render, camera_name, frame_size, output_dir, output_name, save_paths, compress_paths, plot_paths, env_args, noise_scale):
 
     # seed and load environments
     np.random.seed(seed)
     env = gym.make(env_name) if env_args==None else gym.make(env_name, **(eval(env_args)))
     env.seed(seed)
 
-    # load paths
+    # Start a "trace" for recording rollouts
+    if rollout_format=='RoboHive':
+        from robohive.logger.grouped_datasets import Trace
+    elif rollout_format=='RoboSet':
+        from robohive.logger.roboset_logger import RoboSet_Trace as Trace
+    else:
+        raise TypeError("unknown rollout_format format")
+    trace = Trace("Rollouts")
+
+    # Load old traces as "paths"; none if record
     if mode == 'record':
         assert horizon>0, "Rollout horizon must be specified when recording rollout"
         assert output_name is not None, "Specify the name of the recording"
         if save_paths is False:
             print("Warning: Recording is not being saved. Enable save_paths=True to log the recorded path")
-        paths = [None,]*num_repeat # empty paths for recordings
+        paths = [None,]*num_repeat # Mark old traces as None
     else:
-
         assert rollout_path is not None, "Rollout path is required for mode:{} ".format(mode)
         if output_dir == './': # overide the default
             output_dir = os.path.dirname(rollout_path)
-        if output_name is None:
+        if output_name is None: # default to the rollout name
             rollout_name = os.path.split(rollout_path)[-1]
-        output_name, output_type = os.path.splitext(rollout_name)
+            output_name, output_type = os.path.splitext(rollout_name)
         # file_name = os.path.join(output_dir, output_name+"_"+"-".join(cam_names))
+        paths = Trace.load(rollout_path)
 
-        # resolve data format
-        if output_type=='.h5':
-            paths = h5py.File(rollout_path, 'r')
-        elif output_type=='.pickle':
-            paths = pickle.load(open(rollout_path, 'rb'))
-        else:
-            raise TypeError("Unknown path format. Check file")
-
-    # resolve rendering
+    # Resolve rendering
     if render == 'onscreen':
         env.env.mujoco_render_frames = True
     elif render =='offscreen':
@@ -87,102 +87,103 @@ def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera
     elif render == None:
         env.mujoco_render_frames = False
 
-    # playback paths
-    pbk_paths = []
+    # Rollout paths
     for i_loop in range(num_repeat):
-        print("Starting playback loop:{}".format(i_loop))
-        ep_rwd = 0.0
-        for i_path, path in enumerate(paths):
 
-            if output_type=='.h5':
-                data = paths[path]['data']
-                path_horizon = data['ctrl_arm'].shape[0]
-            else:
-                data = path['env_infos']['obs_dict']
-                path_horizon = path['env_infos']['time'].shape[0]
+        # Rollout path
+        print("Starting rollout loop:{}".format(i_loop))
+        for path_name, path_data in paths.items():
+            print(path_name, path_data)
 
-            # initialize buffers
+            if rollout_format == "robohive":
+                path_data = path_data
+            elif rollout_format == "roboset":
+                path_data = path_data['data']
+
+            # initialize path -----------------------------
             ep_t0 = time.time()
-            obs = []
-            act = []
-            rewards = []
-            env_infos = []
-            states = []
+            path_name+='-'+str(i_loop)
+            print("Starting {} rollout".format(path_name))
+            trace.create_group(path_name)
 
-            # initialize env to the starting position
-            if path:
-                path['actions'] = path['action']
-                # recover env initial state
-                state_t = split_tensor_dict_list(path['env_infos']['state'])
-                env.env.set_env_state(state_t[0])
+            # init: reset to starting state
+            if path_data:
                 # reset env
-                if output_type=='.h5':
+                if rollout_format=='RoboSet':
+                    # reset to init state
                     reset_qpos = env.init_qpos.copy()
-                    reset_qpos[:7] = data['qp_arm'][0]
-                    reset_qpos[7] = data['qp_ee'][0]
+                    nq_arm = len(path_data['qp_arm'][0])
+                    reset_qpos[:nq_arm] = path_data['qp_arm'][0]
+                    nq_ee = len(path_data['qp_ee'][0])
+                    reset_qpos[nq_arm:nq_arm+nq_ee] = path_data['qp_ee'][0] # assumption
                     env.reset(reset_qpos=reset_qpos)
-                elif output_type=='.pickle' and "state" in path['env_infos'].keys():
-                    env.reset(reset_qpos=path['env_infos']['state']['qpos'][0], reset_qvel=path['env_infos']['state']['qvel'][0])
+                elif rollout_format=='RoboHive' and "state" in path_data['env_infos'].keys():
+                    env.reset(reset_qpos=path_data['env_infos']['state']['qpos'][0], reset_qvel=path_data['env_infos']['state']['qvel'][0])
                 else:
                     raise TypeError("Unknown path type")
+                # recover env other initial state
+                state_t = tensor_utils.split_tensor_dict_list(path_data['env_infos']['state'])
+                env.env.set_env_state(state_t[0])
             else:
                 env.reset()
+            trace_horizon = horizon if mode=='record' else path_data['time'].shape[0]-1
 
-            # Rollout
-            o = env.get_obs()
-            if output_type=='.h5':
-                path_horizon = horizon if mode == 'record' else data['qp_arm'].shape[0]
-            else:
-                path_horizon = horizon if mode == 'record' else path['actions'].shape[0]
-            for i_step in range(path_horizon):
+
+            # Rollout path --------------------------------
+            ep_rwd = 0.0
+            obs, rwd, done, env_info = env.forward()
+            for i_step in range(trace_horizon+1):
+
+                # Get step's actions ----------------------
 
                 # Record Execution. Useful for kinesthetic demonstrations on hardware
                 if mode=='record':
-                    a = env.action_space.sample() # dummy random sample
-                    onext, r, d, info = env.step(a) # t ==> t+1
+                    act = env.action_space.sample() # dummy random sample
 
                 # Directly create the scene
                 elif mode=='render':
-                    env.env.set_env_state(state_t[i_step])
-                    env.mj_render()
-
-                    # copy over from exiting path
-                    a = path['actions'][i_step]
-                    if (i_step+1) < path_horizon:
-                        onext = path['observations'][i_step+1]
-                        r = path['rewards'][i_step+1]
-                        info = {}
+                    act = path_data['actions'][i_step]
 
                 # Apply actions in open loop
                 elif mode=='playback':
-                    if output_type=='.h5':
-                        a = np.concatenate([data['ctrl_arm'][i_step], data['ctrl_ee'][i_step]])
-                    else:
-                        a = path['actions'][i_step] if output_type=='.pickle' else path['data']['ctrl_arm']
-                    onext, r, d, info = env.step(a) # t ==> t+1
+                    if rollout_format=='RoboSet':
+                        act = np.concatenate([path_data['ctrl_arm'][i_step], path_data['ctrl_ee'][i_step]])
+                    elif rollout_format=='RoboHive':
+                        act = path_data['actions'][i_step]
 
                 # Recover actions from states
                 elif mode=='recover':
                     # assumes position controls
-                    a = path['env_infos']['obs_dict']['qp'][i_step]
+                    if rollout_format=='RoboSet':
+                        act = np.concatenate([path_data['qp_arm'][i_step], path_data['qp_ee'][i_step]])
+                    elif rollout_format=='RoboHive':
+                        act = path_data['env_infos']['obs_dict']['qp'][i_step]
                     if noise_scale:
-                        a = a +  env.env.np_random.uniform(high=noise_scale, low=-noise_scale, size=len(a)).astype(a.dtype)
+                        act = act + env.env.np_random.uniform(high=noise_scale, low=-noise_scale, size=len(act)).astype(act.dtype)
                     if env.normalize_act:
-                        a = env.robot.normalize_actions(controls=a)
-                    onext, r, d, info = env.step(a) # t ==> t+1
+                        act = env.robot.normalize_actions(controls=act)
 
-                # populate rollout paths
-                ep_rwd += r
-                act.append(a)
-                rewards.append(r)
+                # nan actions for last log entry
+                if i_step == trace_horizon:
+                    act = np.nan*np.ones(env.action_space.shape)
+
+                # log values at time=t ----------------------------------
                 if compress_paths:
-                    obs.append([]); o = onext # don't save obs
-                    if 'state' in info.keys(): del info['state']  # don't save state
-                else:
-                    obs.append(o); o = onext
-                env_infos.append(info)
+                    obs = [] # don't save obs, env_infos has obs_dict
+                    if 'state' in env_info.keys(): del env_info['state']  # don't save state, obs_dict has env necessities
 
-                # Render offscreen
+                # log: time, obs, act, rwd, info, done
+                datum_dict = dict(
+                        time=env.time,
+                        observations=obs,
+                        actions=act.copy(),
+                        rewards=rwd,
+                        env_infos=env_info,
+                        done=done,
+                    )
+                trace.append_datums(group_key=path_name,dataset_key_val=datum_dict)
+
+                # log: offscreen frames
                 if render =='offscreen':
                     curr_frame = env.sim.renderer.render_offscreen(
                         camera_id=camera_name,
@@ -193,17 +194,20 @@ def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera
                     frames[i_step,:,:,:] = curr_frame
                     # print(i_step, end=', ', flush=True)
 
-            # Create rollout outputs
-            pbk_path = dict(observations=np.array(obs),
-                actions=np.array(act),
-                rewards=np.array(rewards),
-                env_infos=tensor_utils.stack_tensor_dict_list(env_infos),
-                states=states)
-            pbk_paths.append(pbk_path)
+                # step/forward env using actions from t=>t+1 ----------------------
+                if i_step < trace_horizon and mode=='render':
+                    env.sim.data.time = path_data['time'][i_step]
+                    env.env.set_env_state(state_t[i_step])
+                    obs, rwd, done, env_info = env.forward()
+                    ep_rwd += rwd
+                elif i_step < trace_horizon: #incase last step actions (nans) can cause issues in step
+                    act = act.astype(np.float32, copy=False)
+                    obs, rwd, done, env_info = env.step(act)
+                    ep_rwd += rwd
 
             # save offscreen buffers as video
-            if render =='offscreen':
-                file_name = output_dir + 'rollout' + str(i_path) + ".mp4"
+            if render == 'offscreen':
+                file_name = output_dir + 'rollout' + str(path_name) + ".mp4"
                 inputdict={"-r": str(1/env.dt)}
                 # check if the platform is OS -- make it compatible with quicktime
                 if platform == "darwin":
@@ -213,22 +217,25 @@ def main(env_name, rollout_path, mode, horizon, seed, num_repeat, render, camera
                 print("\nSaved: " + file_name)
 
             # Finish rollout
-            print("-- Finished playback path %d :: Total reward = %3.3f, Total time = %2.3f" % (i_path, ep_rwd, ep_t0-time.time()))
+            print(f"Finishing {path_name} rollout in {(time.time()-ep_t0):0.4} sec. Total rewards {ep_rwd}")
 
         # Finish loop
-        print("Finished playback loop:{}".format(i_loop))
+        print("Finished rollout loop:{}".format(i_loop))
 
-    # Save paths
+    # plot paths ???: Needs upgrade to the new logger
+    trace.stack()
     time_stamp = time.strftime("%Y%m%d-%H%M%S")
-    if save_paths:
-        file_name = os.path.join(output_dir, output_name + '{}_paths.pickle'.format(time_stamp))
-        pickle.dump(pbk_paths, open(file_name, 'wb'))
-        print("Saved: "+file_name)
-
     # plot paths
     if plot_paths:
         file_name = os.path.join(output_dir, output_name + '{}'.format(time_stamp))
-        plotnsave_paths(pbk_paths, env=env, fileName_prefix=file_name)
+        plotnsave_paths(trace.trace, env=env, fileName_prefix=file_name)
+
+    # Close and save paths
+    trace.close()
+    if save_paths:
+        file_name = os.path.join(output_dir, output_name + '{}_paths.h5'.format(time_stamp))
+        trace.save(trace_name=file_name)
+
 
 if __name__ == '__main__':
     main()
