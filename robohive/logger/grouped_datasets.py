@@ -1,5 +1,6 @@
 from robohive.utils import tensor_utils
 from robohive.utils.dict_utils import flatten_dict, dict_numpify
+from robohive.utils.prompt_utils import prompt, Prompt
 import numpy as np
 import pickle
 import h5py
@@ -27,14 +28,27 @@ class TraceType(enum.Enum):
     ROBOHIVE = 0
     ROBOSET = 1
 
+    def get_type(input_type):
+        """
+        A more robust way of getting trace type. Supports strings
+        """
+        if type(input_type) == str:
+            if input_type.to_lower() == "robohive":
+                return TraceType.ROBOHIVE
+            elif input_type.to_lower() == "roboset":
+                return TraceType.ROBOSET
+            else:
+                prompt(f"unknown TraceType{input_type}. Setting it to TraceType.UNSET", type=Prompt.WARN)
+                return TraceType.UNSET
+
 
 class Trace:
-    def __init__(self, name, trace_type=TraceType.ROBOHIVE):
+    def __init__(self, name):
         self.name = name
         self.root = {name: {}}
         self.trace = self.root[name]
         self.index = 0
-        self.type = trace_type
+        self.type = TraceType.ROBOHIVE
 
     # Create a group in your logs
     def create_group(self, name):
@@ -208,10 +222,16 @@ class Trace:
 
 
     def __iter__(self):
+        """
+        Enables iteration over trace's groups. Makes it look like a list of groups
+        """
         return self
 
 
     def __next__(self):
+        """
+        Enables iteration over trace's groups. Makes it look like a list of groups
+        """
         if self.index >= len(self):
             self.index = 0
             raise StopIteration
@@ -222,8 +242,16 @@ class Trace:
         self.index += 1
         return item
 
+    def items(self):
+        """
+        Enables iteration over trace with key-value pairs
+        """
+        return zip(self.trace.keys(), self)
 
     # return length
+    """
+    returns the number of groups in the trace
+    """
     def __len__(self) -> str:
         return len(self.trace.keys())
 
@@ -349,10 +377,11 @@ class Trace:
             - h5 vs dict format
             - flattend schema
         """
-        trace_name, trace_format = trace_path.split('.')
+        trace_name, trace_format = os.path.splitext(trace_path)
         print("Reading:", trace_path)
-        if trace_format == "h5":
-            trace = Trace(name=trace_name, trace_type=trace_type)
+        if trace_format == ".h5":
+            trace = Trace(name=trace_name)
+            trace.trace_type=TraceType.get_type(trace_type)
             file_data = h5py.File(trace_path, "r")
             trace.trace = file_data # load data
             trace.root[trace.name] = trace.trace # build root
