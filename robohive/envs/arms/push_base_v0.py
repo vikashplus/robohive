@@ -13,13 +13,13 @@ import numpy as np
 from robohive.envs import env_base
 from robohive.physics.sim_scene import get_sim
 from robohive.utils.xml_utils import reassign_parent
-from robohive.utils.quat_math import mat2euler, euler2quat
+from robohive.utils.quat_math import mat2euler, euler2quat, mat2quat
 from robohive.utils.inverse_kinematics import qpos_from_site_pose
 
 class PushBaseV0(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS = [
-        'qp', 'qv', 'grasp_pos', 'grasp_rot' 'object_err', 'target_err'
+        'qp', 'qv', 'grasp_pos', 'grasp_rot', 'object_err', 'target_err'
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
         "object_dist": -1.0,
@@ -35,8 +35,15 @@ class PushBaseV0(env_base.MujocoEnv):
         raw_xml = raw_sim.model.get_xml()
         processed_xml = reassign_parent(xml_str=raw_xml, receiver_node="panda0_link7", donor_node="ee_mount")
         processed_model_path = model_path[:-4]+"_processed.xml"
-        with open(processed_model_path, 'w') as file:
-            file.write(processed_xml)
+
+        cur_xml = None
+        if os.path.exists(processed_model_path):
+            with open(processed_model_path,'r') as file:
+                cur_xml = file.read()
+
+        if cur_xml != processed_xml:
+            with open(processed_model_path, 'w') as file:
+                file.write(processed_xml)                       
 
         # Process model to use DManus as end effector
         if obsd_model_path == model_path:
@@ -46,8 +53,14 @@ class PushBaseV0(env_base.MujocoEnv):
             raw_xml = raw_sim.model.get_xml()
             processed_xml = reassign_parent(xml_str=raw_xml, receiver_node="panda0_link7", donor_node="ee_mount")
             processed_obsd_model_path = obsd_model_path[:-4]+"_processed.xml"
-            with open(processed_obsd_model_path, 'w') as file:
-                file.write(processed_xml)
+
+            cur_xml = None
+            if os.path.exists(processed_obsd_model_path):
+                with open(processed_obsd_model_path,'r') as file:
+                    cur_xml = file.read()
+            if cur_xml != processed_xml:
+                with open(processed_obsd_model_path, 'w') as file:
+                    file.write(processed_xml)
         else:
             processed_obsd_model_path = None
 
@@ -66,10 +79,6 @@ class PushBaseV0(env_base.MujocoEnv):
         super().__init__(model_path=processed_model_path, obsd_model_path=processed_obsd_model_path, seed=seed)
 
         self._setup(processed_model_path, **kwargs)
-
-        os.remove(processed_model_path)
-        if processed_obsd_model_path and processed_obsd_model_path!=processed_model_path:
-            os.remove(processed_obsd_model_path)
 
 
     def _setup(self,

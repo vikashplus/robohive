@@ -37,8 +37,15 @@ class BinPickV0(env_base.MujocoEnv):
         raw_xml = raw_sim.model.get_xml()
         processed_xml = reassign_parent(xml_str=raw_xml, receiver_node="panda0_link7", donor_node="ee_mount")
         processed_model_path = model_path[:-4]+"_processed.xml"
-        with open(processed_model_path, 'w') as file:
-            file.write(processed_xml)
+
+        cur_xml = None
+        if os.path.exists(processed_model_path):
+            with open(processed_model_path,'r') as file:
+                cur_xml = file.read()
+
+        if cur_xml != processed_xml:
+            with open(processed_model_path, 'w') as file:
+                file.write(processed_xml)   
 
         # Process model to use DManus as end effector
         if obsd_model_path == model_path:
@@ -48,8 +55,14 @@ class BinPickV0(env_base.MujocoEnv):
             raw_xml = raw_sim.model.get_xml()
             processed_xml = reassign_parent(xml_str=raw_xml, receiver_node="panda0_link7", donor_node="ee_mount")
             processed_obsd_model_path = obsd_model_path[:-4]+"_processed.xml"
-            with open(processed_obsd_model_path, 'w') as file:
-                file.write(processed_xml)
+
+            cur_xml = None
+            if os.path.exists(processed_obsd_model_path):
+                with open(processed_obsd_model_path,'r') as file:
+                    cur_xml = file.read()
+            if cur_xml != processed_xml:
+                with open(processed_obsd_model_path, 'w') as file:
+                    file.write(processed_xml)
         else:
             processed_obsd_model_path = None
 
@@ -68,10 +81,6 @@ class BinPickV0(env_base.MujocoEnv):
         super().__init__(model_path=processed_model_path, obsd_model_path=processed_obsd_model_path, seed=seed)
 
         self._setup(processed_model_path, **kwargs)
-
-        os.remove(processed_model_path)
-        if processed_obsd_model_path and processed_obsd_model_path!=processed_model_path:
-            os.remove(processed_obsd_model_path)
 
     def _setup(self,
                model_path,
