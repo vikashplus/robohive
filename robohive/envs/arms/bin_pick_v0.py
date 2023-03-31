@@ -13,7 +13,7 @@ import numpy as np
 
 from robohive.envs import env_base
 from robohive.physics.sim_scene import get_sim
-from robohive.utils.quat_math import euler2quat, mat2euler, quat2euler
+from robohive.utils.quat_math import euler2quat, mat2euler, quat2euler, mat2quat
 from robohive.utils.xml_utils import reassign_parent
 from robohive.utils.inverse_kinematics import qpos_from_site_pose
 
@@ -139,6 +139,11 @@ class BinPickV0(env_base.MujocoEnv):
                        frame_skip=frame_skip,
                        **kwargs)
         self.viewer_setup(distance=1.25, azimuth=-90, elevation=-20)
+
+        if self.pos_limits is not None:
+            act_low = -np.ones(self.pos_limits['eef_low'].shape[0]) if self.normalize_act else self.pos_limits['eef_low'].copy()
+            act_high = np.ones(self.pos_limits['eef_high'].shape[0]) if self.normalize_act else self.pos_limits['eef_high'].copy()
+            self.action_space = gym.spaces.Box(act_low, act_high, dtype=np.float32)
 
 
     def get_obs_dict(self, sim):

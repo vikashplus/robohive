@@ -139,6 +139,11 @@ class PushBaseV0(env_base.MujocoEnv):
         if init_qpos is not None:
             self.init_qpos[:len(init_qpos)] = np.array(init_qpos)[:]
 
+        if self.pos_limits is not None:
+            act_low = -np.ones(self.pos_limits['eef_low'].shape[0]) if self.normalize_act else self.pos_limits['eef_low'].copy()
+            act_high = np.ones(self.pos_limits['eef_high'].shape[0]) if self.normalize_act else self.pos_limits['eef_high'].copy()
+            self.action_space = gym.spaces.Box(act_low, act_high, dtype=np.float32)
+
     def get_obs_dict(self, sim):
         obs_dict = {}
         obs_dict['time'] = np.array([self.sim.data.time])
