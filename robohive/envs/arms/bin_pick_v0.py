@@ -20,7 +20,7 @@ from robohive.utils.inverse_kinematics import qpos_from_site_pose
 class BinPickV0(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS = [
-        'qp', 'qv', 'grasp_pos', 'object_err', 'target_err'
+        'qp', 'qv', 'grasp_pos', 'grasp_rot', 'object_err', 'target_err'
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
         "object_dist": -1.0,
@@ -138,6 +138,7 @@ class BinPickV0(env_base.MujocoEnv):
         obs_dict['qp'] = sim.data.qpos.copy()
         obs_dict['qv'] = sim.data.qvel.copy()
         obs_dict['grasp_pos'] = sim.data.site_xpos[self.grasp_sid]
+        obs_dict['grasp_rot'] = mat2quat(self.sim.data.site_xmat[self.grasp_sid].reshape(3,3).transpose())
         obs_dict['object_err'] = sim.data.site_xpos[self.object_sid]-sim.data.site_xpos[self.grasp_sid]
         obs_dict['target_err'] = sim.data.site_xpos[self.target_sid]-sim.data.site_xpos[self.object_sid]
         return obs_dict
@@ -322,10 +323,22 @@ class BinPickPolicy():
         self.begin_grasp_thresh = begin_grasp_thresh
         self.align_height = align_height
         self.gripper_close_thresh = 1e-8 if self.env.robot.is_hardware else 0.01
+        self.real_obj_pos = None
+        self.real_tar_pos = None
 
     def is_moving(self, qp):
         assert(self.last_qp is not None and qp is not None)
         return np.linalg.norm(qp - self.last_qp) > self.move_thresh
+
+    def set_real_obj_pos(real_obj_pos):
+        self.real_obj_pos = real_obj_pos
+
+    def set_real_tar_pos(real_tar_pos):
+        self.real_tar_pos = real_tar_pos
+
+    def set_real_yaw(real_yaw):
+        self.yaw = real_yaw
+
     def get_action(self, obs):
         obs_dict = self.env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
 
@@ -366,20 +379,30 @@ class BinPickPolicy():
         self.last_t = self.env.sim.data.time
         self.last_qp = obs_dict['qp'][0,0,:]
 
+        if self.env.robot.is_hardware and self.real_obj_pos is not None:
+            obj_err = self.real_obj_pos-obs_dict['grasp_pos'][0, 0, :]
+        else:
+            obj_err = obs_dict['object_err'][0,0,:]
+
+        if self.env.robot.is_hardware and self.real_tar_pos is not None:
+            tar_err = self.real_tar_pos-obs_dict['grasp_pos'][0, 0, :]
+        else:
+            tar_err = obs_dict['target_err'][0,0,:]
+
         #print('Stage {}, t {}'.format(self.stage, self.last_t))
         if self.stage == 0: # Align in xy
             action[2] = self.align_height
-            action[:2] += 1.5*obs_dict['object_err'][0,0,0:2]
+            action[:2] += 1.5*obj_err[0:2]
             action[6] = 0.0
         elif self.stage == 1 or self.stage == 2: # Move to pregrasp
-            action[:2] += 1.5*obs_dict['object_err'][0,0,0:2]
-            action[2] += obs_dict['object_err'][0,0,2]
+            action[:2] += 1.5*obj_err[0:2]
+            action[2] += obj_err[2]
             action[6] = 0.0
         elif self.stage == 3 or self.stage == 4: # Close gripper
-            action[:3] += obs_dict['object_err'][0,0,0:3]
+            action[:3] += obj_err[0:3]
             action[6] = 0.835
         elif self.stage == 5: # Move to target pose
-            action[:3] += obs_dict['target_err'][0,0,0:3]
+            action[:3] += tar_err[0:3]
             action[6] = 0.835
 
         action = np.clip(action, self.env.pos_limits['eef_low'], self.env.pos_limits['eef_high'])
