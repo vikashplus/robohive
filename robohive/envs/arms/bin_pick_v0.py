@@ -229,18 +229,16 @@ class BinPickV0(env_base.MujocoEnv):
     def step(self, a, **kwargs):
         assert(len(a.shape) == 1)
         assert(a.shape[0] == self.sim.model.nu or a.shape[0] == 7)
-        
+
+        jnt_act_low = self.sim.model.actuator_ctrlrange[:,0].copy()
+        jnt_act_high = self.sim.model.actuator_ctrlrange[:,1].copy()
+
         if a.shape[0] == self.sim.model.nu:
             action = a
             
-            # Enforce joint velocity limits
             if self.normalize_act:
-                action = (0.5*action+0.5)*(self.pos_limits['jnt_high']-self.pos_limits['jnt_low'])+self.pos_limits['jnt_low']
-            action = np.clip(action, 
-                             self.sim.data.qpos[:self.sim.model.nu]-self.vel_limits['jnt'], 
-                             self.sim.data.qpos[:self.sim.model.nu]+self.vel_limits['jnt'])
-            if self.normalize_act:
-                action = 2*(((action - self.pos_limits['jnt_low'])/(self.pos_limits['jnt_high']-self.pos_limits['jnt_low']))-0.5)            
+                action = (0.5*action+0.5)*(jnt_act_high-jnt_act_low)+jnt_act_low
+        
         else:  
             # Un-normalize cmd
             eef_cmd = a
@@ -298,21 +296,28 @@ class BinPickV0(env_base.MujocoEnv):
 
             self.last_eef_cmd = eef_cmd
 
-            # Enforce joint velocity limits
-            #if self.robot.is_hardware:
-            if cur_pose[2] < self.max_slow_height:
-                action = np.clip(action, 
-                                 self.sim.data.qpos[:self.sim.model.nu]-self.vel_limits['jnt_slow'],
-                                 self.sim.data.qpos[:self.sim.model.nu]+self.vel_limits['jnt_slow'])
-            else:
-                action = np.clip(action, 
-                                 self.sim.data.qpos[:self.sim.model.nu]-self.vel_limits['jnt'],
-                                 self.sim.data.qpos[:self.sim.model.nu]+self.vel_limits['jnt'])
+        # Enforce joint position limits
+        action = np.clip(action, jnt_act_low, jnt_act_high)
 
-            if self.normalize_act:
-                action = 2*(((action - self.pos_limits['jnt_low'])/(self.pos_limits['jnt_high']-self.pos_limits['jnt_low']))-0.5)                     
+        # Enforce joint velocity limits
+        if cur_pose[2] < self.max_slow_height:
+            action = np.clip(action, 
+                                self.sim.data.qpos[:self.sim.model.nu]-self.vel_limits['jnt_slow'],
+                                self.sim.data.qpos[:self.sim.model.nu]+self.vel_limits['jnt_slow'])
+        else:
+            action = np.clip(action, 
+                                self.sim.data.qpos[:self.sim.model.nu]-self.vel_limits['jnt'],
+                                self.sim.data.qpos[:self.sim.model.nu]+self.vel_limits['jnt'])
+
+        if self.normalize_act:
+            action = 2*(((action - jnt_act_low)/(jnt_act_high-jnt_act_low))-0.5)                     
         
-        return super().step(action, **kwargs)
+        self.last_ctrl = self.robot.step(ctrl_desired=action,
+                                        ctrl_normalized=self.normalize_act,
+                                        step_duration=self.dt,
+                                        realTimeSim=self.mujoco_render_frames,
+                                        render_cbk=self.mj_render if self.mujoco_render_frames else None)
+        return self.forward(**kwargs)
         
 class BinPickPolicy():
     def __init__(self,

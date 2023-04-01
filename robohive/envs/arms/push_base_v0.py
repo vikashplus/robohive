@@ -22,7 +22,7 @@ class PushBaseV0(env_base.MujocoEnv):
         'qp', 'qv', 'grasp_pos', 'grasp_rot', 'object_err', 'target_err'
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
-        "object_dist": -1.0,
+        "object_dist": 0.0,
         "target_dist": -1.0,
         "bonus": 4.0,
         "penalty": -50,
@@ -165,7 +165,7 @@ class PushBaseV0(env_base.MujocoEnv):
             # Optional Keys
             ('object_dist',   object_dist),
             ('target_dist',   target_dist),
-            ('bonus',   (object_dist<.1) + (target_dist<.1) + (target_dist<.05)),
+            ('bonus',   (object_dist<.15) + (target_dist<.1) + (target_dist<.05)),
             ('penalty', (object_dist>far_th)),
             # Must keys
             ('sparse',  -1.0*(target_dist<.050)),
@@ -222,21 +222,14 @@ class PushBaseV0(env_base.MujocoEnv):
         assert(len(a.shape) == 1)
         assert(a.shape[0] == self.sim.model.nu or a.shape[0] == 7)
 
+        jnt_act_low = self.sim.model.actuator_ctrlrange[:,0].copy()
+        jnt_act_high = self.sim.model.actuator_ctrlrange[:,1].copy()
+
         if a.shape[0] == self.sim.model.nu:
             action = a
+            if self.normalize_act:
+                action = (0.5 * action + 0.5) * (jnt_act_high - jnt_act_low) + jnt_act_low
 
-            if self.vel_limits is not None:
-                act_low = self.sim.model.actuator_ctrlrange[:,0].copy()
-                act_high = self.sim.model.actuator_ctrlrange[:,1].copy()
-                # Enforce joint velocity limits
-                if self.normalize_act:
-                    action = (0.5 * action + 0.5) * (act_high - act_low) + act_low
-                action = np.clip(action,
-                                 self.sim.data.qpos[:self.sim.model.nu] - self.vel_limits['jnt'],
-                                 self.sim.data.qpos[:self.sim.model.nu] + self.vel_limits['jnt'])
-                if self.normalize_act:
-                    action = 2 * (((action - act_low) / (
-                                act_high - act_low)) - 0.5)
         else:
             # Un-normalize cmd
             eef_cmd = a
@@ -281,16 +274,23 @@ class PushBaseV0(env_base.MujocoEnv):
 
             self.last_eef_cmd = eef_cmd
 
-            # Enforce joint velocity limits
-            # if self.robot.is_hardware:
-            if self.vel_limits is not None:
-                action = np.clip(action,
-                                 self.sim.data.qpos[:self.sim.model.nu] - self.vel_limits['jnt'],
-                                 self.sim.data.qpos[:self.sim.model.nu] + self.vel_limits['jnt'])
 
-            if self.normalize_act:
-                action = 2 * (((action - self.sim.model.actuator_ctrlrange[:,0].copy()) / (
-                            self.sim.model.actuator_ctrlrange[:,1].copy() - self.sim.model.actuator_ctrlrange[:,0].copy())) - 0.5)
+        # Enforce joint position limits
+        action = np.clip(action, jnt_act_low, jnt_act_high)
 
-        return super().step(action, **kwargs)
+        # Enforce joint velocity limits
+        if self.vel_limits is not None:
+            action = np.clip(action,
+                                self.sim.data.qpos[:self.sim.model.nu] - self.vel_limits['jnt'],
+                                self.sim.data.qpos[:self.sim.model.nu] + self.vel_limits['jnt'])
+
+        if self.normalize_act:
+            action = 2 * (((action - jnt_act_low) / (jnt_act_high - jnt_act_low)) - 0.5)
+
+        self.last_ctrl = self.robot.step(ctrl_desired=action,
+                                        ctrl_normalized=self.normalize_act,
+                                        step_duration=self.dt,
+                                        realTimeSim=self.mujoco_render_frames,
+                                        render_cbk=self.mj_render if self.mujoco_render_frames else None)
+        return self.forward(**kwargs)
 
