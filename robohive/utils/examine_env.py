@@ -87,14 +87,13 @@ def main(env_name, policy_path, mode, seed, num_episodes, render, camera_name, o
 
     # evaluate paths
     success_percentage = env.env.evaluate_success(paths)
-    print(f'Average success over rollouts: {success_percentage}')
+    print(f'Average success over rollouts: {success_percentage}%')
 
     # save paths
     time_stamp = time.strftime("%Y%m%d-%H%M%S")
     if save_paths:
         file_name = output_dir + '/' + output_name + '{}_trace.h5'.format(time_stamp)
         paths.save(trace_name=file_name, verify_length=True)
-        print("saved ", file_name)
 
     # plot paths
     if plot_paths:
