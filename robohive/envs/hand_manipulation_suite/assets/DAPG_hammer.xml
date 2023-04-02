@@ -37,18 +37,6 @@
 
     <!-- ======= WORLD ======= -->
     <worldbody>
-        <light directional='false' diffuse='.7 .7 .7' specular='0.03 0.03 0.03' pos='-1 -1.0 4.0' dir='1 1.0 -4'/>
-        <geom name='ground' size="1.5 1.5 0.25" pos="0 0 -1" type="plane" contype="1" conaffinity="0" material="groundplane" />
-        <camera name="fixed" pos="0 -0.7 0.7" quat="0.92388 0.382683 0 0" />
-        <geom name="robohive" type="mesh" mesh="robohive" conaffinity="0" contype="0" rgba=".3 .3 .3 1" euler="1.57 0 0" pos="0 1 .2"/>
-        <!-- Camera for the VIL paper -->
-        <camera name="vil_camera" pos="0 -1.2 1.2" quat="0.92388 0.382683 0 0" />
-        <camera name="view_1" pos="-0.8 -0.8 0.8" euler="0.785 -0.785 -0.785" />
-        <camera name="view_2" pos="0 0.5 0.2" euler="-1.57 0 3.14" />
-        <camera name="view_3" pos="0 0.2 -0.2" euler="-2.35 0 3.14" />
-        <camera name="view_4" pos="0.8 -0.8 0.8" euler="0.785 0.785 0.785" />
-        <camera name="view_5" pos="0 -0.25 -0.4" euler="-3.2 0 3.14" />
-        <camera name="top" pos="0 0 1.5" euler="0 0 3.14" />
 
         <!-- ======= TABLE ======= -->
         <body name="table">
