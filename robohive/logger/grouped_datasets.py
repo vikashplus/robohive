@@ -158,7 +158,7 @@ class Trace:
             else:
                 groups = [groups]
         for grp in groups:
-            assert grp in self.trace.keys(), "Unknown group {}".format(grp)
+            assert grp in self.trace.keys(), "Unknown group {}. Available groups {}".format(grp, self.trace.keys())
 
         # Run through all trajs in the paths
         for i_grp, grp in enumerate(groups):
