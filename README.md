@@ -21,7 +21,7 @@ conda activate robohive
 
    a. Most users -
    ```
-   git clone -c submodule.robohive/sims/myo_sim.update=none --branch v0.4dev  --recursive https://github.com/vikashplus/robohive.git
+   git clone -c submodule.robohive/simhive/myo_sim.update=none --branch v0.4dev  --recursive https://github.com/vikashplus/robohive.git
    ```
 
    b. myoSuite developers: you must have access to myo_sim(private repo) -

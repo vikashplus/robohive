@@ -6,20 +6,20 @@
     source  :: https://github.com/vikashplus/robohive
     License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ====================================================== -->
-    <compiler angle="radian" meshdir="../../../../sims/franka_sim" texturedir="../../../../sims/franka_sim"/>
+    <compiler angle="radian" meshdir="../../../../simhive/franka_sim" texturedir="../../../../simhive/franka_sim"/>
 
     <size njmax='1000' nconmax='1000'/>
 
-    <include file="../../../../sims/scene_sim/topfloor_scene.xml"/>
-    <include file="../../../../sims/franka_sim/assets/assets.xml"/>
-    <include file="../../../../sims/franka_sim/assets/gripper_assets.xml"/>
-    <include file="../../../../sims/furniture_sim/simpleTable/simpleTable_asset.xml"/>
-    <include file="../../../../sims/franka_sim/assets/actuator0.xml"/>
-    <include file="../../../../sims/franka_sim/assets/gripper_actuator0.xml"/>
+    <include file="../../../../simhive/scene_sim/topfloor_scene.xml"/>
+    <include file="../../../../simhive/franka_sim/assets/assets.xml"/>
+    <include file="../../../../simhive/franka_sim/assets/gripper_assets.xml"/>
+    <include file="../../../../simhive/furniture_sim/simpleTable/simpleTable_asset.xml"/>
+    <include file="../../../../simhive/franka_sim/assets/actuator0.xml"/>
+    <include file="../../../../simhive/franka_sim/assets/gripper_actuator0.xml"/>
 
-    <include file="../../../../sims/YCB_sim/includes/defaults_ycb.xml"/>
-    <include file="../../../../sims/YCB_sim/includes/assets_004_sugar_box.xml"/>
-    <include file="../../../../sims/YCB_sim/includes/assets_003_cracker_box.xml"/>
+    <include file="../../../../simhive/YCB_sim/includes/defaults_ycb.xml"/>
+    <include file="../../../../simhive/YCB_sim/includes/assets_004_sugar_box.xml"/>
+    <include file="../../../../simhive/YCB_sim/includes/assets_003_cracker_box.xml"/>
 
 
     <worldbody>
@@ -31,12 +31,12 @@
         <!-- Robot -->
         <body pos='0 0 .775' euler='0 0 1.57'>
             <geom type='cylinder' size='.120 .4' pos='-.04 0 -.4'/>
-            <include file="../../../../sims/franka_sim/assets/chain0.xml"/>
+            <include file="../../../../simhive/franka_sim/assets/chain0.xml"/>
         </body>
 
         <!-- simple Table -->
         <body pos='0 0.475 0'>
-            <include file="../../../../sims/furniture_sim/simpleTable/simpleWoodTable_body.xml"/>
+            <include file="../../../../simhive/furniture_sim/simpleTable/simpleWoodTable_body.xml"/>
         </body>
 
         <!-- tasks details added here via include-->
@@ -44,7 +44,7 @@
 
         <!-- object -->
         <body pos="0.0 0.5 .8">
-            <include file="../../../../sims/YCB_sim/includes/body_004_sugar_box.xml"/>
+            <include file="../../../../simhive/YCB_sim/includes/body_004_sugar_box.xml"/>
             <site name="sugarbox" size="0.01" pos="0 0 .088"/>
             <joint name="Tx" axis="1 0 0" type="slide" damping="0" limited="true" range="-1.0 1.0"/>
             <joint name="Ty" axis="0 1 0" type="slide" damping="0" limited="true" range="-0.5 0.5"/>

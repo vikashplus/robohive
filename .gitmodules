@@ -1,41 +1,41 @@
 [submodule "dependencies/Adroit"]
-	path = robohive/sims/Adroit
+	path = robohive/simhive/Adroit
 	url = https://github.com/vikashplus/Adroit.git
     branch = robohive
-[submodule "robohive/sims/furniture_sim"]
-	path = robohive/sims/furniture_sim
+[submodule "robohive/simhive/furniture_sim"]
+	path = robohive/simhive/furniture_sim
 	url = https://github.com/vikashplus/furniture_sim.git
-[submodule "robohive/sims/franka_sim"]
-	path = robohive/sims/franka_sim
+[submodule "robohive/simhive/franka_sim"]
+	path = robohive/simhive/franka_sim
 	url = https://github.com/vikashplus/franka_sim.git
-[submodule "robohive/sims/scene_sim"]
-	path = robohive/sims/scene_sim
+[submodule "robohive/simhive/scene_sim"]
+	path = robohive/simhive/scene_sim
 	url = https://github.com/vikashplus/scene_sim.git
-[submodule "robohive/sims/sawyer_sim"]
-	path = robohive/sims/sawyer_sim
+[submodule "robohive/simhive/sawyer_sim"]
+	path = robohive/simhive/sawyer_sim
 	url = https://github.com/vikashplus/sawyer_sim.git
-[submodule "robohive/sims/fetch_sim"]
-	path = robohive/sims/fetch_sim
+[submodule "robohive/simhive/fetch_sim"]
+	path = robohive/simhive/fetch_sim
 	url = https://github.com/vikashplus/fetch_sim.git
-[submodule "robohive/sims/dmanus_sim"]
-	path = robohive/sims/dmanus_sim
+[submodule "robohive/simhive/dmanus_sim"]
+	path = robohive/simhive/dmanus_sim
 	url = https://github.com/vikashplus/dmanus_sim.git
-[submodule "robohive/sims/YCB_sim"]
-	path = robohive/sims/YCB_sim
+[submodule "robohive/simhive/YCB_sim"]
+	path = robohive/simhive/YCB_sim
 	url = https://github.com/vikashplus/YCB_sim.git
 	branch = main
-[submodule "robohive/sims/object_sim"]
-	path = robohive/sims/object_sim
+[submodule "robohive/simhive/object_sim"]
+	path = robohive/simhive/object_sim
 	url = https://github.com/vikashplus/object_sim.git
-[submodule "robohive/sims/trifinger_sim"]
-	path = robohive/sims/trifinger_sim
+[submodule "robohive/simhive/trifinger_sim"]
+	path = robohive/simhive/trifinger_sim
 	url = https://github.com/vikashplus/trifinger_sim.git
-[submodule "robohive/sims/robel_sim"]
-	path = robohive/sims/robel_sim
+[submodule "robohive/simhive/robel_sim"]
+	path = robohive/simhive/robel_sim
 	url = https://github.com/vikashplus/robel_sim.git
-[submodule "robohive/sims/robotiq_sim"]
-	path = robohive/sims/robotiq_sim
+[submodule "robohive/simhive/robotiq_sim"]
+	path = robohive/simhive/robotiq_sim
 	url = https://github.com/vikashplus/robotiq_sim.git
-[submodule "robohive/sims/myo_sim"]
-	path = robohive/sims/myo_sim
+[submodule "robohive/simhive/myo_sim"]
+	path = robohive/simhive/myo_sim
 	url = https://github.com/vikashplus/myo_sim.git

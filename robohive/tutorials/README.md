@@ -33,7 +33,7 @@ Saved Baselines: https://github.com/vikashplus/robohive/releases/tag/v0.1
 
 ## Repo structure
 - envs
-- sims
+- simhive
 - robot
 - utils
 
