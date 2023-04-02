@@ -63,8 +63,11 @@ def register_all_env_variants(
 
     # update env's visual configs
     task_configs.update({
-            "obs_keys_wt": ['time'],
-            "visual_keys": FrankaKitchen.DEFAULT_VISUAL_KEYS
+            "visual_keys": FrankaKitchen.DEFAULT_VISUAL_KEYS,
+            # override the obs to avoid accidental leakage of oracle state info while using the visual envs
+            # using time as dummy obs. time keys are added twice to avoid unintended singleton expansion errors.
+            # Use proprioceptive data if needed - proprio_keys to configure, env.get_proprioception() to access
+            "obs_keys_wt": ['time', 'time']
             })
 
     # register visual random variants
