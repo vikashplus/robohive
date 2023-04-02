@@ -783,7 +783,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                         device_id=device_id)
 
                     frames[t,:,:,:] = curr_frame
-                    prompt(t, end=', ', flush=True, type=Prompt.INFO)
+                    prompt(str(t), end=', ', flush=True, type=Prompt.INFO)
 
                 # log values at time=t ----------------------------------
                 datum_dict = dict(
@@ -823,7 +823,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                     skvideo.io.vwrite(file_name, np.asarray(frames),outputdict={"-pix_fmt": "yuv420p"})
                 else:
                     skvideo.io.vwrite(file_name, np.asarray(frames))
-                prompt("saved", file_name, type=Prompt.INFO)
+                prompt("saved: "+file_name, type=Prompt.INFO)
 
         self.mujoco_render_frames = False
         prompt("Total time taken = %f"% (timer.time()-exp_t0), type=Prompt.INFO)
