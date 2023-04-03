@@ -8,7 +8,6 @@ import numpy as np
 import gym
 
 from robohive.envs.myo.base_v0 import BaseV0
-from robohive.envs.env_base import get_sim
 from robohive.utils.quat_math import euler2quat
 from robohive.utils.vector_math import calculate_cosine
 from os import sendfile

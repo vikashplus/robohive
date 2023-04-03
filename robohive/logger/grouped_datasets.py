@@ -1,5 +1,6 @@
 from robohive.utils import tensor_utils
 from robohive.utils.dict_utils import flatten_dict, dict_numpify
+from robohive.utils.prompt_utils import prompt, Prompt
 import numpy as np
 import pickle
 import h5py
@@ -7,6 +8,7 @@ from PIL import Image
 from sys import platform
 import skvideo.io
 import os
+import enum
 
 # Trace_name: {
 #     grp1: {dataset{k1:v1}, dataset{k2:v2}, ...}
@@ -15,13 +17,38 @@ import os
 
 # ToDo
 # access pattern for pickle and h5 backbone post load isn't the same
-# Should we get rid of pickle support and double down on h5?
+#   - Should we get rid of pickle support and double down on h5?
+#   - other way would to make the default container (trace.trace) h5 container instead of a dict
+# Should we explicitely keep tract if the trace has been flattened/ stacked/ closed etc?
+
+
+class TraceType(enum.Enum):
+    """Trace types."""
+    UNSET = -1
+    ROBOHIVE = 0
+    ROBOSET = 1
+
+    def get_type(input_type):
+        """
+        A more robust way of getting trace type. Supports strings
+        """
+        if type(input_type) == str:
+            if input_type.to_lower() == "robohive":
+                return TraceType.ROBOHIVE
+            elif input_type.to_lower() == "roboset":
+                return TraceType.ROBOSET
+            else:
+                prompt(f"unknown TraceType{input_type}. Setting it to TraceType.UNSET", type=Prompt.WARN)
+                return TraceType.UNSET
+
+
 class Trace:
     def __init__(self, name):
         self.name = name
         self.root = {name: {}}
         self.trace = self.root[name]
         self.index = 0
+        self.type = TraceType.ROBOHIVE
 
     # Create a group in your logs
     def create_group(self, name):
@@ -131,7 +158,7 @@ class Trace:
             else:
                 groups = [groups]
         for grp in groups:
-            assert grp in self.trace.keys(), "Unknown group {}".format(grp)
+            assert grp in self.trace.keys(), "Unknown group {}. Available groups {}".format(grp, self.trace.keys())
 
         # Run through all trajs in the paths
         for i_grp, grp in enumerate(groups):
@@ -180,18 +207,34 @@ class Trace:
 
 
     def __getitem__(self, index):
-        assert index<len(self)
-        keys = list(self.trace.keys())
-        key = keys[index]
-        value = self.trace[key]
-        return {key: value}
+        """
+            Enables indexing using either index(int) or keys(Trial0)
+            Example: Data = Trace(); Data[0] == Data['Trial0']
+        """
+        if type(index) == str:
+            assert index in self.trace.keys(), f"Index({index}) not in existing keys({list(self.trace.keys())})"
+            return self.trace[index]
+        elif type(index) == int:
+            assert index<len(self), f"Index({index}) outside the max lenght({len(self)})"
+            keys = list(self.trace.keys())
+            key = keys[index]
+            value = self.trace[key]
+            return value
+        else:
+            raise TypeError(f"index has to be str(TrailX), or int. {index} found")
 
 
     def __iter__(self):
+        """
+        Enables iteration over trace's groups. Makes it look like a list of groups
+        """
         return self
 
 
     def __next__(self):
+        """
+        Enables iteration over trace's groups. Makes it look like a list of groups
+        """
         if self.index >= len(self):
             self.index = 0
             raise StopIteration
@@ -202,8 +245,16 @@ class Trace:
         self.index += 1
         return item
 
+    def items(self):
+        """
+        Enables iteration over trace with key-value pairs
+        """
+        return zip(self.trace.keys(), self)
 
     # return length
+    """
+    returns the number of groups in the trace
+    """
     def __len__(self) -> str:
         return len(self.trace.keys())
 
@@ -211,30 +262,38 @@ class Trace:
     # Display data
     def __repr__(self) -> str:
         disp = "Trace_name: {}\n".format(self.root.keys())
-        for grp_k, grp_v in self.trace.items():
-            disp += "{"+grp_k+": \n"
-            for dst_k, dst_v in grp_v.items():
 
-                # raw
-                if type(dst_v) == list:
-                    datum = dst_v[0]
-                    try:
-                        ll = datum.shape
-                    except:
-                        ll = ()
-                    disp += "\t{}:[{}_{}]_{}\n".format(dst_k, str(type(dst_v[0])), ll, len(dst_v))
+        if isinstance(self.trace, h5py.File):
+        # Trace (when reloaded from h5)
+            for k, v in self.trace.items():
+                disp += v.__repr__()+"\n"
+                for kk,vv in v.items():
+                    disp += "\t"+vv.__repr__()+"\n"
 
-                # flattened
-                elif type(dst_v) == dict:
-                    datum = dst_v
-                    disp += "\t{}: {}\n".format(dst_k, str(type(datum)))
+        else:
+        # Trace (while open)
+            for grp_k, grp_v in self.trace.items():
+                disp += "{"+grp_k+": \n"
+                for dst_k, dst_v in grp_v.items():
+                    # raw
+                    if type(dst_v) == list:
+                        datum = dst_v[0]
+                        try:
+                            ll = datum.shape
+                        except:
+                            ll = ()
+                        disp += "\t{}:[{}_{}]_{}\n".format(dst_k, str(type(dst_v[0])), ll, len(dst_v))
 
-                # numpified
-                else:
-                    datum = dst_v
-                    disp += "\t{}: {}, shape{}, type({})\n".format(dst_k, str(type(datum)), datum.shape, datum.dtype)
+                    # flattened
+                    elif type(dst_v) == dict:
+                        datum = dst_v
+                        disp += "\t{}: {}\n".format(dst_k, str(type(datum)))
 
-            disp += "}\n"
+                    # numpified
+                    else:
+                        datum = dst_v
+                        disp += "\t{}: {}, shape{}, type({})\n".format(dst_k, str(type(datum)), datum.shape, datum.dtype)
+                disp += "}\n"
         return disp
 
 
@@ -311,13 +370,30 @@ class Trace:
 
 
     # load trace from disk
-    def load(trace_path):
-        trace_format = trace_path.split('.')[-1]
-        print("Reading: ", trace_path)
-        if trace_format == "h5":
-            trace = h5py.File(trace_path, "r")
+    @staticmethod
+    def load(trace_path, trace_type=TraceType.UNSET):
+        """
+        trace_path: Load the trace using the provided path
+        trace_type: Provide the trace type of the path; UNSET will be used if not provided
+        Note:
+            Loaded trace has some difference with the original trace
+            - h5 vs dict format
+            - flattend schema
+        """
+        trace_name, trace_format = os.path.splitext(trace_path)
+        print("Reading:", trace_path)
+        if trace_format == ".h5":
+            trace = Trace(name=trace_name)
+            trace.trace_type=TraceType.get_type(trace_type)
+            file_data = h5py.File(trace_path, "r")
+            trace.trace = file_data # load data
+            trace.root[trace.name] = trace.trace # build root
         else:
-            trace = pickle.load(open(trace_path, 'rb'))
+            file_data = pickle.load(open(trace_path, 'rb'))
+            trace = Trace(name=list(file_data.keys())[0])
+            trace.trace = file_data[trace.name] # load data
+            trace.root = file_data  # build root
+            trace.trace_type=TraceType.get_type(trace_type)
         return trace
 
 

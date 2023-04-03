@@ -188,9 +188,9 @@ class KitchenBase(env_base.MujocoEnv):
                 # Optional Keys
                 ("obj_goal", -np.sum(goal_dist, axis=-1)),
                 ("bonus",
-                    np.product(goal_dist < 5 * self.obj["dof_proximity"], axis=-1)
+                    1.0*np.product(goal_dist < 5 * self.obj["dof_proximity"], axis=-1)
                     # np.product(goal_dist < 0.75 * self.obj["dof_ranges"], axis=-1)
-                    + np.product(goal_dist < 1.67 * self.obj["dof_proximity"], axis=-1),
+                    + 1.0*np.product(goal_dist < 1.67 * self.obj["dof_proximity"], axis=-1),
                     # + np.product(goal_dist < 0.25 * self.obj["dof_ranges"], axis=-1),
                 ),
                 ("pose", -np.sum(np.abs(obs_dict["pose_err"]), axis=-1)),

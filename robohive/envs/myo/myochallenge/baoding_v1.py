@@ -118,7 +118,7 @@ class BaodingEnvV1(BaseV0):
             desired_positions_wrt_palm[2] = self.x_radius*np.cos(desired_angle_wrt_palm[1]) + self.center_pos[0]
             desired_positions_wrt_palm[3] = self.y_radius*np.sin(desired_angle_wrt_palm[1]) + self.center_pos[1]
 
-            # update both sims with desired targets
+            # update both simhive with desired targets
             for sim in [self.sim, self.sim_obsd]:
                 sim.model.site_pos[self.target1_sid, 0] = desired_positions_wrt_palm[0]
                 sim.model.site_pos[self.target1_sid, 1] = desired_positions_wrt_palm[1]
