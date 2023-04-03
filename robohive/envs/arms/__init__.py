@@ -130,7 +130,7 @@ register(
         'config_path': curr_dir+'/franka/assets/franka_hang_push_v0.config',
         'robot_site_name': "end_effector",
         'object_site_name': "obj0",
-        'obj_pos_limits': {'high':[0.46, 0.01, 1.31], 'low':[0.44, -0.01, 1.3]},
+        'obj_pos_limits': {'high':[0.475, 0.025, 1.31], 'low':[0.425, -0.025, 1.3]},
         'target_site_name': "target",
         'target_xyz_range': {'high':[0.621, 0.0, 1.333], 'low':[0.621, 0.0, 1.333]},
         'pos_limits': {'eef_low': [0.3, -0.1, 1.25, 3.14, 0.5, -0.8, 0.2],
@@ -154,7 +154,7 @@ register(
         'config_path': curr_dir+'/franka/assets/franka_planar_push_v0.config',
         'robot_site_name': "end_effector",
         'object_site_name': "obj0",
-        'obj_pos_limits': {'high':[0.50, 0.31, 0.855], 'low':[0.46, 0.29, 0.845]},
+        'obj_pos_limits': {'high':[0.52, 0.31, 0.855], 'low':[0.44, 0.25, 0.845]},
         'target_site_name': "target",
         'target_xyz_range': {'high':[0.48, -0.1, 0.845], 'low':[0.48, -0.1, 0.845]},
         'pos_limits': {'eef_low': [0.3, -0.4, 0.865, 3.14, 0.0, 0.28, 0.2],
@@ -166,6 +166,37 @@ register(
         'init_qpos': [0.665, 0.567,  0.0, -1.999, 0.0,  0.9172, 1.4541, 0.2, 0.2],
     }
 )
+
+# Reach to random target using visual inputs
+def register_push_visual_envs(env_name, encoder_type, cams, real=False, real_cams=None):
+    proprio_keys = ['qp', 'qv', 'grasp_pos', 'grasp_rot']
+    visual_keys = []
+    for cam in cams:
+        visual_keys.append('rgb:'+cam+':224x224:{}'.format(encoder_type))
+        visual_keys.append('d:'+cam+':224x224:{}'.format(encoder_type))
+    if real:
+        for cam in real_cams:
+            visual_keys.append('rgb:'+cam+':224x224:{}'.format(encoder_type))
+            visual_keys.append('d:'+cam+':224x224:{}'.format(encoder_type))
+       
+    register_env_variant(
+        env_id='{}-v0'.format(env_name),
+        variant_id='{}_v{}-v0'.format(env_name, encoder_type),
+        variants={'proprio_keys': proprio_keys,
+                  'visual_keys': visual_keys
+        },
+        silent=True
+    )
+push_cams =  ['top_cam', 'Franka_wrist_cam']
+for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
+    register_push_visual_envs('FrankaBinPush', enc, cams=push_cams)
+
+for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
+    register_push_visual_envs('FrankaHangPush', enc, cams=push_cams)
+
+planar_push_cams = ['right_cam', 'Franka_wrist_cam']
+for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
+    register_push_visual_envs('FrankaPlanarPush', enc, cams=planar_push_cams)
 
 # FRANKA PICK =======================================================================
 register(
@@ -212,6 +243,30 @@ register(
     }
 
 )
+
+# Reach to random target using visual inputs
+def register_bin_pick_visual_envs(env_name, encoder_type, real=False):
+    proprio_keys = ['qp', 'qv', 'grasp_pos', 'grasp_rot']
+    visual_keys = ["rgb:left_cam:224x224:{}".format(encoder_type),
+                   "d:left_cam:224x224:{}".format(encoder_type),
+                   "rgb:right_cam:224x224:{}".format(encoder_type),
+                   "d:right_cam:224x224:{}".format(encoder_type)]
+    if real:
+        visual_keys.extend(["rgb:top_cam:224x224:{}".format(encoder_type),
+                         "d:top_cam:224x224:{}".format(encoder_type),
+                         "rgb:Franka_wrist_cam:224x224:{}".format(encoder_type),
+                         "d:Franka_wrist_cam:224x224:{}".format(encoder_type)])
+
+    register_env_variant(
+        env_id='{}-v0'.format(env_name),
+        variant_id='{}_v{}-v0'.format(env_name, encoder_type),
+        variants={'proprio_keys': proprio_keys,
+                  'visual_keys':visual_keys
+        },
+        silent=True
+    )
+for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
+    register_bin_pick_visual_envs('FrankaBinPick', enc)
 
 # FETCH =======================================================================
 from robohive.envs.arms.reach_base_v0 import ReachBaseV0

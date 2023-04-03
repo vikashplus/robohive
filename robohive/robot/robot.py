@@ -452,7 +452,7 @@ class Robot():
                 img, depth = sim.renderer.render_offscreen(width=width, height=height, depth=True, camera_id=cam, device_id=device_id)
                 # img = img[::-1, :, :] # Image has to be flipped
                 imgs[ind, :, :, :] = img
-                depths[ind, :, :] = depth
+                depths[ind, :, :] = 255*depth[::-1]
 
         return imgs, depths
 

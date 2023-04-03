@@ -232,6 +232,7 @@ class BinPickV0(env_base.MujocoEnv):
 
         jnt_act_low = self.sim.model.actuator_ctrlrange[:,0].copy()
         jnt_act_high = self.sim.model.actuator_ctrlrange[:,1].copy()
+        cur_pose = None
 
         if a.shape[0] == self.sim.model.nu:
             action = a
@@ -300,7 +301,7 @@ class BinPickV0(env_base.MujocoEnv):
         action = np.clip(action, jnt_act_low, jnt_act_high)
 
         # Enforce joint velocity limits
-        if cur_pose[2] < self.max_slow_height:
+        if cur_pose is not None and cur_pose[2] < self.max_slow_height:
             action = np.clip(action, 
                                 self.sim.data.qpos[:self.sim.model.nu]-self.vel_limits['jnt_slow'],
                                 self.sim.data.qpos[:self.sim.model.nu]+self.vel_limits['jnt_slow'])
@@ -341,7 +342,7 @@ class BinPickPolicy():
         self.begin_descent_thresh = begin_descent_thresh
         self.begin_grasp_thresh = begin_grasp_thresh
         self.align_height = align_height
-        self.gripper_close_thresh = 1e-8 if self.env.robot.is_hardware else 0.01
+        self.gripper_close_thresh = 1e-8 if self.env.robot.is_hardware else 0.001
         self.real_obj_pos = None
         self.real_tar_pos = None
 
@@ -349,13 +350,13 @@ class BinPickPolicy():
         assert(self.last_qp is not None and qp is not None)
         return np.linalg.norm(qp - self.last_qp) > self.move_thresh
 
-    def set_real_obj_pos(real_obj_pos):
+    def set_real_obj_pos(self, real_obj_pos):
         self.real_obj_pos = real_obj_pos
 
-    def set_real_tar_pos(real_tar_pos):
+    def set_real_tar_pos(self, real_tar_pos):
         self.real_tar_pos = real_tar_pos
 
-    def set_real_yaw(real_yaw):
+    def set_real_yaw(self, real_yaw):
         self.yaw = real_yaw
 
     def get_action(self, obs):
@@ -424,6 +425,9 @@ class BinPickPolicy():
             action[:3] += tar_err[0:3]
             action[6] = 0.835
 
+        if self.stage >= 1 and not self.env.robot.is_hardware:
+            action[2] += 0.08
+
         action = np.clip(action, self.env.pos_limits['eef_low'], self.env.pos_limits['eef_high'])
 
         cur_rot = mat2euler(self.env.sim.data.site_xmat[self.env.grasp_sid].reshape(3,3).transpose())
@@ -436,5 +440,7 @@ class BinPickPolicy():
 
         # Normalize action to be between -1 and 1
         action = 2*(((action - self.env.pos_limits['eef_low']) / (self.env.pos_limits['eef_high'] - self.env.pos_limits['eef_low'])) - 0.5)
-
-        return action, {'evaluation': action}
+        
+        noise_action = np.clip(action + np.random.randn(action.shape[0]),-1,1)
+        
+        return noise_action, {'evaluation': action}

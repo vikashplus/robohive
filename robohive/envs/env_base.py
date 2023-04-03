@@ -361,7 +361,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 visual_dict.update({key:rgb_encoded})
                 # add depth observations if requested in the keys (assumption d will always be accompanied by rgb keys)
                 d_key = 'd:'+key[4:]
-                if d_key in self.obs_keys:
+                if d_key in self.visual_keys:
                     visual_dict.update({d_key:dpt})
 
         return visual_dict
@@ -574,9 +574,17 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         num_paths = len(paths)
 
         # Record success if solved for provided successful_steps
-        for path in paths:
-            if np.sum(path['env_infos']['solved'] * 1.0) > successful_steps:
+        for i, path in enumerate(paths):
+            if 'env_infos' in path:
+                success = np.sum(path['env_infos']['solved'] * 1.0) > successful_steps
+            elif 'env_infos' in path['Trial'+str(i)]:
+                success = np.sum([ _data['solved']*1.0 for _data in path['Trial'+str(i)]['env_infos']]) > successful_steps
                 # sum of truth values may not work correctly if dtype=object, need to * 1.0
+            elif 'env_infos/solved' in path['Trial'+str(i)]:
+                success = np.sum(path['Trial'+str(i)]['env_infos/solved'] * 1.0) > successful_steps
+            else:
+                raise NotImplementedError()
+            if success:
                 num_success += 1
         success_percentage = num_success*100.0/num_paths
 
@@ -809,7 +817,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         # print(trace)
         # trace.save(self.id+"_trace.pickle", verify_length=True)
         # trace.save(output_dir+self.id+"_trace.h5", verify_length=True)
-        print(trace)
+        # print(trace)
         if self.visual_keys:
             trace.close()
             render_keys = ['env_infos/visual_dict/'+ key for key in self.visual_keys]
@@ -819,8 +827,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         # Note that the saved logs are read as pickle/h5, we can't call trace.render on them.
         # trace.render("test_render.mp4", groups=":", datasets=["data/rgb_left","data/rgb_right","data/rgb_top","data/rgb_wrist"], output_format="mp4")
 
-        quit()
-        # return trace
+        #quit()
+        return trace
 
 
     # methods to override ====================================================

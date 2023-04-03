@@ -152,7 +152,10 @@ class Trace:
             for t in range(horizon):
                 # render single frame
                 for i_cam, cam_key in enumerate(datasets):
-                    frame_tile[:,i_cam*width:(i_cam+1)*width, :] = self.trace[grp][cam_key][t]
+                    if cam_key.startswith('env_infos/visual_dict/d:'):
+                        frame_tile[:,i_cam*width:(i_cam+1)*width, :] = self.trace[grp][cam_key][t].transpose(1,2,0)
+                    else:
+                        frame_tile[:,i_cam*width:(i_cam+1)*width, :] = self.trace[grp][cam_key][t]
                 # process single frame
                 if output_format == "mp4":
                     frames[t,:,:,:] = frame_tile

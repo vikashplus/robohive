@@ -22,8 +22,8 @@ class PushBaseV0(env_base.MujocoEnv):
         'qp', 'qv', 'grasp_pos', 'grasp_rot', 'object_err', 'target_err'
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
-        "object_dist": 0.0,
-        "target_dist": -1.0,
+        "object_dist": -1.0,
+        "target_dist": -5.0,
         "bonus": 4.0,
         "penalty": -50,
     }
@@ -165,7 +165,7 @@ class PushBaseV0(env_base.MujocoEnv):
             # Optional Keys
             ('object_dist',   object_dist),
             ('target_dist',   target_dist),
-            ('bonus',   (object_dist<.15) + (target_dist<.1) + (target_dist<.05)),
+            ('bonus',   (object_dist<.1) + (target_dist<.1) + (target_dist<.05)),
             ('penalty', (object_dist>far_th)),
             # Must keys
             ('sparse',  -1.0*(target_dist<.050)),
