@@ -14,4 +14,4 @@ import robohive.envs.multi_task # noqa
 import robohive.envs.tcdm # noqa
 import robohive.envs.claws # noqa
 
-__version__ = "0.3.0"
+__version__ = "0.5.0"
