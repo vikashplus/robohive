@@ -72,7 +72,8 @@ def register_visual_envs(env_name, encoder_type):
                     ['hand_jnt'],
                 'visual_keys':[
                     "rgb:vil_camera:224x224:{}".format(encoder_type),
-                    "rgb:fixed:224x224:{}".format(encoder_type)]
+                    "rgb:view_1:224x224:{}".format(encoder_type),
+                    "rgb:view_4:224x224:{}".format(encoder_type)]
         },
         silent=True
     )
