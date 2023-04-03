@@ -9,7 +9,7 @@ import robohive.envs.arms # noqa
 import robohive.envs.myo # noqa
 import robohive.envs.myo.myochallenge # noqa
 import robohive.envs.fm # noqa
-import robohive.envs.hand_manipulation_suite # noqa
+import robohive.envs.hands # noqa
 import robohive.envs.multi_task # noqa
 import robohive.envs.tcdm # noqa
 import robohive.envs.claws # noqa

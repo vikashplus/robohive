@@ -57,6 +57,6 @@ HMS contains a collection of environements centered around dexterous manipulatio
 
 Hand-Manipulation-Suite Tasks [(video)](https://youtu.be/jJtBll8l_OM)
 :-------------------------:
-![Alt text](robohive/envs/hand_manipulation_suite/assets/tasks.jpg?raw=false "Adroit Tasks")
+![Alt text](robohive/envs/hands/assets/tasks.jpg?raw=false "Adroit Tasks")
 
 ## 2. More coming soon
