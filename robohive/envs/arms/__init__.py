@@ -171,13 +171,18 @@ register(
 def register_push_visual_envs(env_name, encoder_type, cams, real=False, real_cams=None):
     proprio_keys = ['qp', 'qv', 'grasp_pos', 'grasp_rot']
     visual_keys = []
-    for cam in cams:
-        visual_keys.append('rgb:'+cam+':224x224:{}'.format(encoder_type))
-        visual_keys.append('d:'+cam+':224x224:{}'.format(encoder_type))
-    if real:
-        for cam in real_cams:
+
+    if not real:
+        for cam in cams:
             visual_keys.append('rgb:'+cam+':224x224:{}'.format(encoder_type))
             visual_keys.append('d:'+cam+':224x224:{}'.format(encoder_type))
+    else:
+        for cam in cams:
+            visual_keys.append('rgb:'+cam+':240x424:{}'.format(encoder_type))
+            visual_keys.append('d:'+cam+':240x424:{}'.format(encoder_type))      
+        for cam in real_cams:
+            visual_keys.append('rgb:'+cam+':240x424:{}'.format(encoder_type))
+            visual_keys.append('d:'+cam+':240x424:{}'.format(encoder_type))              
        
     register_env_variant(
         env_id='{}-v0'.format(env_name),
@@ -187,6 +192,7 @@ def register_push_visual_envs(env_name, encoder_type, cams, real=False, real_cam
         },
         silent=True
     )
+
 push_cams =  ['top_cam', 'Franka_wrist_cam']
 for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
     register_push_visual_envs('FrankaBinPush', enc, cams=push_cams)
@@ -244,18 +250,40 @@ register(
 
 )
 
+register(
+    id='FrankaBinPickReal-v0',
+    entry_point='robohive.envs.arms.bin_pick_v0:BinPickV0',
+    max_episode_steps=100, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_bin_pick_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_bin_pick_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_name': "obj0",
+        'target_site_name': "drop_target",
+        'randomize': True,
+        'target_xyz_range': {'high':[0.5, 0.0, 1.1], 'low':[0.5, 0.0, 1.1]},
+        'init_qpos': [0., 0., 0., -1.7359, 0., 0.2277,  -1.57, 0.0]
+    }
+)
+
 # Reach to random target using visual inputs
 def register_bin_pick_visual_envs(env_name, encoder_type, real=False):
     proprio_keys = ['qp', 'qv', 'grasp_pos', 'grasp_rot']
-    visual_keys = ["rgb:left_cam:224x224:{}".format(encoder_type),
-                   "d:left_cam:224x224:{}".format(encoder_type),
-                   "rgb:right_cam:224x224:{}".format(encoder_type),
-                   "d:right_cam:224x224:{}".format(encoder_type)]
-    if real:
-        visual_keys.extend(["rgb:top_cam:224x224:{}".format(encoder_type),
-                         "d:top_cam:224x224:{}".format(encoder_type),
-                         "rgb:Franka_wrist_cam:224x224:{}".format(encoder_type),
-                         "d:Franka_wrist_cam:224x224:{}".format(encoder_type)])
+
+    if not real:
+        visual_keys = ["rgb:left_cam:224x224:{}".format(encoder_type),
+                       "d:left_cam:224x224:{}".format(encoder_type),
+                       "rgb:right_cam:224x224:{}".format(encoder_type),
+                       "d:right_cam:224x224:{}".format(encoder_type)]
+    else:
+        visual_keys = ["rgb:left_cam:240x424:{}".format(encoder_type),
+                       "d:left_cam:240x424:{}".format(encoder_type),
+                       "rgb:right_cam:240x424:{}".format(encoder_type),
+                       "d:right_cam:240x424:{}".format(encoder_type),
+                       "rgb:top_cam:240x424:{}".format(encoder_type),
+                       "d:top_cam:240x424:{}".format(encoder_type),
+                       "rgb:Franka_wrist_cam:240x424:{}".format(encoder_type),
+                       "d:Franka_wrist_cam:240x424:{}".format(encoder_type)]
 
     register_env_variant(
         env_id='{}-v0'.format(env_name),
@@ -267,6 +295,8 @@ def register_bin_pick_visual_envs(env_name, encoder_type, real=False):
     )
 for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
     register_bin_pick_visual_envs('FrankaBinPick', enc)
+for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
+    register_bin_pick_visual_envs('FrankaBinPickReal', enc, real=True)    
 
 # FETCH =======================================================================
 from robohive.envs.arms.reach_base_v0 import ReachBaseV0

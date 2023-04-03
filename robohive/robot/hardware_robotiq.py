@@ -98,7 +98,7 @@ class Robotiq(hardwareBase):
             return self.get_sensors()
         return np.array([curr_state.width])
 
-    def apply_commands(self, width:float, speed:float=0.1, force:float=0.1):
+    def apply_commands(self, width:float, speed:float=0.4, force:float=0.4):
         assert width>=0.0 and width<=self.max_width, "Gripper desired width ({}) is out of bound (0,{})".format(width, self.max_width)
         self.robot.goto(width=width, speed=speed, force=force)
         return 0

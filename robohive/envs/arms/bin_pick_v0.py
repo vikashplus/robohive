@@ -88,6 +88,7 @@ class BinPickV0(env_base.MujocoEnv):
                object_site_name,
                target_site_name,
                target_xyz_range,
+               init_qpos = None,
                frame_skip=40,
                reward_mode="dense",
                obs_keys=DEFAULT_OBS_KEYS,
@@ -95,10 +96,10 @@ class BinPickV0(env_base.MujocoEnv):
                randomize=False,
                pos_limits = {'eef_low': [0.368, -0.25, 0.9, -np.pi, 0, -np.pi, 0.0],
                              'eef_high':[0.72, 0.25,  1.3, np.pi, 2*np.pi, 0, 0.835]},
-               vel_limits = {'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.1, 0.2, 0.835],
-                             'jnt_slow': [0.1, 0.25, 0.1, 0.25, 0.1, 0.1, 0.2, 0.835],
-                             'eef': [0.075, 0.075, 0.15, 0.3, 0.3, 0.3, 0.835],
-                             'eef_slow': [0.075, 0.075, 0.075, 0.3, 0.3, 0.3, 0.835]},
+               vel_limits = {'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.1, 0.35, 0.835],
+                             'jnt_slow': [0.1, 0.25, 0.1, 0.25, 0.1, 0.1, 0.35, 0.835],
+                             'eef': [0.075, 0.075, 0.15, 0.3, 0.3, 0.5, 0.835],
+                             'eef_slow': [0.075, 0.075, 0.075, 0.3, 0.3, 0.5, 0.835]},
                obj_pos_limits = {'low': [0.36, -0.22, 0.855],
                                  'high': [0.64, 0.22, 0.855]},
                min_grab_height=0.905,
@@ -138,6 +139,8 @@ class BinPickV0(env_base.MujocoEnv):
                        reward_mode=reward_mode,
                        frame_skip=frame_skip,
                        **kwargs)
+        if init_qpos is not None:
+            self.init_qpos[:len(init_qpos)] = np.array(init_qpos)[:]                       
         self.viewer_setup(distance=1.25, azimuth=-90, elevation=-20)
 
         if self.pos_limits is not None:
@@ -194,7 +197,7 @@ class BinPickV0(env_base.MujocoEnv):
 
             self.sim.forward()
 
-        obs = super().reset(reset_qpos, reset_qvel, **kwargs)
+        obs = super().reset(reset_qpos, reset_qvel, blocking=False, **kwargs)
 
         cur_pos = self.sim.data.site_xpos[self.grasp_sid]
         cur_rot = mat2euler(self.sim.data.site_xmat[self.grasp_sid].reshape(3,3).transpose())
@@ -312,7 +315,7 @@ class BinPickV0(env_base.MujocoEnv):
 
         if self.normalize_act:
             action = 2*(((action - jnt_act_low)/(jnt_act_high-jnt_act_low))-0.5)                     
-        
+
         self.last_ctrl = self.robot.step(ctrl_desired=action,
                                         ctrl_normalized=self.normalize_act,
                                         step_duration=self.dt,
@@ -371,17 +374,27 @@ class BinPickPolicy():
 
         action = np.concatenate([obs_dict['grasp_pos'][0, 0, :], [np.pi, 0.0, self.yaw], [obs_dict['qp'][0, 0, 7]]])
 
+        if self.env.robot.is_hardware and self.real_obj_pos is not None:
+            obj_err = self.real_obj_pos-obs_dict['grasp_pos'][0, 0, :]
+        else:
+            obj_err = obs_dict['object_err'][0,0,:]
+
+        if self.env.robot.is_hardware and self.real_tar_pos is not None:
+            tar_err = self.real_tar_pos-obs_dict['grasp_pos'][0, 0, :]
+        else:
+            tar_err = obs_dict['target_err'][0,0,:]
+
         if self.last_t > self.env.sim.data.time:
             # Reset
             self.stage = 0
             self.last_qp = None
         elif self.stage == 0: # Wait until aligned xy
             # Advance to next stage?
-            if (np.linalg.norm(obs_dict['object_err'][0,0,:2]) < self.begin_descent_thresh and
+            if (np.linalg.norm(obj_err[:2]) < self.begin_descent_thresh and
                (self.last_qp is not None and not self.is_moving(obs_dict['qp'][0,0,:]))):
                 self.stage = 1
         elif self.stage == 1:# Wait until close pregrasp
-            if (np.linalg.norm(obs_dict['object_err'][0,0,:3]) < self.begin_grasp_thresh or
+            if (np.linalg.norm(obj_err[:2]) < self.begin_grasp_thresh or
                (self.last_qp is not None and not self.is_moving(obs_dict['qp'][0,0,:]))):
                 self.stage = 2
         elif self.stage == 2: # Wait until pregrasp has stabilized
@@ -398,16 +411,6 @@ class BinPickPolicy():
 
         self.last_t = self.env.sim.data.time
         self.last_qp = obs_dict['qp'][0,0,:]
-
-        if self.env.robot.is_hardware and self.real_obj_pos is not None:
-            obj_err = self.real_obj_pos-obs_dict['grasp_pos'][0, 0, :]
-        else:
-            obj_err = obs_dict['object_err'][0,0,:]
-
-        if self.env.robot.is_hardware and self.real_tar_pos is not None:
-            tar_err = self.real_tar_pos-obs_dict['grasp_pos'][0, 0, :]
-        else:
-            tar_err = obs_dict['target_err'][0,0,:]
 
         #print('Stage {}, t {}'.format(self.stage, self.last_t))
         if self.stage == 0: # Align in xy
