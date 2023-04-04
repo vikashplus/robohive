@@ -68,12 +68,18 @@ def register_visual_envs(env_name, encoder_type):
     register_env_variant(
         env_id='{}-v1'.format(env_name),
         variant_id='{}_v{}-v1'.format(env_name, encoder_type),
-        variants={'proprio_keys':
-                    ['hand_jnt'],
+        variants={
+                # add visual keys to the env
                 'visual_keys':[
                     "rgb:vil_camera:224x224:{}".format(encoder_type),
                     "rgb:view_1:224x224:{}".format(encoder_type),
-                    "rgb:view_4:224x224:{}".format(encoder_type)]
+                    "rgb:view_4:224x224:{}".format(encoder_type)],
+                # override the obs to avoid accidental leakage of oracle state info while using the visual envs
+                # using time as dummy obs. time keys are added twice to avoid unintended singleton expansion errors.
+                "obs_keys": ['time', 'time'],
+                # add proprioceptive data - proprio_keys to configure, env.get_proprioception() to access
+                'proprio_keys':
+                    ['hand_jnt'],
         },
         silent=True
     )
