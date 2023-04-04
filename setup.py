@@ -27,7 +27,7 @@ extra_files = package_files('robohive')
 
 setup(
     name='robohive',
-    version='0.4.0',
+    version='0.5.0',
     packages=find_packages(),
     package_data={"": extra_files},
     include_package_data=True,
@@ -39,6 +39,7 @@ setup(
     install_requires=[
         'click',
         'gym==0.13',
+        'mujoco==2.3.3',
 #        'mujoco-py<2.2,>=2.1',
         'termcolor',
         'sk-video',
