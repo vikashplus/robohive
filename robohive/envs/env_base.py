@@ -32,6 +32,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
     DEFAULT_CREDIT = """\
     RoboHive: A unified framework for robot learning | https://sites.google.com/view/robohive
+        Code: https://github.com/vikashplus/robohive/stargazers (add a star to support the project)
     """
 
     def __init__(self,  model_path, obsd_model_path=None, seed=None, env_credits=DEFAULT_CREDIT):

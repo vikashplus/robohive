@@ -7,7 +7,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 from robohive.physics.sim_scene import SimScene
 from robohive.utils.quat_math import quat2euler
-from robohive.utils.prompt_utils import prompt
+from robohive.utils.prompt_utils import prompt, Prompt
 import time
 import numpy as np
 from collections import deque
@@ -53,7 +53,7 @@ class Robot():
             ):
 
         if kwargs != {}:
-            print("Warning: Unused kwargs found: {}".format(kwargs))
+            prompt("Warning: Unused kwargs found: {}".format(kwargs), type=Prompt.WARN)
         self.name = robot_name+'(sim)' if is_hardware is None else robot_name+'(hdr)'
         self._act_mode = act_mode
         self.is_hardware = bool(is_hardware)
