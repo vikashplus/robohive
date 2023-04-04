@@ -38,4 +38,4 @@
 	url = https://github.com/vikashplus/robotiq_sim.git
 [submodule "robohive/simhive/myo_sim"]
 	path = robohive/simhive/myo_sim
-	url = https://github.com/vikashplus/myo_sim.git
+	url = https://github.com/MyoHub/myo_sim.git
