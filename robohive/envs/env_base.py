@@ -44,7 +44,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                             : use model_path; if None
             seed: Random number generator seed
 
-        """
+        """ 
 
         prompt("RoboHive:> For environment credits, please cite -")
         prompt(env_credits, color="cyan", type=Prompt.INFO)
@@ -753,6 +753,224 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
                 # Get step's actions ----------------------
                 act = policy.get_action(obs)[0] if mode == 'exploration' else policy.get_action(obs)[1]['evaluation']
+
+                # render offscreen visuals ----------------------
+                if render =='offscreen':
+                    curr_frame = self.sim.renderer.render_offscreen(
+                        width=frame_size[0],
+                        height=frame_size[1],
+                        camera_id=camera_name,
+                        device_id=device_id)
+
+                    frames[t,:,:,:] = curr_frame
+                    prompt(t, end=', ', flush=True, type=Prompt.INFO)
+
+                # log values at time=t ----------------------------------
+                datum_dict = dict(
+                        time=t,
+                        observations=obs,
+                        actions=act.copy(),
+                        rewards=rwd,
+                        env_infos=env_info,
+                        done=done,
+                    )
+                trace.append_datums(group_key=group_key, dataset_key_val=datum_dict)
+
+
+                # step env using actions from t=>t+1 ----------------------
+                obs, rwd, done, env_info = self.step(act, update_exteroception=True)
+                t = t+1
+                ep_rwd += rwd
+
+            # record last step and finalize the rollout --------------------------------
+            act = np.nan*np.ones(self.action_space.shape)
+            datum_dict = dict(
+                        time=t,
+                        observations=obs,
+                        actions=act.copy(),
+                        rewards=rwd,
+                        env_infos=env_info,
+                        done=done,
+                    )
+            trace.append_datums(group_key=group_key, dataset_key_val=datum_dict)
+            prompt(f"Episode {ep}:> Finished in {(timer.time()-ep_t0):0.4} sec. Total rewards {ep_rwd}", type=Prompt.INFO)
+
+            # save offscreen buffers as video --------------------------------
+            if render =='offscreen':
+                file_name = output_dir + filename + str(ep) + ".mp4"
+                # check if the platform is OS -- make it compatible with quicktime
+                if platform == "darwin":
+                    skvideo.io.vwrite(file_name, np.asarray(frames),outputdict={"-pix_fmt": "yuv420p"})
+                else:
+                    skvideo.io.vwrite(file_name, np.asarray(frames))
+                prompt("saved", file_name, type=Prompt.INFO)
+
+        self.mujoco_render_frames = False
+        prompt("Total time taken = %f"% (timer.time()-exp_t0), type=Prompt.INFO)
+        trace.stack()
+        return trace
+
+    def replay_paths(self, # old, before updating to use forward with update_exteroception
+            original_paths,
+            horizon=1000,
+            num_episodes=1,
+            render=None,        # options: onscreen/offscreen/none
+            camera_name=None,
+            frame_size=(640,480),
+            output_dir='/tmp/',
+            filename='newvid',
+            device_id:int=0
+            ):
+        """
+            Examine a policy for behaviors;
+            - either onscreen, or offscreen, or just rollout without rendering.
+            - return resulting paths
+        """
+        exp_t0 = timer.time()
+
+        if render == 'onscreen':
+            self.mujoco_render_frames = True
+        elif render =='offscreen':
+            self.mujoco_render_frames = False
+            frames = np.zeros((horizon, frame_size[1], frame_size[0], 3), dtype=np.uint8)
+        elif render == None or render == 'None' or render == 'none':
+            self.mujoco_render_frames = False
+
+        # start rollouts
+        paths = []
+        if isinstance(original_paths, dict): 
+            original_paths = [original_paths]
+
+        num_episodes = len(original_paths)
+        for ep in range(num_episodes):
+            ep_t0 = timer.time()
+            observations=[]
+            actions=[]
+            rewards=[]
+            agent_infos = []
+            env_infos = []
+
+            print("Episode %d" % ep, end=":> ")
+            # o = self.reset(reset_qpos=original_paths[ep]['init_qpos'][:29], reset_qvel=original_paths[ep]['init_qvel'])
+            self.set_env_state(original_paths[ep]['init_state_dict'])
+            o = self.get_obs()
+            done = False
+            t = 0
+            ep_rwd = 0.0
+            while t < original_paths[ep]['observations'].shape[0] and done is False:
+                a = original_paths[ep]['actions'][t]  # take action from the dataset
+                next_o, rwd, done, env_info = self.step(a)
+                print("reward: ", rwd, "  solved: ", env_info['solved'])
+                ep_rwd += rwd
+                # render offscreen visuals
+                if render =='offscreen':
+                    curr_frame = self.sim.renderer.render_offscreen(
+                        width=frame_size[0],
+                        height=frame_size[1],
+                        camera_id=camera_name,
+                        device_id=device_id)
+
+                    frames[t,:,:,:] = curr_frame
+                    print(t, end=', ', flush=True)
+                observations.append(o)
+                actions.append(a)
+                rewards.append(rwd)
+                # agent_infos.append(agent_info)
+                env_infos.append(env_info)
+                o = next_o
+                t = t+1
+
+            print("Total reward = %3.3f, Total time = %2.3f" % (ep_rwd, timer.time()-ep_t0))
+            # rewrite the observations and rewards for the original paths
+            original_paths[ep]['observations'] = np.array(observations)
+            original_paths[ep]['rewards'] = np.array(rewards)
+
+            # still saving the replayed paths in RoboHive format for calculating success rate later
+            path = dict(
+            observations=np.array(observations),
+            actions=np.array(actions),
+            rewards=np.array(rewards),
+            # agent_infos=tensor_utils.stack_tensor_dict_list(agent_infos),
+            env_infos=tensor_utils.stack_tensor_dict_list(env_infos),
+            terminated=done
+            )
+            paths.append(path)
+
+            # save offscreen buffers as video
+            if render =='offscreen':
+                file_name = output_dir + filename + str(ep) + ".mp4"
+                # check if the platform is OS -- make it compatible with quicktime
+                if platform == "darwin":
+                    skvideo.io.vwrite(file_name, np.asarray(frames),outputdict={"-pix_fmt": "yuv420p"})
+                else:
+                    skvideo.io.vwrite(file_name, np.asarray(frames))
+                print("saved", file_name)
+
+        self.mujoco_render_frames = False
+        print("Total time taken = %f"% (timer.time()-exp_t0))
+        replayed_paths = paths
+        return replayed_paths, original_paths
+
+    
+    def replay_paths_new(self,
+            original_paths,
+            horizon=1000,
+            mode='exploration', # options: exploration/evaluation
+            render=None,        # options: onscreen/offscreen/none
+            camera_name=None,
+            frame_size=(640,480),
+            output_dir='/tmp/',
+            filename='newvid',
+            device_id:int=0
+            ):
+        """
+            Examine a policy for behaviors;
+            - either onscreen, or offscreen, or just rollout without rendering.
+            - return resulting paths
+        """
+
+        # from robohive.logger.roboset_logger import RoboSet_Trace as Trace
+        from robohive.logger.grouped_datasets import Trace
+
+        trace = Trace(self.id+"_rollouts")
+
+        exp_t0 = timer.time()
+
+        if render == 'onscreen':
+            self.mujoco_render_frames = True
+        elif render =='offscreen':
+            self.mujoco_render_frames = False
+            frames = np.zeros((horizon, frame_size[1], frame_size[0], 3), dtype=np.uint8)
+        elif render == None or render == 'None' or render == 'none':
+            self.mujoco_render_frames = False
+
+        if isinstance(original_paths, dict): 
+            original_paths = [original_paths]
+        num_episodes = len(original_paths)
+        # start rollouts
+        for ep in range(num_episodes):
+
+            # initialize -----------------------------
+            ep_t0 = timer.time()
+            group_key='Trial'+str(ep); trace.create_group(group_key)
+            prompt(f"Episode {ep}", end=":> ", type=Prompt.INFO)
+            # obs = self.reset()
+
+            self.set_env_state(original_paths[ep]['init_state_dict'])
+            # obs = self.get_obs()
+
+            done = False
+            t = 0
+            ep_rwd = 0.0
+
+            # Rollout --------------------------------
+            obs, rwd, done, env_info = self.forward(update_exteroception=True) # t=0
+            horizon = original_paths[ep]['observations'].shape[0]
+            while t < horizon and done is False:
+
+                # # Get step's actions ----------------------
+                # act = policy.get_action(obs)[0] if mode == 'exploration' else policy.get_action(obs)[1]['evaluation']
+                act = original_paths[ep]['actions'][t]
 
                 # render offscreen visuals ----------------------
                 if render =='offscreen':
