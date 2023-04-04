@@ -87,14 +87,13 @@ def main(env_name, policy_path, mode, seed, num_episodes, render, camera_name, o
 
     # evaluate paths
     success_percentage = env.env.evaluate_success(paths)
-    print(f'Average success over rollouts: {success_percentage}')
+    print(f'Average success over rollouts: {success_percentage}%')
 
     # save paths
     time_stamp = time.strftime("%Y%m%d-%H%M%S")
     if save_paths:
         file_name = output_dir + '/' + output_name + '{}_trace.h5'.format(time_stamp)
-        paths.save(trace_name=file_name, verify_length=True)
-        print("saved ", file_name)
+        paths.save(trace_name=file_name, verify_length=True, f_res=np.float64)
 
     # plot paths
     if plot_paths:
@@ -105,7 +104,7 @@ def main(env_name, policy_path, mode, seed, num_episodes, render, camera_name, o
     if env.visual_keys and render_visuals:
         paths.close()
         render_keys = ['env_infos/visual_dict/'+ key for key in env.visual_keys]
-        paths.render(output_dir=output_dir, output_format="mp4", groups=":", datasets=render_keys, input_fps=1/env.dt)
+        paths.render(output_dir=output_dir, output_format="mp4", groups=["Trial0",], datasets=render_keys, input_fps=1/env.dt)
 
 if __name__ == '__main__':
     main()

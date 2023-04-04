@@ -17,5 +17,13 @@ def set_prompt_verbosity(verbose_mode:Prompt=Prompt.INFO):
 
 
 def prompt(data, color=None, on_color=None, flush=False, end="\n", type:Prompt=Prompt.INFO):
+
+    if on_color == None:
+        if type==Prompt.WARN:
+            color = "black"
+            on_color = "on_yellow"
+        elif type==Prompt.ERROR:
+            on_color = "on_red"
+
     if type>=VERBOSE_MODE:
         cprint(data, color=color, on_color=on_color, flush=flush, end=end)

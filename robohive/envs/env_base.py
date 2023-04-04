@@ -17,7 +17,7 @@ from robohive.robot.robot import Robot
 from robohive.utils.prompt_utils import prompt, Prompt
 import skvideo.io
 from sys import platform
-from robohive.physics.sim_scene import get_sim
+from robohive.physics.sim_scene import SimScene
 
 # TODO
 # remove rwd_mode
@@ -32,6 +32,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
     DEFAULT_CREDIT = """\
     RoboHive: A unified framework for robot learning | https://sites.google.com/view/robohive
+        Code: https://github.com/vikashplus/robohive/stargazers (add a star to support the project)
     """
 
     def __init__(self,  model_path, obsd_model_path=None, seed=None, env_credits=DEFAULT_CREDIT):
@@ -53,8 +54,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.seed(seed)
 
         # sims
-        self.sim = get_sim(model_path)
-        self.sim_obsd = get_sim(obsd_model_path) if obsd_model_path else self.sim
+        self.sim = SimScene.get_sim(model_path)
+        self.sim_obsd = SimScene.get_sim(obsd_model_path) if obsd_model_path else self.sim
         self.sim.forward()
         self.sim_obsd.forward()
         ObsVecDict.__init__(self)
@@ -182,6 +183,9 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 import torchvision.transforms as T
                 from r3m import load_r3m
 
+            if "vc1" in id_encoder:
+                from vc_models.models.vit import model_utils as vc
+
             # Load encoder
             prompt("Using {} visual inputs with {} encoder".format(wxh, id_encoder), type=Prompt.INFO)
             if id_encoder == "1d":
@@ -203,6 +207,13 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             elif id_encoder == "rrl50":
                 model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)
                 self.rgb_encoder = torch.nn.Sequential(*(list(model.children())[:-1])).float()
+            elif id_encoder == "vc1s" or id_encoder == "vc1l":
+                if id_encoder == "vc1s":
+                    model,embd_size,model_transforms,model_info = vc.load_model(vc.VC1_BASE_NAME)
+                else:
+                    model,embd_size,model_transforms,model_info = vc.load_model(vc.VC1_LARGE_NAME)
+                self.rgb_encoder = model
+                self.rgb_transform = model_transforms
             else:
                 raise ValueError("Unsupported visual encoder: {}".format(id_encoder))
             self.rgb_encoder.eval()
@@ -355,6 +366,12 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                         rgb_encoded = rgb_encoded.to(self.device_encoder)
                         rgb_encoded = self.rgb_encoder(rgb_encoded).cpu().numpy()
                         rgb_encoded = np.squeeze(rgb_encoded)
+                elif rgb_encoder_id[:3] == 'vc1':
+                    with torch.no_grad():
+                        rgb_encoded = self.rgb_transform(torch.Tensor(img.transpose(0,3,1,2)))
+                        rgb_encoded = rgb_encoded.to(self.device_encoder)
+                        rgb_encoded = self.rgb_encoder(rgb_encoded).cpu().numpy()
+                        rgb_encoded = np.squeeze(rgb_encoded)
                 else:
                     raise ValueError("Unsupported visual encoder: {}".format(rgb_encoder_id))
 
@@ -479,6 +496,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         Get full state of the environemnt
         Default implemention provided. Override if env has custom state
         """
+        time = self.sim.data.time
         qp = self.sim.data.qpos.ravel().copy()
         qv = self.sim.data.qvel.ravel().copy()
         act = self.sim.data.act.ravel().copy() if self.sim.model.na>0 else None
@@ -488,7 +506,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         site_quat = self.sim.model.site_quat[:].copy() if self.sim.model.nsite>0 else None
         body_pos = self.sim.model.body_pos[:].copy()
         body_quat = self.sim.model.body_quat[:].copy()
-        return dict(qpos=qp,
+        return dict(time=time,
+                    qpos=qp,
                     qvel=qv,
                     act=act,
                     mocap_pos=mocap_pos,
@@ -504,11 +523,12 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         Set full state of the environemnt
         Default implemention provided. Override if env has custom state
         """
+        time = state_dict['time']
         qp = state_dict['qpos']
         qv = state_dict['qvel']
         act = state_dict['act'] if 'act' in state_dict.keys() else None
-        self.sim.set_state(qpos=qp, qvel=qv, act=act)
-        self.sim_obsd.set_state(qpos=qp, qvel=qv, act=act)
+        self.sim.set_state(time=time, qpos=qp, qvel=qv, act=act)
+        self.sim_obsd.set_state(time=time, qpos=qp, qvel=qv, act=act)
         if self.sim.model.nmocap>0:
             self.sim.data.mocap_pos[:] = state_dict['mocap_pos']
             self.sim.data.mocap_quat[:] = state_dict['mocap_quat']
@@ -751,6 +771,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             obs, rwd, done, env_info = self.forward(update_exteroception=True) # t=0
             while t < horizon and done is False:
 
+                # print(t, t*self.dt, self.time, t*self.dt-self.time)
                 # Get step's actions ----------------------
                 act = policy.get_action(obs)[0] if mode == 'exploration' else policy.get_action(obs)[1]['evaluation']
 
@@ -763,11 +784,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                         device_id=device_id)
 
                     frames[t,:,:,:] = curr_frame
-                    prompt(t, end=', ', flush=True, type=Prompt.INFO)
+                    prompt(str(t), end=', ', flush=True, type=Prompt.INFO)
 
                 # log values at time=t ----------------------------------
                 datum_dict = dict(
-                        time=t,
+                        time=self.time,
                         observations=obs,
                         actions=act.copy(),
                         rewards=rwd,
@@ -785,7 +806,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             # record last step and finalize the rollout --------------------------------
             act = np.nan*np.ones(self.action_space.shape)
             datum_dict = dict(
-                        time=t,
+                        time=self.time,
                         observations=obs,
                         actions=act.copy(),
                         rewards=rwd,
@@ -803,7 +824,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                     skvideo.io.vwrite(file_name, np.asarray(frames),outputdict={"-pix_fmt": "yuv420p"})
                 else:
                     skvideo.io.vwrite(file_name, np.asarray(frames))
-                prompt("saved", file_name, type=Prompt.INFO)
+                prompt("saved: "+file_name, type=Prompt.INFO)
 
         self.mujoco_render_frames = False
         prompt("Total time taken = %f"% (timer.time()-exp_t0), type=Prompt.INFO)

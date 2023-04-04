@@ -15,15 +15,6 @@ from typing import Any, Union
 import os
 from robohive.renderer.renderer import Renderer
 
-# resolve  backend and return the sim
-def get_sim(model_handle: Any):
-    sim_backend = os.getenv('sim_backend')
-    if sim_backend == 'MUJOCO_PY' or sim_backend == None:
-        return SimScene.create(model_handle=model_handle, backend=SimBackend.MUJOCO_PY)
-    elif sim_backend == 'MUJOCO':
-        return SimScene.create(model_handle=model_handle, backend=SimBackend.DM_CONTROL)
-    else:
-        raise ValueError("Unknown sim_backend: {}. Available choices: MUJOCO_PY, MUJOCO")
 
 class SimBackend(enum.Enum):
     """Simulation library types."""
@@ -55,6 +46,19 @@ class SimScene(metaclass=abc.ABCMeta):
             return mj_sim_scene.DMSimScene(*args, **kwargs)
         else:
             raise NotImplementedError(backend)
+
+
+    # resolve  backend and return the sim
+    @staticmethod
+    def get_sim(model_handle: Any) -> 'SimScene':
+        sim_backend = os.getenv('sim_backend')
+        if sim_backend == 'MUJOCO_PY' or sim_backend == None:
+            return SimScene.create(model_handle=model_handle, backend=SimBackend.MUJOCO_PY)
+        elif sim_backend == 'MUJOCO':
+            return SimScene.create(model_handle=model_handle, backend=SimBackend.DM_CONTROL)
+        else:
+            raise ValueError("Unknown sim_backend: {}. Available choices: MUJOCO_PY, MUJOCO")
+
 
     def __init__(
             self,
