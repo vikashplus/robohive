@@ -1,5 +1,5 @@
 DESC = '''
-Helper script to record/examine a rollout (record/ render/ playback/ recover) on an environment\n
+Helper script to record/examine a rollout's openloop effects (record/ render/ playback/ recover) on an environment\n
   > Examine options:\n
     - Record:   Record an execution. (Useful for kinesthetic demonstrations on hardware)\n
     - Render:   Render back the execution. (sim.forward)\n
@@ -8,22 +8,22 @@ Helper script to record/examine a rollout (record/ render/ playback/ recover) on
   > Render options\n
     - either onscreen, or offscreen, or just rollout without rendering.\n
   > Save options:\n
-    - save resulting rollouts as RoboHive/Roboset format, and as 2D plots\n
+    - save resulting paths as RoboHive format, and as 2D plots\n
 USAGE:\n
     $ python examine_rollout.py --env_name door-v0 \n
     $ python examine_rollout.py --env_name door-v0 --rollout_path my_rollouts.h5 --repeat 10 \n
     $ python logger/examine_logs.py --env_name rpFrankaRobotiqData-v0 --rollout_path teleOp_trace.h5 --rollout_format RoboSet --render offscreen --compress_paths False -c left_cam -c right_cam -c top_cam -c Franka_wrist_cam --plot_paths True
 '''
 
-from robohive.utils.paths_utils import plot as plotnsave_paths
-from robohive.utils import tensor_utils
 import gym
+from robohive.utils.paths_utils import plot as plotnsave_paths
 import click
 import numpy as np
 import time
 import os
+from robohive.logger.grouped_datasets import Trace
 
-
+# python examine_logs.py -e FrankaBinPickReal_v2d-v0 -p /mnt/raid5/data/plancaster/robohive_base/demonstrations/FrankaBinPick_v2d/robopen07_20230403-195410_paths.pickle -r none --env_args {\'is_hardware\':True}
 @click.command(help=DESC)
 @click.option('-e', '--env_name', type=str, help='environment to load', required=True)
 @click.option('-p', '--rollout_path', type=str, help='absolute path of the rollout', default=None)
@@ -50,22 +50,13 @@ def main(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat
     env = gym.make(env_name) if env_args==None else gym.make(env_name, **(eval(env_args)))
     env.seed(seed)
 
-    # Start a "trace" for recording rollouts
-    if rollout_format=='RoboHive':
-        from robohive.logger.grouped_datasets import Trace
-    elif rollout_format=='RoboSet':
-        from robohive.logger.roboset_logger import RoboSet_Trace as Trace
-    else:
-        raise TypeError("unknown rollout_format format")
-    trace = Trace("Rollouts")
-
-    # Load old traces as "paths"; none if record
+    # Load paths
     if mode == 'record':
         assert horizon>0, "Rollout horizon must be specified when recording rollout"
         assert output_name is not None, "Specify the name of the recording"
         if save_paths is False:
             print("Warning: Recording is not being saved. Enable save_paths=True to log the recorded path")
-        paths = [None,]*num_repeat # Mark old traces as None
+        paths = [None,]*num_repeat # empty paths for recordings
     else:
         assert rollout_path is not None, "Rollout path is required for mode:{} ".format(mode)
         if output_dir == './': # overide the default
@@ -74,7 +65,7 @@ def main(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat
             rollout_name = os.path.split(rollout_path)[-1]
             output_name, output_type = os.path.splitext(rollout_name)
         paths = Trace.load(rollout_path)
-
+    paths.close()
     # Resolve rendering
     if render == 'onscreen':
         env.env.mujoco_render_frames = True
@@ -84,6 +75,7 @@ def main(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat
         env.mujoco_render_frames = False
 
     # Rollout paths
+    trace = Trace("Rollouts Trajectories")
     for i_loop in range(num_repeat):
 
         # Rollout path
@@ -97,33 +89,33 @@ def main(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat
             trace.create_group(path_name)
 
             # init: reset to starting state
-            if path_data and rollout_format=='RoboHive':
+            if rollout_format=='RoboHive':
+                path_horizon = path_data['time'].shape[0]-1
                 # reset to init state
-                if "state" in path_data['env_infos'].keys():
-                    path_state = tensor_utils.split_tensor_dict_list(path_data['env_infos']['state'])
-                    env.reset(reset_qpos=path_state[0]['qpos'], reset_qvel=path_state[0]['qvel'])
-                    env.env.set_env_state(path_state[0])
+                print(path_data.keys())
+                if 'env_infos' in path_data and "state" in path_data['env_infos'].keys():
+                    state = {}
+                    for k in path_data['env_infos']['state'].keys(): state[k] = path_data['env_infos']['state'][k][0]
+                    env.reset(reset_qpos=path_data['env_infos']['state']['qpos'][0], reset_qvel=path_data['env_infos']['state']['qvel'][0])
+                    env.env.set_env_state(state)
                 else:
                     env.reset()
-            elif path_data and rollout_format=='RoboSet':
+            elif rollout_format=='RoboSet':
                 path_data = path_data['data']
+                path_horizon = path_data['ctrl_arm'].shape[0]-1
                 # reset to init state
                 reset_qpos = env.init_qpos.copy()
                 nq_arm = len(path_data['qp_arm'][0])
                 reset_qpos[:nq_arm] = path_data['qp_arm'][0]
-                nq_ee = len(path_data['qp_ee'][0])
-                reset_qpos[nq_arm:nq_arm+nq_ee] = path_data['qp_ee'][0]
+                reset_qpos[nq_arm] = path_data['qp_ee'][0] # assumption
                 env.reset(reset_qpos=reset_qpos)
-            elif mode=="record":
-                env.reset()
             else:
-                raise TypeError(f"Unknown rollout_format{rollout_format} / mode:{mode}")
-            trace_horizon = horizon if mode=='record' else path_data['time'].shape[0]-1
+                raise TypeError("Unknown rollout_format")
 
             # Rollout path --------------------------------
             ep_rwd = 0.0
             obs, rwd, done, env_info = env.forward()
-            for i_step in range(trace_horizon+1):
+            for i_step in range(path_horizon+1):
 
                 # Get step's actions ----------------------
 
@@ -133,10 +125,19 @@ def main(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat
 
                 # Directly create the scene
                 elif mode=='render':
-                    # populate actions merely for logging
+                    env.sim.data.time = path_data['time'][i_step]
                     if rollout_format=='RoboSet':
+                        env.sim.data.qpos[:nq_arm]= path_data['qp_arm'][i_step]
+                        env.sim.data.qpos[nq_arm]= path_data['qp_ee'][i_step] # assumption
+                        env.sim.data.qve[:nq_arm]= path_data['qv_arm'][i_step]
+                        env.sim.data.qvel[nq_arm]= path_data['qv_ee'][i_step] # assumption
+                        # populate actions merely for logging
                         act = np.concatenate([path_data['ctrl_arm'][i_step], path_data['ctrl_ee'][i_step]])
+
                     elif rollout_format=='RoboHive' and "state" in path_data['env_infos'].keys():
+                        env.sim.data.qpos[:]= path_data['env_infos']['state']['qpos'][i_step]
+                        env.sim.data.qvel[:]= path_data['env_infos']['state']['qvel'][i_step]
+                        # populate actions merely for logging
                         act = path_data['actions'][i_step]
                     else:
                         raise NotImplementedError("Settings not found")
@@ -161,13 +162,13 @@ def main(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat
                         act = env.robot.normalize_actions(controls=act)
 
                 # nan actions for last log entry
-                if i_step == trace_horizon:
+                if i_step == path_horizon:
                     act = np.nan*np.ones(env.action_space.shape)
 
                 # log values at time=t ----------------------------------
                 if compress_paths:
                     obs = [] # don't save obs, env_infos has obs_dict
-                    if 'state' in env_info.keys(): del env_info['state']  # don't save state, obs_dict has env necessities
+                    del env_info['state']  # don't save state, obs_dict has env necessities
 
                 # log: time, obs, act, rwd, info, done
                 datum_dict = dict(
@@ -179,6 +180,7 @@ def main(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat
                         done=done,
                     )
                 trace.append_datums(group_key=path_name,dataset_key_val=datum_dict)
+                # print(f't={env.time:2.2}, a={act}, o={obs[:3]}')
 
                 # log: offscreen frames
                 if render =='offscreen':
@@ -193,22 +195,12 @@ def main(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat
                         trace.append_datum(group_key=path_name,dataset_key=cam, dataset_val=curr_frame)
 
                 # step/forward env using actions from t=>t+1 ----------------------
-                if mode=='render' and i_step < trace_horizon:
-                    if rollout_format=='RoboSet':
-                        env.sim.data.qpos[:nq_arm]= path_data['qp_arm'][i_step+1]
-                        env.sim.data.qpos[nq_arm:nq_arm+nq_ee]= path_data['qp_ee'][i_step+1]
-                        env.sim.data.qve[:nq_arm]= path_data['qv_arm'][i_step+1]
-                        env.sim.data.qvel[nq_arm:nq_arm+nq_ee]= path_data['qv_ee'][i_step+1]
-                        env.sim.data.time = path_data['time'][i_step+1]
-                    elif rollout_format=='RoboHive' and "state" in path_data['env_infos'].keys():
-                        env.set_env_state(path_state[i_step+1])
-                    else:
-                        raise NotImplementedError("Settings not found")
+                if mode=='render':
+                    env.sim.forward()
                     obs, rwd, done, env_info = env.forward()
-                    ep_rwd += rwd
-                elif i_step < trace_horizon: # incase last step actions (nans) can cause issues in step
+                elif i_step < path_horizon: #incase last step actions (nans) can cause issues in step
                     obs, rwd, done, env_info = env.step(act)
-                    ep_rwd += rwd
+                ep_rwd += rwd
 
             # save offscreen buffers as video and clear the dataset
             if render == 'offscreen':
@@ -224,7 +216,6 @@ def main(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat
     # plot paths ???: Needs upgrade to the new logger
     trace.stack()
     time_stamp = time.strftime("%Y%m%d-%H%M%S")
-    # plot paths
     if plot_paths:
         file_name = os.path.join(output_dir, output_name + '{}'.format(time_stamp))
         plotnsave_paths(trace.trace, env=env, fileName_prefix=file_name)

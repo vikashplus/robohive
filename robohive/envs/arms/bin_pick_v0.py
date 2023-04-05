@@ -12,7 +12,7 @@ import gym
 import numpy as np
 
 from robohive.envs import env_base
-from robohive.physics.sim_scene import get_sim
+from robohive.physics.sim_scene import SimScene
 from robohive.utils.quat_math import euler2quat, mat2euler, quat2euler, mat2quat
 from robohive.utils.xml_utils import reassign_parent
 from robohive.utils.inverse_kinematics import qpos_from_site_pose
@@ -33,7 +33,7 @@ class BinPickV0(env_base.MujocoEnv):
 
 
         # Process model to use Robotiq/DManus as end effector
-        raw_sim = get_sim(model_path)
+        raw_sim = SimScene.get_sim(model_path)
         raw_xml = raw_sim.model.get_xml()
         processed_xml = reassign_parent(xml_str=raw_xml, receiver_node="panda0_link7", donor_node="ee_mount")
         processed_model_path = model_path[:-4]+"_processed.xml"
@@ -51,7 +51,7 @@ class BinPickV0(env_base.MujocoEnv):
         if obsd_model_path == model_path:
             processed_obsd_model_path = processed_model_path
         elif obsd_model_path:
-            raw_sim = get_sim(obsd_model_path)
+            raw_sim = SimScene.get_sim(obsd_model_path)
             raw_xml = raw_sim.model.get_xml()
             processed_xml = reassign_parent(xml_str=raw_xml, receiver_node="panda0_link7", donor_node="ee_mount")
             processed_obsd_model_path = obsd_model_path[:-4]+"_processed.xml"
@@ -123,7 +123,7 @@ class BinPickV0(env_base.MujocoEnv):
         self.max_ik = max_ik
         self.last_eef_cmd = None
 
-        self.ik_sim = get_sim(model_path)
+        self.ik_sim = SimScene.get_sim(model_path)
         self.pos_limits['jnt_low'] = self.sim.model.jnt_range[:self.sim.model.nu, 0]
         self.pos_limits['jnt_high'] = self.sim.model.jnt_range[:self.sim.model.nu, 1]
         
@@ -442,8 +442,8 @@ class BinPickPolicy():
         action = np.clip(action, cur_pos-self.env.vel_limits['eef'], cur_pos+self.env.vel_limits['eef'])
 
         # Normalize action to be between -1 and 1
-        action = 2*(((action - self.env.pos_limits['eef_low']) / (self.env.pos_limits['eef_high'] - self.env.pos_limits['eef_low'])) - 0.5)
-        
+        action = 2*(((action - self.env.pos_limits['eef_low']) / (np.abs(self.env.pos_limits['eef_high'] - self.env.pos_limits['eef_low'])+1e-8)) - 0.5)
+        action = np.clip(action, -1, 1)
         noise_action = np.clip(action + np.random.randn(action.shape[0]),-1,1)
         
         return noise_action, {'evaluation': action}

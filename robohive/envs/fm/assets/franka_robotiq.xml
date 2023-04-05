@@ -9,14 +9,14 @@
 
     <size njmax='1000' nconmax='1000'/>
 
-    <include file="../../../simhive/scene_sim/topfloor_scene.xml"/>
-    <include file="../../../simhive/furniture_sim/simpleTable/simpleTable_asset.xml"/>
-    <include file="../../../simhive/furniture_sim/ventionTable/ventionTable_asset.xml"/>
-    <include file="../../../simhive/franka_sim/assets/assets.xml"/>
-    <include file="../../../simhive/franka_sim/assets/actuator0.xml"/>
-    <include file="../../../simhive/robotiq_sim/assets/assets.xml"/>
+    <include file="../../../sims/scene_sim/topfloor_scene.xml"/>
+    <include file="../../../sims/furniture_sim/simpleTable/simpleTable_asset.xml"/>
+    <include file="../../../sims/furniture_sim/ventionTable/ventionTable_asset.xml"/>
+    <include file="../../../sims/franka_sim/assets/assets.xml"/>
+    <include file="../../../sims/franka_sim/assets/actuator0.xml"/>
+    <include file="../../../sims/robotiq_sim/assets/assets.xml"/>
 
-    <compiler inertiafromgeom="auto" inertiagrouprange="3 4" angle="radian" meshdir="../../../simhive/franka_sim" texturedir="../../../simhive/franka_sim"/>
+    <compiler inertiafromgeom="auto" inertiagrouprange="3 4" angle="radian" meshdir="../../../sims/franka_sim" texturedir="../../../sims/franka_sim"/>
 
     <worldbody>
 
@@ -28,20 +28,20 @@
         <!-- Franka Arm-->
         <site name='ee_target' type='box' size='.03 .07 .04' pos='0.4 0 1' group='1' rgba='0 1 .4 0' euler="0 3.14 3.14"/>
         <body pos='0 0 .823' euler='0 0 0'>
-            <include file="../../../simhive/franka_sim/assets/chain0_nogripper.xml"/>
+            <include file="../../../sims/franka_sim/assets/chain0_nogripper.xml"/>
         </body>
 
         <!-- Tables -->
         <body name="ventiontable" pos='-.3 0 0' euler='0 0 1.57'>
-            <include file="../../../simhive/furniture_sim/ventionTable/ventionTable_body.xml"/>
+            <include file="../../../sims/furniture_sim/ventionTable/ventionTable_body.xml"/>
         </body>
         <body name="scenetable" pos='0.49 0 0.065' euler="0 0 1.57">
-            <include file="../../../simhive/furniture_sim/simpleTable/simpleMarbleTable_body.xml"/>
+            <include file="../../../sims/furniture_sim/simpleTable/simpleMarbleTable_body.xml"/>
         </body>
 
         <!-- Robotiq Hand-->
         <body name="ee_mount" pos="0 0 .11" euler="0 0 0">
-            <include file="../../../simhive/robotiq_sim/assets/chain.xml"/>
+            <include file="../../../sims/robotiq_sim/assets/chain.xml"/>
         </body>
 
     </worldbody>

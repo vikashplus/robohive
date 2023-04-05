@@ -390,9 +390,13 @@ class Trace:
             trace.root[trace.name] = trace.trace # build root
         else:
             file_data = pickle.load(open(trace_path, 'rb'))
-            trace = Trace(name=list(file_data.keys())[0])
-            trace.trace = file_data[trace.name] # load data
-            trace.root = file_data  # build root
+
+            try:
+                trace = Trace(name=list(file_data.keys())[0])
+                trace.trace = file_data[trace.name] # load data
+                trace.root = file_data  # build root
+            except:
+                trace = file_data
             trace.trace_type=TraceType.get_type(trace_type)
         return trace
 

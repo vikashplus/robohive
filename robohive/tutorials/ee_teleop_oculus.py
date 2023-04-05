@@ -16,7 +16,7 @@ import time
 import numpy as np
 import click
 import gym
-from robohive.utils.quat_math import euler2quat, euler2mat, mat2quat, diffQuat, mulQuat
+from robohive.utils.quat_math import euler2quat, euler2mat, mat2quat, diffQuat, mulQuat, quat2euler
 from robohive.utils.inverse_kinematics import IKResult, qpos_from_site_pose
 from robohive.logger.roboset_logger import RoboSet_Trace
 from robohive.logger.grouped_datasets import Trace as RoboHive_Trace
@@ -54,6 +54,7 @@ def vrbehind2mj(pose):
 
     return pos, mat2quat(mat)
 
+# python tutorials/ee_teleop_oculus.py -e FrankaPlanarPushTeleop_v2d-v0 -ea "{'is_hardware': True}" -h 100 -r none -an 0.00 -rn 0.00 -o test.pickle -n 2 -f RoboHive
 @click.command(help=DESC)
 @click.option('-e', '--env_name', type=str, help='environment to load', default='rpFrankaRobotiqData-v0')
 @click.option('-ea', '--env_args', type=str, default=None, help=('env args. E.g. --env_args "{\'is_hardware\':True}"'))
@@ -112,7 +113,7 @@ def main(env_name, env_args, reset_noise, action_noise, output, horizon, num_rol
     # default actions
     act = np.zeros(env.action_space.shape)
     gripper_state = delta_gripper = 0
-
+    successes = 0
     # Collect rollouts
     for i_rollout in range(num_rollouts):
 
@@ -122,13 +123,27 @@ def main(env_name, env_args, reset_noise, action_noise, output, horizon, num_rol
         # Reset
         exit_request = False
         reset_noise = reset_noise*np.random.uniform(low=-1, high=1, size=env.init_qpos.shape)
-        env.reset(reset_qpos=env.init_qpos+reset_noise, blocking=True)
+        env.reset(reset_qpos=env.init_qpos+reset_noise, blocking=False)
+
+        # launch
+        print('hit pedal/button to start')
+        #while(getch.getch() not in ['a','b','c']): continue
+        while(True):
+            # poll input device --------------------------------------
+            buttons = oculus_reader.get_transformations_and_buttons()[1]
+            if buttons and buttons['A']:
+                break
+
+        time.sleep(.666)
+
+        print("\nrollout {} start".format(i_rollout))
+
         # Reset goal site back to nominal position
         env.sim.model.site_pos[goal_sid] = env.sim.data.site_xpos[teleop_sid]
         env.sim.model.site_quat[goal_sid] = mat2quat(np.reshape(env.sim.data.site_xmat[teleop_sid], [3,-1]))
 
         # recover init state
-        obs, rwd, done, env_info = env.forward()
+        obs, rwd, done, env_info = env.forward(update_exteroception=True)
         act = np.zeros(env.action_space.shape)
         gripper_state = 0
 
@@ -184,7 +199,7 @@ def main(env_name, env_args, reset_noise, action_noise, output, horizon, num_rol
                 # target_quat[:] = mulQuat(euler2quat(rot_scale*delta_euler), target_quat)
                 # update desired gripper
                 gripper_state = gripper_scale*delta_gripper # TODO: Update to be delta
-
+                '''
                 # Find joint space solutions
                 ik_result = qpos_from_site_pose(
                             physics = env.sim,
@@ -204,7 +219,12 @@ def main(env_name, env_args, reset_noise, action_noise, output, horizon, num_rol
                         act = act + env.env.np_random.uniform(high=action_noise, low=-action_noise, size=len(act)).astype(act.dtype)
                     if env.normalize_act:
                         act = env.env.robot.normalize_actions(act)
-
+                '''
+                #print('target yaw: {}'.format(target_quat))
+                #print('target yaw: {}'.format(quat2euler(target_quat)))
+                act = np.concatenate([target_pos, quat2euler(target_quat), [gripper_state]])
+                act = 2*((act - env.pos_limits['eef_low'])/(np.abs(env.pos_limits['eef_high'] - env.pos_limits['eef_low'])+1e-8)-0.5)
+                act = np.clip(act, -1,1)
             # nan actions for last log entry
             act = np.nan*np.ones(env.action_space.shape) if i_step == horizon else act
 
@@ -222,11 +242,14 @@ def main(env_name, env_args, reset_noise, action_noise, output, horizon, num_rol
 
             # step env using action from t=>t+1 ----------------------
             if i_step < horizon: #incase last actions (nans) can cause issues in step
-                obs, rwd, done, env_info = env.step(act)
+                obs, rwd, done, env_info = env.unwrapped.step(act, update_exteroception=True)
 
                 # Detect jumps
-                qpos_now = env_info['obs_dict']['qp_arm']
-                qpos_arm_err = np.linalg.norm(ik_result.qpos[:7]-qpos_now[:7])
+                try:
+                    qpos_now = env_info['obs_dict']['qp_arm']
+                except:
+                    qpos_now = env_info['obs_dict']['qp']
+                qpos_arm_err = np.linalg.norm(env.last_ctrl[:7]-qpos_now[:7])
                 if qpos_arm_err>0.5:
                     print("Jump detechted. Joint error {}. This is likely caused when hardware detects something unsafe. Resetting goal to where the arm curently is to avoid sudden jumps.".format(qpos_arm_err))
                     # Reset goal back to nominal position
@@ -234,12 +257,49 @@ def main(env_name, env_args, reset_noise, action_noise, output, horizon, num_rol
                     env.sim.model.site_quat[goal_sid] = mat2quat(np.reshape(env.sim.data.site_xmat[teleop_sid], [3,-1]))
 
         print("rollout {} end".format(i_rollout))
-        time.sleep(0.5)
+
+        # Move to pre-reset position
+        preset_pos = np.array([0.45, 0.375, 1.25])
+        preset_elr = np.array([ 3.14,  0.0, 0.78])
+        preset_grasp = np.array([0.0])
+        preset_action = np.concatenate([preset_pos, preset_elr, preset_grasp])
+        preset_action = 2*(((preset_action - env.pos_limits['eef_low'])/(np.abs(env.pos_limits['eef_high']-env.pos_limits['eef_low'])+1e-8))-0.5)
+        preset_i = 0
+        
+        while preset_i < 50:           
+            
+            env.step(preset_action)
+            preset_i += 1
+
+        print('input result, A success / B fail')
+        while(True):
+            # poll input device --------------------------------------
+            buttons = oculus_reader.get_transformations_and_buttons()[1]
+            if buttons and buttons['A']:
+                user_cmt=1.0
+                successes += 1
+                break
+            elif buttons and buttons['B']:
+                user_cmt=0.0
+                break
+            elif buttons and buttons['rightTrig'][0]:
+                ans = input('corrupt??? (y for yes)')
+                if ans=='y':
+                    user_cmt = -1.0
+                    break
+
+
+        print(user_cmt)
+        
+        for t in range(horizon+1):
+            trace.append_datums(group_key=group_key,dataset_key_val={'success':user_cmt})
+        print('Successes {}'.format(successes))
 
     # save and close
     env.close()
+    trace.close()
     trace.save(output, verify_length=True)
-
+    print('Successes {}'.format(successes))
     # render video outputs
     if len(camera)>0:
         if camera[0]!="default":

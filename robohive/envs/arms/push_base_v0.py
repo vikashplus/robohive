@@ -11,7 +11,7 @@ import gym
 import numpy as np
 
 from robohive.envs import env_base
-from robohive.physics.sim_scene import get_sim
+from robohive.physics.sim_scene import SimScene
 from robohive.utils.xml_utils import reassign_parent
 from robohive.utils.quat_math import mat2euler, euler2quat, mat2quat
 from robohive.utils.inverse_kinematics import qpos_from_site_pose
@@ -31,7 +31,7 @@ class PushBaseV0(env_base.MujocoEnv):
     def __init__(self, model_path, obsd_model_path=None, seed=None, **kwargs):
 
         # Process model to use Robotiq/DManus as end effector
-        raw_sim = get_sim(model_path)
+        raw_sim = SimScene.get_sim(model_path)
         raw_xml = raw_sim.model.get_xml()
         processed_xml = reassign_parent(xml_str=raw_xml, receiver_node="panda0_link7", donor_node="ee_mount")
         processed_model_path = model_path[:-4]+"_processed.xml"
@@ -49,7 +49,7 @@ class PushBaseV0(env_base.MujocoEnv):
         if obsd_model_path == model_path:
             processed_obsd_model_path = processed_model_path
         elif obsd_model_path:
-            raw_sim = get_sim(obsd_model_path)
+            raw_sim = SimScene.get_sim(obsd_model_path)
             raw_xml = raw_sim.model.get_xml()
             processed_xml = reassign_parent(xml_str=raw_xml, receiver_node="panda0_link7", donor_node="ee_mount")
             processed_obsd_model_path = obsd_model_path[:-4]+"_processed.xml"
@@ -111,7 +111,7 @@ class PushBaseV0(env_base.MujocoEnv):
         self.obj_pos_limits = obj_pos_limits
         self.max_ik = max_ik
 
-        self.ik_sim = get_sim(model_path)
+        self.ik_sim = SimScene.get_sim(model_path)
         self.last_eef_cmd = None
 
         assert(self.pos_limits is None or

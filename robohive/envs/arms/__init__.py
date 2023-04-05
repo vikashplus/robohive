@@ -120,6 +120,50 @@ register(
 )
 
 register(
+    id='FrankaBinPushTeleop-v0',
+    entry_point='robohive.envs.arms.push_base_v0:PushBaseV0',
+    max_episode_steps=100, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_bin_push_teleop_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_bin_push_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_name': "obj0",
+        'obj_pos_limits': {'high':[0.52, 0.126, 0.955], 'low':[0.48, 0.125, 0.945]},
+        'target_site_name': "target",
+        'target_xyz_range': {'high':[0.22, 0.5, 1.02], 'low':[0.22, 0.5, 1.02]},
+        'pos_limits': {'eef_low': [0.2, 0.05, 0.9, -0.485, 3.14, -2.36, 0.3507],
+                       'eef_high': [0.7, 0.6, 1.1, -0.485, 3.14, -2.36, 0.3507]
+                       },                      
+        'vel_limits': {'eef':[0.15, 0.15, 0.15],
+                        'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.25, 0.2, 1.0]
+                        },
+        'init_qpos': [0.767,0.492,-0.064,-1.965,-0.358,0.535,1.713,0.349,0.349],
+    }
+)
+
+register(
+    id='FrankaBinPushReal-v0',
+    entry_point='robohive.envs.arms.push_base_v0:PushBaseV0',
+    max_episode_steps=100, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_bin_push_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_bin_push_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_name': "obj0",
+        'obj_pos_limits': {'high':[0.52, 0.126, 0.955], 'low':[0.48, 0.125, 0.945]},
+        'target_site_name': "target",
+        'target_xyz_range': {'high':[0.22, 0.5, 1.02], 'low':[0.22, 0.5, 1.02]},
+        'pos_limits': {'eef_low': [0.2, 0.05, 0.9, -0.485, 3.14, -2.36, 0.3507],
+                       'eef_high': [0.7, 0.6, 1.1, -0.485, 3.14, -2.36, 0.3507]
+                       },                      
+        'vel_limits': {'eef':[0.15, 0.15, 0.15],
+                        'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.25, 0.2, 1.0]
+                        },
+        'init_qpos': [0.767,0.492,-0.064,-1.965,-0.358,0.535,1.713,0.349,0.349],
+    }
+)
+
+register(
     # Init position: [0.36, 0.0,  1.34]
     # Init euler: [3.14, 0.5, -0.8,]
     id='FrankaHangPush-v0',
@@ -167,11 +211,59 @@ register(
     }
 )
 
+register(
+    # Init position: [0.36, 0.0,  1.34]
+    # Init euler: [3.14, 0.5, -0.8,]
+    id='FrankaPlanarPushTeleop-v0',
+    entry_point='robohive.envs.arms.push_base_v0:PushBaseV0',
+    max_episode_steps=100, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_planar_push_teleop_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_planar_push_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_name': "obj0",
+        'obj_pos_limits': {'high':[0.52, -0.31, 0.855], 'low':[0.44, -0.25, 0.845]},
+        'target_site_name': "target",
+        'target_xyz_range': {'high':[0.48, -0.1, 0.845], 'low':[0.48, -0.1, 0.845]},
+        'pos_limits': {'eef_low': [0.2, -0.2, 0.9, 3.14, 0.0, 0.28, 0.0],
+                       'eef_high': [0.7, 0.5, 0.95, 3.14, 0.0, 1.28, 0.0]
+                       },
+        'vel_limits': {'eef':[0.15, 0.15, 0.15],
+                        'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.25, 0.2, 1.0]
+                        },
+        'init_qpos': [0.467,0.309,0.088,-2.344,-0.145,1.054,1.4,0.0,0.0],
+    }
+)
+
+register(
+    # Init position: [0.36, 0.0,  1.34]
+    # Init euler: [3.14, 0.5, -0.8,]
+    id='FrankaPlanarPushReal-v0',
+    entry_point='robohive.envs.arms.push_base_v0:PushBaseV0',
+    max_episode_steps=100, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_planar_push_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_planar_push_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_name': "obj0",
+        'obj_pos_limits': {'high':[0.52, 0.31, 0.855], 'low':[0.44, 0.25, 0.845]},
+        'target_site_name': "target",
+        'target_xyz_range': {'high':[0.48, -0.1, 0.845], 'low':[0.48, -0.1, 0.845]},
+        'pos_limits': {'eef_low': [0.2, -0.2, 0.9, 3.14, 0.0, 0.28, 0.0],
+                       'eef_high': [0.7, 0.5, 0.95, 3.14, 0.0, 1.28, 0.0]
+                       },
+        'vel_limits': {'eef':[0.15, 0.15, 0.15],
+                        'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.25, 0.2, 1.0]
+                        },
+        'init_qpos': [0.467,0.309,0.088,-2.344,-0.145,1.054,1.4,0.0,0.0],
+    }
+)
+
 # Reach to random target using visual inputs
 def register_push_visual_envs(env_name, encoder_type, cams, real=False, real_cams=None):
     proprio_keys = ['qp', 'qv', 'grasp_pos', 'grasp_rot']
     visual_keys = []
-
+    assert((not real and real_cams is None) or (real and real_cams is not None))
     if not real:
         for cam in cams:
             visual_keys.append('rgb:'+cam+':224x224:{}'.format(encoder_type))
@@ -194,15 +286,21 @@ def register_push_visual_envs(env_name, encoder_type, cams, real=False, real_cam
     )
 
 push_cams =  ['top_cam', 'Franka_wrist_cam']
+real_cams = ['left_cam', 'right_cam']
 for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
     register_push_visual_envs('FrankaBinPush', enc, cams=push_cams)
+    register_push_visual_envs('FrankaBinPushTeleop', enc, cams=push_cams, real_cams=real_cams, real=True)
+    register_push_visual_envs('FrankaBinPushReal', enc, cams=push_cams, real_cams=real_cams, real=True)
 
 for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
     register_push_visual_envs('FrankaHangPush', enc, cams=push_cams)
 
 planar_push_cams = ['right_cam', 'Franka_wrist_cam']
+planar_push_real_cams = ['top_cam', 'left_cam']
 for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
     register_push_visual_envs('FrankaPlanarPush', enc, cams=planar_push_cams)
+    register_push_visual_envs('FrankaPlanarPushTeleop', enc, cams=planar_push_cams, real_cams=planar_push_real_cams, real=True)
+    register_push_visual_envs('FrankaPlanarPushReal', enc, cams=planar_push_cams, real_cams=planar_push_real_cams, real=True)
 
 # FRANKA PICK =======================================================================
 register(
