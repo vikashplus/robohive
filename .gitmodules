@@ -39,3 +39,15 @@
 [submodule "robohive/simhive/myo_sim"]
 	path = robohive/simhive/myo_sim
 	url = https://github.com/vikashplus/myo_sim.git
+[submodule "scene_sim"]
+	path = scene_sim
+	url = https://github.com/vikashplus/scene_sim.git
+[submodule "robohive/simhive/--force"]
+	path = robohive/simhive/--force
+	url = https://github.com/vikashplus/scene_sim.git
+[submodule "robohive/simhive/abc"]
+	path = robohive/simhive/abc
+	url = https://github.com/vikashplus/franka_sim.git
+[submodule "robohive/simhive/Adroit"]
+	path = robohive/simhive/Adroit
+	url = https://github.com/vikashplus/Adroit.git
