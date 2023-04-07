@@ -94,8 +94,8 @@ class FrankaRobotiqData(env_base.MujocoEnv):
         obs_dict['qp_ee'] = sim.data.qpos[self.nq_arm:self.nq_arm+self.nq_ee].copy()
         obs_dict['qv_ee'] = sim.data.qvel[self.nq_arm:self.nq_arm+self.nq_ee].copy()
 
-        obs_dict['pos_ee'] = sim.data.site_xpos[self.ee_sid]
-        obs_dict['rot_ee'] = sim.data.site_xmat[self.ee_sid]
+        obs_dict['pos_ee'] = sim.data.site_xpos[self.ee_sid].copy()
+        obs_dict['rot_ee'] = sim.data.site_xmat[self.ee_sid].copy()
 
         return obs_dict
 
