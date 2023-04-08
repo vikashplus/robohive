@@ -6,6 +6,12 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= -->
 
 # RoboHive
+![PyPI](https://img.shields.io/pypi/v/robohive)
+![PyPI - License](https://img.shields.io/pypi/l/robohive)
+[![Downloads](https://pepy.tech/badge/robohive)](https://pepy.tech/project/robohive)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1rdSgnsfUaE-eFLjAkFHeqfUWzAK8ruTs?usp=sharing)
+[![Slack](https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white)](https://robohiveworkspace.slack.com)
+
 `RoboHive` is a collection of environments/tasks simulated with the [MuJoCo](http://www.mujoco.org/) physics engine exposed using the OpenAI-Gym API.
 
 ## Getting Started
