@@ -33,10 +33,11 @@ jobs:
             libosmesa6-dev \
             software-properties-common
         sudo apt-get install -y patchelf
+    - name: Checkout submodules
+      run: git submodule update --init --recursive
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        git submodule update --recursive
         pip install -e .
         pip install free-mujoco-py
     - name: Test with pytest
