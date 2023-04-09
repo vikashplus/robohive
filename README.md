@@ -27,14 +27,22 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 # Suites
 *RoboHive* contains a variety of environement, which are organized as suites. Each suites is a collection of loosely related environements. Following suites are provided at the moment with plans to improve the diversity of the collection.
 
-## 1. Hand Manipulation Suite
-HMS contains a collection of environement centered around dexterous manipulation with simulated actuators, and include:
+## - Hand Manipulation Suite
 
-- Hand Manipulation Suite
-- Arm Manipulation Suite
-- Myo Suite
-- MultiTask Suite
-- TCDM Suite (WIP)
+   This suite contains a collection of environement centered around dexterous manipulation. Standard ADROIT benchmarks introduced in [Learning Complex Dexterous Manipulation with Deep Reinforcement Learning and Demonstrations, RSS2018](https://sites.google.com/corp/view/deeprl-dexterous-manipulation).) are a part of this suite
+## - Arm Manipulation Suite
 
+   This suite contains a collection of environement centered around Arm+Gripper manipulation.
 
-## 2. More coming soon
+## - Myo Suite
+
+   This suite contains a collection of environements related to biomechanics. Standard [MyoSuite benchmarks](https://sites.google.com/view/myosuite) are a part of this suite
+
+## - MultiTask Suite
+
+   This suite contains a collection of environement centered around multi-tassk. Standard [RelayKitchen benchmarks](https://relay-policy-learning.github.io/) are a part of this suite
+## - TCDM Suite (WIP)
+   This suite contains a collection of environement centered around dexterous manipulation. Standard [TCDM benchmarks](https://pregrasps.github.io/) are a part of this suite
+
+## - ROBEL Suite (Coming soon)
+   This suite contains a collection of environement centered around real world locomotion and manipulation. Standard [ROBEL benchmarks](http://roboticsbenchmarks.org/) are a part of this suite
