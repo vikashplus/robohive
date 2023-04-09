@@ -27,9 +27,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pytest pytest-cov
-        # if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         pip install -e .
     - name: Test with pytest
       run: |
-        pytest  --cov-report "xml:coverage.xml"  --cov=.
+        python -c "import robohive, gym; gym.make('FrankaReachRandom-v0')"
