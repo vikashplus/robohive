@@ -41,4 +41,4 @@ jobs:
         pip install -e .
     - name: Test with pytest
       run: |
-        python robohive/tests/testall.py
+        python robohive/tests/test_all.py
