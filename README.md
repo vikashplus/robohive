@@ -20,8 +20,18 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
    # Install RoboHive and demo an environemnt
    pip install robohive
    cd robohive
+   python -c "import robohive, gym; gym.make('FrankaReachRandom-v0')"
+   ```
+
+   or, alternatively,
+
+   ``` bash
+   git clone --recursive https://github.com/vikashplus/robohive.git; cd robohive
+   pip install -e .
    python robohive/utils/examine_env.py -e FrankaReachRandom-v0
    ```
+
+
    See here for [detailed installation instructions](./setup/README.md) and [frequently asked questions](./setup/FAQ.md).
 
 # Suites
