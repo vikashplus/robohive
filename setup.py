@@ -39,7 +39,6 @@ setup(
     install_requires=[
         'click',
         'gym==0.13',
-        # 'mujoco==2.3.3',
         'free-mujoco-py',
         'termcolor',
         'sk-video',
@@ -48,7 +47,6 @@ setup(
         'ffmpeg',
         'absl-py',
         'r3m @ git+https://github.com/facebookresearch/r3m.git',
-        # 'data_tools @ git+https://github.com/fairinternal/data_tools.git',
         'h5py==3.7.0',
     ],
     extras_require={
