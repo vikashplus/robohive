@@ -39,8 +39,8 @@ setup(
     install_requires=[
         'click',
         'gym==0.13',
-        'mujoco==2.3.3',
-#        'mujoco-py<2.2,>=2.1',
+        # 'mujoco==2.3.3',
+        'free-mujoco-py',
         'termcolor',
         'sk-video',
         'flatten_dict',
@@ -52,6 +52,9 @@ setup(
         'h5py==3.7.0',
     ],
     extras_require={
+      'mujoco':[
+        'mujoco==2.3.3'
+        ],
       'a0': [
         'pycapnp==1.1.0',
         'alephzero', # real_sense subscribers dependency

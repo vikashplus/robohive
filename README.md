@@ -28,9 +28,17 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 *RoboHive* contains a variety of environement, which are organized as suites. Each suites is a collection of loosely related environements. Following suites are provided at the moment with plans to improve the diversity of the collection.
 
 ## 1. Hand Manipulation Suite
-HMS contains a collection of environement centered around dexterous manipulation with anthroporphic 24 degrees of freedom  [Adroit Hand](https://vikashplus.github.io/P_Hand.html). These environments were designed for the publication: [Learning Complex Dexterous Manipulation with Deep Reinforcement Learning and Demonstrations, RSS2018](https://sites.google.com/corp/view/deeprl-dexterous-manipulation).
-
+HMS contains a collection of environement centered around dexterous manipulation with
+simulated actuators:
+- anthroporphic 24 degrees of freedom  [Adroit Hand](https://vikashplus.github.io/P_Hand.html). These environments were designed for the publication: [Learning Complex Dexterous Manipulation with Deep Reinforcement Learning and Demonstrations, RSS2018](https://sites.google.com/corp/view/deeprl-dexterous-manipulation).
 Hand-Manipulation-Suite Tasks [(video)](https://youtu.be/jJtBll8l_OM)
 ![Alt text](robohive/envs/hands/assets/tasks.jpg?raw=false "Adroit Tasks")
+- Franka
+- DManus
+- Trifinger
+- MyoSuite
+
+It also allows to control the following physical robots:
+-
 
 ## 2. More coming soon
