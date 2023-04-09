@@ -32,7 +32,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
    ```
 
 
-   See here for [detailed installation instructions](./setup/README.md) and [frequently asked questions](./setup/FAQ.md).
+   See here for [detailed installation instructions](./setup/README.md) and [frequently asked questions](https://github.com/vikashplus/robohive/wiki/6.-Tutorials-&-FAQs#installation).
 
 # Suites
 *RoboHive* contains a variety of environement, which are organized as suites. Each suites is a collection of loosely related environements. Following suites are provided at the moment with plans to improve the diversity of the collection.
