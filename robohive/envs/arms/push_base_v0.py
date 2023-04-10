@@ -185,7 +185,7 @@ class PushBaseV0(env_base.MujocoEnv):
             obj_jid = self.sim.model.joint_name2id(self.object_site_name)
             reset_qpos[obj_jid:obj_jid+3] = self.np_random.uniform(low=self.obj_pos_limits['low'], high=self.obj_pos_limits['high'])
 
-        obs = super().reset(reset_qpos, reset_qvel, **kwargs)
+        obs = super().reset(reset_qpos, reset_qvel, blocking=False, **kwargs)
 
         cur_pos = self.sim.data.site_xpos[self.grasp_sid]
         cur_rot = mat2euler(self.sim.data.site_xmat[self.grasp_sid].reshape(3,3).transpose())
