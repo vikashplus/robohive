@@ -28,6 +28,7 @@ extra_files = package_files('robohive')
 setup(
     name='robohive',
     version='0.5.0',
+    license='Apache 2.0',
     packages=find_packages(),
     package_data={"": extra_files},
     include_package_data=True,
