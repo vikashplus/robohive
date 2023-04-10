@@ -19,18 +19,39 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
    ``` bash
    # Install RoboHive and demo an environemnt
    pip install robohive
-   cd robohive
-   python robohive/utils/examine_env.py -e FrankaReachRandom-v0
+   python -m robohive.utils.examine_env -e FrankaReachRandom-v0
    ```
-   See here for [detailed installation instructions](./setup/README.md) and [frequently asked questions](./setup/FAQ.md).
+
+   or, alternatively,
+
+   ``` bash
+   git clone --recursive https://github.com/vikashplus/robohive.git; cd robohive
+   pip install -e .
+   python -m robohive.utils.examine_env -e FrankaReachRandom-v0
+   ```
+
+
+   See here for [detailed installation instructions](./setup/README.md) and [frequently asked questions](https://github.com/vikashplus/robohive/wiki/6.-Tutorials-&-FAQs#installation).
 
 # Suites
 *RoboHive* contains a variety of environement, which are organized as suites. Each suites is a collection of loosely related environements. Following suites are provided at the moment with plans to improve the diversity of the collection.
 
-## 1. Hand Manipulation Suite
-HMS contains a collection of environement centered around dexterous manipulation with anthroporphic 24 degrees of freedom  [Adroit Hand](https://vikashplus.github.io/P_Hand.html). These environments were designed for the publication: [Learning Complex Dexterous Manipulation with Deep Reinforcement Learning and Demonstrations, RSS2018](https://sites.google.com/corp/view/deeprl-dexterous-manipulation).
+## - Hand Manipulation Suite
 
-Hand-Manipulation-Suite Tasks [(video)](https://youtu.be/jJtBll8l_OM)
-![Alt text](robohive/envs/hands/assets/tasks.jpg?raw=false "Adroit Tasks")
+   This suite contains a collection of environement centered around dexterous manipulation. Standard ADROIT benchmarks introduced in [Learning Complex Dexterous Manipulation with Deep Reinforcement Learning and Demonstrations, RSS2018](https://sites.google.com/corp/view/deeprl-dexterous-manipulation).) are a part of this suite
+## - Arm Manipulation Suite
 
-## 2. More coming soon
+   This suite contains a collection of environement centered around Arm+Gripper manipulation.
+
+## - Myo Suite
+
+   This suite contains a collection of environements related to biomechanics. Standard [MyoSuite benchmarks](https://sites.google.com/view/myosuite) are a part of this suite
+
+## - MultiTask Suite
+
+   This suite contains a collection of environement centered around multi-tassk. Standard [RelayKitchen benchmarks](https://relay-policy-learning.github.io/) are a part of this suite
+## - TCDM Suite (WIP)
+   This suite contains a collection of environement centered around dexterous manipulation. Standard [TCDM benchmarks](https://pregrasps.github.io/) are a part of this suite
+
+## - ROBEL Suite (Coming soon)
+   This suite contains a collection of environement centered around real world locomotion and manipulation. Standard [ROBEL benchmarks](http://roboticsbenchmarks.org/) are a part of this suite
