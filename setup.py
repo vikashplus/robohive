@@ -12,11 +12,17 @@ from typing import List
 from setuptools import setup, find_packages
 
 if sys.version_info.major != 3:
-    print("This library is only compatible with Python 3, but you are running "
-          "Python {}. The installation will likely fail.".format(sys.version_info.major))
+    print(
+        "This library is only compatible with Python 3, but you are running "
+        "Python {}. The installation will likely fail.".format(
+            sys.version_info.major
+            )
+        )
+
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
 
 def package_files(directory):
     paths = []
@@ -24,6 +30,7 @@ def package_files(directory):
         for filename in filenames:
             paths.append(os.path.join('..', path, filename))
     return paths
+
 
 def parse_args(argv: List[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="mj_envs setup")
@@ -35,8 +42,8 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     )
     return parser.parse_known_args(argv)
 
-def _main(argv):
 
+def _main(argv):
     args, unknown = parse_args(argv)
     sys.argv = [sys.argv[0], *unknown]
     name = args.package_name
@@ -54,10 +61,12 @@ def _main(argv):
         long_description_content_type="text/markdown",
         url='https://github.com/vikashplus/mj_envs.git',
         author='Movement Control Lab, UW',
+        license='Apache 2.0',
         install_requires=[
             'click',
             'gym==0.13',
-    #        'mujoco-py<2.2,>=2.1',
+            'free-mujoco-py',
+            'numpy==1.22.4',
             'termcolor',
             'sk-video',
             'flatten_dict',
@@ -69,12 +78,13 @@ def _main(argv):
             'h5py==3.7.0',
         ],
         extras_require={
-          'a0': [
-            'pycapnp==1.1.0',
-            'alephzero', # real_sense subscribers dependency
+            'a0': [
+                'pycapnp==1.1.0',
+                'alephzero',  # real_sense subscribers dependency
             ]
         }
     )
+
 
 if __name__ == "__main__":
     _main(sys.argv[1:])
