@@ -96,12 +96,12 @@ class BinReorientV0(env_base.MujocoEnv):
                randomize=False,
                pos_limits = {'eef_low': [0.368, -0.25, 0.9, -np.pi, 0, -np.pi, 0.0],
                              'eef_high':[0.72, 0.25,  1.3, np.pi, 2*np.pi, 0, 0.835]},
-               vel_limits = {'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.1, 0.35, 0.835],
-                             'jnt_slow': [0.1, 0.25, 0.1, 0.25, 0.1, 0.1, 0.35, 0.835],
+               vel_limits = {'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.1, 0.35, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+                             'jnt_slow': [0.1, 0.25, 0.1, 0.25, 0.1, 0.1, 0.35, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
                              'eef': [0.075, 0.075, 0.15, 0.3, 0.3, 0.5, 0.835],
                              'eef_slow': [0.075, 0.075, 0.075, 0.3, 0.3, 0.5, 0.835]},
-               obj_pos_limits = {'low': [0.36, -0.22, 0.855],
-                                 'high': [0.64, 0.22, 0.855]},
+               obj_pos_limits = {'low': [0.475, -0.025, 0.875],
+                                 'high': [0.525, 0.025, 0.875]},
                min_grab_height=0.905,
                max_slow_height=1.075,
                max_ik=3,
@@ -193,7 +193,7 @@ class BinReorientV0(env_base.MujocoEnv):
             obj_jid = self.sim.model.joint_name2id(self.object_site_name)
             reset_qpos[obj_jid:obj_jid+3] = self.np_random.uniform(low=self.obj_pos_limits['low'],
                                                                    high=self.obj_pos_limits['high'])
-            reset_qpos[obj_jid+3:obj_jid+7] = euler2quat(self.np_random.uniform(low=(0, 0, -np.pi/2), high=(0, 0, np.pi/2)) ) # random quat                       
+            reset_qpos[obj_jid+3:obj_jid+7] = euler2quat(self.np_random.uniform(low=(np.pi/2, -np.pi,0), high=(np.pi/2, np.pi,0)) ) # random quat
 
             self.sim.forward()
 

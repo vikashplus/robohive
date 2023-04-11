@@ -1,0 +1,485 @@
+<mujoco model="RoboPen">
+    
+    <compiler angle="radian" meshdir="../../../../sims/franka_sim/" texturedir="../../../../sims/franka_sim/" />
+    <size njmax="1000" nconmax="1000" nuser_actuator="5" />
+    <visual>
+        <quality shadowsize="4096" />
+        <map force="0.1" fogstart="1.5" fogend="5" shadowclip="2" />
+    </visual>
+    <statistic extent="3.5" />
+    <default class="main">
+        <default class="scene">
+            <geom contype="0" conaffinity="0" />
+        </default>
+        <default class="viz_simpleWoodTable">
+            <geom type="mesh" contype="0" conaffinity="0" group="1" material="M_simpleWoodTable" />
+        </default>
+        <default class="viz_simpleMarbleTable">
+            <geom type="mesh" contype="0" conaffinity="0" group="1" material="M_simpleMarbleTable" />
+        </default>
+        <default class="viz_simpleGraniteTable">
+            <geom type="mesh" contype="0" conaffinity="0" group="1" material="M_simpleGraniteTable" />
+        </default>
+        <default class="body_simpleTable">
+            <joint limited="true" armature="0.01" damping="1" frictionloss="0.5" />
+            <geom group="4" rgba="0.4 0.5 0.6 1" />
+        </default>
+        <default class="vention">
+            <geom contype="0" conaffinity="0" group="1" />
+            <default class="vention_collision">
+                <geom conaffinity="1" group="4" margin="0.001" rgba="0.4 0.5 0.6 1" />
+            </default>
+        </default>
+        <default class="panda">
+            <joint limited="true" />
+            <general ctrllimited="true" forcelimited="true" biastype="affine" biasprm="0 -1 0 0 0 0 0 0 0 0" user="1002 40 2001 -0.005 0.005" />
+            <default class="panda_viz">
+                <geom type="mesh" contype="0" conaffinity="0" rgba="0.92 0.92 0.95 1" />
+                <general user="1002 40 2001 -0.005 0.005" />
+            </default>
+            <default class="panda_grey_viz">
+                <geom type="mesh" contype="0" conaffinity="0" rgba="0.4 0.4 0.4 1" />
+                <general user="1002 40 2001 -0.005 0.005" />
+            </default>
+            <default class="panda_col">
+                <geom type="mesh" group="3" rgba="0.5 0.6 0.7 1" />
+                <general user="1002 40 2001 -0.005 0.005" />
+            </default>
+            <default class="panda_arm">
+                <joint damping="100" />
+                <general user="1002 40 2001 -0.005 0.005" />
+            </default>
+            <default class="panda_forearm">
+                <joint damping="10" />
+                <general user="1002 40 2001 -0.005 0.005" />
+            </default>
+            <default class="panda_finger">
+                <joint armature="5" damping="100" />
+                <geom conaffinity="0" condim="6" group="3" friction="1 0.5 0.0001" solref="0.01 1" solimp="0.8 0.9 0.001 0.5 2" margin="0.001" rgba="0.5 0.6 0.7 0.4" />
+                <general user="1002 40 2001 -0.0001 0.0001" />
+            </default>
+        </default>
+        <default class="dmanus">
+            <joint limited="true" armature="0.001" damping="1" />
+            <geom type="mesh" contype="0" conaffinity="0" group="1" material="visual_black" />
+            <site group="3" />
+            <general ctrllimited="true" ctrlrange="0 1.57" biastype="affine" biasprm="0 -1 0 0 0 0 0 0 0 0" />
+            <default class="phys_metal">
+                <geom conaffinity="1" condim="4" group="4" margin="0.001" rgba="0.3 0.3 1 0.5" />
+            </default>
+            <default class="ADB">
+                <joint range="-0.75 0.75" />
+                <general ctrlrange="-0.75 0.75" gainprm="5 0 0 0 0 0 0 0 0 0" biasprm="0 -5 0 0 0 0 0 0 0 0" />
+            </default>
+            <default class="MCP">
+                <joint range="-0.2 2.14" />
+                <general ctrlrange="-0.2 2.14" gainprm="5 0 0 0 0 0 0 0 0 0" biasprm="0 -5 0 0 0 0 0 0 0 0" />
+            </default>
+            <default class="PIP">
+                <joint range="-0.2 2" />
+                <general ctrlrange="-0.2 2" gainprm="5 0 0 0 0 0 0 0 0 0" biasprm="0 -5 0 0 0 0 0 0 0 0" />
+            </default>
+            <default class="WR">
+                <joint damping="100" frictionloss="1" />
+                <general ctrlrange="-0.2 1.57" gainprm="1600 0 0 0 0 0 0 0 0 0" biasprm="0 -1600 0 0 0 0 0 0 0 0" />
+            </default>
+        </default>
+        <default class="viz_stl_Metal_bin">
+            <geom type="mesh" group="1" material="M_Metal_bin" />
+        </default>
+        <default class="viz_stl_Wood_bin">
+            <geom type="mesh" group="1" material="M_Wood_bin" />
+        </default>
+        <default class="viz_stl_Black_bin">
+            <geom type="mesh" group="1" rgba="0.15 0.15 0.15 1" />
+        </default>
+    </default>
+    <asset>
+        <texture type="skybox" name="skybox" file="../scene_sim/textures/dawn.png" gridsize="3 4" gridlayout=".U..LFRB.D.." />
+        <texture type="2d" name="texplane" file="../scene_sim/textures/white_marble_tile2.png" />
+        <texture type="2d" name="texwindow" file="../scene_sim/textures/windows0.png" />
+        <texture type="cube" name="T_simpleWoodTable" file="../furniture_sim/common/textures/wood1.png" />
+        <texture type="cube" name="T_simpleMarbleTable" file="../furniture_sim/common/textures/stone0.png" />
+        <texture type="cube" name="T_simpleGraniteTable" file="../furniture_sim/common/textures/stone1.png" />
+        <texture type="cube" name="T_Metal_bin" file="../furniture_sim/common/textures/metal0.png" />
+        <texture type="cube" name="T_Wood_bin" file="../furniture_sim/common/textures/wood0.png" />
+        <material name="MatPlane" texture="texplane" texuniform="true" texrepeat="4 4" reflectance="0.01" />
+        <material name="MatMetal" emission="0.01" specular="0.2" rgba="0.31 0.3 0.3 1" />
+        <material name="MatGlass" emission="0.25" specular="0.4" reflectance="1" rgba="0.6 0.6 0.65 0.1" />
+        <material name="MatWindow" texture="texwindow" texuniform="true" rgba="1 0 0 1" />
+        <material name="M_simpleWoodTable" texture="T_simpleWoodTable" shininess="0.2" reflectance="0.3" rgba="0.8 0.8 0.8 1" />
+        <material name="M_simpleMarbleTable" texture="T_simpleMarbleTable" shininess="1" reflectance="1" rgba="0.75 0.75 0.75 1" />
+        <material name="M_simpleGraniteTable" texture="T_simpleGraniteTable" shininess="1" reflectance="1" rgba="0.75 0.75 0.75 1" />
+        <material name="vention_black" reflectance="1" rgba="0.05 0.05 0.1 1" />
+        <material name="vention_blue" shininess="0.1" reflectance="10" rgba="0.14 0.3 0.52 1" />
+        <material name="visual_black" shininess="0.8" rgba="0.2 0.2 0.2 1" />
+        <material name="visual_blue" rgba="0.1 0.4 0.9 1" />
+        <material name="visual_white" specular="0.2" shininess="0.2" />
+        <material name="visual_chrome" shininess="1" reflectance="1" rgba="0.5 0.5 0.5 1" />
+        <material name="collision_blue" specular="0" shininess="0" rgba="0.3 0.3 1 0.5" />
+        <material name="M_Metal_bin" texture="T_Metal_bin" texrepeat="3 3" reflectance="0.7" />
+        <material name="M_Wood_bin" texture="T_Wood_bin" texrepeat="3 3" />
+        <mesh name="wall" file="../scene_sim/meshes/highwindow.stl" />
+        <mesh name="skyline" file="../scene_sim/meshes/skyline.stl" scale="2.2 2.2 1" />
+        <mesh name="robohive" file="../scene_sim/meshes/robohive.stl" />
+        <mesh name="robohive_half" file="../scene_sim/meshes/robohive_half.stl" scale="4 4 4" />
+        <mesh name="link0_col" file="../franka_sim/meshes/collision/link0.stl" />
+        <mesh name="link1_col" file="../franka_sim/meshes/collision/link1.stl" />
+        <mesh name="link2_col" file="../franka_sim/meshes/collision/link2.stl" />
+        <mesh name="link3_col" file="../franka_sim/meshes/collision/link3.stl" />
+        <mesh name="link4_col" file="../franka_sim/meshes/collision/link4.stl" />
+        <mesh name="link5_col" file="../franka_sim/meshes/collision/link5.stl" />
+        <mesh name="link6_col" file="../franka_sim/meshes/collision/link6.stl" />
+        <mesh name="link7_col" file="../franka_sim/meshes/collision/link7.stl" />
+        <mesh name="hand_col" file="../franka_sim/meshes/collision/hand.stl" />
+        <mesh name="link0_viz" file="../franka_sim/meshes/visual/link0.stl" />
+        <mesh name="link1_viz" file="../franka_sim/meshes/visual/link1.stl" />
+        <mesh name="link2_viz" file="../franka_sim/meshes/visual/link2.stl" />
+        <mesh name="link3_viz" file="../franka_sim/meshes/visual/link3.stl" />
+        <mesh name="link3_dark_viz" file="../franka_sim/meshes/visual/link3_dark.stl" scale="1.01 1.01 1.01" />
+        <mesh name="link4_viz" file="../franka_sim/meshes/visual/link4.stl" />
+        <mesh name="link4_dark_viz" file="../franka_sim/meshes/visual/link4_dark.stl" scale="1.01 1.01 1.01" />
+        <mesh name="link5_viz" file="../franka_sim/meshes/visual/link5.stl" />
+        <mesh name="link5_dark_viz" file="../franka_sim/meshes/visual/link5_dark.stl" scale="1.01 1.01 1.01" />
+        <mesh name="link6_viz" file="../franka_sim/meshes/visual/link6.stl" />
+        <mesh name="link6_dark_viz" file="../franka_sim/meshes/visual/link6_dark.stl" scale="1.01 1.01 1.01" />
+        <mesh name="link7_viz" file="../franka_sim/meshes/visual/link7.stl" />
+        <mesh name="link7_dark_viz" file="../franka_sim/meshes/visual/link7_dark.stl" scale="1.01 1.01 1.01" />
+        <mesh name="hand_viz" file="../franka_sim/meshes/visual/hand.stl" />
+        <mesh name="bracket2" file="../robel_sim/dmanus/meshes/bracket2.stl" />
+        <mesh name="finger" file="../robel_sim/dmanus/meshes/finger.stl" />
+        <mesh name="H-540" file="../robel_sim/dmanus/meshes/H-540.stl" />
+        <mesh name="knuckle" file="../robel_sim/dmanus/meshes/knuckle.stl" />
+        <mesh name="motor" file="../robel_sim/dmanus/meshes/motor.stl" />
+        <mesh name="PalmC" file="../robel_sim/dmanus/meshes/PalmC.stl" />
+        <mesh name="PalmR" file="../robel_sim/dmanus/meshes/PalmR.stl" />
+        <mesh name="PalmL1" file="../robel_sim/dmanus/meshes/PalmL1.stl" />
+        <mesh name="PalmL2" file="../robel_sim/dmanus/meshes/PalmL2.stl" />
+        <mesh name="PalmFull" file="../robel_sim/dmanus/meshes/PalmFull.stl" />
+        <mesh name="plate" file="../robel_sim/dmanus/meshes/plate.stl" />
+        <mesh name="wristbracket1" file="../robel_sim/dmanus/meshes/wristbracket1.stl" />
+        <mesh name="wristbracket2" file="../robel_sim/dmanus/meshes/wristbracket2.stl" />
+        <mesh name="wristmount" file="../robel_sim/dmanus/meshes/wristmount.stl" />
+        <mesh name="fingertip" file="../robel_sim/dmanus/meshes/fingertip.stl" />
+        <mesh name="bin" file="../furniture_sim/bin/meshes/bin.stl" scale="0.01 0.01 0.01" />
+        <mesh name="busbin" file="../furniture_sim/bin/meshes/busbin.stl" />
+        <mesh name="lowbin" file="../furniture_sim/bin/meshes/lowbin.stl" scale="0.001 0.001 0.001" />
+        <mesh name="waterbottle" file="../object_sim/waterbottle/waterbottle.stl" />
+        <mesh name="contact0" file="../object_sim/waterbottle/contact0.stl" />
+        <mesh name="contact1" file="../object_sim/waterbottle/contact1.stl" />
+        <mesh name="waterbottle_big" file="../object_sim/waterbottle/waterbottle.stl" scale="1.5 1.5 1.5" />
+        <mesh name="contact0_big" file="../object_sim/waterbottle/contact0.stl" scale="1.5 1.5 1.5" />
+        <mesh name="contact1_big" file="../object_sim/waterbottle/contact1.stl" scale="1.5 1.5 1.5" />
+    </asset>
+    <worldbody>
+        <geom name="skyline" class="scene" pos="0 0 -3" type="mesh" material="MatWindow" rgba="0.3 0.3 0.27 1" mesh="skyline" />
+        <geom name="floor" class="scene" size="12 12 0.1" pos="0 0 0.0001" type="plane" contype="1" conaffinity="1" material="MatPlane" />
+        <geom name="roof" class="scene" size="12 12 0.2" pos="0 0 8" quat="0.000796327 1 0 0" type="plane" material="MatMetal" />
+        <geom name="robohive" pos="0 -0.45 0" type="mesh" contype="0" conaffinity="0" rgba="0.3 0.3 0.3 1" mesh="robohive" />
+        <geom pos="0 0 -0.03" type="mesh" contype="0" conaffinity="0" rgba="1 0.6 0 2" mesh="robohive_half" />
+        <geom pos="0 0 -0.03" quat="0.000796327 0 0 1" type="mesh" contype="0" conaffinity="0" rgba="0.3 0.3 0.3 1" mesh="robohive_half" />
+        <geom class="scene" pos="0 10 0" type="mesh" material="MatMetal" mesh="wall" />
+        <geom class="scene" size="5 0.01 3.5" pos="0 10 3.5" type="box" material="MatGlass" />
+        <geom class="scene" pos="0 -10 0" quat="0.000796327 0 0 -1" type="mesh" material="MatMetal" mesh="wall" />
+        <geom class="scene" size="5 0.01 3.5" pos="0 -10 3.5" type="box" material="MatGlass" />
+        <geom class="scene" pos="10 0 0" quat="0.707388 0 0 -0.706825" type="mesh" material="MatMetal" mesh="wall" />
+        <geom class="scene" size="0.01 5 3.5" pos="10 0 3.5" type="box" material="MatGlass" />
+        <geom class="scene" pos="-10 0 0" quat="0.707388 0 0 0.706825" type="mesh" material="MatMetal" mesh="wall" />
+        <geom class="scene" size="0.01 5 3.5" pos="-10 0 3.5" type="box" material="MatGlass" />
+        <site name="xaxis" pos="0.5 0 0" quat="0.707107 0 -0.707107 0" size="0.005 0.5" group="3" type="capsule" rgba="1 0 0 0.25" />
+        <site name="yaxis" pos="0 0.5 0" quat="0.707107 0.707107 0 0" size="0.005 0.5" group="3" type="capsule" rgba="0 1 0 0.25" />
+        <site name="workspace" pos="0 0.475 1" size="0.6 0.375 0.25" group="3" type="box" rgba="0 0 0.4 0.2" />
+        <site name="drop_target" pos="0 0.5 1.1" size="0.075" group="1" rgba="0.1 0.8 0.2 0" />
+        <camera name="left_cam" pos="-1.2 -0.5 1.8" quat="0.78 0.49 -0.22 -0.32" />
+        <camera name="right_cam" pos="1.2 -0.5 1.8" quat="0.76 0.5 0.21 0.35" />
+        <camera name="top_cam" pos="0 0.5 2.2" />
+        <light name="left_light" pos="-4 -4 7" dir="0.57735 0.57735 -0.57735" diffuse="0.4 0.35 0.3" specular="0.4 0.35 0.3" />
+        <light name="right_light" pos="4 -4 7" dir="-0.57735 0.57735 -0.57735" diffuse="0.4 0.35 0.3" specular="0.4 0.35 0.3" />
+        <light name="front_light" pos="0 4 7" dir="0 -0.707107 -0.707107" diffuse="0.4 0.35 0.3" specular="0.4 0.35 0.3" />
+        <body pos="0 0 0.823">
+            <inertial pos="0 0 0.823" mass="0" diaginertia="0 0 0" />
+            <body name="panda0_link0" childclass="panda" pos="0 0 0">
+                <inertial pos="-0.0291898 -0.000879465 0.0566032" quat="0.00411744 0.564916 0.0132875 0.825031" mass="2.91242" diaginertia="0.0122527 0.011364 0.00827785" />
+                <geom class="panda_viz" mesh="link0_viz" />
+                <geom class="panda_col" mesh="link0_col" />
+                <body name="panda0_link1" pos="0 0 0.333">
+                    <inertial pos="1.1399e-05 -0.0312655 -0.0693733" quat="0.98466 0.174481 -0.000101815 0.000347662" mass="2.7063" diaginertia="0.0160285 0.0150276 0.00533183" />
+                    <joint name="panda0_joint1" class="panda_arm" pos="0 0 0" axis="0 0 1" range="-2.8973 2.8973" />
+                    <geom class="panda_viz" mesh="link1_viz" />
+                    <geom class="panda_col" mesh="link1_col" />
+                    <body name="panda0_link2" pos="0 0 0" quat="0.707107 -0.707107 0 0">
+                        <inertial pos="-1.31766e-05 -0.0703216 0.0311782" quat="0.57484 0.818266 -6.05764e-05 -6.61626e-05" mass="2.73046" diaginertia="0.0163724 0.0153528 0.0053937" />
+                        <joint name="panda0_joint2" class="panda_arm" pos="0 0 0" axis="0 0 1" range="-1.7628 1.7628" />
+                        <geom class="panda_viz" mesh="link2_viz" />
+                        <geom class="panda_col" mesh="link2_col" />
+                        <body name="panda0_link3" pos="0 -0.316 0" quat="0.707107 0.707107 0 0">
+                            <inertial pos="0.0443483 0.0249283 -0.03813" quat="0.0615263 0.349824 0.234291 0.904956" mass="2.04104" diaginertia="0.0087048 0.00852619 0.00365919" />
+                            <joint name="panda0_joint3" class="panda_arm" pos="0 0 0" axis="0 0 1" range="-2.8973 2.8973" />
+                            <geom class="panda_viz" mesh="link3_viz" />
+                            <geom class="panda_grey_viz" pos="0 0.001 0" mesh="link3_dark_viz" />
+                            <geom class="panda_col" mesh="link3_col" />
+                            <body name="panda0_link4" pos="0.0825 0 0" quat="0.707107 0.707107 0 0">
+                                <inertial pos="-0.0385503 0.0395256 0.0247162" quat="0.813566 0.465041 0.309792 0.160858" mass="2.08129" diaginertia="0.00900688 0.00883179 0.00377335" />
+                                <joint name="panda0_joint4" class="panda_arm" pos="0 0 0" axis="0 0 1" range="-3.0718 -0.4" />
+                                <geom class="panda_viz" mesh="link4_viz" />
+                                <geom class="panda_grey_viz" mesh="link4_dark_viz" />
+                                <geom class="panda_col" mesh="link4_col" />
+                                <body name="panda0_link5" pos="-0.0825 0.384 0" quat="0.707107 -0.707107 0 0">
+                                    <inertial pos="-6.36776e-05 0.0384124 -0.10997" quat="0.990767 -0.135571 0.000963106 0.000694406" mass="3.00049" diaginertia="0.0261858 0.0252422 0.00534818" />
+                                    <joint name="panda0_joint5" class="panda_forearm" pos="0 0 0" axis="0 0 1" range="-2.8973 2.8973" />
+                                    <geom class="panda_viz" mesh="link5_viz" />
+                                    <geom class="panda_grey_viz" mesh="link5_dark_viz" />
+                                    <geom class="panda_col" mesh="link5_col" />
+                                    <body name="panda0_link6" pos="0 0 0" quat="0.500398 0.5 -0.499602 0.5">
+                                        <inertial pos="0.0510023 0.00693267 0.00616899" quat="-0.0460841 0.754362 0.044494 0.653325" mass="1.3235" diaginertia="0.00401813 0.00328514 0.00207945" />
+                                        <joint name="panda0_joint6" class="panda_forearm" pos="0 0 0" axis="0 0 1" range="-1.6573 2.1127" />
+                                        <geom class="panda_viz" mesh="link6_viz" />
+                                        <geom class="panda_grey_viz" mesh="link6_dark_viz" />
+                                        <geom class="panda_col" mesh="link6_col" />
+                                        <body name="panda0_link7" pos="0.088 0 0" quat="0.653541 0.653021 -0.270491 0.270706">
+                                            <inertial pos="0.0103614 0.0103596 0.0791078" quat="0.63547 0.278021 -0.670462 0.263369" mass="0.2" diaginertia="0.000305585 0.000253055 0.000133979" />
+                                            <joint name="panda0_joint7" class="panda_forearm" pos="0 0 0" axis="0 0 1" range="-2.8973 2.8973" />
+                                            <geom class="panda_viz" rgba="0.8 0.8 0.82 1" mesh="link7_viz" />
+                                            <geom class="panda_grey_viz" pos="0 0 -0.0008" mesh="link7_dark_viz" />
+                                            <geom class="panda_col" mesh="link7_col" />
+                                            <site name="end_effector" pos="0 0 0.21" quat="0.92388 0 0 -0.382683" size="0.01" />
+                                            <camera name="Franka_wrist_cam" pos="0.05 -0.05 0.15" quat="0.126001 0.911084 0.388578 0.0552895" />
+                                        <body name="ee_mount" pos="0.032 -0.0375 0.135" quat="0.270769 -0.270554 0.653515 -0.652995">
+            <inertial pos="0.032 -0.0375 0.135" quat="0.270769 -0.270554 0.653515 -0.652995" mass="0" diaginertia="0 0 0" />
+            <body name="palm" childclass="dmanus" pos="0 0 0.01">
+                <inertial pos="0.000613959 -6.95585e-05 0.0563112" quat="0.359795 0.608871 0.608806 0.359415" mass="0.748774" diaginertia="0.001903 0.00116219 0.00106349" />
+                <geom name="palmFull" pos="-0.001 0 0.1032" rgba="1 1 1 1" mesh="PalmFull" />
+                <geom name="Palmcenter" class="phys_metal" pos="-0.001 0 0.1032" mesh="PalmC" />
+                <geom name="Palmright" class="phys_metal" pos="-0.001 0 0.1032" mesh="PalmR" />
+                <geom name="Palmleft1" class="phys_metal" pos="-0.001 0 0.1032" mesh="PalmL1" />
+                <geom name="Palmleft2" class="phys_metal" pos="-0.001 0 0.1032" mesh="PalmL2" />
+                <geom name="plate1_mesh" pos="0 -0.0255 0.1032" mesh="plate" />
+                <geom name="plate2_mesh" pos="0 0.0235 0.1032" mesh="plate" />
+                <body name="thumb_finger" pos="0.0343 0.0015 0.027" quat="0.57352 0 0.819192 0">
+                    <inertial pos="0.0343 0.0015 0.027" quat="0.57352 0 0.819192 0" mass="0" diaginertia="0 0 0" />
+                    <geom pos="0 0 0.025" quat="0.500398 0.5 -0.499602 0.5" mesh="motor" />
+                    <body name="TF_metacarpel" pos="0 0 0.03475">
+                        <inertial pos="0 0.00283516 0.0358791" quat="0.492003 0.507871 -0.507871 0.492003" mass="0.091" diaginertia="2.74684e-05 2.64925e-05 1.83502e-05" />
+                        <joint name="TF_ADB" class="ADB" pos="0 0 0" axis="0 1 0" />
+                        <geom quat="-0.499203 -0.500398 0.5 -0.500398" mesh="knuckle" />
+                        <geom pos="0 0 0.037" quat="0.500398 0.5 -0.5 -0.499602" mesh="motor" />
+                        <geom class="phys_metal" size="0.015 0.021 0.002" pos="0 0 0.021" type="box" />
+                        <geom class="phys_metal" size="0.015 0.001 0.014" pos="0 0.02 0.01" type="box" />
+                        <geom class="phys_metal" size="0.015 0.001 0.014" pos="0 -0.02 0.01" type="box" />
+                        <geom class="phys_metal" size="0.018 0.024 0.015" pos="0 0.003 0.037" type="box" />
+                        <body name="TF_proximal" pos="0 -0.009 0.037">
+                            <inertial pos="0 0 0.0391087" quat="0.707107 0 0 0.707107" mass="0.092" diaginertia="3.33134e-05 2.85209e-05 1.85925e-05" />
+                            <joint name="TF_MCP" class="MCP" pos="0 0 0" axis="1 0 0" />
+                            <geom pos="-0.018 0 0.012" quat="0.707388 0 -0.706825 0" mesh="bracket2" />
+                            <geom pos="0.018 0 0.012" quat="0.000563312 0.706825 0.000562864 0.707388" mesh="bracket2" />
+                            <geom pos="0 0 0.0445" quat="0.707388 0 -0.706825 0" mesh="motor" />
+                            <geom class="phys_metal" size="0.0015 0.015 0.014" pos="0.02 0 0.012" type="box" />
+                            <geom class="phys_metal" size="0.0015 0.015 0.014" pos="-0.02 0 0.012" type="box" />
+                            <geom class="phys_metal" size="0.018 0.015 0.024" pos="0 0 0.041" type="box" />
+                            <body name="TF_middle" pos="0 0 0.053">
+                                <inertial pos="0 0 0.0391087" quat="0.707107 0 0 0.707107" mass="0.092" diaginertia="3.33134e-05 2.85209e-05 1.85925e-05" />
+                                <joint name="TF_PIP" class="MCP" pos="0 0 0" axis="1 0 0" />
+                                <geom pos="-0.018 0 0.012" quat="0.707388 0 -0.706825 0" mesh="bracket2" />
+                                <geom pos="0.018 0 0.012" quat="0.000563312 0.706825 0.000562864 0.707388" mesh="bracket2" />
+                                <geom pos="0 0 0.0445" quat="0.707388 0 -0.706825 0" mesh="motor" />
+                                <geom class="phys_metal" size="0.0015 0.015 0.014" pos="0.02 0 0.012" type="box" />
+                                <geom class="phys_metal" size="0.0015 0.015 0.014" pos="-0.02 0 0.012" type="box" />
+                                <geom class="phys_metal" size="0.018 0.015 0.024" pos="0 0 0.041" type="box" />
+                                <body name="TF_distal" pos="0 0 0.054">
+                                    <inertial pos="-0.000647264 -0.00431461 0.0260617" quat="0.705741 0.0535243 0.0494807 -0.70471" mass="0.0544098" diaginertia="3.26877e-05 2.45549e-05 1.0655e-05" />
+                                    <joint name="TF_DIP" class="PIP" pos="0 0 0" axis="1 0 0" />
+                                    <geom quat="0.500398 -0.5 0.5 -0.499602" mesh="fingertip" />
+                                    <geom class="phys_metal" quat="0.500398 -0.5 0.5 -0.499602" mesh="fingertip" />
+                                </body>
+                            </body>
+                        </body>
+                    </body>
+                </body>
+                <body name="index_proximal" pos="0.0445 0.002 0.06325">
+                    <inertial pos="0.0445 0.002 0.06325" mass="0" diaginertia="0 0 0" />
+                    <geom pos="0 0 0.025" quat="0.500398 0.5 -0.499602 0.5" mesh="motor" />
+                    <body name="FF_metacarpel" pos="0 0 0.03475">
+                        <inertial pos="0 0.00283516 0.0358791" quat="0.492003 0.507871 -0.507871 0.492003" mass="0.091" diaginertia="2.74684e-05 2.64925e-05 1.83502e-05" />
+                        <joint name="FF_ADB" class="ADB" pos="0 0 0" axis="0 1 0" />
+                        <geom quat="-0.499203 -0.500398 0.5 -0.500398" mesh="knuckle" />
+                        <geom pos="0 0 0.037" quat="0.500398 0.5 -0.5 -0.499602" mesh="motor" />
+                        <geom class="phys_metal" size="0.015 0.021 0.002" pos="0 0 0.021" type="box" />
+                        <geom class="phys_metal" size="0.015 0.001 0.014" pos="0 0.02 0.01" type="box" />
+                        <geom class="phys_metal" size="0.015 0.001 0.014" pos="0 -0.02 0.01" type="box" />
+                        <geom class="phys_metal" size="0.018 0.024 0.015" pos="0 0.003 0.037" type="box" />
+                        <body name="FF_proximal" pos="0 -0.009 0.037">
+                            <inertial pos="0 0 0.0391087" quat="0.707107 0 0 0.707107" mass="0.092" diaginertia="3.33134e-05 2.85209e-05 1.85925e-05" />
+                            <joint name="FF_MCP" class="MCP" pos="0 0 0" axis="1 0 0" />
+                            <geom pos="-0.018 0 0.012" quat="0.707388 0 -0.706825 0" mesh="bracket2" />
+                            <geom pos="0.018 0 0.012" quat="0.000563312 0.706825 0.000562864 0.707388" mesh="bracket2" />
+                            <geom pos="0 0 0.0445" quat="0.707388 0 -0.706825 0" mesh="motor" />
+                            <geom class="phys_metal" size="0.0015 0.015 0.014" pos="0.02 0 0.012" type="box" />
+                            <geom class="phys_metal" size="0.0015 0.015 0.014" pos="-0.02 0 0.012" type="box" />
+                            <geom class="phys_metal" size="0.018 0.015 0.024" pos="0 0 0.041" type="box" />
+                            <body name="FF_middle" pos="0 0 0.054">
+                                <inertial pos="-0.000647264 -0.00431461 0.0260617" quat="0.705741 0.0535243 0.0494807 -0.70471" mass="0.0544098" diaginertia="3.26877e-05 2.45549e-05 1.0655e-05" />
+                                <joint name="FF_PIP" class="PIP" pos="0 0 0" axis="1 0 0" />
+                                <geom quat="0.500398 -0.5 0.5 -0.499602" mesh="fingertip" />
+                                <geom class="phys_metal" quat="0.500398 -0.5 0.5 -0.499602" mesh="fingertip" />
+                            </body>
+                        </body>
+                    </body>
+                </body>
+                <body name="pinky_finger" pos="-0.0445 0.002 0.06325">
+                    <inertial pos="-0.0445 0.002 0.06325" mass="0" diaginertia="0 0 0" />
+                    <geom pos="0 0 0.025" quat="0.500398 0.5 -0.499602 0.5" mesh="motor" />
+                    <body name="PF_metacarpel" pos="0 0 0.03475">
+                        <inertial pos="0 0.00283516 0.0358791" quat="0.492003 0.507871 -0.507871 0.492003" mass="0.091" diaginertia="2.74684e-05 2.64925e-05 1.83502e-05" />
+                        <joint name="PF_ADB" class="ADB" pos="0 0 0" axis="0 1 0" />
+                        <geom quat="-0.499203 -0.500398 0.5 -0.500398" mesh="knuckle" />
+                        <geom pos="0 0 0.037" quat="0.500398 0.5 -0.5 -0.499602" mesh="motor" />
+                        <geom class="phys_metal" size="0.015 0.021 0.002" pos="0 0 0.021" type="box" />
+                        <geom class="phys_metal" size="0.015 0.001 0.014" pos="0 0.02 0.01" type="box" />
+                        <geom class="phys_metal" size="0.015 0.001 0.014" pos="0 -0.02 0.01" type="box" />
+                        <geom class="phys_metal" size="0.018 0.024 0.015" pos="0 0.003 0.037" type="box" />
+                        <body name="PF_proximal" pos="0 -0.009 0.037">
+                            <inertial pos="0 0 0.0391087" quat="0.707107 0 0 0.707107" mass="0.092" diaginertia="3.33134e-05 2.85209e-05 1.85925e-05" />
+                            <joint name="PF_MCP" class="MCP" pos="0 0 0" axis="1 0 0" />
+                            <geom pos="-0.018 0 0.012" quat="0.707388 0 -0.706825 0" mesh="bracket2" />
+                            <geom pos="0.018 0 0.012" quat="0.000563312 0.706825 0.000562864 0.707388" mesh="bracket2" />
+                            <geom pos="0 0 0.0445" quat="0.707388 0 -0.706825 0" mesh="motor" />
+                            <geom class="phys_metal" size="0.0015 0.015 0.014" pos="0.02 0 0.012" type="box" />
+                            <geom class="phys_metal" size="0.0015 0.015 0.014" pos="-0.02 0 0.012" type="box" />
+                            <geom class="phys_metal" size="0.018 0.015 0.024" pos="0 0 0.041" type="box" />
+                            <body name="PF_middle" pos="0 0 0.054">
+                                <inertial pos="-0.000647264 -0.00431461 0.0260617" quat="0.705741 0.0535243 0.0494807 -0.70471" mass="0.0544098" diaginertia="3.26877e-05 2.45549e-05 1.0655e-05" />
+                                <joint name="PF_PIP" class="PIP" pos="0 0 0" axis="1 0 0" />
+                                <geom quat="0.500398 -0.5 0.5 -0.499602" mesh="fingertip" />
+                                <geom class="phys_metal" quat="0.500398 -0.5 0.5 -0.499602" mesh="fingertip" />
+                            </body>
+                        </body>
+                    </body>
+                </body>
+            </body>
+        </body>
+        </body>
+                                    </body>
+                                </body>
+                            </body>
+                        </body>
+                    </body>
+                </body>
+            </body>
+        </body>
+        <body name="ventiontable" pos="-0.3 0 0" quat="0.707388 0 0 0.706825">
+            <inertial pos="-0.3 0 0" quat="0.707388 0 0 0.706825" mass="0" diaginertia="0 0 0" />
+            <body name="vention table" childclass="vention" pos="0 0 0">
+                <inertial pos="0 0 0.413" mass="796.367" diaginertia="87.5265 141.683 139.528" />
+                <geom size="0.04 0.01" pos="-0.585 -0.383 0.01" type="cylinder" material="vention_black" />
+                <geom size="0.04 0.01" pos="0.585 -0.383 0.01" type="cylinder" material="vention_black" />
+                <geom size="0.04 0.01" pos="-0.585 0.383 0.01" type="cylinder" material="vention_black" />
+                <geom size="0.04 0.01" pos="0.585 0.383 0.01" type="cylinder" material="vention_black" />
+                <geom size="0.01 0.02" pos="-0.585 -0.383 0.03" type="cylinder" />
+                <geom size="0.01 0.02" pos="0.585 -0.383 0.03" type="cylinder" />
+                <geom size="0.01 0.02" pos="-0.585 0.383 0.03" type="cylinder" />
+                <geom size="0.01 0.02" pos="0.585 0.383 0.03" type="cylinder" />
+                <geom size="0.023 0.023 0.387" pos="-0.585 -0.383 0.435" type="box" material="vention_blue" />
+                <geom size="0.023 0.023 0.387" pos="0.585 -0.383 0.435" type="box" material="vention_blue" />
+                <geom size="0.023 0.023 0.387" pos="-0.585 0.383 0.435" type="box" material="vention_blue" />
+                <geom size="0.023 0.023 0.387" pos="0.585 0.383 0.435" type="box" material="vention_blue" />
+                <geom size="0.023 0.023 0.337" pos="0 0.377 0.44" type="box" material="vention_blue" />
+                <geom size="0.023 0.023 0.337" pos="0 -0.377 0.44" type="box" material="vention_blue" />
+                <geom size="0.612 0.409 0.023" pos="0 0 0.801" type="box" material="vention_black" />
+                <geom size="0.614 0.411 0.023" pos="0 0 0.79" type="box" material="vention_blue" />
+                <geom size="0.602 0.399 0.005" pos="0 0 0.15" type="box" material="vention_black" />
+                <geom size="0.604 0.401 0.023" pos="0 0 0.124" type="box" material="vention_blue" />
+                <geom class="vention_collision" size="0.604 0.401 0.411" pos="0 0 0.413" type="box" />
+            </body>
+        </body>
+        <body name="scenetable" pos="0.49 0 0.065" quat="0.707388 0 0 0.706825">
+            <inertial pos="0.49 0 0.065" quat="0.707388 0 0 0.706825" mass="0" diaginertia="0 0 0" />
+            <body name="simpleMarbleTable" childclass="body_simpleTable" pos="0 0 0">
+                <inertial pos="0 0 0.667766" quat="0 0.707107 0 0.707107" mass="107.46" diaginertia="17.4641 15.1042 4.83168" />
+                <geom class="viz_simpleMarbleTable" size="0.7 0.375 0.025" pos="0 0 0.735" type="box" />
+                <geom class="viz_simpleMarbleTable" size="0.59 0.26 0.05" pos="0 0 0.66" type="box" rgba="0.2 0.1 0.1 1" />
+                <geom class="viz_simpleMarbleTable" size="0.025 0.025 0.305" pos="-0.565 0.235 0.305" type="box" rgba="0.2 0.1 0.1 1" />
+                <geom class="viz_simpleMarbleTable" size="0.025 0.025 0.305" pos="-0.565 -0.235 0.305" type="box" rgba="0.2 0.1 0.1 1" />
+                <geom class="viz_simpleMarbleTable" size="0.025 0.025 0.305" pos="0.565 0.235 0.305" type="box" rgba="0.2 0.1 0.1 1" />
+                <geom class="viz_simpleMarbleTable" size="0.025 0.025 0.305" pos="0.565 -0.235 0.305" type="box" rgba="0.2 0.1 0.1 1" />
+                <geom size="0.6 0.375 0.025" pos="0 0 0.735" type="box" />
+                <geom size="0.59 0.26 0.05" pos="0 0 0.66" type="box" />
+                <geom size="0.025 0.025 0.305" pos="-0.565 0.235 0.305" type="box" />
+                <geom size="0.025 0.025 0.305" pos="-0.565 -0.235 0.305" type="box" />
+                <geom size="0.025 0.025 0.305" pos="0.565 0.235 0.305" type="box" />
+                <geom size="0.025 0.025 0.305" pos="0.565 -0.235 0.305" type="box" />
+            </body>
+        </body>
+        <body name="busbin1" pos="0.5 0 0.825" quat="0.707388 0 0 0.706825">
+            <inertial pos="0 0 0.0143996" quat="0.000165319 0.707107 -0.000165319 0.707107" mass="3.41064" diaginertia="0.210975 0.137661 0.0745052" />
+            <geom class="viz_stl_Black_bin" quat="0.000796327 0 0 1" contype="0" conaffinity="0" mesh="lowbin" />
+            <geom size="0.012 0.2 0.0225" pos="-0.28 0 0.021" quat="0.980067 0 -0.198669 0" type="box" group="3" />
+            <geom size="0.012 0.2 0.0225" pos="0.28 0 0.021" quat="0.980067 0 0.198669 0" type="box" group="3" />
+            <geom size="0.012 0.3 0.0225" pos="0 -0.19 0.021" quat="0.699445 0.105711 -0.105627 0.698888" type="box" group="3" />
+            <geom size="0.012 0.3 0.0225" pos="0 0.19 0.021" quat="0.699445 -0.105711 0.105627 0.698888" type="box" group="3" />
+            <geom size="0.27 0.193 0.003" pos="0 0 0.003" type="box" group="3" />
+        </body>
+        <body name="obj0" pos="0.5 0 1.9">
+            <inertial pos="0 0 0" mass="0.01" diaginertia="0.0001 0.0001 0.0001" />
+            <joint name="obj0" type="free" />
+            <geom name="waterbottle_visual" type="mesh" rgba="0.7 0.7 0.8 1" mesh="waterbottle_big" />
+            <geom name="waterbottle_contact0" type="mesh" condim="4" rgba="0 0 1 0" mesh="contact0_big" />
+            <geom name="waterbottle_contact1" type="mesh" condim="4" rgba="0.31 0.29 0.75 0" mesh="contact1_big" />
+            <site name="obj0" pos="0 0 0" size="0.01" />
+        </body>
+    </worldbody>
+    <actuator>
+        <general name="panda0_joint1" class="panda" joint="panda0_joint1" ctrlrange="-2.9671 2.9671" forcerange="-87 87" gainprm="870 0 0 0 0 0 0 0 0 0" biasprm="0 -870 0 0 0 0 0 0 0 0" />
+        <general name="panda0_joint2" class="panda" joint="panda0_joint2" ctrlrange="-1.8326 1.8326" forcerange="-87 87" gainprm="870 0 0 0 0 0 0 0 0 0" biasprm="0 -870 0 0 0 0 0 0 0 0" />
+        <general name="panda0_joint3" class="panda" joint="panda0_joint3" ctrlrange="-2.9671 2.9671" forcerange="-87 87" gainprm="870 0 0 0 0 0 0 0 0 0" biasprm="0 -870 0 0 0 0 0 0 0 0" />
+        <general name="panda0_joint4" class="panda" joint="panda0_joint4" ctrlrange="-3.1416 0" forcerange="-87 87" gainprm="870 0 0 0 0 0 0 0 0 0" biasprm="0 -870 0 0 0 0 0 0 0 0" />
+        <general name="panda0_joint5" class="panda" joint="panda0_joint5" ctrlrange="-2.9671 2.9671" forcerange="-12 12" gainprm="120 0 0 0 0 0 0 0 0 0" biasprm="0 -120 0 0 0 0 0 0 0 0" />
+        <general name="panda0_joint6" class="panda" joint="panda0_joint6" ctrlrange="-1.66 2.1817" forcerange="-12 12" gainprm="120 0 0 0 0 0 0 0 0 0" biasprm="0 -120 0 0 0 0 0 0 0 0" />
+        <general name="panda0_joint7" class="panda" joint="panda0_joint7" ctrlrange="-2.9671 2.9671" forcerange="-12 12" gainprm="120 0 0 0 0 0 0 0 0 0" biasprm="0 -120 0 0 0 0 0 0 0 0" />
+        <general name="TF_ADB" class="ADB" joint="TF_ADB" ctrlrange="-2.57 0.57" />
+        <general name="TF_MCP" class="MCP" joint="TF_MCP" />
+        <general name="TF_PIP" class="MCP" joint="TF_PIP" />
+        <general name="TF_DIP" class="PIP" joint="TF_DIP" />
+        <general name="FF_ADB" class="ADB" joint="FF_ADB" />
+        <general name="FF_MCP" class="MCP" joint="FF_MCP" />
+        <general name="FF_PIP" class="PIP" joint="FF_PIP" />
+        <general name="PF_ADB" class="ADB" joint="PF_ADB" />
+        <general name="PF_MCP" class="MCP" joint="PF_MCP" />
+        <general name="PF_PIP" class="PIP" joint="PF_PIP" />
+    </actuator>
+    <sensor>
+        <jointpos joint="panda0_joint1" name="fr_arm_jp1" />
+        <jointpos joint="panda0_joint2" name="fr_arm_jp2" />
+        <jointpos joint="panda0_joint3" name="fr_arm_jp3" />
+        <jointpos joint="panda0_joint4" name="fr_arm_jp4" />
+        <jointpos joint="panda0_joint5" name="fr_arm_jp5" />
+        <jointpos joint="panda0_joint6" name="fr_arm_jp6" />
+        <jointpos joint="panda0_joint7" name="fr_arm_jp7" />
+        <jointvel joint="panda0_joint1" name="fr_arm_jv1" />
+        <jointvel joint="panda0_joint2" name="fr_arm_jv2" />
+        <jointvel joint="panda0_joint3" name="fr_arm_jv3" />
+        <jointvel joint="panda0_joint4" name="fr_arm_jv4" />
+        <jointvel joint="panda0_joint5" name="fr_arm_jv5" />
+        <jointvel joint="panda0_joint6" name="fr_arm_jv6" />
+        <jointvel joint="panda0_joint7" name="fr_arm_jv7" />
+        <jointpos joint="TF_ADB" name="TF_ADB_jp" />
+        <jointpos joint="TF_MCP" name="TF_MCP_jp" />
+        <jointpos joint="TF_PIP" name="TF_PIP_jp" />
+        <jointpos joint="TF_DIP" name="TF_DIP_jp" />
+        <jointpos joint="FF_ADB" name="FF_ADB_jp" />
+        <jointpos joint="FF_MCP" name="FF_MCP_jp" />
+        <jointpos joint="FF_PIP" name="FF_PIP_jp" />
+        <jointpos joint="PF_ADB" name="PF_ADB_jp" />
+        <jointpos joint="PF_MCP" name="PF_MCP_jp" />
+        <jointpos joint="PF_PIP" name="PF_PIP_jp" />
+        <jointvel joint="TF_ADB" name="TF_ADB_jv" />
+        <jointvel joint="TF_MCP" name="TF_MCP_jv" />
+        <jointvel joint="TF_PIP" name="TF_PIP_jv" />
+        <jointvel joint="TF_DIP" name="TF_DIP_jv" />
+        <jointvel joint="FF_ADB" name="FF_ADB_jv" />
+        <jointvel joint="FF_MCP" name="FF_MCP_jv" />
+        <jointvel joint="FF_PIP" name="FF_PIP_jv" />
+        <jointvel joint="PF_ADB" name="PF_ADB_jv" />
+        <jointvel joint="PF_MCP" name="PF_MCP_jv" />
+        <jointvel joint="PF_PIP" name="PF_PIP_jv" />
+    </sensor>
+</mujoco>
