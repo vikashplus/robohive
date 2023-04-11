@@ -38,6 +38,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
 def _main(argv):
 
     args, unknown = parse_args(argv)
+    sys.argv = [sys.argv[0], *unknown]
     name = args.package_name
 
     extra_files = package_files('mj_envs')
