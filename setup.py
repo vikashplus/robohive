@@ -55,7 +55,7 @@ setup(
         'mujoco==2.3.3'
         ],
       'a0': [
-        'pycapnp==1.1.0',
+        'pycapnp>=1.1.1',
         'alephzero', # real_sense subscribers dependency
         ]
     }
