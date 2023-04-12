@@ -52,7 +52,8 @@ setup(
     ],
     extras_require={
       'mujoco':[
-        'mujoco==2.3.3'
+        'mujoco==2.3.3',
+        'dm-control==1.0.11'
         ],
       'a0': [
         'pycapnp>=1.1.1',
