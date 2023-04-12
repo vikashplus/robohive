@@ -39,8 +39,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -e ".[mujoco,encoder]"
-        pip install free-mujoco-py
-        pip install numpy==1.22.4
     - name: Test with pytest
       run: |
         python robohive/tests/test_all.py
