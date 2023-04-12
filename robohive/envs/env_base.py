@@ -9,7 +9,6 @@ import gym
 import numpy as np
 import os
 import time as timer
-import torch
 
 from robohive.envs.obj_vec_dict import ObsVecDict
 from robohive.utils import tensor_utils
@@ -18,6 +17,7 @@ from robohive.utils.prompt_utils import prompt, Prompt
 import skvideo.io
 from sys import platform
 from robohive.physics.sim_scene import SimScene
+import robohive.utils.import_utils as import_utils
 
 # TODO
 # remove rwd_mode
@@ -146,6 +146,10 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
         if self.visual_keys == None:
             return
+        else:
+            # import torch only if environment with visual keys are used.
+            import_utils.torch_isavailable()
+            global torch; import torch
 
         if device is None:
             self.device_encoder = "cuda" if torch.cuda.is_available() else "cpu"
@@ -176,14 +180,18 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             wxh, id_encoder = id_encoders[0].split(':')
 
             if "rrl" in id_encoder or "resnet" in id_encoder:
+                import_utils.torchvision_isavailable()
                 import torchvision.transforms as T
                 from torchvision.models import resnet50, ResNet50_Weights, resnet34, ResNet34_Weights, resnet18, ResNet18_Weights
 
             if "r3m" in id_encoder:
+                import_utils.torchvision_isavailable()
                 import torchvision.transforms as T
+                import_utils.r3m_isavailable()
                 from r3m import load_r3m
 
             if "vc1" in id_encoder:
+                import_utils.vc_isavailable()
                 from vc_models.models.vit import model_utils as vc
 
             # Load encoder

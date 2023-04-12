@@ -85,7 +85,7 @@ def register_visual_envs(env_name, encoder_type):
     )
 
 for env_name in ["door", "relocate", "hammer", "pen"]:
-    for enc in ["r3m18", "r3m34", "r3m50", "rrl18", "rrl34", "rrl50", "2d"]:
+    for enc in ["r3m18", "r3m34", "r3m50", "rrl18", "rrl34", "rrl50", "2d", "vc1s"]:
         register_visual_envs(env_name, enc)
 
 

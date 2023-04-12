@@ -11,7 +11,8 @@ import logging
 import os
 from typing import Any
 import numpy as np
-
+import robohive.utils.import_utils as import_utils
+import_utils.mujoco_py_isavailable()
 import mujoco_py
 from mujoco_py.builder import cymj, user_warning_raise_exception
 
