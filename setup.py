@@ -47,9 +47,10 @@ setup(
         'matplotlib',
         'ffmpeg',
         'absl-py',
-        'r3m @ git+https://github.com/facebookresearch/r3m.git',       
+        'torch',
+        # 'r3m @ git+https://github.com/facebookresearch/r3m.git',
         'h5py==3.7.0',
-        'vc_models @ git+https://github.com/facebookresearch/eai-vc.git@9958b278666bcbde193d665cc0df9ccddcdb8a5a#egg=vc_models&subdirectory=vc_models',
+        # 'vc_models @ git+https://github.com/facebookresearch/eai-vc.git@9958b278666bcbde193d665cc0df9ccddcdb8a5a#egg=vc_models&subdirectory=vc_models',
     ],
     extras_require={
       'mujoco':[
@@ -59,6 +60,9 @@ setup(
       'a0': [
         'pycapnp>=1.1.1',
         'alephzero', # real_sense subscribers dependency
-        ]
+        ],
+      'encoder':[
+          'torchvision',
+      ]
     }
 )
