@@ -23,46 +23,42 @@ def package_files(directory):
             paths.append(os.path.join('..', path, filename))
     return paths
 
-def _main():
-    extra_files = package_files('robohive')
+extra_files = package_files('robohive')
 
-    setup(
-        name='robohive',
-        version='0.5.0',
-        license='Apache 2.0',
-        packages=find_packages(),
-        package_data={"": extra_files},
-        include_package_data=True,
-        description='environments simulated in MuJoCo',
-        long_description=read('README.md'),
-        long_description_content_type="text/markdown",
-        url='https://github.com/vikashplus/robohive.git',
-        author='Movement Control Lab, UW',
-        install_requires=[
-            'click',
-            'gym==0.13',
-            'free-mujoco-py',
-            'numpy==1.22.4',
-            'termcolor',
-            'sk-video',
-            'flatten_dict',
-            'matplotlib',
-            'ffmpeg',
-            'absl-py',
-            # 'r3m @ git+https://github.com/facebookresearch/r3m.git',
-            'h5py==3.7.0',
+setup(
+    name='robohive',
+    version='0.5.0',
+    license='Apache 2.0',
+    packages=find_packages(),
+    package_data={"": extra_files},
+    include_package_data=True,
+    description='environments simulated in MuJoCo',
+    long_description=read('README.md'),
+    long_description_content_type="text/markdown",
+    url='https://github.com/vikashplus/robohive.git',
+    author='Movement Control Lab, UW',
+    install_requires=[
+        'click',
+        'gym==0.13',
+        'free-mujoco-py',
+        'termcolor',
+        'sk-video',
+        'flatten_dict',
+        'matplotlib',
+        'ffmpeg',
+        'absl-py',
+        # 'r3m @ git+https://github.com/facebookresearch/r3m.git',
+        'h5py==3.7.0',
+        # 'vc_models @ git+https://github.com/facebookresearch/eai-vc.git@9958b278666bcbde193d665cc0df9ccddcdb8a5a#egg=vc_models&subdirectory=vc_models',
+    ],
+    extras_require={
+      'mujoco':[
+        'mujoco==2.3.3',
+        'dm-control==1.0.11'
         ],
-        extras_require={
-          'mujoco':[
-            'mujoco==2.3.3'
-            ],
-          'a0': [
-            'pycapnp==1.1.0',
-            'alephzero', # real_sense subscribers dependency
-            ]
-        }
-    )
-
-
-if __name__ == "__main__":
-    _main()
+      'a0': [
+        'pycapnp>=1.1.1',
+        'alephzero', # real_sense subscribers dependency
+        ]
+    }
+)
