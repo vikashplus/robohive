@@ -48,21 +48,25 @@ setup(
         'ffmpeg',
         'absl-py',
         'torch',
-        # 'r3m @ git+https://github.com/facebookresearch/r3m.git',
         'h5py==3.7.0',
-        # 'vc_models @ git+https://github.com/facebookresearch/eai-vc.git@9958b278666bcbde193d665cc0df9ccddcdb8a5a#egg=vc_models&subdirectory=vc_models',
     ],
     extras_require={
+      # To use mujoco bindings, run (pip install -e ".[mujoco]") and set sim_backend=MUJOCO
       'mujoco':[
         'mujoco==2.3.3',
         'dm-control==1.0.11'
         ],
+      # To use hardware dependencies, run (pip install -e ".[a0]") and follow install instructions inside robot
       'a0': [
         'pycapnp>=1.1.1',
         'alephzero', # real_sense subscribers dependency
         ],
       'encoder':[
           'torchvision',
+        # Unlike pypi, Git dependencies can be directly installed in editable mode.
+        # To use r3m/vc encoders, uncomment below and run (pip install -e ".[encoder]")
+        # 'r3m @ git+https://github.com/facebookresearch/r3m.git',
+        # 'vc_models @ git+https://github.com/facebookresearch/eai-vc.git@9958b278666bcbde193d665cc0df9ccddcdb8a5a#egg=vc_models&subdirectory=vc_models',
       ]
     }
 )
