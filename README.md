@@ -30,8 +30,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
    python -m robohive.utils.examine_env -e FrankaReachRandom-v0
    ```
 
-
-   See here for [detailed installation instructions](./setup/README.md) and [frequently asked questions](https://github.com/vikashplus/robohive/wiki/6.-Tutorials-&-FAQs#installation).
+   See [detailed installation instructions](./setup/README.md) for options on mujoco-python-bindings and  visual-encoders ([R3M](https://sites.google.com/view/robot-r3m/), [RRL](https://sites.google.com/view/abstractions4rl), [VC](https://eai-vc.github.io/)), and [frequently asked questions](https://github.com/vikashplus/robohive/wiki/6.-Tutorials-&-FAQs#installation) for more details.
 
 # Suites
 *RoboHive* contains a variety of environement, which are organized as suites. Each suites is a collection of loosely related environements. Following suites are provided at the moment with plans to improve the diversity of the collection.
