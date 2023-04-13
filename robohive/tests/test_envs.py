@@ -35,7 +35,7 @@ class TestEnvs(unittest.TestCase):
         obs1, rwd1, done1, infos1 = env1.env.step(u.copy())
         infos1 = copy.deepcopy(infos1) #info points to internal variables.
         proprio1 = env1.env.get_proprioception()
-        exterio1 = env1.env.get_exteroception()
+        extero1 = env1.env.get_exteroception()
         assert len(obs1>0)
         # assert len(rwd1>0)
         # test dicts
@@ -61,10 +61,10 @@ class TestEnvs(unittest.TestCase):
         obs2, rwd2, done2, infos2 = env2.env.step(u)
         infos2 = copy.deepcopy(infos2)
         proprio2 = env2.env.get_proprioception()
-        exterio2 = env2.env.get_exteroception()
+        extero2 = env2.env.get_exteroception()
         torch.testing.assert_close(obs1, obs2)
         torch.testing.assert_close(proprio1, proprio2)
-        torch.testing.assert_close(exterio1, exterio2)
+        torch.testing.assert_close(extero1, extero2)
         torch.testing.assert_close(rwd1, rwd2)
         assert (done1==done2), (done1, done2)
         assert len(infos1)==len(infos2), (infos1, infos2)

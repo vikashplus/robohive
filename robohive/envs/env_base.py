@@ -404,17 +404,18 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         if obs_dict==None: obs_dict = self.obs_dict
         proprio_vec = np.zeros(0)
         proprio_dict = {}
+        proprio_dict['time'] = obs_dict['time']
 
         for key in self.proprio_keys:
             proprio_vec = np.concatenate([proprio_vec, obs_dict[key]])
             proprio_dict[key] = obs_dict[key]
 
-        return obs_dict['time'], proprio_vec, proprio_dict
+        return proprio_dict['time'], proprio_vec, proprio_dict
 
 
     def get_exteroception(self, **kwargs)->dict:
         """
-        Get robot exterioception data. Usually incudes robot's onboard (visual, tactile, acoustic) sensors
+        Get robot exteroception data. Usually incudes robot's onboard (visual, tactile, acoustic) sensors
         """
         return self.get_visuals(**kwargs)
 
