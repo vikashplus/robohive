@@ -160,6 +160,7 @@
         <mesh name="wristbracket1" file="../robel_sim/dmanus/meshes/wristbracket1.stl" />
         <mesh name="wristbracket2" file="../robel_sim/dmanus/meshes/wristbracket2.stl" />
         <mesh name="wristmount" file="../robel_sim/dmanus/meshes/wristmount.stl" />
+        <mesh name="right_angle_wristmount" file="../robel_sim/dmanus/meshes/right_angle_wristmount.stl" scale="0.001 0.001 0.001" />
         <mesh name="fingertip" file="../robel_sim/dmanus/meshes/fingertip.stl" />
         <mesh name="bin" file="../furniture_sim/bin/meshes/bin.stl" scale="0.01 0.01 0.01" />
         <mesh name="busbin" file="../furniture_sim/bin/meshes/busbin.stl" />
@@ -190,9 +191,9 @@
         <site name="yaxis" pos="0 0.5 0" quat="0.707107 0.707107 0 0" size="0.005 0.5" group="3" type="capsule" rgba="0 1 0 0.25" />
         <site name="workspace" pos="0 0.475 1" size="0.6 0.375 0.25" group="3" type="box" rgba="0 0 0.4 0.2" />
         <site name="drop_target" pos="0 0.5 1.1" size="0.075" group="1" rgba="0.1 0.8 0.2 0" />
-        <camera name="left_cam" pos="-1.2 -0.5 1.8" quat="0.78 0.49 -0.22 -0.32" />
-        <camera name="right_cam" pos="1.2 -0.5 1.8" quat="0.76 0.5 0.21 0.35" />
-        <camera name="top_cam" pos="0 0.5 2.2" />
+        <camera name="left_cam" pos="0.16 0.68 1.35" quat="-0.2 -0.11 0.45 0.86" />
+        <camera name="right_cam" pos="0.78 -0.68 1.35" quat="0.87 0.45 0.09 0.17" />
+        <camera name="top_cam" pos="0.5 0 2.2" quat="0.707388 0 0 -0.706825" />
         <light name="left_light" pos="-4 -4 7" dir="0.57735 0.57735 -0.57735" diffuse="0.4 0.35 0.3" specular="0.4 0.35 0.3" />
         <light name="right_light" pos="4 -4 7" dir="-0.57735 0.57735 -0.57735" diffuse="0.4 0.35 0.3" specular="0.4 0.35 0.3" />
         <light name="front_light" pos="0 4 7" dir="0 -0.707107 -0.707107" diffuse="0.4 0.35 0.3" specular="0.4 0.35 0.3" />
@@ -244,113 +245,118 @@
                                             <geom class="panda_col" mesh="link7_col" />
                                             <site name="end_effector" pos="0 0 0.21" quat="0.92388 0 0 -0.382683" size="0.01" />
                                             <camera name="Franka_wrist_cam" pos="0.05 -0.05 0.15" quat="0.126001 0.911084 0.388578 0.0552895" />
-                                        <body name="ee_mount" pos="0.032 -0.0375 0.135" quat="0.270769 -0.270554 0.653515 -0.652995">
-            <inertial pos="0.032 -0.0375 0.135" quat="0.270769 -0.270554 0.653515 -0.652995" mass="0" diaginertia="0 0 0" />
-            <body name="palm" childclass="dmanus" pos="0 0 0.01">
-                <inertial pos="0.000613959 -6.95585e-05 0.0563112" quat="0.359795 0.608871 0.608806 0.359415" mass="0.748774" diaginertia="0.001903 0.00116219 0.00106349" />
-                <geom name="palmFull" pos="-0.001 0 0.1032" rgba="1 1 1 1" mesh="PalmFull" />
-                <geom name="Palmcenter" class="phys_metal" pos="-0.001 0 0.1032" mesh="PalmC" />
-                <geom name="Palmright" class="phys_metal" pos="-0.001 0 0.1032" mesh="PalmR" />
-                <geom name="Palmleft1" class="phys_metal" pos="-0.001 0 0.1032" mesh="PalmL1" />
-                <geom name="Palmleft2" class="phys_metal" pos="-0.001 0 0.1032" mesh="PalmL2" />
-                <geom name="plate1_mesh" pos="0 -0.0255 0.1032" mesh="plate" />
-                <geom name="plate2_mesh" pos="0 0.0235 0.1032" mesh="plate" />
-                <body name="thumb_finger" pos="0.0343 0.0015 0.027" quat="0.57352 0 0.819192 0">
-                    <inertial pos="0.0343 0.0015 0.027" quat="0.57352 0 0.819192 0" mass="0" diaginertia="0 0 0" />
-                    <geom pos="0 0 0.025" quat="0.500398 0.5 -0.499602 0.5" mesh="motor" />
-                    <body name="TF_metacarpel" pos="0 0 0.03475">
-                        <inertial pos="0 0.00283516 0.0358791" quat="0.492003 0.507871 -0.507871 0.492003" mass="0.091" diaginertia="2.74684e-05 2.64925e-05 1.83502e-05" />
-                        <joint name="TF_ADB" class="ADB" pos="0 0 0" axis="0 1 0" />
-                        <geom quat="-0.499203 -0.500398 0.5 -0.500398" mesh="knuckle" />
-                        <geom pos="0 0 0.037" quat="0.500398 0.5 -0.5 -0.499602" mesh="motor" />
-                        <geom class="phys_metal" size="0.015 0.021 0.002" pos="0 0 0.021" type="box" />
-                        <geom class="phys_metal" size="0.015 0.001 0.014" pos="0 0.02 0.01" type="box" />
-                        <geom class="phys_metal" size="0.015 0.001 0.014" pos="0 -0.02 0.01" type="box" />
-                        <geom class="phys_metal" size="0.018 0.024 0.015" pos="0 0.003 0.037" type="box" />
-                        <body name="TF_proximal" pos="0 -0.009 0.037">
-                            <inertial pos="0 0 0.0391087" quat="0.707107 0 0 0.707107" mass="0.092" diaginertia="3.33134e-05 2.85209e-05 1.85925e-05" />
-                            <joint name="TF_MCP" class="MCP" pos="0 0 0" axis="1 0 0" />
-                            <geom pos="-0.018 0 0.012" quat="0.707388 0 -0.706825 0" mesh="bracket2" />
-                            <geom pos="0.018 0 0.012" quat="0.000563312 0.706825 0.000562864 0.707388" mesh="bracket2" />
-                            <geom pos="0 0 0.0445" quat="0.707388 0 -0.706825 0" mesh="motor" />
-                            <geom class="phys_metal" size="0.0015 0.015 0.014" pos="0.02 0 0.012" type="box" />
-                            <geom class="phys_metal" size="0.0015 0.015 0.014" pos="-0.02 0 0.012" type="box" />
-                            <geom class="phys_metal" size="0.018 0.015 0.024" pos="0 0 0.041" type="box" />
-                            <body name="TF_middle" pos="0 0 0.053">
+                                        <body name="ee_mount" pos="0.023 -0.021 0.153" quat="0.270769 -0.270554 0.653515 -0.652995">
+            <inertial pos="0.023 -0.021 0.153" quat="0.270769 -0.270554 0.653515 -0.652995" mass="0" diaginertia="0 0 0" />
+            <site name="palm_site" pos="0.015 -0.055 0.07" size="0.01" />
+            <body name="wrist" childclass="dmanus" pos="0 0 0">
+                <inertial pos="0 0 0" mass="0" diaginertia="0 0 0" />
+                <geom pos="0.033 0.0495 -0.063" quat="0.500398 0.5 -0.499602 0.5" mesh="right_angle_wristmount" />
+                <body name="palm" childclass="dmanus" pos="0 0 0.01">
+                    <inertial pos="0.000613959 -6.95585e-05 0.0563112" quat="0.359795 0.608871 0.608806 0.359415" mass="0.748774" diaginertia="0.001903 0.00116219 0.00106349" />
+                    <geom name="palmFull" pos="-0.001 0 0.1032" rgba="1 1 1 1" mesh="PalmFull" />
+                    <geom name="Palmcenter" class="phys_metal" pos="-0.001 0 0.1032" mesh="PalmC" />
+                    <geom name="Palmright" class="phys_metal" pos="-0.001 0 0.1032" mesh="PalmR" />
+                    <geom name="Palmleft1" class="phys_metal" pos="-0.001 0 0.1032" mesh="PalmL1" />
+                    <geom name="Palmleft2" class="phys_metal" pos="-0.001 0 0.1032" mesh="PalmL2" />
+                    <geom name="plate1_mesh" pos="0 -0.0255 0.1032" mesh="plate" />
+                    <geom name="plate2_mesh" pos="0 0.0235 0.1032" mesh="plate" />
+                    <body name="thumb_finger" pos="0.0343 0.0015 0.027" quat="0.57352 0 0.819192 0">
+                        <inertial pos="0.0343 0.0015 0.027" quat="0.57352 0 0.819192 0" mass="0" diaginertia="0 0 0" />
+                        <geom pos="0 0 0.025" quat="0.500398 0.5 -0.499602 0.5" mesh="motor" />
+                        <body name="TF_metacarpel" pos="0 0 0.03475">
+                            <inertial pos="0 0.00283516 0.0358791" quat="0.492003 0.507871 -0.507871 0.492003" mass="0.091" diaginertia="2.74684e-05 2.64925e-05 1.83502e-05" />
+                            <joint name="TF_ADB" class="ADB" pos="0 0 0" axis="0 1 0" />
+                            <geom quat="-0.499203 -0.500398 0.5 -0.500398" mesh="knuckle" />
+                            <geom pos="0 0 0.037" quat="0.500398 0.5 -0.5 -0.499602" mesh="motor" />
+                            <geom class="phys_metal" size="0.015 0.021 0.002" pos="0 0 0.021" type="box" />
+                            <geom class="phys_metal" size="0.015 0.001 0.014" pos="0 0.02 0.01" type="box" />
+                            <geom class="phys_metal" size="0.015 0.001 0.014" pos="0 -0.02 0.01" type="box" />
+                            <geom class="phys_metal" size="0.018 0.024 0.015" pos="0 0.003 0.037" type="box" />
+                            <body name="TF_proximal" pos="0 -0.009 0.037">
                                 <inertial pos="0 0 0.0391087" quat="0.707107 0 0 0.707107" mass="0.092" diaginertia="3.33134e-05 2.85209e-05 1.85925e-05" />
-                                <joint name="TF_PIP" class="MCP" pos="0 0 0" axis="1 0 0" />
+                                <joint name="TF_MCP" class="MCP" pos="0 0 0" axis="1 0 0" />
                                 <geom pos="-0.018 0 0.012" quat="0.707388 0 -0.706825 0" mesh="bracket2" />
                                 <geom pos="0.018 0 0.012" quat="0.000563312 0.706825 0.000562864 0.707388" mesh="bracket2" />
                                 <geom pos="0 0 0.0445" quat="0.707388 0 -0.706825 0" mesh="motor" />
                                 <geom class="phys_metal" size="0.0015 0.015 0.014" pos="0.02 0 0.012" type="box" />
                                 <geom class="phys_metal" size="0.0015 0.015 0.014" pos="-0.02 0 0.012" type="box" />
                                 <geom class="phys_metal" size="0.018 0.015 0.024" pos="0 0 0.041" type="box" />
-                                <body name="TF_distal" pos="0 0 0.054">
+                                <body name="TF_middle" pos="0 0 0.053">
+                                    <inertial pos="0 0 0.0391087" quat="0.707107 0 0 0.707107" mass="0.092" diaginertia="3.33134e-05 2.85209e-05 1.85925e-05" />
+                                    <joint name="TF_PIP" class="MCP" pos="0 0 0" axis="1 0 0" />
+                                    <geom pos="-0.018 0 0.012" quat="0.707388 0 -0.706825 0" mesh="bracket2" />
+                                    <geom pos="0.018 0 0.012" quat="0.000563312 0.706825 0.000562864 0.707388" mesh="bracket2" />
+                                    <geom pos="0 0 0.0445" quat="0.707388 0 -0.706825 0" mesh="motor" />
+                                    <geom class="phys_metal" size="0.0015 0.015 0.014" pos="0.02 0 0.012" type="box" />
+                                    <geom class="phys_metal" size="0.0015 0.015 0.014" pos="-0.02 0 0.012" type="box" />
+                                    <geom class="phys_metal" size="0.018 0.015 0.024" pos="0 0 0.041" type="box" />
+                                    <body name="TF_distal" pos="0 0 0.054">
+                                        <inertial pos="-0.000647264 -0.00431461 0.0260617" quat="0.705741 0.0535243 0.0494807 -0.70471" mass="0.0544098" diaginertia="3.26877e-05 2.45549e-05 1.0655e-05" />
+                                        <joint name="TF_DIP" class="PIP" pos="0 0 0" axis="1 0 0" />
+                                        <geom quat="0.500398 -0.5 0.5 -0.499602" mesh="fingertip" />
+                                        <geom class="phys_metal" quat="0.500398 -0.5 0.5 -0.499602" mesh="fingertip" />
+                                    </body>
+                                </body>
+                            </body>
+                        </body>
+                    </body>
+                    <body name="index_proximal" pos="0.0445 0.002 0.06325">
+                        <inertial pos="0.0445 0.002 0.06325" mass="0" diaginertia="0 0 0" />
+                        <geom pos="0 0 0.025" quat="0.500398 0.5 -0.499602 0.5" mesh="motor" />
+                        <body name="FF_metacarpel" pos="0 0 0.03475">
+                            <inertial pos="0 0.00283516 0.0358791" quat="0.492003 0.507871 -0.507871 0.492003" mass="0.091" diaginertia="2.74684e-05 2.64925e-05 1.83502e-05" />
+                            <joint name="FF_ADB" class="ADB" pos="0 0 0" axis="0 1 0" />
+                            <geom quat="-0.499203 -0.500398 0.5 -0.500398" mesh="knuckle" />
+                            <geom pos="0 0 0.037" quat="0.500398 0.5 -0.5 -0.499602" mesh="motor" />
+                            <geom class="phys_metal" size="0.015 0.021 0.002" pos="0 0 0.021" type="box" />
+                            <geom class="phys_metal" size="0.015 0.001 0.014" pos="0 0.02 0.01" type="box" />
+                            <geom class="phys_metal" size="0.015 0.001 0.014" pos="0 -0.02 0.01" type="box" />
+                            <geom class="phys_metal" size="0.018 0.024 0.015" pos="0 0.003 0.037" type="box" />
+                            <body name="FF_proximal" pos="0 -0.009 0.037">
+                                <inertial pos="0 0 0.0391087" quat="0.707107 0 0 0.707107" mass="0.092" diaginertia="3.33134e-05 2.85209e-05 1.85925e-05" />
+                                <joint name="FF_MCP" class="MCP" pos="0 0 0" axis="1 0 0" />
+                                <geom pos="-0.018 0 0.012" quat="0.707388 0 -0.706825 0" mesh="bracket2" />
+                                <geom pos="0.018 0 0.012" quat="0.000563312 0.706825 0.000562864 0.707388" mesh="bracket2" />
+                                <geom pos="0 0 0.0445" quat="0.707388 0 -0.706825 0" mesh="motor" />
+                                <geom class="phys_metal" size="0.0015 0.015 0.014" pos="0.02 0 0.012" type="box" />
+                                <geom class="phys_metal" size="0.0015 0.015 0.014" pos="-0.02 0 0.012" type="box" />
+                                <geom class="phys_metal" size="0.018 0.015 0.024" pos="0 0 0.041" type="box" />
+                                <body name="FF_middle" pos="0 0 0.054">
                                     <inertial pos="-0.000647264 -0.00431461 0.0260617" quat="0.705741 0.0535243 0.0494807 -0.70471" mass="0.0544098" diaginertia="3.26877e-05 2.45549e-05 1.0655e-05" />
-                                    <joint name="TF_DIP" class="PIP" pos="0 0 0" axis="1 0 0" />
+                                    <joint name="FF_PIP" class="PIP" pos="0 0 0" axis="1 0 0" />
                                     <geom quat="0.500398 -0.5 0.5 -0.499602" mesh="fingertip" />
                                     <geom class="phys_metal" quat="0.500398 -0.5 0.5 -0.499602" mesh="fingertip" />
                                 </body>
                             </body>
                         </body>
                     </body>
-                </body>
-                <body name="index_proximal" pos="0.0445 0.002 0.06325">
-                    <inertial pos="0.0445 0.002 0.06325" mass="0" diaginertia="0 0 0" />
-                    <geom pos="0 0 0.025" quat="0.500398 0.5 -0.499602 0.5" mesh="motor" />
-                    <body name="FF_metacarpel" pos="0 0 0.03475">
-                        <inertial pos="0 0.00283516 0.0358791" quat="0.492003 0.507871 -0.507871 0.492003" mass="0.091" diaginertia="2.74684e-05 2.64925e-05 1.83502e-05" />
-                        <joint name="FF_ADB" class="ADB" pos="0 0 0" axis="0 1 0" />
-                        <geom quat="-0.499203 -0.500398 0.5 -0.500398" mesh="knuckle" />
-                        <geom pos="0 0 0.037" quat="0.500398 0.5 -0.5 -0.499602" mesh="motor" />
-                        <geom class="phys_metal" size="0.015 0.021 0.002" pos="0 0 0.021" type="box" />
-                        <geom class="phys_metal" size="0.015 0.001 0.014" pos="0 0.02 0.01" type="box" />
-                        <geom class="phys_metal" size="0.015 0.001 0.014" pos="0 -0.02 0.01" type="box" />
-                        <geom class="phys_metal" size="0.018 0.024 0.015" pos="0 0.003 0.037" type="box" />
-                        <body name="FF_proximal" pos="0 -0.009 0.037">
-                            <inertial pos="0 0 0.0391087" quat="0.707107 0 0 0.707107" mass="0.092" diaginertia="3.33134e-05 2.85209e-05 1.85925e-05" />
-                            <joint name="FF_MCP" class="MCP" pos="0 0 0" axis="1 0 0" />
-                            <geom pos="-0.018 0 0.012" quat="0.707388 0 -0.706825 0" mesh="bracket2" />
-                            <geom pos="0.018 0 0.012" quat="0.000563312 0.706825 0.000562864 0.707388" mesh="bracket2" />
-                            <geom pos="0 0 0.0445" quat="0.707388 0 -0.706825 0" mesh="motor" />
-                            <geom class="phys_metal" size="0.0015 0.015 0.014" pos="0.02 0 0.012" type="box" />
-                            <geom class="phys_metal" size="0.0015 0.015 0.014" pos="-0.02 0 0.012" type="box" />
-                            <geom class="phys_metal" size="0.018 0.015 0.024" pos="0 0 0.041" type="box" />
-                            <body name="FF_middle" pos="0 0 0.054">
-                                <inertial pos="-0.000647264 -0.00431461 0.0260617" quat="0.705741 0.0535243 0.0494807 -0.70471" mass="0.0544098" diaginertia="3.26877e-05 2.45549e-05 1.0655e-05" />
-                                <joint name="FF_PIP" class="PIP" pos="0 0 0" axis="1 0 0" />
-                                <geom quat="0.500398 -0.5 0.5 -0.499602" mesh="fingertip" />
-                                <geom class="phys_metal" quat="0.500398 -0.5 0.5 -0.499602" mesh="fingertip" />
-                            </body>
-                        </body>
-                    </body>
-                </body>
-                <body name="pinky_finger" pos="-0.0445 0.002 0.06325">
-                    <inertial pos="-0.0445 0.002 0.06325" mass="0" diaginertia="0 0 0" />
-                    <geom pos="0 0 0.025" quat="0.500398 0.5 -0.499602 0.5" mesh="motor" />
-                    <body name="PF_metacarpel" pos="0 0 0.03475">
-                        <inertial pos="0 0.00283516 0.0358791" quat="0.492003 0.507871 -0.507871 0.492003" mass="0.091" diaginertia="2.74684e-05 2.64925e-05 1.83502e-05" />
-                        <joint name="PF_ADB" class="ADB" pos="0 0 0" axis="0 1 0" />
-                        <geom quat="-0.499203 -0.500398 0.5 -0.500398" mesh="knuckle" />
-                        <geom pos="0 0 0.037" quat="0.500398 0.5 -0.5 -0.499602" mesh="motor" />
-                        <geom class="phys_metal" size="0.015 0.021 0.002" pos="0 0 0.021" type="box" />
-                        <geom class="phys_metal" size="0.015 0.001 0.014" pos="0 0.02 0.01" type="box" />
-                        <geom class="phys_metal" size="0.015 0.001 0.014" pos="0 -0.02 0.01" type="box" />
-                        <geom class="phys_metal" size="0.018 0.024 0.015" pos="0 0.003 0.037" type="box" />
-                        <body name="PF_proximal" pos="0 -0.009 0.037">
-                            <inertial pos="0 0 0.0391087" quat="0.707107 0 0 0.707107" mass="0.092" diaginertia="3.33134e-05 2.85209e-05 1.85925e-05" />
-                            <joint name="PF_MCP" class="MCP" pos="0 0 0" axis="1 0 0" />
-                            <geom pos="-0.018 0 0.012" quat="0.707388 0 -0.706825 0" mesh="bracket2" />
-                            <geom pos="0.018 0 0.012" quat="0.000563312 0.706825 0.000562864 0.707388" mesh="bracket2" />
-                            <geom pos="0 0 0.0445" quat="0.707388 0 -0.706825 0" mesh="motor" />
-                            <geom class="phys_metal" size="0.0015 0.015 0.014" pos="0.02 0 0.012" type="box" />
-                            <geom class="phys_metal" size="0.0015 0.015 0.014" pos="-0.02 0 0.012" type="box" />
-                            <geom class="phys_metal" size="0.018 0.015 0.024" pos="0 0 0.041" type="box" />
-                            <body name="PF_middle" pos="0 0 0.054">
-                                <inertial pos="-0.000647264 -0.00431461 0.0260617" quat="0.705741 0.0535243 0.0494807 -0.70471" mass="0.0544098" diaginertia="3.26877e-05 2.45549e-05 1.0655e-05" />
-                                <joint name="PF_PIP" class="PIP" pos="0 0 0" axis="1 0 0" />
-                                <geom quat="0.500398 -0.5 0.5 -0.499602" mesh="fingertip" />
-                                <geom class="phys_metal" quat="0.500398 -0.5 0.5 -0.499602" mesh="fingertip" />
+                    <body name="pinky_finger" pos="-0.0445 0.002 0.06325">
+                        <inertial pos="-0.0445 0.002 0.06325" mass="0" diaginertia="0 0 0" />
+                        <geom pos="0 0 0.025" quat="0.500398 0.5 -0.499602 0.5" mesh="motor" />
+                        <body name="PF_metacarpel" pos="0 0 0.03475">
+                            <inertial pos="0 0.00283516 0.0358791" quat="0.492003 0.507871 -0.507871 0.492003" mass="0.091" diaginertia="2.74684e-05 2.64925e-05 1.83502e-05" />
+                            <joint name="PF_ADB" class="ADB" pos="0 0 0" axis="0 1 0" />
+                            <geom quat="-0.499203 -0.500398 0.5 -0.500398" mesh="knuckle" />
+                            <geom pos="0 0 0.037" quat="0.500398 0.5 -0.5 -0.499602" mesh="motor" />
+                            <geom class="phys_metal" size="0.015 0.021 0.002" pos="0 0 0.021" type="box" />
+                            <geom class="phys_metal" size="0.015 0.001 0.014" pos="0 0.02 0.01" type="box" />
+                            <geom class="phys_metal" size="0.015 0.001 0.014" pos="0 -0.02 0.01" type="box" />
+                            <geom class="phys_metal" size="0.018 0.024 0.015" pos="0 0.003 0.037" type="box" />
+                            <body name="PF_proximal" pos="0 -0.009 0.037">
+                                <inertial pos="0 0 0.0391087" quat="0.707107 0 0 0.707107" mass="0.092" diaginertia="3.33134e-05 2.85209e-05 1.85925e-05" />
+                                <joint name="PF_MCP" class="MCP" pos="0 0 0" axis="1 0 0" />
+                                <geom pos="-0.018 0 0.012" quat="0.707388 0 -0.706825 0" mesh="bracket2" />
+                                <geom pos="0.018 0 0.012" quat="0.000563312 0.706825 0.000562864 0.707388" mesh="bracket2" />
+                                <geom pos="0 0 0.0445" quat="0.707388 0 -0.706825 0" mesh="motor" />
+                                <geom class="phys_metal" size="0.0015 0.015 0.014" pos="0.02 0 0.012" type="box" />
+                                <geom class="phys_metal" size="0.0015 0.015 0.014" pos="-0.02 0 0.012" type="box" />
+                                <geom class="phys_metal" size="0.018 0.015 0.024" pos="0 0 0.041" type="box" />
+                                <body name="PF_middle" pos="0 0 0.054">
+                                    <inertial pos="-0.000647264 -0.00431461 0.0260617" quat="0.705741 0.0535243 0.0494807 -0.70471" mass="0.0544098" diaginertia="3.26877e-05 2.45549e-05 1.0655e-05" />
+                                    <joint name="PF_PIP" class="PIP" pos="0 0 0" axis="1 0 0" />
+                                    <geom quat="0.500398 -0.5 0.5 -0.499602" mesh="fingertip" />
+                                    <geom class="phys_metal" quat="0.500398 -0.5 0.5 -0.499602" mesh="fingertip" />
+                                </body>
                             </body>
                         </body>
                     </body>
@@ -421,9 +427,8 @@
         <body name="obj0" pos="0.5 0 1.9">
             <inertial pos="0 0 0" mass="0.01" diaginertia="0.0001 0.0001 0.0001" />
             <joint name="obj0" type="free" />
-            <geom name="waterbottle_visual" type="mesh" rgba="0.7 0.7 0.8 1" mesh="waterbottle_big" />
-            <geom name="waterbottle_contact0" type="mesh" condim="4" rgba="0 0 1 0" mesh="contact0_big" />
-            <geom name="waterbottle_contact1" type="mesh" condim="4" rgba="0.31 0.29 0.75 0" mesh="contact1_big" />
+            <geom size="0.05 0.05" pos="0 0 0.05" type="capsule" group="1" rgba="0.3 0.7 0.8 1" />
+            <geom size="0.05 0.05" pos="0 0 -0.05" type="cylinder" group="1" rgba="0.94 0.9 0.55 1" />
             <site name="obj0" pos="0 0 0" size="0.01" />
         </body>
     </worldbody>
