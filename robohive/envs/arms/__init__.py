@@ -417,7 +417,7 @@ for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
 register(
     id='FrankaBinReorient-v0',
     entry_point='robohive.envs.arms.bin_reorient_v0:BinReorientV0',
-    max_episode_steps=100, #50steps*40Skip*2ms = 4s
+    max_episode_steps=150, #50steps*40Skip*2ms = 4s
     kwargs={
         'model_path': curr_dir+'/franka/assets/franka_dmanus_reorient_v0.xml',
         'config_path': curr_dir+'/franka/assets/franka_dmanus_reorient_v0.config',
