@@ -95,7 +95,7 @@ class BinReorientV0(env_base.MujocoEnv):
                obs_keys=DEFAULT_OBS_KEYS,
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
                randomize=False,
-               geom_sizes={'high': [.055, .055, .055], 'low': [.045, 0.045, 0.045]},
+               geom_sizes={'high': 0.055, 'low': 0.045},
                pos_limits = {'eef_low': [0.368, -0.25, 0.9, -np.pi, 0, -np.pi],
                              'eef_high':[0.72, 0.25,  1.3, np.pi, 2*np.pi, np.pi]},
                vel_limits = {'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6],
@@ -126,7 +126,7 @@ class BinReorientV0(env_base.MujocoEnv):
         self.max_slow_height = max_slow_height
         self.max_ik = max_ik
         self.last_eef_cmd = None
-
+        self.random_size = 0.05
         self.ik_sim = SimScene.get_sim(model_path)
         self.pos_limits['jnt_low'] = self.sim.model.jnt_range[:self.sim.model.nu, 0]
         self.pos_limits['jnt_high'] = self.sim.model.jnt_range[:self.sim.model.nu, 1]
@@ -176,24 +176,25 @@ class BinReorientV0(env_base.MujocoEnv):
         obs_dict['grasp_pos'] = sim.data.site_xpos[self.grasp_sid].copy()
         obs_dict['grasp_rot'] = mat2quat(self.sim.data.site_xmat[self.grasp_sid].reshape(3,3).transpose())
         obs_dict['object_err'] = sim.data.site_xpos[self.object_sid]-sim.data.site_xpos[self.hand_sid]
-        obs_dict['target_err'] = sim.data.site_xpos[self.target_sid]-sim.data.site_xpos[self.object_sid]
+        obs_dict['target_err'] = np.array([np.abs(self.sim.data.site_xmat[self.object_sid][-1] - 1.0)],dtype=np.float)
         return obs_dict
 
 
     def get_reward_dict(self, obs_dict):
         object_dist = np.linalg.norm(obs_dict['object_err'], axis=-1)
         target_dist = np.linalg.norm(obs_dict['target_err'], axis=-1)
+        upright = 1.0*(self.sim.data.site_xmat[self.object_sid][-1] > 0.999)
         far_th = 1.25
 
         rwd_dict = collections.OrderedDict((
             # Optional Keys
             ('object_dist',   object_dist),
             ('target_dist',   target_dist),
-            ('bonus',   (target_dist<.1) + (target_dist<.05)),
+            ('bonus',   (target_dist<.01) + (target_dist<.001)),
             ('penalty', (object_dist>far_th)),
             # Must keys
-            ('sparse',  target_dist<.075),
-            ('solved',  target_dist<.075),
+            ('sparse',  upright),
+            ('solved',  upright),
             ('done',    object_dist > far_th),
         ))
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
@@ -214,22 +215,34 @@ class BinReorientV0(env_base.MujocoEnv):
                                                                    high=self.obj_pos_limits['high'])
             reset_qpos[obj_jid+3:obj_jid+7] = euler2quat(self.np_random.uniform(low=(np.pi/2, -np.pi,0), high=(np.pi/2, np.pi,0)) ) # random quat
 
-            random_size = self.np_random.uniform(low=self.geom_sizes['low'],
-                                                 high=self.geom_sizes['high'])  # random size
+            self.random_size = self.np_random.uniform(low=self.geom_sizes['low'],
+                                                      high=self.geom_sizes['high'])  # random size
             bid = self.sim.model.body_name2id(self.object_site_name)
             for gid in range(self.sim.model.body_geomnum[bid]):
                 gid += self.sim.model.body_geomadr[bid]
-                self.sim.model.geom_size[gid] = random_size
+                if gid - self.sim.model.body_geomadr[bid] < 2:
+                    self.sim.model.geom_size[gid][:] = self.random_size
+                    self.sim.model.geom_pos[gid][2] = self.random_size
+                    if gid - self.sim.model.body_geomadr[bid] == 1:
+                        self.sim.model.geom_pos[gid][2] *= -1.0
+                    else:
+                        self.random_size += 0.5e-4
+                elif gid - self.sim.model.body_geomadr[bid] == 2:
+                    self.sim.model.geom_size[gid][0] = 0.5*self.sim.model.geom_size[gid-1][0]
+                    self.sim.model.geom_pos[gid][2] = 3*self.sim.model.geom_size[gid-2][1]-0.5*self.sim.model.geom_size[gid][1]
+                elif gid - self.sim.model.body_geomadr[bid] > 2 and gid - self.sim.model.body_geomadr[bid] < 7:
+                    self.sim.model.geom_pos[gid][2] = -2*self.random_size+self.sim.model.geom_size[gid][0]-0.001
                 #self.sim.model.geom_pos[gid] = self.np_random.uniform(low=-1 * self.sim.model.geom_size[gid],
                 #                                                      high=self.sim.model.geom_size[gid])  # random pos
 
-                if gid - self.sim.model.body_geomadr[bid] > 0 and self.np_random.rand() > 0.5:
-                    self.sim.model.geom_rgba[gid] = self.sim.model.geom_rgba[gid-1]
-                    print('same color')
-                else:
-                    self.sim.model.geom_rgba[gid] = self.np_random.uniform(low=[.2, .2, .2, 1],
-                                                                           high=[.9, .9, .9, 1])  # random color
+                if (gid - self.sim.model.body_geomadr[bid] > 2 and gid - self.sim.model.body_geomadr[bid] < 7):
+                    self.sim.model.geom_rgba[gid] = self.sim.model.geom_rgba[self.sim.model.body_geomadr[bid]+1]
 
+                elif (gid - self.sim.model.body_geomadr[bid] > 0 and self.np_random.rand() > 0.5):
+                    self.sim.model.geom_rgba[gid] = self.sim.model.geom_rgba[gid-1]
+                else:
+                    self.sim.model.geom_rgba[gid][:3] = self.np_random.uniform(low=[.2, .2, .2],
+                                                                           high=[.9, .9, .9])  # random color
             self.sim.forward()
 
         obs = super().reset(reset_qpos, reset_qvel, blocking=False, **kwargs)
@@ -430,11 +443,6 @@ class BinReorientPolicy():
         else:
             obj_err = obs_dict['object_err'][0,0,:]
 
-        if self.env.robot.is_hardware and self.real_tar_pos is not None:
-            tar_err = self.real_tar_pos-obs_dict['grasp_pos'][0, 0, :]
-        else:
-            tar_err = obs_dict['target_err'][0,0,:]
-
         if self.last_t > self.env.sim.data.time:
             # Reset
             self.stage = 0
@@ -515,12 +523,12 @@ class BinReorientPolicy():
                                    -0.75,1.5,0.0])    # Pinky
         elif self.stage == 8:
             action[:6] = self.preplace_pose
-            action[:2] = obs_dict['grasp_pos'][0, 0, :2]+0.8*obj_err[0:2]
+            action[:2] = obs_dict['grasp_pos'][0, 0, :2]+1.5*obj_err[0:2]
             #action[0] += -1*0.1*np.sin(obs_dict['qp'][0, 0, 6]) #REAL ROBOT
             #action[1] += -1*0.1*np.cos(obs_dict['qp'][0, 0, 6]) # REAL ROBOT
             action[2] += 0.1
-            action[6:] = np.array([0.57,1.5,0,-0.2, # Thumb
-                                   0.0,1.5,0.1,     # Middle
+            action[6:] = np.array([0.0,1.42,0,0.2, # Thumb
+                                   0.3,1.35,0.2,     # Middle
                                    -0.75,1.5,0.0])    # Pinky
             #action[:3] = self.preplace_pose[:3]
             #action[1] = 0.25
@@ -531,7 +539,7 @@ class BinReorientPolicy():
 
         elif self.stage == 9:
             action[:6] = self.preplace_pose
-            action[:2] = obs_dict['grasp_pos'][0, 0, :2]+0.8*obj_err[0:2]
+            action[:2] = obs_dict['grasp_pos'][0, 0, :2]+1.0*obj_err[0:2]
             action[2] += 0.1
             action[6:] = np.array([0.57,1.5,-0.2,-0.2, # Thumb
                                    0.0,1.5,-0.2,     # Middle
@@ -562,5 +570,5 @@ class BinReorientPolicy():
         action = 2*(((action - self.env.pos_limits['eef_low']) / (np.abs(self.env.pos_limits['eef_high'] - self.env.pos_limits['eef_low'])+1e-8)) - 0.5)
         action = np.clip(action, -1, 1)
         noise_action = np.clip(action + np.random.randn(action.shape[0]),-1,1)
-        
+
         return noise_action, {'evaluation': action}
