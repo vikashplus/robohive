@@ -183,7 +183,9 @@ class BinReorientV0(env_base.MujocoEnv):
     def get_reward_dict(self, obs_dict):
         object_dist = np.linalg.norm(obs_dict['object_err'], axis=-1)
         target_dist = np.linalg.norm(obs_dict['target_err'], axis=-1)
-        upright = 1.0*(self.sim.data.site_xmat[self.object_sid][-1] > 0.999)
+        upright = 1.0*(self.sim.data.site_xmat[self.object_sid][-1] > 0.999 and
+                       (self.sim.data.site_xpos[self.object_sid][:2] >= self.pos_limits['eef_low'][:2]).all() and
+                       (self.sim.data.site_xpos[self.object_sid][:2] <= self.pos_limits['eef_high'][:2]).all())
         far_th = 1.25
 
         rwd_dict = collections.OrderedDict((
