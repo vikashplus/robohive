@@ -57,7 +57,7 @@ def viewer(env,
         print("unknown render: ", render)
 
 def adept_pickle_replay(env, env_name, original_paths):
-    is_robohive_env = 'FK' in env_name 
+    is_robohive_env = 'FK' in env_name
     if type(original_paths) is dict:
         original_paths = [original_paths]
     FPS = 30
@@ -73,23 +73,30 @@ def adept_pickle_replay(env, env_name, original_paths):
             init_qpos[-3:] = quat2euler(data['init_qpos'][-4:])
             init_qvel = data['init_qvel'].copy()
 
-            env.reset(reset_qpos=init_qpos, reset_qvel=init_qvel) 
+            env.reset(reset_qpos=init_qpos, reset_qvel=init_qvel)
         else:
             env.reset()
         env.sim.data.qpos[:] = init_qpos
         env.sim.data.qvel[:] = init_qvel
         env.sim.forward()
+
+        # Since we changed the sim state, we need to propagate changes throughout the envs
+        if is_robohive_env:
+            obs = env.env.get_obs()
+        else:
+            obs = env.env._get_obs()
         viewer(env, mode='initialize', render=render)
 
         print("qpos before step: ", env.sim.data.qpos)
         for i_frame in range(data['actions'].shape[0] - 1):
             act = data['actions'][i_frame]
             if is_robohive_env:
+                act = act/np.pi # fix: The velocity limits are different in two the envs (+-2 for Adept_env and +-2*pi for Robohive. un-normalization of actions need to be done respecting the limits)
                 next_obs, reward, done, env_info = env.env.step(act, update_exteroception=True)
             else:
                 next_obs, reward, done, env_info = env.env.step(act)
             print("qpos after step: ", env.sim.data.qpos)
-            import pdb; pdb.set_trace() # comment this out to play the full trajectory
+            # import pdb; pdb.set_trace() # comment this out to play the full trajectory
             if i_frame % render_skip == 0:
                 viewer(env, mode='render', render=render)
                 print(i_frame, end=', ', flush=True)
@@ -111,16 +118,16 @@ def adept_pickle_replay(env, env_name, original_paths):
 @click.option('-rv', '--render_visuals', type=bool, default=False, help=('render the visual keys of the env, if present'))
 @click.option('-ea', '--env_args', type=str, default=None, help=('env args. E.g. --env_args "{\'is_hardware\':True}"'))
 def main(env_name, data_path, mode, seed, render, camera_name, output_dir, output_name, save_paths, plot_paths, render_visuals, env_args):
-    
+
     # seed and load environments
     np.random.seed(seed)
     env = gym.make(env_name) if env_args==None else gym.make(env_name, **(eval(env_args)))
     env.seed(seed)
-    
+
     original_paths = pickle.load(open(data_path, 'rb'))
     paths = adept_pickle_replay(
         env,
-        env_name, 
+        env_name,
         original_paths=original_paths
     )
 
