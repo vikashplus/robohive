@@ -431,6 +431,37 @@ register(
 
 )
 
+# Reach to random target using visual inputs
+def register_bin_reorient_visual_envs(env_name, encoder_type, real=False):
+    proprio_keys = ['qp', 'qv', 'grasp_pos', 'grasp_rot']
+
+    if not real:
+        visual_keys = ["rgb:left_cam:224x224:{}".format(encoder_type),
+                       "d:left_cam:224x224:{}".format(encoder_type),
+                       "rgb:right_cam:224x224:{}".format(encoder_type),
+                       "d:right_cam:224x224:{}".format(encoder_type)]
+    else:
+        visual_keys = ["rgb:left_cam:240x424:{}".format(encoder_type),
+                       "d:left_cam:240x424:{}".format(encoder_type),
+                       "rgb:right_cam:240x424:{}".format(encoder_type),
+                       "d:right_cam:240x424:{}".format(encoder_type),
+                       "rgb:top_cam:240x424:{}".format(encoder_type),
+                       "d:top_cam:240x424:{}".format(encoder_type),
+                       "rgb:Franka_wrist_cam:240x424:{}".format(encoder_type),
+                       "d:Franka_wrist_cam:240x424:{}".format(encoder_type)]
+
+    register_env_variant(
+        env_id='{}-v0'.format(env_name),
+        variant_id='{}_v{}-v0'.format(env_name, encoder_type),
+        variants={'proprio_keys': proprio_keys,
+                  'visual_keys':visual_keys
+        },
+        silent=True
+    )
+
+for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
+    register_bin_reorient_visual_envs('FrankaBinReorient', enc)
+
 # FETCH =======================================================================
 from robohive.envs.arms.reach_base_v0 import ReachBaseV0
 
