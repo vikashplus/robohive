@@ -507,7 +507,7 @@ class BinReorientPolicy():
             if (self.last_qp is not None and
                 np.linalg.norm(obs_dict['qp'][0,0,6]-self.last_qp[6]) < self.gripper_close_thresh and
                 np.linalg.norm(preplace_pose[:3]-obs_dict['grasp_pos'][0, 0, :]) < self.preplace_thresh):
-                self.stage = 6
+                self.stage = 8
         elif self.stage == 6: # Wait for gripper to start closing
             # Advance to next stage?
             if self.last_qp is not None and np.linalg.norm(self.last_qp[7:self.env.sim.model.nu] - obs_dict['qp'][0,0,7:self.env.sim.model.nu]) > self.gripper_close_thresh:
@@ -517,7 +517,8 @@ class BinReorientPolicy():
                 self.stage = 8
         elif self.stage == 8: # Wait until pregrasp has stabilized
             # Advance to next stage?
-            if self.last_qp is not None and not self.is_moving(obs_dict['qp'][0,0,:7]):
+            if quat2mat(obs_dict['qp'][0, 0, -4:])[-1,-1] > 0.99:
+            #if self.last_qp is not None and not self.is_moving(obs_dict['qp'][0,0,:7]):
                 self.stage = 9
         #print('QP {}'.format(obs_dict['qp'][0, 0, :7]))
 
@@ -543,8 +544,12 @@ class BinReorientPolicy():
             #action[:3] += tar_err[0:3]
             action[:6] = self.preplace_pose
             action[6:] = self.grasp_config
+            action[6:] = np.array([0.57,1.5,0,0.0, # Thumb
+                                   0.0,1.5,0.0,     # Middle
+                                   -0.75,1.5,0.0])    # Pinky
         elif self.stage == 6 or self.stage == 7:
             action[:6] = self.preplace_pose
+            action[:2] = obs_dict['grasp_pos'][0, 0, :2] + 1.5 * obj_err[0:2]
             #action[0] += 1*0.1*np.sin(obs_dict['qp'][0, 0, 6])
             #action[1] += 1*0.1*np.cos(obs_dict['qp'][0, 0, 6])
             action[6:] = np.array([0.57,1.5,0,0.0, # Thumb
