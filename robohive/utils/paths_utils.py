@@ -86,19 +86,26 @@ def plot(paths, env=None, fileName_prefix=''):
         plt.clf()
 
         # observations
-        nplt1 = len(path['env_infos']['obs_dict'].keys())
+        path_keys = path.keys()
+        env_info_keys = []
+        for k in path_keys:
+            print(k)
+            if 'env_infos/obs_dict' in k:
+                env_info_keys.append(k)
+
+        nplt1 = len(env_info_keys)
         for iplt1, key in enumerate(
-                sorted(path['env_infos']['obs_dict'].keys())):
+                sorted(env_info_keys)):
             ax = plt.subplot(nplt1, 2, iplt1 * 2 + 1)
             if iplt1 != (nplt1 - 1):
                 ax.axes.xaxis.set_ticklabels([])
             if iplt1 == 0:
                 plt.title('Observations')
             ax.yaxis.tick_right()
-            if path['env_infos']['obs_dict'][key].ndim<3:
+            if path[key].ndim<3:
                 plt.plot(
-                    path['env_infos']['time'],
-                    path['env_infos']['obs_dict'][key],
+                    path['env_infos/time'],
+                    path[key],
                     label=key)
             # plt.ylabel(key)
             plt.text(0.01, .01, key, transform=ax.transAxes)
@@ -110,12 +117,13 @@ def plot(paths, env=None, fileName_prefix=''):
         ax.set_prop_cycle(None)
         # h4 = plt.plot(path['env_infos']['time'], env.env.act_mid + path['actions']*env.env.act_rng, '-', label='act') # plot scaled actions
         h4 = plt.plot(
-            path['env_infos']['time'], path['actions'], '-',
+            path['env_infos/time'], path['actions'], '-',
             label='act')  # plot normalized actions
         plt.ylabel('actions')
         ax.axes.xaxis.set_ticklabels([])
         ax.yaxis.tick_right()
 
+        '''
         # rewards/ scores
         if "score" in path['env_infos']:
             ax = plt.subplot(nplt2, 2, 6)
@@ -159,7 +167,7 @@ def plot(paths, env=None, fileName_prefix=''):
             ax.axes.xaxis.set_ticklabels([])
             plt.ylabel('wt*rewards')
             ax.yaxis.tick_right()
-
+        '''
         file_name = fileName_prefix + path_name + '.pdf'
         plt.savefig(file_name)
         print("saved ", file_name)
