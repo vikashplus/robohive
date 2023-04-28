@@ -54,3 +54,16 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 ## - ROBEL Suite (Coming soon)
    This suite contains a collection of environement centered around real world locomotion and manipulation. Standard [ROBEL benchmarks](http://roboticsbenchmarks.org/) are a part of this suite
+
+# Citation
+If you find `RoboHive` useful in your research,
+- please consider supporting the project by providing a [star ⭐](https://github.com/vikashplus/robohive/stargazers)
+- please consider citing our project by using the following BibTeX entry:
+
+```BibTeX
+@Misc{RoboHive2020,
+  title = {RoboHive -- A Unified Framework for Robot Learning},
+  howpublished = {\url{https://sites.google.com/view/robohive}},
+  year = {2020}
+  url = {https://sites.google.com/view/robohive},
+}
