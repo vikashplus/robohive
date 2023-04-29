@@ -48,7 +48,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
 
         prompt("RoboHive:> For environment credits, please cite -")
-        prompt(env_credits, color="cyan", type=Prompt.INFO)
+        prompt(env_credits, color="cyan", type=Prompt.ONCE)
 
         # Seed and initialize the random number generator
         self.seed(seed)

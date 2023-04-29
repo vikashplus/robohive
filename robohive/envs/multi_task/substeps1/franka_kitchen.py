@@ -10,6 +10,8 @@ from gym.envs.registration import register
 from robohive.envs.multi_task.common.franka_kitchen_v2 import FrankaKitchen
 import copy
 
+print("RoboHive:> Registering FrankaKitchen (FK1) Envs")
+
 # Global Configs
 CURR_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = CURR_DIR + "/../common/kitchen/franka_kitchen.xml"
