@@ -12,7 +12,6 @@ import numpy as np
 import pickle
 import time
 import os
-import importlib
 
 DESC = '''
 Helper script to examine an environment and associated policy for behaviors; \n
