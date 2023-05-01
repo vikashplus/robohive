@@ -52,9 +52,9 @@ class SimScene(metaclass=abc.ABCMeta):
     @staticmethod
     def get_sim(model_handle: Any) -> 'SimScene':
         sim_backend = os.getenv('sim_backend')
-        if sim_backend == 'MUJOCO_PY' or sim_backend == None:
+        if sim_backend == 'MUJOCO_PY':
             return SimScene.create(model_handle=model_handle, backend=SimBackend.MUJOCO_PY)
-        elif sim_backend == 'MUJOCO':
+        elif sim_backend == 'MUJOCO' or sim_backend == None:
             return SimScene.create(model_handle=model_handle, backend=SimBackend.DM_CONTROL)
         else:
             raise ValueError("Unknown sim_backend: {}. Available choices: MUJOCO_PY, MUJOCO")
