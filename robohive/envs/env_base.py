@@ -386,7 +386,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 visual_dict.update({key:rgb_encoded})
                 # add depth observations if requested in the keys (assumption d will always be accompanied by rgb keys)
                 d_key = 'd:'+key[4:]
-                if d_key in self.obs_keys:
+                if d_key in visual_keys:
                     visual_dict.update({d_key:dpt})
 
         return visual_dict
