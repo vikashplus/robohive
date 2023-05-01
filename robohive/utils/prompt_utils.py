@@ -7,7 +7,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 """
 Utility script to help with information verbosity produced by RoboHive
-To control verbosity set env variable ROBOHIVE_VERBOSITY=INFO(default)/WARN/ERROR/ONCE/NONE
+To control verbosity set env variable ROBOHIVE_VERBOSITY=NONE(default)/INFO/WARN/ERROR/ONCE/ALWAYS
 """
 
 from termcolor import cprint
@@ -18,11 +18,12 @@ import os
 # Define verbosity levels
 class Prompt(enum.IntEnum):
     """Prompt verbosity types"""
-    INFO = 0    # info (lowest priority)
-    WARN = 1
-    ERROR = 2
-    ONCE = 3    # print only once
-    NONE = 4    # print always (highest priority)
+    NONE = 0    #  default (lowest priority)
+    INFO = 1
+    WARN = 2
+    ERROR = 3
+    ONCE = 4    # print only once
+    ALWAYS = 5  # print always (highest priority)
 
 
 # Prompt Cache (to track for Prompt.ONCE messages)
@@ -32,21 +33,25 @@ PROMPT_CACHE = []
 # Infer verbose mode to be used
 VERBOSE_MODE = os.getenv('ROBOHIVE_VERBOSITY')
 if VERBOSE_MODE==None:
-    VERBOSE_MODE = Prompt.INFO
+    VERBOSE_MODE = Prompt.NONE
 else:
     VERBOSE_MODE = VERBOSE_MODE.upper()
-    if VERBOSE_MODE == 'ERROR':
+    if VERBOSE_MODE == 'ALWAYS':
+        VERBOSE_MODE = Prompt.ALWAYS
+    elif VERBOSE_MODE == 'ERROR':
         VERBOSE_MODE = Prompt.ERROR
     elif VERBOSE_MODE == 'WARN':
         VERBOSE_MODE = Prompt.WARN
     elif VERBOSE_MODE == 'INFO':
         VERBOSE_MODE = Prompt.INFO
+    elif VERBOSE_MODE == 'NONE':
+        VERBOSE_MODE = Prompt.NONE
     else:
         raise TypeError("Unknown ROBOHIVE_VERBOSITY option")
 
 
 # Programatically override the verbosity
-def set_prompt_verbosity(verbose_mode:Prompt=Prompt.INFO):
+def set_prompt_verbosity(verbose_mode:Prompt=Prompt.NONE):
     global VERBOSE_MODE
     VERBOSE_MODE = verbose_mode
 
@@ -63,7 +68,7 @@ def prompt(data, color=None, on_color=None, flush=False, end="\n", type:Prompt=P
             type = Prompt.INFO
         else:
             PROMPT_CACHE.append(data_hash)
-            type = Prompt.NONE
+            type = Prompt.ALWAYS
 
     # resolve print colors
     if on_color == None:
@@ -75,4 +80,6 @@ def prompt(data, color=None, on_color=None, flush=False, end="\n", type:Prompt=P
 
     # resolve printing
     if type>=VERBOSE_MODE:
+        if not isinstance(data, str):
+            data = data.__str__()
         cprint(data, color=color, on_color=on_color, flush=flush, end=end)
