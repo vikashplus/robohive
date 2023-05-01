@@ -16,7 +16,7 @@ import_utils.dm_control_isavailable()
 import_utils.mujoco_isavailable()
 import dm_control.mujoco as dm_mujoco
 
-from robohive.renderer.mj_renderer import DMRenderer
+from robohive.renderer.mj_renderer import MJRenderer
 from robohive.physics.sim_scene import SimScene
 
 
@@ -52,10 +52,9 @@ class DMSimScene(SimScene):
             # self.renderer.refresh_window()
             self.renderer.render_to_window()
 
-
-    def _create_renderer(self, sim: Any) -> DMRenderer:
+    def _create_renderer(self, sim: Any) -> MJRenderer:
         """Creates a renderer for the given simulation."""
-        return DMRenderer(sim)
+        return MJRenderer(sim)
 
     def copy_model(self) -> Any:
         """Returns a copy of the MjModel object."""

@@ -126,7 +126,6 @@ class HammerEnvV1(env_base.MujocoEnv):
         qv = self.init_qvel.copy() if reset_qvel==None else reset_qvel
         self.robot.reset(reset_pos=qp, reset_vel=qv, **kwargs)
 
-
         self.sim.model.body_pos[self.target_bid,2] = self.np_random.uniform(low=0.1, high=0.25)
         self.sim.forward()
         return self.get_obs()

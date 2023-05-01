@@ -53,7 +53,7 @@ setup(
     extras_require={
       # To use mujoco bindings, run (pip install -e ".[mujoco]") and set sim_backend=MUJOCO
       'mujoco':[
-        'mujoco==2.3.3',
+        'mujoco==2.3.5',
         'dm-control==1.0.11'
         ],
       # To use hardware dependencies, run (pip install -e ".[a0]") and follow install instructions inside robot
