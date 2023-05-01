@@ -16,10 +16,12 @@ import os
 DESC = '''
 Helper script to examine an environment and associated policy for behaviors; \n
 - either onscreen, or offscreen, or just rollout without rendering.\n
-- save resulting paths as pickle or as 2D plots
+- save resulting paths as pickle or as 2D plots \n
+- rollout either learned policies or scripted policies (e.g. see rand_policy class below) \n
 USAGE:\n
-    $ python examine_env.py --env_name door-v0 \n
-    $ python examine_env.py --env_name door-v0 --policy my_policy.pickle --mode evaluation --episodes 10 \n
+    $ python examine_env.py --env_name door-v1 \n
+    $ python examine_env.py --env_name door-v1 --policy_path robohive.utils.examine_env.rand_policy \n
+    $ python examine_env.py --env_name door-v1 --policy_path my_policy.pickle --mode evaluation --episodes 10 \n
 '''
 
 # Random policy

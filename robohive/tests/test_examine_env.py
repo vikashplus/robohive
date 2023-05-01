@@ -22,10 +22,19 @@ class TestExamineEnv(unittest.TestCase):
         result = runner.invoke(examine_env, ["--env_name", "door-v1", \
                                             "--num_episodes", 1, \
                                             "--render", "offscreen",\
-                                            "--camera_name", "top_acam"])
+                                            "--camera_name", "top_cam"])
         print(result.output.strip())
         self.assertEqual(result.exception, None)
 
+    def test_scripted_policy_loading(self):
+        # Call your function and test its output/assertions
+        print("Testing scripted policy loading")
+        runner = click.testing.CliRunner()
+        result = runner.invoke(examine_env, ["--env_name", "door-v1", \
+                                            "--num_episodes", 1, \
+                                            "--policy_path", "robohive.utils.examine_env.rand_policy"])
+        print(result.output.strip())
+        self.assertEqual(result.exception, None)
 
 if __name__ == '__main__':
     unittest.main()
