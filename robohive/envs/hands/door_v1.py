@@ -100,7 +100,7 @@ class DoorEnvV1(env_base.MujocoEnv):
         self.sim.reset()
         qp = self.init_qpos.copy() if reset_qpos==None else reset_qpos
         qv = self.init_qvel.copy() if reset_qvel==None else reset_qvel
-        self.sim.set_state(qpos=qp, qvel=qv)
+        self.robot.reset(reset_pos=qp, reset_vel=qv, **kwargs)
 
         self.sim.model.body_pos[self.door_bid,0] = self.np_random.uniform(low=-0.3, high=-0.2)
         self.sim.model.body_pos[self.door_bid, 1] = self.np_random.uniform(low=0.25, high=0.35)
