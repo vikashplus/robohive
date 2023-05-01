@@ -7,6 +7,8 @@ from robohive.tests.test_myo import TestMyo
 from robohive.tests.test_claws import TestClaws
 from robohive.tests.test_tcdm import TestTCDM
 
+from robohive.tests.test_examine_env import TestExamineEnv
+from robohive.tests.test_robot import TestRobot
 
 if __name__ == '__main__':
     unittest.main()

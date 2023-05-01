@@ -2,7 +2,9 @@ import click
 import click.testing
 import unittest
 from robohive.utils.examine_env import main as examine_env
-class TestMain(unittest.TestCase):
+
+
+class TestExamineEnv(unittest.TestCase):
     def test_main(self):
         # Call your function and test its output/assertions
         print("Testing env with random policy")
@@ -21,5 +23,9 @@ class TestMain(unittest.TestCase):
                                             "--num_episodes", 1, \
                                             "--render", "offscreen",\
                                             "--camera_name", "top_acam"])
-        # print(result.output.strip())
+        print(result.output.strip())
         self.assertEqual(result.exception, None)
+
+
+if __name__ == '__main__':
+    unittest.main()
