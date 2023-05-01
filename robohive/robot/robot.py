@@ -99,7 +99,7 @@ class Robot():
 
         # Robot's time
         self.time_start = time.time()
-        self.time = time.time() - self.time_start
+        self.time_wall = time.time()-self.time_start # Wall time (used for realtime factors) for both sim and hardware
 
         # refresh the sensor cache
         self._sensor_cache_refresh()
@@ -410,7 +410,7 @@ class Robot():
         self._sensor_cache.append(current_sen)
 
         # Update time
-        self.time = current_sen['time']
+        self.time_wall = time.time()-self.time_start
 
         return current_sen
 
@@ -694,10 +694,11 @@ class Robot():
         # synchronize time to maintain step_duration
         if self.is_hardware or realTimeSim:
             time_now = (time.time() - self.time_start)
-            time_left_in_step = step_duration - (time_now - self.time)
+            time_left_in_step = step_duration - (time_now-self.time_wall)
             if (time_left_in_step > 0.001):
                 time.sleep(time_left_in_step)
-            # prompt("Step took %0.4fs, time left in step %0.4f"% ((time_now-self.time), time_left_in_step))
+            elif time_left_in_step < 0.0:
+                prompt("Step duration %0.4fs, Step took %0.4fs, Time left %0.4f"% (step_duration, (time_now-self.time_wall), time_left_in_step), type=Prompt.WARN)
 
         if _ROBOT_VIZ:
             global timing_SRV_t0
@@ -753,7 +754,6 @@ class Robot():
             # Ideally we should use actuator/ reset mechanism as in the real world
             # but choosing to directly resetting sim for efficiency
             self.sim.reset()
-            self.time = self.sim.data.time # update robot time
             self.sim.data.qpos[:] = feasibe_pos
             self.sim.data.qvel[:] = feasibe_vel
             self.sim.forward() # ???Vik alternatively should following be called? functions.mj_step1(self.sim.model, self.sim.data)
@@ -768,8 +768,9 @@ class Robot():
         # refresh sensor cache before exiting reset
         self._sensor_cache_refresh()
 
-        # restart the clock
+        # restart the robot clock
         self.time_start = time.time()
+        self.time_wall = time.time()-self.time_start
 
         global timing_SRV_t0
         timing_SRV_t0 = time.time()
@@ -790,31 +791,29 @@ class Robot():
         self.close()
 
 
-def main():
+def demo_robot():
     import gym
-    import darwin
-    import pprompt
-
 
     prompt("Starting Robot===================")
-    env = gym.make('DarwinRideRandom-v0')
-    rob = env.env.mpl
+    env = gym.make('FrankaReachFixed-v0')
+    rob = env.env.robot
 
     prompt("Getting sensor data==============")
-    sen = rob.get_sensors(env.env)
-    pprompt.pprompt(sen)
+    sen = rob.get_sensors()
+    prompt("Sensor data: ", end="")
+    prompt(sen)
 
     prompt("stepping forward=================")
     ctrl = env.env.np_random.uniform(size=env.env.sim.model.nu)
-    rob.step(env.env, ctrl, 1.0)
+    rob.step(ctrl, 1.0)
 
     prompt("Resetting Robot==================")
     pos = env.env.np_random.uniform(size=env.env.sim.model.nq)
     vel = env.env.np_random.uniform(size=env.env.sim.model.nv)
-    rob.reset(env.env, pos, vel)
+    rob.reset(pos, vel)
 
     prompt("Closing Robot====================")
     rob.close()
 
 if __name__ == '__main__':
-    main()
+    demo_robot()
