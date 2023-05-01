@@ -39,18 +39,18 @@ class RealSense(hardwareBase):
     def callback(self, pkt):
         # save the latest sensor reading into local var
         # logger.info("In callback")
-        msg = sensor_msgs.Image.from_bytes(pkt.payload)
-        dtype=np.dtype(msg.encoding)
-        color_depth = int(msg.step/msg.width/dtype.itemsize)
-        if len(msg.data) != msg.height*msg.width*color_depth*dtype.itemsize:
-            logger.warning(f'{self.sub_topic}: short packet {len(msg.data)} < {msg.height*msg.width*color_depth*dtype.itemsize}! skip')
-            return
-        # print(msg.height, msg.width)
+        with sensor_msgs.Image.from_bytes(pkt.payload) as msg:
+            dtype=np.dtype(msg.encoding)
+            color_depth = int(msg.step/msg.width/dtype.itemsize)
+            if len(msg.data) != msg.height*msg.width*color_depth*dtype.itemsize:
+                logger.warning(f'{self.sub_topic}: short packet {len(msg.data)} < {msg.height*msg.width*color_depth*dtype.itemsize}! skip')
+                return
+            # print(msg.height, msg.width)
 
-        if color_depth == 3:
-            self.last_image_pkt = np.ndarray(shape=(msg.height, msg.width, color_depth), dtype=dtype, buffer=msg.data)
-        else:
-            self.last_depth_pkt = np.ndarray(shape=(msg.height, msg.width, color_depth), dtype=dtype, buffer=msg.data)
+            if color_depth == 3:
+                self.last_image_pkt = np.ndarray(shape=(msg.height, msg.width, color_depth), dtype=dtype, buffer=msg.data)
+            else:
+                self.last_depth_pkt = np.ndarray(shape=(msg.height, msg.width, color_depth), dtype=dtype, buffer=msg.data)
 
         # Update the timestamp
         timestamp_str = dict(pkt.headers)["a0_time_wall"]

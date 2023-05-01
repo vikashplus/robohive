@@ -5,9 +5,9 @@ Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
-from robohive.physics.sim_scene import get_sim
+from robohive.physics.sim_scene import SimScene
 from robohive.utils.quat_math import quat2euler
-from robohive.utils.prompt_utils import prompt
+from robohive.utils.prompt_utils import prompt, Prompt
 import time
 import numpy as np
 from collections import deque
@@ -53,7 +53,7 @@ class Robot():
             ):
 
         if kwargs != {}:
-            print("Warning: Unused kwargs found: {}".format(kwargs))
+            prompt("Warning: Unused kwargs found: {}".format(kwargs), type=Prompt.WARN)
         self.name = robot_name+'(sim)' if is_hardware is None else robot_name+'(hdr)'
         self._act_mode = act_mode
         self.is_hardware = bool(is_hardware)
@@ -71,7 +71,7 @@ class Robot():
         if mj_sim is None:
             # (creates new robot everytime to facilitate parallelization)
             prompt("Preparing robot-sim from %s" % model_path)
-            self.sim =get_sim(model_path=model_path)
+            self.sim =SimScene.get_sim(model_path=model_path)
         else:
             # use provided sim
             self.sim = mj_sim
@@ -486,6 +486,7 @@ class Robot():
 
     # synchronize states between two sims
     def sync_sims(self, source_sim, destination_sim, model=True, data=True):
+        destination_sim.data.time = source_sim.data.time
         if data:
             destination_sim.data.qpos[:] = source_sim.data.qpos[:].copy()
             destination_sim.data.qvel[:] = source_sim.data.qvel[:].copy()

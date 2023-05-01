@@ -36,7 +36,6 @@ class TrackEnv(env_base.MujocoEnv):
     }
     def __init__(self, object_name, model_path, obsd_model_path=None, seed=None, **kwargs):
 
-        print(self.DEFAULT_CREDIT)
         curr_dir = os.path.dirname(os.path.abspath(__file__))
 
         # Process model_path to import the right object
@@ -72,7 +71,7 @@ class TrackEnv(env_base.MujocoEnv):
         # first construct the inheritance chain, which is just __init__ calls all the way down, with env_base
         # creating the sim / sim_obsd instances. Next we run through "setup"  which relies on sim / sim_obsd
         # created in __init__ to complete the setup.
-        super().__init__(model_path=processed_model_path, obsd_model_path=processed_obsd_model_path, seed=seed)
+        super().__init__(model_path=processed_model_path, obsd_model_path=processed_obsd_model_path, seed=seed, env_credits=self.DEFAULT_CREDIT)
         os.remove(processed_model_path)
         if processed_obsd_model_path and processed_obsd_model_path!=processed_model_path:
             os.remove(processed_obsd_model_path)

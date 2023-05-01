@@ -53,9 +53,10 @@ def load_class_from_str(module_name, class_name):
 @click.option('-on', '--output_name', type=str, default=None, help=('The name to save the outputs as'))
 @click.option('-sp', '--save_paths', type=bool, default=False, help=('Save the rollout paths'))
 @click.option('-pp', '--plot_paths', type=bool, default=False, help=('2D-plot of individual paths'))
+@click.option('-rv', '--render_visuals', type=bool, default=False, help=('render the visual keys of the env, if present'))
 @click.option('-ea', '--env_args', type=str, default=None, help=('env args. E.g. --env_args "{\'is_hardware\':True}"'))
 
-def main(env_name, policy_path, mode, seed, num_episodes, render, camera_name, output_dir, output_name, save_paths, plot_paths, env_args):
+def main(env_name, policy_path, mode, seed, num_episodes, render, camera_name, output_dir, output_name, save_paths, plot_paths, render_visuals, env_args):
 
     # seed and load environments
     np.random.seed(seed)
@@ -101,19 +102,24 @@ def main(env_name, policy_path, mode, seed, num_episodes, render, camera_name, o
 
     # evaluate paths
     success_percentage = env.env.evaluate_success(paths)
-    print(f'Average success over rollouts: {success_percentage}')
+    print(f'Average success over rollouts: {success_percentage}%')
 
     # save paths
     time_stamp = time.strftime("%Y%m%d-%H%M%S")
     if save_paths:
-        file_name = output_dir + '/' + output_name + '{}_paths.pickle'.format(time_stamp)
-        pickle.dump(paths, open(file_name, 'wb'))
-        print("saved ", file_name)
+        file_name = output_dir + '/' + output_name + '{}_trace.h5'.format(time_stamp)
+        paths.save(trace_name=file_name, verify_length=True, f_res=np.float64)
 
     # plot paths
     if plot_paths:
         file_name = output_dir + '/' + output_name + '{}'.format(time_stamp)
         plotnsave_paths(paths, env=env, fileName_prefix=file_name)
+
+    # render visuals keys
+    if env.visual_keys and render_visuals:
+        paths.close()
+        render_keys = ['env_infos/visual_dict/'+ key for key in env.visual_keys]
+        paths.render(output_dir=output_dir, output_format="mp4", groups=["Trial0",], datasets=render_keys, input_fps=1/env.dt)
 
 if __name__ == '__main__':
     main()

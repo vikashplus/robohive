@@ -8,7 +8,6 @@ import gym
 import numpy as np
 
 from robohive.envs.myo.base_v0 import BaseV0
-from robohive.envs.env_base import get_sim
 
 class PoseEnvV0(BaseV0):
 
@@ -91,15 +90,14 @@ class PoseEnvV0(BaseV0):
         obs_dict['time'] = np.array([sim.data.time])
         obs_dict['qpos'] = sim.data.qpos[:].copy()
         obs_dict['qvel'] = sim.data.qvel[:].copy()*self.dt
-        if sim.model.na>0:
-            obs_dict['act'] = sim.data.act[:].copy()
-
+        obs_dict['act'] = sim.data.act[:].copy() if sim.model.na>0 else np.zeros_like(obs_dict['qpos'])
         obs_dict['pose_err'] = self.target_jnt_value - obs_dict['qpos']
         return obs_dict
 
     def get_reward_dict(self, obs_dict):
         pose_dist = np.linalg.norm(obs_dict['pose_err'], axis=-1)
-        act_mag = np.linalg.norm(self.obs_dict['act'], axis=-1)/self.sim.model.na if self.sim.model.na !=0 else 0
+        act_mag = np.linalg.norm(self.obs_dict['act'], axis=-1)
+        if self.sim.model.na !=0: act_mag= act_mag/self.sim.model.na
         far_th = 4*np.pi/2
 
         rwd_dict = collections.OrderedDict((

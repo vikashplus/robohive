@@ -11,6 +11,9 @@ import copy
 import logging
 from typing import Any
 
+import robohive.utils.import_utils as import_utils
+import_utils.dm_control_isavailable()
+import_utils.mujoco_isavailable()
 import dm_control.mujoco as dm_mujoco
 
 from robohive.renderer.mj_renderer import DMRenderer

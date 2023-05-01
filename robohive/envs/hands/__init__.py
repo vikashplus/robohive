@@ -22,63 +22,70 @@ print("RoboHive:> Registering Hand Envs")
 # Swing the door open
 register(
     id='door-v1',
-    entry_point='robohive.envs.hand_manipulation_suite:DoorEnvV1',
+    entry_point='robohive.envs.hands:DoorEnvV1',
     max_episode_steps=200,
     kwargs={
         'model_path': curr_dir+'/assets/DAPG_door.xml',
     }
 )
-from robohive.envs.hand_manipulation_suite.door_v1 import DoorEnvV1
+from robohive.envs.hands.door_v1 import DoorEnvV1
 
 # Hammer a nail into the board
 register(
     id='hammer-v1',
-    entry_point='robohive.envs.hand_manipulation_suite:HammerEnvV1',
+    entry_point='robohive.envs.hands:HammerEnvV1',
     max_episode_steps=200,
     kwargs={
         'model_path': curr_dir+'/assets/DAPG_hammer.xml',
     }
 )
-from robohive.envs.hand_manipulation_suite.hammer_v1 import HammerEnvV1
+from robohive.envs.hands.hammer_v1 import HammerEnvV1
 
 # Reposition a pen in hand
 register(
     id='pen-v1',
-    entry_point='robohive.envs.hand_manipulation_suite:PenEnvV1',
+    entry_point='robohive.envs.hands:PenEnvV1',
     max_episode_steps=100,
     kwargs={
         'model_path': curr_dir+'/assets/DAPG_pen.xml',
     }
 )
-from robohive.envs.hand_manipulation_suite.pen_v1 import PenEnvV1
+from robohive.envs.hands.pen_v1 import PenEnvV1
 
 # Relcoate an object to the target
 register(
     id='relocate-v1',
-    entry_point='robohive.envs.hand_manipulation_suite:RelocateEnvV1',
+    entry_point='robohive.envs.hands:RelocateEnvV1',
     max_episode_steps=200,
     kwargs={
         'model_path': curr_dir+'/assets/DAPG_relocate.xml',
     }
 )
-from robohive.envs.hand_manipulation_suite.relocate_v1 import RelocateEnvV1
+from robohive.envs.hands.relocate_v1 import RelocateEnvV1
 
 # Reach to random target using visual inputs
 def register_visual_envs(env_name, encoder_type):
     register_env_variant(
         env_id='{}-v1'.format(env_name),
         variant_id='{}_v{}-v1'.format(env_name, encoder_type),
-        variants={'proprio_keys':
-                    ['hand_jnt'],
+        variants={
+                # add visual keys to the env
                 'visual_keys':[
                     "rgb:vil_camera:224x224:{}".format(encoder_type),
-                    "rgb:fixed:224x224:{}".format(encoder_type)]
+                    "rgb:view_1:224x224:{}".format(encoder_type),
+                    "rgb:view_4:224x224:{}".format(encoder_type)],
+                # override the obs to avoid accidental leakage of oracle state info while using the visual envs
+                # using time as dummy obs. time keys are added twice to avoid unintended singleton expansion errors.
+                "obs_keys": ['time', 'time'],
+                # add proprioceptive data - proprio_keys to configure, env.get_proprioception() to access
+                'proprio_keys':
+                    ['hand_jnt'],
         },
         silent=True
     )
 
 for env_name in ["door", "relocate", "hammer", "pen"]:
-    for enc in ["r3m18", "r3m34", "r3m50", "rrl18", "rrl34", "rrl50", "2d"]:
+    for enc in ["r3m18", "r3m34", "r3m50", "rrl18", "rrl34", "rrl50", "2d", "vc1s"]:
         register_visual_envs(env_name, enc)
 
 
@@ -89,24 +96,24 @@ for env_name in ["door", "relocate", "hammer", "pen"]:
 # V0: Old Baoding ball
 # register(
 #     id='baoding-v0',
-#     entry_point='robohive.envs.hand_manipulation_suite:BaodingEnvV0',
+#     entry_point='robohive.envs.hands:BaodingEnvV0',
 #     max_episode_steps=200,
 # )
-# from robohive.envs.hand_manipulation_suite.baoding_v0 import BaodingEnvV0
+# from robohive.envs.hands.baoding_v0 import BaodingEnvV0
 
 # V0: baoding balls new
 register(
     id='baoding-v1',
-    entry_point='robohive.envs.hand_manipulation_suite:BaodingFixedEnvV1',
+    entry_point='robohive.envs.hands:BaodingFixedEnvV1',
     max_episode_steps=200,
      kwargs={
             'model_path': curr_dir+'/assets/baoding_v1.mjb',
      }
 )
-from robohive.envs.hand_manipulation_suite.baoding_v1 import BaodingFixedEnvV1
+from robohive.envs.hands.baoding_v1 import BaodingFixedEnvV1
 register(
     id='baoding4th-v1',
-    entry_point='robohive.envs.hand_manipulation_suite:BaodingFixedEnvV1',
+    entry_point='robohive.envs.hands:BaodingFixedEnvV1',
     max_episode_steps=200,
      kwargs={
             'model_path': curr_dir+'/assets/baoding_v1.mjb',
@@ -115,14 +122,14 @@ register(
 )
 register(
     id='baoding8th-v1',
-    entry_point='robohive.envs.hand_manipulation_suite:BaodingFixedEnvV1',
+    entry_point='robohive.envs.hands:BaodingFixedEnvV1',
     max_episode_steps=200,
      kwargs={
             'model_path': curr_dir+'/assets/baoding_v1.mjb',
             'n_shifts_per_period':8,
      }
 )
-from robohive.envs.hand_manipulation_suite.baoding_v1 import BaodingFixedEnvV1
+from robohive.envs.hands.baoding_v1 import BaodingFixedEnvV1
 
 
 # ==================================================================================
@@ -134,31 +141,31 @@ from robohive.envs.hand_manipulation_suite.baoding_v1 import BaodingFixedEnvV1
 # # Swing the door open
 # register(
 #     id='door-v0',
-#     entry_point='robohive.envs.hand_manipulation_suite:DoorEnvV0',
+#     entry_point='robohive.envs.hands:DoorEnvV0',
 #     max_episode_steps=200,
 # )
-# from robohive.envs.hand_manipulation_suite.door_v0 import DoorEnvV0
+# from robohive.envs.hands.door_v0 import DoorEnvV0
 #
 # # Hammer a nail into the board
 # register(
 #     id='hammer-v0',
-#     entry_point='robohive.envs.hand_manipulation_suite:HammerEnvV0',
+#     entry_point='robohive.envs.hands:HammerEnvV0',
 #     max_episode_steps=200,
 # )
-# from robohive.envs.hand_manipulation_suite.hammer_v0 import HammerEnvV0
+# from robohive.envs.hands.hammer_v0 import HammerEnvV0
 #
 # # Reposition a pen in hand
 # register(
 #     id='pen-v0',
-#     entry_point='robohive.envs.hand_manipulation_suite:PenEnvV0',
+#     entry_point='robohive.envs.hands:PenEnvV0',
 #     max_episode_steps=100,
 # )
-# from robohive.envs.hand_manipulation_suite.pen_v0 import PenEnvV0
+# from robohive.envs.hands.pen_v0 import PenEnvV0
 #
 # # Relcoate an object to the target
 # register(
 #     id='relocate-v0',
-#     entry_point='robohive.envs.hand_manipulation_suite:RelocateEnvV0',
+#     entry_point='robohive.envs.hands:RelocateEnvV0',
 #     max_episode_steps=200,
 # )
-# from robohive.envs.hand_manipulation_suite.relocate_v0 import RelocateEnvV0
+# from robohive.envs.hands.relocate_v0 import RelocateEnvV0

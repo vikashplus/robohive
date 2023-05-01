@@ -11,7 +11,7 @@ EXAMPLE:\n
     - python tutorials/ik_minjerk_trajectory.py --sim_path envs/arms/franka/assets/franka_busbin_v0.xml\n
 """
 
-from robohive.physics.sim_scene import get_sim
+from robohive.physics.sim_scene import SimScene
 from robohive.utils.inverse_kinematics import qpos_from_site_pose
 from robohive.utils.min_jerk import *
 from robohive.utils.quat_math import euler2quat
@@ -28,7 +28,7 @@ ARM_nJnt = 7
 @click.option('-h', '--horizon', type=int, help='time (s) to simulate', default=2)
 def main(sim_path, horizon):
     # Prep
-    sim = get_sim(model_handle=sim_path)
+    sim = SimScene.get_sim(model_handle=sim_path)
 
     # setup
     target_sid = sim.model.site_name2id("drop_target")

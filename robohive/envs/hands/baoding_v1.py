@@ -143,7 +143,7 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
     def step(self, a):
         if self.which_task==Task.MOVE_TO_LOCATION:
             desired_pos = self.goal[self.counter].copy()
-            # update both sims with desired targets
+            # update both simhive with desired targets
             for sim in [self.sim, self.sim_obsd]:
                 # update target 1
                 sim.model.site_pos[self.target1_sid, 0] = desired_pos[0]
@@ -160,7 +160,7 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
             desired_positions_wrt_palm[2] = self.x_radius*np.cos(desired_angle_wrt_palm[1]) + self.center_pos[0]
             desired_positions_wrt_palm[3] = self.y_radius*np.sin(desired_angle_wrt_palm[1]) + self.center_pos[1]
 
-            # update both sims with desired targets
+            # update both simhive with desired targets
             for sim in [self.sim, self.sim_obsd]:
                 sim.model.site_pos[self.target1_sid, 0] = desired_positions_wrt_palm[0]
                 sim.model.site_pos[self.target1_sid, 2] = desired_positions_wrt_palm[1]

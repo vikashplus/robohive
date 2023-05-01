@@ -1,5 +1,5 @@
  <mujocoinclude>
- 	<compiler angle="radian" meshdir='../../../sims/Adroit/' texturedir='../../../sims/Adroit/' />
+ 	<compiler angle="radian" meshdir='../../../simhive/Adroit/' texturedir='../../../simhive/Adroit/' />
     <option apirate="200" iterations="20" noslip_iterations="20"/>
     <size njmax="500" nconmax="100" nstack="600000" nuser_body="9" nuser_jnt="1" nuser_site="1" nuser_tendon="1" nuser_actuator="16" nuser_sensor="1" />
     <visual>
@@ -30,6 +30,9 @@
             <joint type="free" limited="false" armature="0" damping="0" />
             <general user="0 1 0.03 0.0939711 0.513477 0.0358776 1.23598 8.40409 0.485031 6.04244 1.02187 0.175297 0.121642 0 0 0" />
         </default>
+        <default class='scene'>
+            <geom contype="0" conaffinity="0" group="1"/>
+        </default>
     </default>
     <asset>
         <texture type="cube" name="texgeom" builtin="flat" mark="cross" rgb1="0.3 0.6 0.5" rgb2="0.3 0.6 0.5" width="127" height="762" />
@@ -38,18 +41,15 @@
         <texture type="cube" name="square" file="../Adroit/resources/textures/square.png" />
         <texture type="cube" name="foil" file="../Adroit/resources/textures/silverRaw.png" />
         <texture type="cube" name="woodb" file="../Adroit/resources/textures/woodb.png" />
-        <texture type="2d" name="groundplane" builtin="checker" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" width="100" height="100" />
         <texture type="2d" name="marble2d" file="../Adroit/resources/textures/marble.png" />
         <texture type="cube" name="marblecube" file="../Adroit/resources/textures/marble.png" />
         <material name="MatColl" specular="1" shininess="0.3" reflectance="0.5" rgba="0.4 0.5 0.6 1" />
         <material name="MatViz" specular="0.75" shininess="0.1" reflectance="0.5" rgba="0.9 0.7 0.5 1" />
         <material name="MatGnd" specular="0.3" shininess="0.3" reflectance="0.3" rgba="0.5 0.55 0.5 1" />
         <material name="object" texture="texgeom" />
-        <material name="groundplane" texture="groundplane" texrepeat="10 10" />
         <material name="table2d" texture="marble2d" reflectance="0.3" rgba="0.8 0.8 0.8 1" />
         <material name="tablecube" texture="marblecube" rgba="0.8 0.8 0.8 1" />
         <material name="MatFoil" texture="foil" specular="1" shininess="0.3" rgba="0.9 0.9 0.9 1" />
-        <material name="MatPlane" specular="0.3" shininess="0.3" rgba="0.3 0.3 0.2 1" />
         <material name="MatWood" texture="wood" texrepeat="3 3" specular="0.4" shininess="0.1" />
         <material name="MatSquare" texture="square" specular="1" shininess="0.6" rgba="0.8 0.8 0.8 1" />
         <material name="MatWoodR" texture="wood" specular="1" shininess="0.3" rgba="1 0.5 0.5 1" />
@@ -66,8 +66,11 @@
         <mesh name="TH3_z" file="../Adroit/resources/meshes/TH3_z.stl" />
         <mesh name="TH2_z" file="../Adroit/resources/meshes/TH2_z.stl" />
         <mesh name="TH1_z" file="../Adroit/resources/meshes/TH1_z.stl" />
+        <texture name="texplane" type="2d" height="1" width="1" file="../scene_sim/textures/oak_floorboard.png"/>
+        <material name="MatPlane" reflectance="0.01" texture="texplane" texrepeat="4 4" texuniform="true"/>
+        <mesh name="room" file="../scene_sim/meshes/simpleroom1.stl" scale="1 1 1"/>
         <mesh name="robohive" file="../scene_sim/meshes/robohive.stl" scale="1 1 1"/>
-
+        <mesh name="robohive_half" file="../scene_sim/meshes/robohive_half.stl" scale="4 4 4"/>
     </asset>
 
     <contact>
@@ -94,6 +97,36 @@
     <!-- <equality>
         <weld body1="vive_tracker" body2="forearm" solref="0.01 1" solimp="0.9 0.9 0.01" />
     </equality> -->
+
+    <worldbody>
+        <light directional='false' diffuse='.8 .8 .8' specular='0.03 0.03 0.03' pos='-1 -1.0 3.0' dir='1 1.0 -3'/>
+
+        <!-- Camera for the VIL paper -->
+        <camera name="fixed" pos="0 -0.7 0.7" quat="0.92388 0.382683 0 0" />
+        <camera name="vil_camera" pos="0 -1.2 1.2" quat="0.92388 0.382683 0 0" />
+        <camera name="view_1" pos="-0.8 -0.8 0.8" euler="0.785 -0.785 -0.785" />
+        <camera name="view_2" pos="0 0.5 0.2" euler="-1.57 0 3.14" />
+        <camera name="view_3" pos="0 0.2 -0.2" euler="-2.35 0 3.14" />
+        <camera name="view_4" pos="0.8 -0.8 0.8" euler="0.785 0.785 0.785" />
+        <camera name="view_5" pos="0 -0.25 -0.4" euler="-3.2 0 3.14" />
+        <camera name="top" pos="0 0 1.5" euler="0 0 3.14" />
+
+        <!-- Room -->
+        <body name="room" pos="0 0 -.7" childclass="scene">
+            <geom name="room" pos="0 0 0" type="mesh" mesh="room" rgba=".3 .3 .3 1" euler="-.0 0 3.14"/>
+            <geom name="floor" pos="0 0 0.001" size="3 2.5 .1" conaffinity="1" contype="1" type="plane" material="MatPlane" condim="3"/>
+            <geom name="lamp" pos="2.604 2.1 1.65" type="cylinder" size=".3 .2" rgba="2 1.6 0 .6" group="1"/>
+            <light directional='false' diffuse='2 1.6 0' specular='0.03 0.03 0.03' pos='2.604 2.1 1.5' dir='0 0 -1' cutoff="90" exponent="5"/>
+
+            <geom pos="0 2.45 1.75" euler="1.57 0 0" name="robohive_front" type="mesh" mesh="robohive" rgba=".6 .6 .6 1"/>
+            <body pos="-3 .95 2.4" euler="0 1.57 1.57">
+                <geom pos="0 0 -.030" type="mesh" mesh="robohive_half" rgba="1 0.6 0 2" euler="0 0 0"/>
+                <geom pos="0 0 -.03" type="mesh" mesh="robohive_half" rgba=".6 .6 .6 1" euler="-.0 0 3.14"/>
+                <geom pos="0 -.45 0" name="robohive" type="mesh" mesh="robohive" rgba=".6 .6 .6 1"/>
+            </body>
+        </body>
+    </worldbody>
+
     <tendon>
         <fixed name="T_WRJ1r" range="-0.032 0.032" user="1236">
             <joint joint="WRJ1" coef="0.018" />
