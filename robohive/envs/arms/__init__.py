@@ -379,6 +379,23 @@ register(
         'init_qpos': [0., 0., 0., -1.7359, 0., 0.2277,  -1.57, 0.0]
     }
 )
+
+register(
+    id='FrankaBinPickRealRP05-v0',
+    entry_point='robohive.envs.arms.bin_pick_v0:BinPickV0',
+    max_episode_steps=100, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_bin_pick_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_bin_pick_rp05_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_name': "obj0",
+        'target_site_name': "drop_target",
+        'randomize': True,
+        'target_xyz_range': {'high':[0.5, 0.0, 1.1], 'low':[0.5, 0.0, 1.1]},
+        'init_qpos': [0., 0., 0., -1.7359, 0., 0.2277,  -1.57, 0.0]
+    }
+)
+
 # Reach to random target using visual inputs
 def register_bin_pick_visual_envs(env_name, encoder_type, real=False):
     proprio_keys = ['qp', 'qv', 'grasp_pos', 'grasp_rot']
@@ -410,7 +427,8 @@ for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
     register_bin_pick_visual_envs('FrankaBinPick', enc)
 for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
     register_bin_pick_visual_envs('FrankaBinPickReal', enc, real=True)    
-    register_bin_pick_visual_envs('FrankaBinPickRealRP03', enc, real=True)    
+    register_bin_pick_visual_envs('FrankaBinPickRealRP03', enc, real=True) 
+    register_bin_pick_visual_envs('FrankaBinPickRealRP05', enc, real=True)    
 
 # REORIENT ====================================================================
 

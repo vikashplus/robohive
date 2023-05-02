@@ -537,7 +537,7 @@ class BinReorientPolicy():
         #    if self.last_qp is not None and np.linalg.norm(self.last_qp[7:self.env.sim.model.nu] - obs_dict['qp'][0,0,7:self.env.sim.model.nu]) > self.gripper_close_thresh:
         #        self.stage = 4
         elif self.stage == 4: # Wait for gripper to stop closing
-            print('motor diff {}'.format(np.linalg.norm(self.grasp_config - obs_dict['qp'][0,0,7:self.env.sim.model.nu])))
+            #print('motor diff {}'.format(np.linalg.norm(self.grasp_config - obs_dict['qp'][0,0,7:self.env.sim.model.nu])))
             if np.linalg.norm(self.grasp_config - obs_dict['qp'][0,0,7:self.env.sim.model.nu]) < 0.8:
             #if self.last_qp is not None and np.linalg.norm(self.last_qp[7:self.env.sim.model.nu] - obs_dict['qp'][0,0,7:self.env.sim.model.nu]) < self.gripper_close_thresh:
                 self.stage = 5
