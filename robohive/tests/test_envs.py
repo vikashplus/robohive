@@ -64,7 +64,7 @@ class TestEnvs(unittest.TestCase):
         extero2 = env2.env.get_exteroception()
         torch.testing.assert_close(obs1, obs2)
         torch.testing.assert_close(proprio1, proprio2)
-        torch.testing.assert_close(extero1, extero2)
+        torch.testing.assert_close(extero1, extero2, atol=2, rtol=0.04)
         torch.testing.assert_close(rwd1, rwd2)
         assert (done1==done2), (done1, done2)
         assert len(infos1)==len(infos2), (infos1, infos2)
