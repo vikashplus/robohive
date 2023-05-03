@@ -8,7 +8,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 import gym
 from robohive.envs import env_base
 from robohive.envs.tcdm.reference_motion import ReferenceMotion
-from robohive.utils.quat_math import quat2euler, euler2quat, quatDiff2Vel
+from robohive.utils.quat_math import quat2euler, euler2quat, quatDiff2Vel, mat2quat
 import numpy as np
 import os
 import collections
@@ -45,7 +45,6 @@ class TrackEnv(env_base.MujocoEnv):
         processed_model_path = curr_dir+model_path[:-4]+"_processed.xml"
         with open(processed_model_path, 'w') as file:
             file.write(processed_xml)
-        self._object_name = object_name
         # Process obsd_model_path to import the right object
         if obsd_model_path == model_path:
             processed_obsd_model_path = processed_model_path
@@ -101,7 +100,12 @@ class TrackEnv(env_base.MujocoEnv):
         self.TermPose = False
         ##########################################
 
-        self._lift_z = self.sim.data.get_body_xipos(self._object_name)[2] + self.lift_bonus_thresh
+        self.object_bid = self.sim.model.body_name2id(object_name)
+        self.wrist_bid = self.sim.model.body_name2id("wrist")
+
+        self._lift_z = self.sim.data.xipos[self.object_bid][2] + self.lift_bonus_thresh
+
+
         self.initialized_pos = False
         self._setup(**kwargs)
 
@@ -178,10 +182,10 @@ class TrackEnv(env_base.MujocoEnv):
         obs_dict['targ_hand_qvel'] = curr_ref.robot_vel
 
         ## info about current object com + rotations
-        obs_dict['curr_obj_com'] = sim.data.get_body_xipos(self._object_name).copy()
-        obs_dict['curr_obj_rot'] = sim.data.get_body_xquat(self._object_name).copy()
+        obs_dict['curr_obj_com'] = self.sim.data.xipos[self.object_bid].copy()
+        obs_dict['curr_obj_rot'] = mat2quat(np.reshape(self.sim.data.ximat[self.object_bid].copy(), (3,3)))
 
-        obs_dict['wrist_err'] = sim.data.get_body_xipos('wrist')
+        obs_dict['wrist_err'] = self.sim.data.xipos[self.wrist_bid].copy()
 
         obs_dict['base_error'] = obs_dict['curr_obj_com'] - obs_dict['wrist_err']
 
