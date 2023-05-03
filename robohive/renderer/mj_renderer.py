@@ -45,6 +45,7 @@ class MJRenderer(Renderer):
         if not self._window:
             self._window = viewer.launch_passive(self._sim.model.ptr, self._sim.data.ptr)
             self._update_camera_properties(self._window.cam)
+            self._update_viewer_settings(self._window.opt)
 
         self._window.cam.azimuth+=.1 # trick to rotate camera for 360 videos
         self.refresh_window()
@@ -109,6 +110,13 @@ class MJRenderer(Renderer):
         else:
             return rgb_arr
 
+    def _update_viewer_settings(self, viewer):
+        """Updates the given camera object with the current camera settings."""
+        for key, value in self._viewer_settings.items():
+            if key == 'render_tendon':
+                viewer.flags[7] = value
+            if key == 'render_actuator':
+                viewer.flags[4] = value
 
     def close(self):
         """Cleans up any resources being used by the renderer."""

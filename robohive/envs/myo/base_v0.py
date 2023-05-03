@@ -46,9 +46,8 @@ class BaseV0(env_base.MujocoEnv):
                     weighted_reward_keys=weighted_reward_keys,
                     frame_skip=frame_skip,
                     **kwargs)
+        self.viewer_setup(azimuth=90, distance=1.5, render_actuator=True)
 
-        self.viewer_setup(azimuth=90, distance=1.5)
-        # self.sim.renderer._onscreen_renderer.vopt.flags[3] = 1 # render actuators #ToDo: make it binding agnostic
 
     def initializeConditions(self):
         # for muscle weakness we assume that a weaker muscle has a

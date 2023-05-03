@@ -629,7 +629,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.sim.renderer.render_to_window()
 
 
-    def viewer_setup(self, distance=2.5, azimuth=90, elevation=-30, lookat=None):
+    def viewer_setup(self, distance=2.5, azimuth=90, elevation=-30, lookat=None, render_actuator=None, render_tendon=None):
         """
         Setup the default camera
         """
@@ -638,6 +638,10 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 azimuth=azimuth,
                 elevation=elevation,
                 lookat=lookat
+        )
+        self.sim.renderer.set_viewer_settings(
+            render_actuator=render_actuator,
+            render_tendon=render_tendon
         )
 
 
