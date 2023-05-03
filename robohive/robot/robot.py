@@ -120,7 +120,7 @@ class Robot():
             prompt("Initializing device: %s"%(name), 'white', 'on_grey')
             if device['interface']['type'] == 'dynamixel':
                 # initialize dynamixels
-                from dynamixel_py import dxl
+                from robohive.robot.dynamixel_py import dxl
                 ids = np.unique([device['sensor_ids'] + device['actuator_ids']]).tolist()
                 device['robot'] = dxl(motor_id=ids, motor_type=\
                     device['interface']['motor_type'], devicename= device['interface']['name'])
@@ -162,8 +162,8 @@ class Robot():
                 device['robot'].open_port()
 
                 # set actuator mode
-                for actuator in device['actuator']:
-                    device['robot'].set_operation_mode(motor_id=[actuator['hdr_id']], mode=actuator['mode'])
+                #for actuator in device['actuator']:
+                #    device['robot'].set_operation_mode(motor_id=[actuator['hdr_id']], mode=actuator['mode'])
 
                 # engage motors
                 device['robot'].engage_motor(motor_id=device['actuator_ids'], enable=True)

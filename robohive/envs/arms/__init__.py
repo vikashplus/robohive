@@ -449,6 +449,23 @@ register(
 
 )
 
+register(
+    id='FrankaBinReorientReal-v0',
+    entry_point='robohive.envs.arms.bin_reorient_v0:BinReorientV0',
+    max_episode_steps=150, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_dmanus_reorient_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_dmanus_reorient_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_name': "obj0",
+        'target_site_name': "drop_target",
+        'hand_site_name': 'palm_site',
+        'randomize': True,
+        'target_xyz_range': {'high':[0.5, 0.0, 1.1], 'low':[0.5, 0.0, 1.1]}
+    }
+
+)
+
 # Reach to random target using visual inputs
 def register_bin_reorient_visual_envs(env_name, encoder_type, real=False):
     proprio_keys = ['qp', 'qv', 'grasp_pos', 'grasp_rot']
@@ -464,9 +481,7 @@ def register_bin_reorient_visual_envs(env_name, encoder_type, real=False):
                        "rgb:right_cam:240x424:{}".format(encoder_type),
                        "d:right_cam:240x424:{}".format(encoder_type),
                        "rgb:top_cam:240x424:{}".format(encoder_type),
-                       "d:top_cam:240x424:{}".format(encoder_type),
-                       "rgb:Franka_wrist_cam:240x424:{}".format(encoder_type),
-                       "d:Franka_wrist_cam:240x424:{}".format(encoder_type)]
+                       "d:top_cam:240x424:{}".format(encoder_type)]
 
     register_env_variant(
         env_id='{}-v0'.format(env_name),
@@ -479,6 +494,7 @@ def register_bin_reorient_visual_envs(env_name, encoder_type, real=False):
 
 for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
     register_bin_reorient_visual_envs('FrankaBinReorient', enc)
+    register_bin_reorient_visual_envs('FrankaBinReorientReal', enc, real=True)
 
 # FETCH =======================================================================
 from robohive.envs.arms.reach_base_v0 import ReachBaseV0

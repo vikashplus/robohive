@@ -96,7 +96,7 @@ class BinReorientV0(env_base.MujocoEnv):
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
                randomize=False,
                geom_sizes={'high': 0.055, 'low': 0.045},
-               pos_limits = {'eef_low': [0.368, -0.25, 0.9, -np.pi, 0, -np.pi],
+               pos_limits = {'eef_low': [0.368, -0.25, 0.86, -np.pi, 0, -np.pi],
                              'eef_high':[0.72, 0.25,  1.3, np.pi, 2*np.pi, np.pi]},
                vel_limits = {'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6],
                              'jnt_slow': [0.1, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6],
@@ -105,7 +105,7 @@ class BinReorientV0(env_base.MujocoEnv):
                obj_pos_limits = {'low': [0.475, -0.025, 0.875],
                                  'high': [0.525, 0.025, 0.875]},
                min_grab_height=0.905,
-               max_slow_height=1.075,
+               max_slow_height=0.95,#1.075,
                max_ik=3,
                **kwargs,
         ):
@@ -145,8 +145,8 @@ class BinReorientV0(env_base.MujocoEnv):
 
         assert(vel_limits['jnt'].shape == vel_limits['jnt_slow'].shape)
         if vel_limits['jnt'].shape[0] == 7:
-            vel_limits['jnt'] = np.concatenate([vel_limits['jnt'], np.ones(10)])
-            vel_limits['jnt_slow'] = np.concatenate([vel_limits['jnt_slow'], np.ones(10)])
+            vel_limits['jnt'] = np.concatenate([vel_limits['jnt'], 5*np.ones(10)])
+            vel_limits['jnt_slow'] = np.concatenate([vel_limits['jnt_slow'], 5*np.ones(10)])
 
         assert(vel_limits['eef'].shape == vel_limits['eef_slow'].shape)
         if vel_limits['eef'].shape[0] == 6:
@@ -298,7 +298,7 @@ class BinReorientV0(env_base.MujocoEnv):
             eef_cmd = a
             if self.normalize_act:
                 eef_cmd = (0.5*eef_cmd+0.5)*(self.pos_limits['eef_high']-self.pos_limits['eef_low'])+self.pos_limits['eef_low']
-
+            
             '''
             eef_cmd[0] = 0.5
             eef_cmd[1] = 0.0
@@ -322,7 +322,7 @@ class BinReorientV0(env_base.MujocoEnv):
                 
             # Enforce cartesian velocity limits
 
-            if cur_pose[2] < self.max_slow_height:# and self.robot.is_hardware:
+            if cur_pose[2] < self.max_slow_height and eef_cmd[2] < self.last_eef_cmd[2]:# and self.robot.is_hardware:
                 eef_cmd[:3] = np.clip(eef_cmd[:3],
                                       cur_pose[:3]-self.vel_limits['eef_slow'][:3],
                                       cur_pose[:3]+self.vel_limits['eef_slow'][:3])
@@ -337,6 +337,7 @@ class BinReorientV0(env_base.MujocoEnv):
 
             # Prepare for IK, execute last successful command if IK fails
             eef_pos = eef_cmd[:3]
+
             eef_elr = eef_cmd[3:6]
             eef_quat= euler2quat(eef_elr)
 
@@ -352,7 +353,7 @@ class BinReorientV0(env_base.MujocoEnv):
             action = np.zeros(self.sim.model.nu)
             action[:7] = ik_result.qpos[:7]
             action[7:] = eef_cmd[6:]
-
+            
             self.last_eef_cmd = eef_cmd
 
         # Enforce joint position limits
@@ -367,9 +368,10 @@ class BinReorientV0(env_base.MujocoEnv):
             action = np.clip(action, 
                                 self.sim.data.qpos[:self.sim.model.nu]-self.vel_limits['jnt'],
                                 self.sim.data.qpos[:self.sim.model.nu]+self.vel_limits['jnt'])
-
+        
         if self.normalize_act:
             action = 2*(((action - jnt_act_low)/(jnt_act_high-jnt_act_low))-0.5)                     
+        
 
         self.last_ctrl = self.robot.step(ctrl_desired=action,
                                         ctrl_normalized=self.normalize_act,
@@ -377,7 +379,48 @@ class BinReorientV0(env_base.MujocoEnv):
                                         realTimeSim=self.mujoco_render_frames,
                                         render_cbk=self.mj_render if self.mujoco_render_frames else None)
         return self.forward(**kwargs)
+
+class TestPolicy():
+    def __init__(self,
+                 env,
+                 seed):
+        self.env = env
+        self.seed = seed
+        self.grasp_pos = None
+        self.prev = None
+
+    def get_action(self, obs):
+        obs_dict = self.env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
+
+        if self.grasp_pos is None:
+            self.grasp_pos = obs_dict['grasp_pos'][0, 0, :]
+            self.grasp_pos[2] = 0.875
         
+        #action = np.concatenate([self.grasp_pos, [np.pi, 0.0, 0.0], obs_dict['qp'][0, 0, 7:self.env.sim.model.nu]])
+        action = np.concatenate([self.grasp_pos, [np.pi, 0.0, 0.0], [0.0,-0.2,-0.2,-0.2,0.0,-0.2,-0.2,0.0,-0.2,-0.2]])                                    
+        action[6:] = np.array([0.57,-0.2,1.5,0.0, # Thumb
+                                         0.0,1.0,0.5,     # Middle
+                                         0.0,1.0,0.5])    # Pinky   
+        print('obs {}, action {}'.format(obs_dict['grasp_pos'][0, 0, :], action[:3]))
+        '''
+        if self.prev is None:
+            self.prev = -2.57
+        action[6] = self.prev
+        print('act {}, obs {}'.format(action[6], obs_dict['qp'][0,0,7]))
+        if obs_dict['qp'][0,0,7] > 0.25:
+            #print('Set action -0.75')
+            self.prev = -2.57
+        elif obs_dict['qp'][0,0,7] < -1.2:
+            #print('Set action 0.75')
+            self.prev = 0.57
+        '''
+
+        action = 2*(((action - self.env.pos_limits['eef_low']) / (np.abs(self.env.pos_limits['eef_high'] - self.env.pos_limits['eef_low'])+1e-8)) - 0.5)
+        action = np.clip(action, -1, 1)
+
+        print('pol: {}'.format(action[6]))
+        return action, {'evaluation': action}
+
 class BinReorientPolicy():
     def __init__(self,
                  env,
@@ -401,17 +444,22 @@ class BinReorientPolicy():
         self.align_height = align_height
         self.gripper_close_thresh = 1e-8 if self.env.robot.is_hardware else 0.03
         self.preplace_thresh = 0.05
-        self.real_obj_pos = None
+        self.real_obj_pos = np.array([0.55, 0.0, 0.875]) # 0.86
         self.real_tar_pos = None
 
-        self.pregrasp_config = np.array([0.57,-0.2,1.5,0.0, # Thumb
-                                         0.0,1.0,0.5,     # Middle
-                                         0.0,1.0,0.5])    # Pinky
-        self.grasp_config = np.array([0.57,1.5,1.5,0.0, # Thumb
-                                      0.0,1.5,0.5,     # Middle
-                                      0.0,1.5,0.5])    # Pinky
-        self.preplace_pose = np.array([0.52, 0.0, 0.975, 3.14, 0.0, 0.0])
+        self.pregrasp_config = np.array([-0.3,-0.2,1.5,0.0, # Thumb
+                                         0.75,1.0,0.5,     # Middle
+                                         -0.75,1.0,0.5])    # Pinky
+        #self.grasp_config = np.array([0.57,1.5,1.5,0.0, # Thumb
+        #                              0.0,1.5,0.5,     # Middle
+        #                              0.0,1.5,0.5])    # Pinky
+        self.grasp_config = np.array([0.57,1.5,0.2,0.5, # Thumb
+                                   0.0,1.5,0.0,     # Middle
+                                   -0.0,1.5,0.2])    # Pinky
+        self.preplace_pose = np.array([0.52, 0.0, 1.15, 3.14, 0.0, 0.0])
         self.extra_height = 0.08
+        self.grasp_count = 0
+
     def is_moving(self, qp):
         assert(self.last_qp is not None and qp is not None)
         return np.linalg.norm(qp - self.last_qp[:7]) > self.move_thresh
@@ -424,6 +472,10 @@ class BinReorientPolicy():
 
     def set_real_yaw(self, real_yaw):
         self.yaw = real_yaw
+        while self.yaw < -np.pi:
+            self.yaw += 2*np.pi
+        while self.yaw > np.pi:
+            self.yaw -= 2*np.pi
 
     def get_action(self, obs):
         obs_dict = self.env.obsvec2obsdict(np.expand_dims(obs, axis=(0,1)))
@@ -462,11 +514,12 @@ class BinReorientPolicy():
             obj_err = obs_dict['object_err'][0,0,:]
 
         yaw_err = self.yaw - cur_yaw
-
+        
         if self.last_t > self.env.sim.data.time:
             # Reset
             self.stage = 0
             self.last_qp = None
+            self.grasp_count = 0
 
         elif self.stage == 0: # Wait until aligned xy
             # Advance to next stage?
@@ -475,7 +528,7 @@ class BinReorientPolicy():
                 np.abs(yaw_err) < 0.125
                #(self.last_qp is not None and not self.is_moving(obs_dict['qp'][0,0,:7]))):
             ):
-                self.stage = 2
+                self.stage = 0
         #elif self.stage == 1:# Wait until close pregrasp
         #    print(obj_err[2])
         #    if (np.linalg.norm(obj_err[:2]) < self.begin_grasp_thresh or
@@ -494,7 +547,12 @@ class BinReorientPolicy():
         #        self.stage = 4
         elif self.stage == 4: # Wait for gripper to stop closing
             #print('motor diff {}'.format(np.linalg.norm(self.grasp_config - obs_dict['qp'][0,0,7:self.env.sim.model.nu])))
-            if np.linalg.norm(self.grasp_config - obs_dict['qp'][0,0,7:self.env.sim.model.nu]) < 0.8:
+            if self.env.robot.is_hardware:
+                self.grasp_count += 1
+                if self.grasp_count >= 12:
+                    self.grasp_count = 0
+                    self.stage = 5
+            elif np.linalg.norm(self.grasp_config - obs_dict['qp'][0,0,7:self.env.sim.model.nu]) < 0.8:
             #if self.last_qp is not None and np.linalg.norm(self.last_qp[7:self.env.sim.model.nu] - obs_dict['qp'][0,0,7:self.env.sim.model.nu]) < self.gripper_close_thresh:
                 self.stage = 5
 
@@ -503,11 +561,13 @@ class BinReorientPolicy():
             preplace_pose[2] += self.extra_height
             #print('First {}'.format(np.linalg.norm(obs_dict['qp'][0,0,6]-self.last_qp[6])))
             #print('Second {}'.format(np.linalg.norm(preplace_pose[:3]-obs_dict['grasp_pos'][0, 0, :])))
-
-            if (self.last_qp is not None and
-                np.linalg.norm(obs_dict['qp'][0,0,6]-self.last_qp[6]) < self.gripper_close_thresh and
-                np.linalg.norm(preplace_pose[:3]-obs_dict['grasp_pos'][0, 0, :]) < self.preplace_thresh):
+            print(obs_dict['grasp_pos'][0, 0, :])
+            if obs_dict['grasp_pos'][0, 0, 2] > 1.05:
+                if self.env.robot.is_hardware:
+                    self.preplace_pose[0] += -1*0.15*np.sin(obs_dict['qp'][0, 0, 6]+np.pi/2.0) #REAL ROBOT
+                    self.preplace_pose[1] += -1*0.15*np.cos(obs_dict['qp'][0, 0, 6]+np.pi/2.0) # REAL ROBOT
                 self.stage = 8
+            
         elif self.stage == 6: # Wait for gripper to start closing
             # Advance to next stage?
             if self.last_qp is not None and np.linalg.norm(self.last_qp[7:self.env.sim.model.nu] - obs_dict['qp'][0,0,7:self.env.sim.model.nu]) > self.gripper_close_thresh:
@@ -517,8 +577,9 @@ class BinReorientPolicy():
                 self.stage = 8
         elif self.stage == 8: # Wait until pregrasp has stabilized
             # Advance to next stage?
-            if quat2mat(obs_dict['qp'][0, 0, -4:])[-1,-1] > 0.99:
-            #if self.last_qp is not None and not self.is_moving(obs_dict['qp'][0,0,:7]):
+            print(np.linalg.norm(obs_dict['grasp_pos'][0, 0, :2]-self.preplace_pose[:2]))
+            if np.linalg.norm(obs_dict['grasp_pos'][0, 0, :2]-self.preplace_pose[:2]) < 0.02:
+            #if quat2mat(obs_dict['qp'][0, 0, -4:])[-1,-1] > 0.99:
                 self.stage = 9
         #print('QP {}'.format(obs_dict['qp'][0, 0, :7]))
 
@@ -528,7 +589,7 @@ class BinReorientPolicy():
         self.last_qp = obs_dict['qp'][0,0,:self.env.sim.model.nu]
 
 
-        #print('Stage {}, t {}'.format(self.stage, self.last_t))
+        print('Stage {}, t {}'.format(self.stage, self.last_t))
         if self.stage == 0: # Align in xy
             action[2] = self.align_height
             action[:2] += 1.5*obj_err[0:2]
@@ -544,9 +605,9 @@ class BinReorientPolicy():
             #action[:3] += tar_err[0:3]
             action[:6] = self.preplace_pose
             action[6:] = self.grasp_config
-            action[6:] = np.array([0.57,1.5,0,0.0, # Thumb
-                                   0.0,1.5,0.0,     # Middle
-                                   -0.75,1.5,0.0])    # Pinky
+            action[6:] = np.array([0.0,1.5,0.2,0.3, # Thumb
+                                   0.0,1.5,0.2,     # Middle
+                                   -0.0,1.5,0.0])    # Pinky
         elif self.stage == 6 or self.stage == 7:
             action[:6] = self.preplace_pose
             action[:2] = obs_dict['grasp_pos'][0, 0, :2] + 1.5 * obj_err[0:2]
@@ -557,12 +618,14 @@ class BinReorientPolicy():
                                    -0.75,1.5,0.0])    # Pinky
         elif self.stage == 8:
             action[:6] = self.preplace_pose
-            action[:2] = obs_dict['grasp_pos'][0, 0, :2]+1.5*obj_err[0:2]
-            #action[0] += -1*0.1*np.sin(obs_dict['qp'][0, 0, 6]) #REAL ROBOT
-            #action[1] += -1*0.1*np.cos(obs_dict['qp'][0, 0, 6]) # REAL ROBOT
-            action[2] += 0.1
-            action[6:] = np.array([0.57,1.42,0.2,0.2, # Thumb
-                                   0.3,1.35,0.2,     # Middle
+            if self.env.robot.is_hardware:
+                pass
+            else:
+                action[:2] = obs_dict['grasp_pos'][0, 0, :2]+1.5*obj_err[0:2]
+            
+                action[2] += 0.1
+            action[6:] = np.array([0.0,1.5,0.2,0.3, # Thumb
+                                   0.0,1.5,0.2,     # Middle
                                    -0.75,1.5,0.0])    # Pinky
             #action[:3] = self.preplace_pose[:3]
             #action[1] = 0.25
@@ -573,11 +636,14 @@ class BinReorientPolicy():
 
         elif self.stage == 9:
             action[:6] = self.preplace_pose
-            action[:2] = obs_dict['grasp_pos'][0, 0, :2]+1.0*obj_err[0:2]
-            action[2] += 0.1
-            action[6:] = np.array([0.57,1.5,-0.2,-0.2, # Thumb
-                                   0.0,1.5,-0.2,     # Middle
-                                   -0.75,1.5,-0.2])    # Pinky
+            if self.env.robot.is_hardware:
+                pass
+            else:
+                action[:2] = obs_dict['grasp_pos'][0, 0, :2]+1.0*obj_err[0:2]
+                action[2] += 0.1
+            action[6:] =  np.array([0.0,1.5,0.0,0.0, # Thumb
+                                   0.0,1.5,0.0,     # Middle
+                                   -0.75,1.5,0.0])    # Pinky
             #action[:3] = self.preplace_pose[:3]
             #action[1] = 0.25
             #action[3] = -1.57
