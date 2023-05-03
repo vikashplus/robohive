@@ -215,7 +215,7 @@ class BinReorientV0(env_base.MujocoEnv):
             obj_jid = self.sim.model.joint_name2id(self.object_site_name)
             reset_qpos[obj_jid:obj_jid+3] = self.np_random.uniform(low=self.obj_pos_limits['low'],
                                                                    high=self.obj_pos_limits['high'])
-            reset_qpos[obj_jid+3:obj_jid+7] = euler2quat(self.np_random.uniform(low=(np.pi/2, -np.pi,0), high=(np.pi/2, np.pi/2,0)) ) # random quat
+            reset_qpos[obj_jid+3:obj_jid+7] = euler2quat(self.np_random.uniform(low=(np.pi/2, np.pi/2,0), high=(np.pi/2, 2*np.pi,0)) ) # random quat
 
             self.random_size = self.np_random.uniform(low=self.geom_sizes['low'],
                                                       high=self.geom_sizes['high'])  # random size
@@ -462,7 +462,7 @@ class BinReorientPolicy():
         self.grasp_config = np.array([0.2,1.5,1.5,-np.pi/2, # Thumb
                                          0.75,0.0,-0.2,     # Middle
                                          -0.75,1.5,-0.2])    # Pinky
-        self.lift_config = np.array([0.75,1.5,1.75,-np.pi/2+0.2, # Thumb
+        self.lift_config = np.array([0.75,1.5,1.6,-np.pi/2+0.45, # Thumb
                                          0.75,0.85,0.5,     # Middle
                                          -0.75,1.75,0.0])    # Pinky
         self.release_config = np.array([0.75,1.5,1.75,-np.pi/2+0.2, # Thumb
@@ -498,7 +498,7 @@ class BinReorientPolicy():
             obj_rot_mat = quat2mat(obs_dict['qp'][0, 0, -4:])
             obj_yaw = np.arctan2(obj_rot_mat[0,0],obj_rot_mat[0,2])
 
-            self.yaw = obj_yaw-3*np.pi/4
+            self.yaw = obj_yaw+3*np.pi/4
             while self.yaw < self.env.pos_limits['eef_low'][5]:
                 self.yaw += 2*np.pi
             while self.yaw > self.env.pos_limits['eef_high'][5]:
@@ -539,7 +539,7 @@ class BinReorientPolicy():
 
         elif self.stage == 0: # Wait until aligned xy
             # Advance to next stage?
-            print('Cur obj yaw {}'.format(self.yaw+3*np.pi/4))
+            #print('Cur obj yaw {}, yaw err {}'.format(self.yaw-3*np.pi/4, yaw_err))
             #print('pos err {}, yaw err {}'.format(np.linalg.norm(obj_err[:2]), np.abs(yaw_err)))
             if (np.linalg.norm(obj_err[:2]) < self.begin_descent_thresh and
                 np.abs(yaw_err) < 0.125
@@ -553,13 +553,12 @@ class BinReorientPolicy():
         elif self.stage == 1:
 
             #if np.abs(self.grasp_pose[2]-obs_dict['grasp_pos'][0,0,2]) < 0.02 and np.abs(yaw_err) < 0.125:
-            if self.last_eef is not None:
-                print(np.abs(self.last_eef[2]-obs_dict['grasp_pos'][0,0,2]))
+            #if self.last_eef is not None:
+            #    print(np.abs(self.last_eef[2]-obs_dict['grasp_pos'][0,0,2]))
             if self.last_eef is not None and np.abs(self.last_eef[2]-obs_dict['grasp_pos'][0,0,2]) < 0.001:
                 self.stage = 2
                 self.grasp_pose[2] += 0.2
         elif self.stage == 2:
-            print('z {}, mf1 {}, mf2 {}'.format(obs_dict['grasp_pos'][0,0,2],obs_dict['qp'][0,0,12],obs_dict['qp'][0,0,13]))
 
             if obj_rot_mat.flatten()[-1] > 0.95:
             #if obs_dict['grasp_pos'][0,0,2] > self.grasp_pose[2] and obs_dict['qp'][0,0,12] > self.lift_config[5] and obs_dict['qp'][0,0,13] > self.lift_config[6]:
@@ -572,7 +571,7 @@ class BinReorientPolicy():
         self.last_qp = obs_dict['qp'][0,0,:self.env.sim.model.nu]
 
 
-        print('Stage {}, t {}'.format(self.stage, self.last_t))
+        #print('Stage {}, t {}'.format(self.stage, self.last_t))
         if self.stage == 0: # Align in xy
             action[:2] += 1.5*obj_err[0:2]
             action[2] = self.align_height

@@ -44,7 +44,7 @@
         <!-- D'Manus Hand-->
         <body name="ee_mount" pos="0.023 -0.021 0.153" euler="-1.57 2.356 0.0">
             <include file="../../../../sims/robel_sim/dmanus/assets/dmanus_simple_wrist_chain.xml"/>
-            <site name='palm_site' size="0.01" pos="0.063 -0.13 0.15"/>
+            <site name='palm_site' size="0.01" pos="-0.18 -0.13 0.031 "/>
         </body>
 
         <body name="busbin1" pos='0.5 0.0 0.825'  euler="0 0 1.57">
