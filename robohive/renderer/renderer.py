@@ -39,6 +39,7 @@ class Renderer(abc.ABC):
         """
         self._sim = sim
         self._camera_settings = {}
+        self._viewer_settings = {}
 
     @abc.abstractmethod
     def render_to_window(self):
@@ -104,6 +105,26 @@ class Renderer(abc.ABC):
                 dtype=np.float32)
 
         self._camera_settings = settings
+
+
+    def set_viewer_settings(
+            self,
+            render_tendon: Optional[float] = None,
+            render_actuator: Optional[float] = None,
+    ):
+        """Sets the viewer parameters.
+
+        Args:
+            render_tendon: Turn tendon rendering on/off
+            render_actuator: Turn tendon rendering on/off
+        """
+        viewer_settings = {}
+        if render_tendon is not None:
+            viewer_settings['render_tendon'] = render_tendon
+        if render_actuator is not None:
+            viewer_settings['render_actuator'] = render_actuator
+
+        self._viewer_settings = viewer_settings
 
     def close(self):
         """Cleans up any resources being used by the renderer."""
