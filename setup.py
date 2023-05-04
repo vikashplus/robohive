@@ -40,7 +40,8 @@ setup(
     install_requires=[
         'click',
         'gym==0.13',
-        'free-mujoco-py',
+        'mujoco==2.3.5',
+        'dm-control==1.0.11',
         'termcolor',
         'sk-video',
         'flatten_dict',
@@ -52,9 +53,8 @@ setup(
     ],
     extras_require={
       # To use mujoco bindings, run (pip install -e ".[mujoco]") and set sim_backend=MUJOCO
-      'mujoco':[
-        'mujoco==2.3.5',
-        'dm-control==1.0.11'
+      'mujoco_py':[
+        'free-mujoco-py',
         ],
       # To use hardware dependencies, run (pip install -e ".[a0]") and follow install instructions inside robot
       'a0': [

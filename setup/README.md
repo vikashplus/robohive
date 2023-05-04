@@ -8,12 +8,12 @@
 
 1. Robohive can be installed directly from the [PyPi](https://pypi.org/project/robohive/). Additional flags can be supplied to use additional  features
    ``` bash
-   # only mujoco_py as available sim_backend
+   # only mujoco as available sim_backend
    pip install robohive
    # mujoco_py+mujoco as available sim_backend
-   pip install robohive[mujoco]
+   pip install robohive[mujoco_py]
    # mujoco_py+mujoco+visual encoders
-   pip install robohive[mujoco, encoder]
+   pip install robohive[mujoco_py, encoder]
    ```
    RoboHive will throw informative errors if any of these packages are invokes but not installed
 
@@ -24,23 +24,22 @@
    Note: RoboHive agressively uses [git-submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules). Therefore, it is important to use the exact command above for installation. Basic understanding of how to work with submodules is expected.
 
    ```bash
-   $ cd robohive
-   # only mujoco_py as available sim_backend
-   $ pip install -e .
+   # only mujoco as available sim_backend
+   $ pip install -e robohive
    # mujoco_py+mujoco as available sim_backend
-   $ pip install -e ".[mujoco]"
+   $ pip install -e robohive[mujoco_py]
    # mujoco_py+mujoco+visual encoder
-   pip install -e ".[mujoco, encoder]
+   pip install -e robohive[mujoco_py, encoder]
    # with a0 binding for realworld robot
-   $ pip install -e ".[a0]"
+   $ pip install -e robohive[a0]
    ```
    **OR** Add repo to pythonpath by updating `~/.bashrc` or `~/.bash_profile`
    ```
    export PYTHONPATH="<path/to/robohive>:$PYTHONPATH"
    ```
-3. To use `R3M`, `RRL`, `VC` as visual encoders. 
+3. To use `R3M`, `RRL`, `VC` as visual encoders.
    - For PyPI installation: Encoders can't be directly installated from PyPi as these encoders don't have PyPi packages. (we are working with the authors for a fix). To use the encoders, simply try using the encoders and follow the instructions on the console
-   - For editable installation 
+   - For editable installation
       Open [setup.py](/setup.py), uncomment the `r3m` and `vc_models` dependency under `encoder` and then run
          ```
          # all visual encoders
@@ -51,8 +50,8 @@
    ```
    $ python robohive/utils/examine_env.py -e FrankaReachRandom-v0
    ```
-   
- 
+
+
 # Installation FAQs
 The package relies on `mujoco-py` which might be the trickiest part of the installation. See `known issues` below and also instructions from the mujoco-py [page](https://github.com/openai/mujoco-py) if you are stuck with mujoco-py installation.
 
