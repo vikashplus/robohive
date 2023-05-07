@@ -98,14 +98,14 @@ class BinReorientV0(env_base.MujocoEnv):
                geom_sizes={'high': [0.0635,0.0525], 'low': [0.0585,0.0475]},
                pos_limits = {'eef_low': [0.368, -0.25, 0.86, -np.pi, 0, -np.pi],
                              'eef_high':[0.72, 0.25,  1.3, np.pi, 2*np.pi, np.pi]},
-               vel_limits = {'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6],
+               vel_limits = {'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6], #SET in INIT
                              'jnt_slow': [0.1, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6],
                              'eef': [0.075, 0.075, 0.15, 0.3, 0.3, 0.5],
-                             'eef_slow': [0.075, 0.075, 0.075, 0.3, 0.3, 0.5]},
+                             'eef_slow': [0.075, 0.075, 0.1, 0.3, 0.3, 0.5]},
                obj_pos_limits = {'low': [0.475, -0.025, 0.875],
                                  'high': [0.525, 0.025, 0.875]},
                min_grab_height=0.905,
-               max_slow_height=0.95,#1.075,
+               max_slow_height=1.075, # SET in INIT
                max_ik=3,
                **kwargs,
         ):
@@ -456,22 +456,38 @@ class BinReorientPolicy():
         self.real_obj_pos = np.array([0.55, 0.0, 0.875]) # 0.86
         self.real_tar_pos = None
 
-        self.pregrasp_config = np.array([0.2,1.0,1.5,-np.pi/2, # Thumb
+        if self.env.robot.is_hardware:
+            self.pregrasp_config = np.array([0.57,1.0,1.5,-np.pi/2, # Thumb
+                                            0.75,-0.2,-0.2,     # Middle
+                                            -0.4,1.0,-0.2])    # Pinky
+            self.grasp_config = np.array([0.57,1.5,1.55,-np.pi/2+1.3, # Thumb
+                                            0.75,-0.2,-0.2,     # Middle
+                                            -0.4,1.55,0.3])    # Pinky
+            self.lift_config = np.array([0.57,1.5,1.55,-np.pi/2+1.3, # Thumb
+                                            0.75,1.75,-0.2,     # Middle
+                                            -0.75,1.55,0.3])    # Pinky
+            self.release_config = np.array([0.57,1.5,1.55,-np.pi/2+1.3, # Thumb
+                                            0.75,1.2,-0.2,     # Middle
+                                            -0.75,1.55,0.3])    # Pinky
+        else:
+            self.pregrasp_config = np.array([0.2,1.0,1.5,-np.pi/2, # Thumb
                                          0.75,0.0,-0.2,     # Middle
                                          -0.75,1.0,-0.2])    # Pinky
-        self.grasp_config = np.array([0.2,1.5,1.5,-np.pi/2, # Thumb
-                                         0.75,0.0,-0.2,     # Middle
-                                         -0.75,1.5,-0.2])    # Pinky
-        self.lift_config = np.array([0.75,1.5,1.6,-np.pi/2+0.45, # Thumb
-                                         0.75,0.85,0.5,     # Middle
-                                         -0.75,1.75,0.0])    # Pinky
-        self.release_config = np.array([0.75,1.5,1.75,-np.pi/2+0.2, # Thumb
-                                         0.75,0.35,0.65,     # Middle
-                                         -0.75,1.75,0.0])    # Pinky
+            self.grasp_config = np.array([0.2,1.5,1.5,-np.pi/2, # Thumb
+                                            0.75,0.0,-0.2,     # Middle
+                                            -0.75,1.5,-0.2])    # Pinky
+            self.lift_config = np.array([0.75,1.5,1.6,-np.pi/2+0.45, # Thumb
+                                            0.75,0.85,0.5,     # Middle
+                                            -0.75,1.75,0.0])    # Pinky
+            self.release_config = np.array([0.75,1.5,1.75,-np.pi/2+0.2, # Thumb
+                                            0.75,0.35,0.65,     # Middle
+                                            -0.75,1.75,0.0])    # Pinky
+        self.done_config = np.array([0.57,1.2,1.55,-np.pi/2+1.3, # Thumb
+                                         0.75,1.2,-0.2,     # Middle
+                                         -0.75,1.2,0.3])    # Pinky
         self.grasp_pose = None
         self.grasp_yaw = None
-        #self.preplace_pose = np.array([0.52, 0.0, 0.975, 3.14, 0.0, 0.0])
-        #self.extra_height = 0.08
+        self.grasp_count = 0
 
     def is_moving(self, qp):
         assert(self.last_qp is not None and qp is not None)
@@ -527,7 +543,7 @@ class BinReorientPolicy():
             obj_err = obs_dict['object_err'][0,0,:]
 
         yaw_err = self.yaw - cur_yaw
-        
+
         if self.last_t > self.env.sim.data.time:
             # Reset
             self.stage = 0
@@ -535,12 +551,14 @@ class BinReorientPolicy():
             self.grasp_pose = None
             self.last_eef = None
             self.grasp_yaw  = None
+            self.grasp_count = 0
 
 
         elif self.stage == 0: # Wait until aligned xy
             # Advance to next stage?
             #print('Cur obj yaw {}, yaw err {}'.format(self.yaw-3*np.pi/4, yaw_err))
             #print('pos err {}, yaw err {}'.format(np.linalg.norm(obj_err[:2]), np.abs(yaw_err)))
+            #print('Yaw err {}'.format(np.abs(yaw_err)))
             if (np.linalg.norm(obj_err[:2]) < self.begin_descent_thresh and
                 np.abs(yaw_err) < 0.125
                #(self.last_qp is not None and not self.is_moving(obs_dict['qp'][0,0,:7]))):
@@ -548,22 +566,52 @@ class BinReorientPolicy():
                 self.stage = 1
                 self.grasp_pose = np.zeros_like(obj_err)
                 self.grasp_pose[:2] = obs_dict['grasp_pos'][0, 0, :2].copy() + obj_err[:2].copy()
-                self.grasp_pose[2] = obs_dict['grasp_pos'][0, 0, 2] + 1.2*obj_err[2]
+                if self.env.robot.is_hardware:
+                    self.grasp_pose[0] = self.real_obj_pos[0]
+                    self.grasp_pose[1] = self.real_obj_pos[1]
+                    self.grasp_pose[2] = obs_dict['grasp_pos'][0, 0, 2] + 1.0*obj_err[2]
+                    #0.15*np.sin(obs_dict['qp'][0, 0, 6] - 0.57)
+                    #0.15*np.cos(obs_dict['qp'][0, 0, 6] - 0.57)
+                else:
+                    self.grasp_pose[2] = obs_dict['grasp_pos'][0, 0, 2] + 1.2*obj_err[2]
                 self.grasp_yaw = cur_yaw
         elif self.stage == 1:
+            if env.robot.is_hardware:
+                if obs_dict['grasp_pos'][0,0,2] < 0.92:
+                    self.stage = 2
+            else:
+                if self.last_eef is not None and np.abs(self.last_eef[2]-obs_dict['grasp_pos'][0,0,2]) < 0.001:
+                    self.stage = 3
+                    self.grasp_pose[2] += 0.2
 
-            #if np.abs(self.grasp_pose[2]-obs_dict['grasp_pos'][0,0,2]) < 0.02 and np.abs(yaw_err) < 0.125:
-            #if self.last_eef is not None:
-            #    print(np.abs(self.last_eef[2]-obs_dict['grasp_pos'][0,0,2]))
-            if self.last_eef is not None and np.abs(self.last_eef[2]-obs_dict['grasp_pos'][0,0,2]) < 0.001:
-                self.stage = 2
-                self.grasp_pose[2] += 0.2
         elif self.stage == 2:
-
-            if obj_rot_mat.flatten()[-1] > 0.95:
-            #if obs_dict['grasp_pos'][0,0,2] > self.grasp_pose[2] and obs_dict['qp'][0,0,12] > self.lift_config[5] and obs_dict['qp'][0,0,13] > self.lift_config[6]:
+            assert(self.env.robot.is_hardware)
+            diff = obs_dict['qp'][0,0,7:17].copy()
+            diff -= self.grasp_config
+            #print('Raw {} {}'.format(obs_dict['qp'][0,0,7:17], self.grasp_config))
+            #print('Grasp err {}'.format(np.linalg.norm(diff)))
+            if np.linalg.norm(diff) < 0.45:
                 self.stage = 3
-                #self.grasp_pose[2] += 0.02
+                self.grasp_pose[2] += 0.19
+        elif self.stage == 3:
+            if self.env.robot.is_hardware:
+                #print(obs_dict['qp'][0,0,12])
+                self.grasp_count += 1
+                if obs_dict['qp'][0,0,12] > 1.55 and self.grasp_count >= 40:
+                    self.stage = 4
+                    self.grasp_pose[2] -= 0.04
+                    self.grasp_count = 0
+            else:
+                if obj_rot_mat.flatten()[-1] > 0.95:
+                #if obs_dict['grasp_pos'][0,0,2] > self.grasp_pose[2] and obs_dict['qp'][0,0,12] > self.lift_config[5] and obs_dict['qp'][0,0,13] > self.lift_config[6]:
+                    self.stage = 4
+                    #self.grasp_pose[2] += 0.02
+        elif self.stage == 4:
+            if self.env.robot.is_hardware:
+                self.grasp_count += 1
+                if self.grasp_count >= 25:
+                    self.stage = 5
+
 
         #if self.last_qp is not None:
         #    print(np.linalg.norm(self.last_qp[7:self.env.sim.model.nu] - obs_dict['qp'][0, 0, 7:self.env.sim.model.nu]))
@@ -573,21 +621,35 @@ class BinReorientPolicy():
 
         #print('Stage {}, t {}'.format(self.stage, self.last_t))
         if self.stage == 0: # Align in xy
-            action[:2] += 1.5*obj_err[0:2]
+            if self.env.robot.is_hardware:
+                action[:2] = self.real_obj_pos[:2] 
+            else:
+                action[:2] += 1.5*obj_err[0:2]
             action[2] = self.align_height
             action[6:] = self.pregrasp_config
         elif self.stage == 1:
             action[:3] = self.grasp_pose
             action[5] = self.grasp_yaw
-            action[6:] = self.grasp_config
+            if self.env.robot.is_hardware:
+                action[6:] = self.pregrasp_config
+            else:
+                action[6:] = self.grasp_config
         elif self.stage == 2:
             action[:3] = self.grasp_pose
             action[5] = self.grasp_yaw
-            action[6:] = self.lift_config
+            action[6:] = self.grasp_config            
         elif self.stage == 3:
             action[:3] = self.grasp_pose
             action[5] = self.grasp_yaw
+            action[6:] = self.lift_config
+        elif self.stage == 4:
+            action[:3] = self.grasp_pose
+            action[5] = self.grasp_yaw
             action[6:] = self.release_config
+        elif self.stage == 5:
+            action[:3] = self.grasp_pose
+            action[5] = self.grasp_yaw
+            action[6:] = self.done_config            
         self.last_eef = obs_dict['grasp_pos'][0,0,:].copy()
         action = np.clip(action, self.env.pos_limits['eef_low'], self.env.pos_limits['eef_high'])
 

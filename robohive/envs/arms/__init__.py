@@ -444,7 +444,12 @@ register(
         'target_site_name': "drop_target",
         'hand_site_name': 'palm_site',
         'randomize': True,
-        'target_xyz_range': {'high':[0.5, 0.0, 1.1], 'low':[0.5, 0.0, 1.1]}
+        'target_xyz_range': {'high':[0.5, 0.0, 1.1], 'low':[0.5, 0.0, 1.1]},
+        'vel_limits' = {'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6],
+                'jnt_slow': [0.1, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6],
+                'eef': [0.075, 0.075, 0.15, 0.3, 0.3, 0.5],
+                'eef_slow': [0.075, 0.075, 0.075, 0.3, 0.3, 0.5]},
+        'max_slow_height': 0.95
     }
 
 )
@@ -461,7 +466,12 @@ register(
         'target_site_name': "drop_target",
         'hand_site_name': 'palm_site',
         'randomize': True,
-        'target_xyz_range': {'high':[0.5, 0.0, 1.1], 'low':[0.5, 0.0, 1.1]}
+        'target_xyz_range': {'high':[0.5, 0.0, 1.1], 'low':[0.5, 0.0, 1.1]},
+        'vel_limits' = {'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6],
+                'jnt_slow': [0.1, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6],
+                'eef': [0.075, 0.075, 0.15, 0.3, 0.3, 0.5],
+                'eef_slow': [0.075, 0.075, 0.1, 0.3, 0.3, 0.5]},
+        'max_slow_height':1.075        
     }
 
 )
