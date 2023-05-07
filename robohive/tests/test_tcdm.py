@@ -5,6 +5,8 @@ Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gma
 
 import unittest
 from robohive.tests.test_envs import TestEnvs
+from robohive.envs.tcdm.playback_traj import playback_default_traj
+import click.testing
 
 class TestTCDM(TestEnvs):
     def test_tcdm_ref_suite(self):
@@ -74,6 +76,14 @@ class TestTCDM(TestEnvs):
         ]
         self.check_envs('TCDM-Fixed+Random', env_names)
 
+    def test_playback(self):
+        # Call your function and test its output/assertions
+        print("Testing trajectory playback")
+        runner = click.testing.CliRunner()
+        result = runner.invoke(playback_default_traj, ["--env_name", "AdroitAirplanePass-v0", \
+                                            "--render", "none",])
+        print(result.output.strip())
+        self.assertEqual(result.exception, None)
 
 if __name__ == '__main__':
     unittest.main()

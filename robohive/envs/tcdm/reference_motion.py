@@ -30,7 +30,8 @@ class ReferenceType(enum.Enum):
 # Reference motion
 class ReferenceMotion():
     def __init__(self, reference:Union[str, dict],
-                 motion_extrapolation:bool=False    # zero order hold if the motion is over
+                 motion_extrapolation:bool=False,    # zero order hold if the motion is over
+                 random_generator=None
                  ):
         """
         Reference Type
@@ -40,13 +41,15 @@ class ReferenceMotion():
         """
 
         self.motion_extrapolation = motion_extrapolation
+        self.np_random = random_generator if random_generator!=None else np.random
+
         # load reference
         if isinstance(reference, str):
             self.reference = self.load(reference)
             if 'robot_vel' not in self.reference.keys():
                 self.reference['robot_vel'] = np.zeros(self.reference['robot'].shape)
         elif isinstance(reference, dict):
-            self.reference = reference
+            self.reference = reference.copy()
         else:
             raise TypeError("Unknown reference type")
 
@@ -61,7 +64,7 @@ class ReferenceMotion():
         # identify type
         if robot_shape[0] == 1 and object_shape[0] == 1:
             self.type = ReferenceType.FIXED
-        elif robot_shape[0] == 2 and object_shape[0] == 2:
+        elif robot_shape[0] == 2 or object_shape[0] == 2:
             self.type = ReferenceType.RANDOM
         elif robot_shape[0] > 2 or object_shape[0] > 2:
             self.type = ReferenceType.TRACK
@@ -123,7 +126,10 @@ class ReferenceMotion():
                 - where reference['time'][ind_prev] <= time <= reference['time'][ind_next]
                 - ind_prev == ind_next if exact time is found in reference['time']
         """
+
         time = np.around(time, _TIME_PRECISION) # round to help with comparisions
+        if self.type == ReferenceType.FIXED:
+            return (0,0)
         if self.motion_extrapolation and time>=self.reference['time'][-1]:
             return (self.horizon-1,self.horizon-1)
         else:
@@ -153,9 +159,23 @@ class ReferenceMotion():
                     return (self.index_cache, self.index_cache+1)
                 else:
                     raise ValueError("We shouldn't be in this condition")
+        else:
+            raise ValueError("We shouldn't be in this condition")
+
 
     def reset(self):
+        """
+        Reset the cache to point back to the begining
+        """
         self.index_cache = 0
+
+
+    def get_init(self):
+        """
+        return the initial posture of the robot and the object
+        """
+        return self.reference['robot_init'], self.reference['object_init']
+
 
 
     def get_reference(self, time):
