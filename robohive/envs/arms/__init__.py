@@ -438,7 +438,7 @@ register(
     max_episode_steps=150, #50steps*40Skip*2ms = 4s
     kwargs={
         'model_path': curr_dir+'/franka/assets/franka_dmanus_reorient_v0.xml',
-        'config_path': curr_dir+'/franka/assets/franka_dmanus_reorient_v0.config',
+        'config_path': curr_dir+'/franka/assets/franka_dmanus_reorient_sim_v0.config',
         'robot_site_name': "end_effector",
         'object_site_name': "obj0",
         'target_site_name': "drop_target",
@@ -460,7 +460,7 @@ register(
     max_episode_steps=150, #50steps*40Skip*2ms = 4s
     kwargs={
         'model_path': curr_dir+'/franka/assets/franka_dmanus_reorient_v0.xml',
-        'config_path': curr_dir+'/franka/assets/franka_dmanus_reorient_v0.config',
+        'config_path': curr_dir+'/franka/assets/franka_dmanus_reorient_real_v0.config',
         'robot_site_name': "end_effector",
         'object_site_name': "obj0",
         'target_site_name': "drop_target",

@@ -576,7 +576,7 @@ class BinReorientPolicy():
                     self.grasp_pose[2] = obs_dict['grasp_pos'][0, 0, 2] + 1.2*obj_err[2]
                 self.grasp_yaw = cur_yaw
         elif self.stage == 1:
-            if env.robot.is_hardware:
+            if self.env.robot.is_hardware:
                 if obs_dict['grasp_pos'][0,0,2] < 0.92:
                     self.stage = 2
             else:
