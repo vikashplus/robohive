@@ -21,9 +21,6 @@ task_spec = collections.namedtuple('task_spec',
          'motion',      # motion reference file path
          ])
 
-# All available objects
-OBJECTS = ('airplane','alarmclock','apple','banana','binoculars','bowl','camera','coffeemug','cubelarge','cubemedium','cubemiddle','cubesmall','cup','cylinderlarge','cylindermedium','cylindersmall','doorknob','duck','elephant','eyeglasses','flashlight','flute','fryingpan','gamecontroller','hammer','hand','headphones','human','knife','lightbulb','mouse','mug','phone','piggybank', 'pyramidlarge','pyramidmedium','pyramidsmall','rubberduck','scissors','spherelarge','spheremedium','spheresmall','stamp','stanfordbunny','stapler','table','teapot','toothbrush','toothpaste','toruslarge','torusmedium','torussmall','train','watch','waterbottle','wineglass','wristwatch')
-
 # Adroit tasks
 Adroit_task_spec = (
     task_spec(name='AdroitAirplaneFly-v0', robot='Adroit', object='airplane', motion='/assets/data/Adroit_airplane_fly.npz'),
@@ -85,6 +82,11 @@ def register_adroit_object_trackref(task_name, object_name, motion_path=None):
 for task_name, robot_name, object_name, motion_path in Adroit_task_spec:
     register_adroit_object_trackref(task_name, object_name, motion_path)
 
+
+
+# All available objects
+OBJECTS = ('airplane','alarmclock','apple','banana','binoculars','bowl','camera','coffeemug','cubelarge','cubemedium','cubemiddle','cubesmall','cup','cylinderlarge','cylindermedium','cylindersmall','doorknob','duck','elephant','eyeglasses','flashlight','flute','fryingpan','gamecontroller','hammer','hand','headphones','human','knife','lightbulb','mouse','mug','phone','piggybank', 'pyramidlarge','pyramidmedium','pyramidsmall','rubberduck','scissors','spherelarge','spheremedium','spheresmall','stamp','stanfordbunny','stapler','table','teapot','toothbrush','toothpaste','toruslarge','torusmedium','torussmall','train','watch','waterbottle','wineglass','wristwatch')
+
 # Register object envs
 def register_Adroit_object(object_name):
     task_name = 'Adroit{}Fixed-v0'.format(object_name.title())
@@ -98,10 +100,12 @@ def register_Adroit_object(object_name):
         kwargs={
                 'model_path': '/assets/Adroit_object.xml',
                 'object_name': object_name,
-                'reference': {'time':0.0,
+                'reference': {'time':(0.0, 4.0),
                                 'robot':np.zeros((1, 30)),
                                 'robot_vel':np.zeros((1,30)),
-                                'object':np.ones((1, 7))}
+                                'object_init':np.array((-.2, -.2, 0.0, 1.0, 0.0, 0.0, 0.0)),
+                                'object':np.reshape(np.array((.2, .2, 0.0, 1.0, 0.0, 0.0, 0.0)), (1,7))
+                            }
             }
     )
 
@@ -115,10 +119,12 @@ def register_Adroit_object(object_name):
         kwargs={
                 'model_path': '/assets/Adroit_object.xml',
                 'object_name': object_name,
-                'reference': {'time':0.0,
-                                'robot':np.zeros((1, 30)),
-                                'robot_vel':np.zeros((1,30)),
-                                'object':np.ones((1, 7))}
+                'reference': {'time':(0.0, 4.0),
+                                'robot':np.zeros((2, 30)),
+                                'robot_vel':np.zeros((2, 30)),
+                                'object':np.array([ [-.2, -.2, 0.0, 1.0, 0.0, 0.0, 0.0],
+                                                    [0.2, 0.2, 0.0, 1.0, 0.0, 0.0, 0.0]])
+                            }
             }
     )
 for obj in OBJECTS:
