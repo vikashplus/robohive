@@ -23,8 +23,8 @@ class BinReorientV0(env_base.MujocoEnv):
         'qp', 'qv', 'grasp_pos', 'grasp_rot', 'object_err', 'target_err'
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
-        "object_dist": -1.0,
-        "target_dist": -2.5,
+        "object_dist": -0.0,
+        "target_dist": -1.0,
         "bonus": 10.0,
         "penalty": -50,
     }
