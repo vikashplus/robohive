@@ -82,7 +82,7 @@ def main(env_name, policy_path, mode, seed, num_episodes, render, camera_name, o
     else:
         pi = rand_policy(env, seed)
         mode = 'exploration'
-        output_name ='random_policy'
+        output_name ='random_policy' if output_name is None else output_name
 
     # resolve directory
     if (os.path.isdir(output_dir) == False) and (render=='offscreen' or save_paths or plot_paths is not None):
