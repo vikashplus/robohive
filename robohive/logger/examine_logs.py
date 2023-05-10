@@ -43,7 +43,7 @@ import os
 @click.option('-ea', '--env_args', type=str, default=None, help=('env args. E.g. --env_args "{\'is_hardware\':True}"'))
 @click.option('-ns', '--noise_scale', type=float, default=0.0, help=('Noise amplitude in randians}"'))
 
-def main(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat, render, camera_name, frame_size, output_dir, output_name, save_paths, compress_paths, plot_paths, env_args, noise_scale):
+def examine_logs(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat, render, camera_name, frame_size, output_dir, output_name, save_paths, compress_paths, plot_paths, env_args, noise_scale):
 
     # seed and load environments
     np.random.seed(seed)
@@ -73,7 +73,7 @@ def main(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat
         if output_name is None: # default to the rollout name
             rollout_name = os.path.split(rollout_path)[-1]
             output_name, output_type = os.path.splitext(rollout_name)
-        paths = Trace.load(rollout_path)
+        paths = Trace.load(trace_path=rollout_path, trace_type=rollout_format)
 
     # Resolve rendering
     if render == 'onscreen':
@@ -197,7 +197,7 @@ def main(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat
                     if rollout_format=='RoboSet':
                         env.sim.data.qpos[:nq_arm]= path_data['qp_arm'][i_step+1]
                         env.sim.data.qpos[nq_arm:nq_arm+nq_ee]= path_data['qp_ee'][i_step+1]
-                        env.sim.data.qve[:nq_arm]= path_data['qv_arm'][i_step+1]
+                        env.sim.data.qvel[:nq_arm]= path_data['qv_arm'][i_step+1]
                         env.sim.data.qvel[nq_arm:nq_arm+nq_ee]= path_data['qv_ee'][i_step+1]
                         env.sim.data.time = path_data['time'][i_step+1]
                     elif rollout_format=='RoboHive' and "state" in path_data['env_infos'].keys():
@@ -237,4 +237,4 @@ def main(env_name, rollout_path, rollout_format, mode, horizon, seed, num_repeat
 
 
 if __name__ == '__main__':
-    main()
+    examine_logs()
