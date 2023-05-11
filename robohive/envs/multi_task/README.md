@@ -8,10 +8,10 @@ This suite is designed to study generalization in multi-task settings. RoboHive'
 
 ### FrankaKitchen-v4(RoboHive)
 - A part of the RoboHive-v0.5 release. Designed and packaged specifically to study visual generalization.
-- Introduces there env variants (fix to control default behavior)
-    - *Fixed-v4: State based stationary environments with no randomization
-    - *Random-v4: State based environments with random robot initialization (joint pose + relative position  wrt to kitchen)
-    - *Random_v2d-v4: Visual environment with random robot initialization (joint pose + relative position  wrt to kitchen)
+- Introduces three env variants (fix to control env's default behavior)
+    - `Fixed-v4`: State based stationary environments with no randomization
+    - `Random-v4`: State based environments with random robot initialization (joint pose + relative position  wrt to kitchen)
+    - `Random_v2d-v4`: Visual environment with random robot initialization (joint pose + relative position  wrt to kitchen)
 - RoboHive introduces `get_obs()`, `get_prioprio()`, `get_extero()` features. All state envs shoud used `obs`. All visual envs should use `proprio` and `extero` data.
 - Init robot state recovered from([kitchen_demos_multitask-v0](https://github.com/google-research/relay-policy-learning/blob/master/kitchen_demos_multitask.zip))
 - Four explicit cameras introduced to aid multi-view generalization studies -- `top`, `left`, `right`, `wrist`
