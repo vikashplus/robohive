@@ -57,7 +57,7 @@ class JointPDPolicy(toco.PolicyModule):
 
 
 class FrankaArm(hardwareBase):
-    def __init__(self, name, ip_address, gain_scale=1.0, **kwargs):
+    def __init__(self, name, ip_address, gain_scale=[.5,.5,.5,.5,.5,.5,.5], **kwargs):
         self.name = name
         self.ip_address = ip_address
         self.robot = None
@@ -90,8 +90,9 @@ class FrankaArm(hardwareBase):
                 s_initial = self.get_sensors()
                 policy = JointPDPolicy(
                     desired_joint_pos=s_initial['joint_pos'],
-                    kp=self.gain_scale * torch.Tensor(self.robot.metadata.default_Kq),
-                    kd=self.gain_scale * torch.Tensor(self.robot.metadata.default_Kqd),
+                    #dot product of gain scale with default kq/kqd (np.dot returns the summation of the dot product thus used for and zip)
+                    kp=torch.Tensor([x*y for x,y in zip(self.gain_scale, self.robot.metadata.default_Kq)]), #self.gain_scale * torch.Tensor(self.robot.metadata.default_Kq),
+                    kd=torch.Tensor([x*y for x,y in zip(self.gain_scale, self.robot.metadata.default_Kqd)]), #self.gain_scale * torch.Tensor(self.robot.metadata.default_Kqd),
                 )
 
             # Send policy
@@ -101,7 +102,7 @@ class FrankaArm(hardwareBase):
             print("Not ready. Please retry connection")
 
         return connection
-
+        
 
     def okay(self):
         """Return hardware health"""
