@@ -45,8 +45,8 @@ class JointPDPolicy(toco.PolicyModule):
         # Parse states
         q_current = state_dict["joint_positions"]
         qd_current = state_dict["joint_velocities"]
-        # self.feedback.Kp = self.kp
-        # self.feedback.Kd = self.kd
+        self.feedback.Kp = torch.diag(self.kp)
+        self.feedback.Kd = torch.diag(self.kd)
 
         # Execute PD control
         output = self.feedback(
@@ -57,11 +57,12 @@ class JointPDPolicy(toco.PolicyModule):
 
 
 class FrankaArm(hardwareBase):
-    def __init__(self, name, ip_address, gain_scale=1.0, **kwargs):
+    def __init__(self, name, ip_address, gain_scale=1.0, reset_gain_scale=1.0, **kwargs):
         self.name = name
         self.ip_address = ip_address
         self.robot = None
         self.gain_scale = gain_scale
+        self.reset_gain_scale = reset_gain_scale
 
 
     def connect(self, policy=None):
@@ -160,9 +161,20 @@ class FrankaArm(hardwareBase):
                 # generate min jerk trajectory
                 dt = 0.1
                 waypoints =  generate_joint_space_min_jerk(start=q_current, goal=reset_pos, time_to_go=time_to_go, dt=dt)
+                # reset using min_jerk traj
                 for i in range(len(waypoints)):
-                    self.apply_commands(q_desired=waypoints[i]['position'])
+                    self.apply_commands(
+                            q_desired=waypoints[i]['position'],
+                            kp=self.reset_gain_scale * torch.Tensor(self.robot.metadata.default_Kq),
+                            kd=self.reset_gain_scale * torch.Tensor(self.robot.metadata.default_Kqd),
+                        )
                     time.sleep(dt)
+
+                # reset back gains to gain-policy
+                self.apply_commands(
+                        kp=self.gain_scale*torch.Tensor(self.robot.metadata.default_Kq),
+                        kd=self.gain_scale*torch.Tensor(self.robot.metadata.default_Kqd)
+                    )
             else:
                 # Use default controller
                 print("Resetting using default controller")
@@ -247,21 +259,19 @@ if __name__ == "__main__":
         q_desired[5] = q_initial[5] + m * np.sin(np.pi * i / (T * hz))
         # q_desired[5] = q_initial[5] + 0.05*np.random.uniform(high=1, low=-1)
         # q_desired = q_initial + 0.01*np.random.uniform(high=1, low=-1, size=7)
-
         franka.apply_commands(q_desired = q_desired)
         time.sleep(1 / hz)
 
-    # import ipdb; ipdb.set_trace()
     # Udpate the gains
-    # kp_new = 0.0001* torch.Tensor(franka.robot.metadata.default_Kq)
-    # kd_new = 0.0001* torch.Tensor(franka.robot.metadata.default_Kqd)
-    # franka.apply_commands(kp=kp_new, kd=kd_new)
+    kp_new = 0.1* torch.Tensor(franka.robot.metadata.default_Kq)
+    kd_new = 0.1* torch.Tensor(franka.robot.metadata.default_Kqd)
+    franka.apply_commands(kp=kp_new, kd=kd_new)
 
-    # print("Starting sine motion updates again ...")
-    # for i in range(int(time_to_go * hz)):
-    #     q_desired[5] = q_initial[5] + m * np.sin(np.pi * i / (T * hz))
-    #     franka.apply_commands(q_desired = q_desired)
-    #     time.sleep(1 / hz)
+    print("Starting sine motion updates again with updated gains.")
+    for i in range(int(time_to_go * hz)):
+        q_desired[5] = q_initial[5] + m * np.sin(np.pi * i / (T * hz))
+        franka.apply_commands(q_desired = q_desired)
+        time.sleep(1 / hz)
 
-
+    print("Closing and exiting hardware connection")
     franka.close()
