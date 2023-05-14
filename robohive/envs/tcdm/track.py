@@ -161,9 +161,8 @@ class TrackEnv(env_base.MujocoEnv):
 
     def update_reference_insim(self, curr_ref):
         if curr_ref.object is not None:
-            # print(curr_ref.object)
-            self.sim.model.site_pos[:] = curr_ref.object[:3]
-            self.sim_obsd.model.site_pos[:] = curr_ref.object[:3]
+            self.sim.model.site_pos[self.target_sid][:] = curr_ref.object[:3]
+            self.sim_obsd.model.site_pos[self.target_sid][:] = curr_ref.object[:3]
             self.sim.forward()
 
     def norm2(self, x):
@@ -179,7 +178,7 @@ class TrackEnv(env_base.MujocoEnv):
         obs_dict['time'] = np.array([self.sim.data.time])
         obs_dict['qp'] = sim.data.qpos.copy()
         obs_dict['qv'] = sim.data.qvel.copy()
-        obs_dict['robot_err'] = obs_dict['qp'][:30].copy() - curr_ref.robot
+        obs_dict['robot_err'] = obs_dict['qp'][:-6].copy() - curr_ref.robot
 
         ## info about current hand pose + vel
         obs_dict['curr_hand_qpos'] = sim.data.qpos[:-6].copy() ## assuming only 1 object and the last values are posision + rotation
