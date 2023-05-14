@@ -28,7 +28,8 @@ register_env_variant(
     variants={
             'target_distance_range':(1.75, 2.25),
             'target_angle_range':(-np.pi/6, np.pi/6),
-    }
+    },
+    silent=True
 )
 
 # register(
