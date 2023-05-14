@@ -22,7 +22,7 @@ class TestExamineEnv(unittest.TestCase):
         result = runner.invoke(examine_env, ["--env_name", "door-v1", \
                                             "--num_episodes", 1, \
                                             "--render", "offscreen",\
-                                            "--camera_name", "top_cam"])
+                                            "--camera_name", "top"])
         print(result.output.strip())
         self.assertEqual(result.exception, None)
 
