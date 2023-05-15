@@ -29,6 +29,21 @@ class TestMyo(TestEnvs):
                                                         "--num_playback", 1, \
                                                         "--render", "none"])
 
+    def test_myomimic(self):
+        env_names=['MyoLegJump-v0', 'MyoLegLunge-v0', 'MyoLegSquat-v0', 'MyoLegLand-v0', 'MyoLegRun-v0', 'MyoLegWalk-v0']
+        # Check the envs
+        self.check_envs('MyoDex', env_names)
+
+        # Check trajectory playback
+        from robohive.envs.tcdm.playback_traj import playback_default_traj
+        for env in env_names:
+            print(f"Testing reference motion playback on: {env}")
+            runner = click.testing.CliRunner()
+            result = runner.invoke(playback_default_traj, ["--env_name", env, \
+                                                        "--horizon", -1, \
+                                                        "--num_playback", 1, \
+                                                        "--render", "none"])
+
 
 if __name__ == '__main__':
     unittest.main()
