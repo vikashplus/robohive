@@ -92,7 +92,7 @@ class TrackEnv(BaseV0):
                **kwargs):
 
         # prep reference
-        self.ref = ReferenceMotion(reference=reference, motion_extrapolation=motion_extrapolation, random_generator=self.np_random)
+        self.ref = ReferenceMotion(reference_data=reference, motion_extrapolation=motion_extrapolation, random_generator=self.np_random)
         self.motion_start_time = motion_start_time
         self.target_sid = self.sim.model.site_name2id("target")
 
@@ -192,8 +192,7 @@ class TrackEnv(BaseV0):
 
         ## info about target hand pose + vel
         obs_dict['targ_hand_qpos'] = curr_ref.robot
-        # import ipdb; ipdb.set_trace()
-        obs_dict['targ_hand_qvel'] = curr_ref.robot_vel
+        obs_dict['targ_hand_qvel'] = np.array([0]) if curr_ref.robot_vel is None else curr_ref.robot_vel
 
         ## info about current object com + rotations
         obs_dict['curr_obj_com'] = self.sim.data.xipos[self.object_bid].copy()
@@ -209,7 +208,7 @@ class TrackEnv(BaseV0):
 
         ## Errors
         obs_dict['hand_qpos_err'] = obs_dict['curr_hand_qpos']-obs_dict['targ_hand_qpos']
-        obs_dict['hand_qvel_err'] = obs_dict['curr_hand_qvel']-obs_dict['targ_hand_qvel']
+        obs_dict['hand_qvel_err'] = np.array([0]) if curr_ref.robot_vel is None else (obs_dict['curr_hand_qvel']-obs_dict['targ_hand_qvel'])
 
         obs_dict['obj_com_err'] =  obs_dict['curr_obj_com'] - obs_dict['targ_obj_com']
 
@@ -240,7 +239,7 @@ class TrackEnv(BaseV0):
 
         # calculate reward terms
         qpos_reward = np.exp(-self.qpos_err_scale * self.norm2(obs_dict['hand_qpos_err']))
-        qvel_reward = np.exp(-self.qvel_err_scale * self.norm2(obs_dict['hand_qvel_err']))
+        qvel_reward = np.array([0]) if obs_dict['hand_qvel_err'] is None else np.exp(-self.qvel_err_scale * self.norm2(obs_dict['hand_qvel_err']))
 
 
         # weight and sum individual reward terms

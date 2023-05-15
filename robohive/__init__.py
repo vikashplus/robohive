@@ -6,8 +6,13 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= """
 
 import robohive.envs.arms # noqa
+
+# Import Myo Suites
 import robohive.envs.myo # noqa
 import robohive.envs.myo.myochallenge # noqa
+import robohive.envs.myo.myodex # noqa
+import robohive.envs.myo.myomimic # noqa
+
 import robohive.envs.fm # noqa
 import robohive.envs.hands # noqa
 import robohive.envs.multi_task # noqa
