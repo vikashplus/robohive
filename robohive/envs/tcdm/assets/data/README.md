@@ -13,7 +13,7 @@ This folder contains the motion files containing manipulation behaviors. These f
 
 ## Data format in the motion files
 ```python
-    'time',        # int(N) ==> Time stamp for the reference
+    'time',        # float(N) ==> Time stamp for the reference
     'robot',       # shape(N, n_robot_jnt) ==> robot trajectory
     'object',      # shape(M, n_objects_jnt) ==> object trajectory
     'robot_init',  # shape(n_objects_jnt) ==> initial robot pose, if different from robot[0,n_robot_jnt]

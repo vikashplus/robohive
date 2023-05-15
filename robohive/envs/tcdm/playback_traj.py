@@ -14,7 +14,10 @@ Script to render trajectories embeded in the env"
 @click.option('-r', '--render', type=click.Choice(['onscreen', 'none']), help='visualize onscreen?', default='onscreen')
 def playback_default_traj(env_name, horizon, num_playback, render):
     env = gym.make(env_name)
-    if horizon==-1: horizon = env.horizon
+
+    # infer reference horizon
+    if horizon==-1:
+        horizon =  env.env.ref.horizon
 
     # Start playback loops
     for n in range(num_playback):
@@ -28,7 +31,7 @@ def playback_default_traj(env_name, horizon, num_playback, render):
             # render onscreen if asked
             if render=='onscreen':
                 env.mj_render()
-                time.sleep(.1)
+                time.sleep(env.dt)
     env.close()
 
 
