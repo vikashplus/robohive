@@ -61,10 +61,10 @@ If you find `RoboHive` useful in your research,
 - please consider supporting the project by providing a [star ⭐](https://github.com/vikashplus/robohive/stargazers)
 - please consider citing our project by using the following BibTeX entry:
 
-```BibTeX
+```bibtex
 @Misc{RoboHive2020,
   title = {RoboHive -- A Unified Framework for Robot Learning},
   howpublished = {\url{https://sites.google.com/view/robohive}},
-  year = {2020}
+  year = {2020},
   url = {https://sites.google.com/view/robohive},
 }
