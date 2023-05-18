@@ -167,6 +167,16 @@ class BinReorientV0(env_base.MujocoEnv):
             act_high = np.ones(self.pos_limits['eef_high'].shape[0]) if self.normalize_act else self.pos_limits['eef_high'].copy()
             self.action_space = gym.spaces.Box(act_low, act_high, dtype=np.float32)
 
+    def set_joint_vel(self, jnt_vel, slow_jnt_vel):
+        if jnt_vel is not None:
+            assert(len(jnt_vel.shape)==1)
+            self.vel_limits['jnt'][:jnt_vel.shape[0]] = jnt_vel[:]
+            print('Set jnt vel to {}'.format(self.vel_limits['jnt']))
+
+        if slow_jnt_vel is not None:
+            assert(len(slow_jnt_vel.shape)==1)
+            self.vel_limits['jnt_slow'][:slow_jnt_vel.shape[0]] = slow_jnt_vel[:]
+            print('Set slow jnt vel to {}'.format(self.vel_limits['jnt_slow']))
 
     def get_obs_dict(self, sim):
         obs_dict = {}
