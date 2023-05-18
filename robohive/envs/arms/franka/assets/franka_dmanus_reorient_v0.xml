@@ -58,15 +58,15 @@
             <!--
             <include file="../../../../sims/object_sim/waterbottle/body_large.xml"/>
             -->
-            <geom type="capsule" size="0.05 0.05" pos="0.0 0.0 0.05" euler="0 0 0" group="1" rgba=".3 .7 .8 1" mass=".0001"/>
+            <geom type="capsule" size="0.05 0.05" pos="0.0 0.0 0.05" euler="0 0 0" group="1" rgba="0.94 0.9 0.55 1" mass=".0001"/>
             <geom type="cylinder" size="0.05 0.05" pos="0.0 0.0 -0.05" euler="0 0 0" group="1" rgba="0.94 0.9 0.55 1" mass=".100"/>
-            <geom type="cylinder" size="0.05 0.01" pos ="0.0 0.0 0.14" euler="0 0 0" group="1" rgba="1 1 1 1" mass="0.0001" />
+            <geom type="cylinder" size="0.05 0.01" pos ="0.0 0.0 0.14" euler="0 0 0" group="1" rgba="0.95 0 0 1" mass="0.0001" />
 
             # To introduce asymmetries in contact between bottom of object and bin
-            <geom type="sphere" size="0.015" pos="0.0585 0.0 -0.081" euler="0 0 0" group="1" rgba="0 0 1 1" mass="0.0001"/>
-            <geom type="sphere" size="0.015" pos="-0.0585 0.0 -0.081" euler="0 0 0" group="1" rgba="0 0 1 1" mass="0.0001"/>
-            <geom type="sphere" size="0.015" pos="0.0 0.0585 -0.081" euler="0 0 0" group="1" rgba="0 0 1 1" mass="0.0001"/>
-            <geom type="sphere" size="0.015" pos="0.0 -0.0585 -0.081" euler="0 0 0" group="1" rgba="0 0 1 1" mass="0.0001"/>
+            <geom type="sphere" size="0.015" pos="0.0585 0.0 -0.081" euler="0 0 0" group="1" rgba="0.94 0.9 0.55 1" mass="0.0001"/>
+            <geom type="sphere" size="0.015" pos="-0.0585 0.0 -0.081" euler="0 0 0" group="1" rgba="0.94 0.9 0.55 1" mass="0.0001"/>
+            <geom type="sphere" size="0.015" pos="0.0 0.0585 -0.081" euler="0 0 0" group="1" rgba="0.94 0.9 0.55 1" mass="0.0001"/>
+            <geom type="sphere" size="0.015" pos="0.0 -0.0585 -0.081" euler="0 0 0" group="1" rgba="0.94 0.9 0.55 1" mass="0.0001"/>
             <site name="obj0" size="0.01" pos="0 0 0"/>
             <freejoint name="obj0"/>
         </body>  

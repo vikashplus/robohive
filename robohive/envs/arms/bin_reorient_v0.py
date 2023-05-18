@@ -245,14 +245,13 @@ class BinReorientV0(env_base.MujocoEnv):
                 #self.sim.model.geom_pos[gid] = self.np_random.uniform(low=-1 * self.sim.model.geom_size[gid],
                 #                                                      high=self.sim.model.geom_size[gid])  # random pos
 
-                if (gid - self.sim.model.body_geomadr[bid] > 2 and gid - self.sim.model.body_geomadr[bid] < 7):
-                    self.sim.model.geom_rgba[gid] = self.sim.model.geom_rgba[self.sim.model.body_geomadr[bid]+1]
-
-                elif (gid - self.sim.model.body_geomadr[bid] > 0 and self.np_random.rand() > 0.5):
-                    self.sim.model.geom_rgba[gid] = self.sim.model.geom_rgba[gid-1]
-                else:
-                    self.sim.model.geom_rgba[gid][:3] = self.np_random.uniform(low=[.2, .2, .2],
-                                                                           high=[.9, .9, .9])  # random color
+                #if (gid - self.sim.model.body_geomadr[bid] > 2 and gid - self.sim.model.body_geomadr[bid] < 7):
+                #    self.sim.model.geom_rgba[gid] = self.sim.model.geom_rgba[self.sim.model.body_geomadr[bid]+1]
+                #elif (gid - self.sim.model.body_geomadr[bid] > 0 and self.np_random.rand() > 0.5):
+                #    self.sim.model.geom_rgba[gid] = self.sim.model.geom_rgba[gid-1]
+                #else:
+                #    self.sim.model.geom_rgba[gid][:3] = self.np_random.uniform(low=[.2, .2, .2],
+                #                                                           high=[.9, .9, .9])  # random color
             self.sim.forward()
 
         obs = super().reset(reset_qpos, reset_qvel, blocking=False, **kwargs)

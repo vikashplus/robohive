@@ -57,7 +57,7 @@
 
         <body name="obj0" pos="0.5 0.125 0.945" euler='0 0 1.57'>
             <inertial pos="0 0 0" mass="0.088" diaginertia="0.0001 0.0001 0.0001" />
-            <geom type="capsule" size="0.02 0.04" pos="0.0 0.0 0.0" euler="1.57 0 0" group="1" rgba=".3 .7 .8 1" mass=".100"/>
+            <geom type="capsule" size="0.03 0.06" pos="0.0 0.0 0.0" euler="1.57 0 0" group="1" rgba=".3 .7 .8 1" mass=".100"/>
             <site name="obj0" size="0.01" pos="0 0 0"/>
             <freejoint name="obj0"/>
         </body>
