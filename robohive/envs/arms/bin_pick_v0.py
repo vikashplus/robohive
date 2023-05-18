@@ -100,8 +100,8 @@ class BinPickV0(env_base.MujocoEnv):
                              'jnt_slow': [0.1, 0.25, 0.1, 0.25, 0.1, 0.1, 0.35, 0.835],
                              'eef': [0.075, 0.075, 0.15, 0.3, 0.3, 0.5, 0.835],
                              'eef_slow': [0.075, 0.075, 0.075, 0.3, 0.3, 0.5, 0.835]},
-               obj_pos_limits = {'low': [0.475, -0.025, 0.855],
-                                 'high': [0.525, 0.025, 0.855]},
+               obj_pos_limits = {'low': [0.4, -0.2, 0.855],
+                                 'high': [0.6, 0.2, 0.855]},
                min_grab_height=0.905,
                max_slow_height=1.075,
                max_ik=3,
@@ -327,7 +327,6 @@ class BinPickPolicy():
     def __init__(self,
                  env,
                  seed,
-                 move_thresh=0.01,
                  begin_descent_thresh=0.05,
                  begin_grasp_thresh=0.08,
                  align_height=1.075):
@@ -340,7 +339,10 @@ class BinPickPolicy():
         self.stage = 0
 
         self.last_qp = None
-        self.move_thresh = move_thresh
+        if env.robot.is_hardware:
+            self.move_thresh = 0.01
+        else:
+            self.move_thresh = 0.03
 
         self.begin_descent_thresh = begin_descent_thresh
         self.begin_grasp_thresh = begin_grasp_thresh
@@ -378,6 +380,7 @@ class BinPickPolicy():
             obj_err = self.real_obj_pos-obs_dict['grasp_pos'][0, 0, :]
         else:
             obj_err = obs_dict['object_err'][0,0,:]
+            obj_err[2] = obj_err[2] - 0.015
 
         if self.env.robot.is_hardware and self.real_tar_pos is not None:
             tar_err = self.real_tar_pos-obs_dict['grasp_pos'][0, 0, :]
@@ -444,6 +447,5 @@ class BinPickPolicy():
         # Normalize action to be between -1 and 1
         action = 2*(((action - self.env.pos_limits['eef_low']) / (np.abs(self.env.pos_limits['eef_high'] - self.env.pos_limits['eef_low'])+1e-8)) - 0.5)
         action = np.clip(action, -1, 1)
-        noise_action = np.clip(action + np.random.randn(action.shape[0]),-1,1)
-        
+        noise_action = np.clip(action + 0.1 * np.random.randn(action.shape[0]), -1, 1)
         return noise_action, {'evaluation': action}
