@@ -329,7 +329,8 @@ class BinPickPolicy():
                  seed,
                  begin_descent_thresh=0.05,
                  begin_grasp_thresh=0.08,
-                 align_height=1.075):
+                 align_height=1.075,
+                 is_reset_policy=False):
 
         self.env = env
         self.seed = seed
@@ -337,9 +338,9 @@ class BinPickPolicy():
                                      high=self.env.pos_limits['jnt_high'][6])
         self.last_t = 0.0
         self.stage = 0
-
+        self.is_reset_policy = is_reset_policy
         self.last_qp = None
-        if env.robot.is_hardware:
+        if env.robot.is_hardware and self.is_reset_policy:
             self.move_thresh = 0.01
         else:
             self.move_thresh = 0.03
@@ -347,7 +348,7 @@ class BinPickPolicy():
         self.begin_descent_thresh = begin_descent_thresh
         self.begin_grasp_thresh = begin_grasp_thresh
         self.align_height = align_height
-        self.gripper_close_thresh = 1e-8 if self.env.robot.is_hardware else 0.001
+        self.gripper_close_thresh = 1e-8 if (self.env.robot.is_hardware and self.is_reset_policy) else 0.001
         self.real_obj_pos = None
         self.real_tar_pos = None
 

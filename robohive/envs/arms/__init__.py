@@ -219,7 +219,8 @@ register(
     max_episode_steps=100, #50steps*40Skip*2ms = 4s
     kwargs={
         'model_path': curr_dir+'/franka/assets/franka_planar_push_teleop_v0.xml',
-        'config_path': curr_dir+'/franka/assets/franka_planar_push_v0.config',
+        #'config_path': curr_dir+'/franka/assets/franka_planar_push_v0.config',
+        'config_path': curr_dir+'/franka/assets/franka_planar_push_rp03_v0.config',
         'robot_site_name': "end_effector",
         'object_site_name': "obj0",
         'obj_pos_limits': {'high':[0.52, -0.31, 0.855], 'low':[0.44, -0.25, 0.845]},
@@ -243,7 +244,8 @@ register(
     max_episode_steps=100, #50steps*40Skip*2ms = 4s
     kwargs={
         'model_path': curr_dir+'/franka/assets/franka_planar_push_v0.xml',
-        'config_path': curr_dir+'/franka/assets/franka_planar_push_v0.config',
+        #'config_path': curr_dir+'/franka/assets/franka_planar_push_v0.config',
+        'config_path': curr_dir+'/franka/assets/franka_planar_push_rp03_v0.config',
         'robot_site_name': "end_effector",
         'object_site_name': "obj0",
         'obj_pos_limits': {'high':[0.52, 0.31, 0.855], 'low':[0.44, 0.25, 0.845]},

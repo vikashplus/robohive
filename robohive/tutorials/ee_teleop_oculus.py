@@ -123,7 +123,7 @@ def main(env_name, env_args, reset_noise, action_noise, output, horizon, num_rol
         # Reset
         exit_request = False
         reset_noise = reset_noise*np.random.uniform(low=-1, high=1, size=env.init_qpos.shape)
-        env.reset(reset_qpos=env.init_qpos+reset_noise, blocking=False)
+        env.reset(reset_qpos=env.init_qpos+reset_noise)
 
         # launch
         print('hit pedal/button to start')
