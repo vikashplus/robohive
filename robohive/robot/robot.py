@@ -71,7 +71,7 @@ class Robot():
         if mj_sim is None:
             # (creates new robot everytime to facilitate parallelization)
             prompt("Preparing robot-sim from %s" % model_path)
-            self.sim =SimScene.get_sim(model_path=model_path)
+            self.sim =SimScene.get_sim(model_handle=model_path)
         else:
             # use provided sim
             self.sim = mj_sim
