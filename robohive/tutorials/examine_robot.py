@@ -13,7 +13,6 @@ EXAMPLE:\n
     $ python tutorials/examine_robot.py --sim_path envs/arms/franka/assets/franka_reach_v0.xml --config_path envs/arms/franka/assets/franka_reach_v0.config
 '''
 
-from mujoco_py import MjViewer
 from robohive.robot.robot import Robot
 import numpy as np
 import click
@@ -32,11 +31,7 @@ def main(sim_path, config_path, is_hardware, jnt_amp, frame_skip, traj_horizon, 
     # start robots and visualizers
     robot = Robot(robot_name="Robot Demo", model_path=sim_path, config_path=config_path, act_mode='pos', is_hardware=is_hardware)
     sim = robot.sim
-    if live_render:
-        viewer = MjViewer(sim)
-        render_cbk = viewer.render
-    else:
-        render_cbk = None
+    render_cbk = sim.renderer.render_to_window if live_render else None
 
     # derived variables
     traj_dt = frame_skip*sim.model.opt.timestep
@@ -46,7 +41,8 @@ def main(sim_path, config_path, is_hardware, jnt_amp, frame_skip, traj_horizon, 
     jnt_rng = 0.5*(sim.model.jnt_range[:,1]-sim.model.jnt_range[:,0])
 
     # Goto joint targets
-    while True:
+    for iloop in range(10):
+        print(f"Loop ID:{iloop}")
 
         # Sample a new desired position
         des_jnt_pos = jnt_mean + jnt_amp*np.random.uniform(high=jnt_rng, low=-jnt_rng)
@@ -56,7 +52,7 @@ def main(sim_path, config_path, is_hardware, jnt_amp, frame_skip, traj_horizon, 
         robot.reset(reset_pos=jnt_mean, reset_vel=djnt_mean)
         sensors = robot.get_sensors() # gets latest sensors and propage it in the sim
         for _ in range(traj_nsteps):
-            robot.step(ctrl_desired=act, step_duration=traj_dt, ctrl_normalized=False, realTimeSim=True, render_cbk=render_cbk)
+            robot.step(ctrl_desired=act, step_duration=traj_dt, ctrl_normalized=False, realTimeSim=(live_render==True), render_cbk=render_cbk)
             sensors = robot.get_sensors() # gets current sensors and propage it in the sim
 
         # Report progress

@@ -8,6 +8,7 @@ from robohive.tests.test_claws import TestClaws
 from robohive.tests.test_tcdm import TestTCDM
 
 from robohive.tests.test_examine_env import TestExamineEnv
+from robohive.tests.test_examine_robot import TestExamineRobot
 from robohive.tests.test_logger import TestExamineTrace
 from robohive.tests.test_robot import TestRobot
 
