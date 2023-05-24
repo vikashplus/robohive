@@ -146,7 +146,7 @@ def plot(paths, env=None, fileName_prefix=''):
         if env and hasattr(env.env, "rwd_keys_wt"):
             ax = plt.subplot(nplt2, 2, 6)
             ax.set_prop_cycle(None)
-            for key in env.env.rwd_keys_wt.keys():
+            for key in sorted(env.env.rwd_keys_wt.keys()):
                 plt.plot(
                     path['env_infos']['time'],
                     path['env_infos']['rwd_dict'][key]*env.env.rwd_keys_wt[key],
