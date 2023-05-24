@@ -12,20 +12,20 @@ import numpy as np
 from robohive.envs import env_base
 from robohive.utils.vector_math import calculate_cosine
 
-class WalkBaseV0(env_base.MujocoEnv):
+class OrientBaseV0(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS = [
         'upright', 'kitty_qpos', 'heading', 'target_error', 'last_a'
     ]
 
     # Original Robel Obs (pinned to the origin)
-    # DEFAULT_OBS_KEYS = ['upright', 'root_pos', 'root_euler', 'kitty_qpos', 'heading', 'target_pos', 'target_error', 'last_a']
+    # DEFAULT_OBS_KEYS = ['root_pos', 'root_euler', 'kitty_qpos', 'root_vel', 'root_angular_vel', 'kitty_qvel', 'last_action', 'upright', 'current_facing', 'desired_facing']
 
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
                 'target_dist_cost': 4.0,
-                'upright': 1.0,
+                'upright': 2.0,
                 'falling': 100.0,
-                'heading': 2.0,
+                'heading': 5.0,
                 'height': 0.5,
                 'bonus_small': 5.0,
                 'bonus_big': 10.0
@@ -49,7 +49,6 @@ class WalkBaseV0(env_base.MujocoEnv):
         CoRL-2019 | https://sites.google.com/view/roboticsbenchmarks/
     """
 
-
     def __init__(self, model_path, obsd_model_path=None, seed=None, **kwargs):
         gym.utils.EzPickle.__init__(self, model_path, obsd_model_path, seed, **kwargs)
         super().__init__(model_path=model_path, obsd_model_path=obsd_model_path, seed=seed, env_credits=self.ENV_CREDIT)
@@ -63,7 +62,7 @@ class WalkBaseV0(env_base.MujocoEnv):
                 torso_site_name='torso',
                 target_site_name='target',
                 heading_site_name='heading',
-                target_distance_range = (2.3, 2.3),
+                target_distance_range = (0, 0),
                 target_angle_range = (np.pi/2, np.pi/2),
                 target_height_range = (0.28, 0.28),
                 frame_skip = 40,
@@ -86,9 +85,9 @@ class WalkBaseV0(env_base.MujocoEnv):
                                self.sim.model.actuator_name2id(act_range_names[1])+1)
 
         super()._setup(obs_keys=obs_keys,
-                       proprio_keys=proprio_keys,
                        weighted_reward_keys=weighted_reward_keys,
                        frame_skip=frame_skip,
+                       proprio_keys=proprio_keys,
                        **kwargs)
 
         # configure
@@ -144,7 +143,6 @@ class WalkBaseV0(env_base.MujocoEnv):
         upright = obs_dict['upright'][:,:,0] if obs_dict['upright'].ndim==3 else obs_dict['upright'][0]
         quad_height = obs_dict['root_pos'][:,:,2] if obs_dict['root_pos'].ndim==3 else obs_dict['root_pos'][2]
 
-        target_distance_th = np.mean(self.target_distance_range)
         target_height_th = np.mean(self.target_height_range)
 
         rwd_dict = collections.OrderedDict((
@@ -155,16 +153,19 @@ class WalkBaseV0(env_base.MujocoEnv):
             # not falling
             ('falling', -1.0* (upright < self._upright_threshold)),
             # Heading - 1 @ cos(0) to 0 @ cos(25deg).
-            ('heading', (heading - 0.9) / 0.1),
+            # ('heading', (heading - 0.9) / 0.1),
+            ('heading', (heading + 1.0)),
             # height
             ('height', -1.*abs(quad_height-target_height_th)),
-            # Bonus
-            ('bonus_small', 1.0*(target_xy_dist < 0.75*target_distance_th) + 1.0*(heading > 0.9)),
-            ('bonus_big', 1.0 * (target_xy_dist < 0.5*target_distance_th) * (heading > 0.9)),
+            # Bonus when mean error < 15deg or upright within 15deg.
+            ('bonus_small', 1.0*(upright > self._upright_threshold) + 1.0*(heading > 0.9)),
+            # Bonus when mean error < 5deg or upright within 5deg.
+            ('bonus_big', 1.0 * (upright > self._upright_threshold) * (heading > 0.996)),
             # Must keys
-            ('sparse',  -1.0*target_xy_dist),
-            ('solved',  (target_xy_dist < 0.5)),
-            ('done',    upright < self._upright_threshold),
+            ('sparse',  heading),
+            ('solved',  (upright > self._upright_threshold) * (heading > 0.996)),
+            # ('done',    upright < self._upright_threshold),
+            ('done',    False),
         ))
 
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
@@ -184,4 +185,3 @@ class WalkBaseV0(env_base.MujocoEnv):
         self.sim.model.site_pos[self.heading_sid] = (target_dist+0.5) * np.array([np.cos(target_theta), np.sin(target_theta), 0])
         obs = super().reset(reset_qpos, reset_qvel)
         return obs
-
