@@ -352,9 +352,22 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         visual_dict['time'] = np.array([self.sim.data.time])
         for key in visual_keys:
             if key.startswith('rgb'):
-                _, cam, wxh, rgb_encoder_id = key.split(':')
+
+                # _, cam, wxh, rgb_encoder_id = key.split(':') # faces issues if camera names have : in them
+
+                # get encoder
+                key_payload = key[4:]
+                rgb_encoder_id = key_payload.split(':')[-1]
+
+                # get image resolution
+                key_payload = key_payload[:-(len(rgb_encoder_id)+1)]
+                wxh = key_payload.split(':')[-1]
                 height = int(wxh.split('x')[0])
                 width = int(wxh.split('x')[1])
+
+                # get camera name
+                cam = key_payload[:-(len(wxh)+1)]
+
                 # render images ==> returns (ncams, height, width, 3)
                 img, dpt = self.robot.get_visual_sensors(
                                     height=height,
