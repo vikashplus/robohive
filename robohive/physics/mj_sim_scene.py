@@ -12,6 +12,7 @@ import logging
 from typing import Any
 
 import robohive.utils.import_utils as import_utils
+from robohive.utils.prompt_utils import prompt, Prompt
 import_utils.dm_control_isavailable()
 import_utils.mujoco_isavailable()
 import dm_control.mujoco as dm_mujoco
@@ -47,7 +48,12 @@ class DMSimScene(SimScene):
     def advance(self, substeps: int = 1, render:bool = True):
         """Advances the simulation for one step."""
         # Step the simulation substeps (frame_skip) times.
-        self.sim.step(substeps)
+        try:
+            self.sim.step(substeps)
+        except:
+            prompt("Simulation couldn't be stepped as intended. Issuing a reset", type=Prompt.WARN)
+            self.sim.reset()
+
         if render:
             # self.renderer.refresh_window()
             self.renderer.render_to_window()
