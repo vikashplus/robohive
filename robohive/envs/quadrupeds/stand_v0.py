@@ -12,24 +12,29 @@ import numpy as np
 from robohive.envs import env_base
 from robohive.utils.vector_math import calculate_cosine
 
-class WalkBaseV0(env_base.MujocoEnv):
+
+class StandBaseV0(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS = [
-        'upright', 'kitty_qpos', 'heading', 'target_error', 'last_a'
+        'root_pos',
+        'root_euler',
+        'kitty_qpos',
+        'root_vel',
+        'root_angular_vel',
+        'kitty_qvel',
+        'last_action',
+        'upright',
+        'pose_error',
     ]
 
-    # Original Robel Obs (pinned to the origin)
-    # DEFAULT_OBS_KEYS = ['upright', 'root_pos', 'root_euler', 'kitty_qpos', 'heading', 'target_pos', 'target_error', 'last_a']
-
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
-                'target_dist_cost': 4.0,
-                'upright': 1.0,
-                'falling': 100.0,
-                'heading': 2.0,
-                'height': 0.5,
-                'bonus_small': 5.0,
-                'bonus_big': 10.0
-                }
+        'pose_error_cost': 4.0,
+        'center_distance_cost': 2.0,
+        'bonus_small': 5.0,
+        'bonus_big': 10.0,
+        'upright': 1.0,
+        'falling': 100,
+        }
 
     DEFAULT_VISUAL_KEYS = [
         'rgb:A:headCam:256x256:2d',
@@ -49,7 +54,6 @@ class WalkBaseV0(env_base.MujocoEnv):
         CoRL-2019 | https://sites.google.com/view/roboticsbenchmarks/
     """
 
-
     def __init__(self, model_path, obsd_model_path=None, seed=None, **kwargs):
         gym.utils.EzPickle.__init__(self, model_path, obsd_model_path, seed, **kwargs)
         super().__init__(model_path=model_path, obsd_model_path=obsd_model_path, seed=seed, env_credits=self.ENV_CREDIT)
@@ -59,7 +63,7 @@ class WalkBaseV0(env_base.MujocoEnv):
     def _setup(self,
                 dof_range_names=None,
                 act_range_names=None,
-                upright_threshold: float = 0.9,
+                upright_threshold: float = 0.0,
                 torso_site_name='torso',
                 target_site_name='target',
                 heading_site_name='heading',
@@ -69,11 +73,14 @@ class WalkBaseV0(env_base.MujocoEnv):
                 frame_skip = 40,
                 obs_keys=DEFAULT_OBS_KEYS,
                 weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
+                reset_type='fixed',
                 proprio_keys=DEFAULT_PROPRIO_KEYS,
                 **kwargs,
         ):
 
         self._upright_threshold = upright_threshold
+        self.reset_type = reset_type
+
         # ids
         self.torso_sid = self.sim.model.site_name2id(torso_site_name)
         self.target_sid = self.sim.model.site_name2id(target_site_name)
@@ -84,17 +91,13 @@ class WalkBaseV0(env_base.MujocoEnv):
                                self.sim.model.jnt_dofadr[self.sim.model.joint_name2id(dof_range_names[1])]+1)
         self.act_range = range(self.sim.model.actuator_name2id(act_range_names[0]),
                                self.sim.model.actuator_name2id(act_range_names[1])+1)
+        self._desired_pose = np.zeros(len(self.dof_range))
 
         super()._setup(obs_keys=obs_keys,
-                       proprio_keys=proprio_keys,
                        weighted_reward_keys=weighted_reward_keys,
                        frame_skip=frame_skip,
+                       proprio_keys=proprio_keys,
                        **kwargs)
-
-        # configure
-        for name, device in self.robot.robot_config.items():
-            for act_id, actuator in enumerate(device['actuator']):
-                self.init_qpos[actuator['data_id']] = np.mean(actuator['pos_range'])
 
 
     def get_obs_dict(self, sim):
@@ -122,7 +125,7 @@ class WalkBaseV0(env_base.MujocoEnv):
         obs_dict = collections.OrderedDict((
             # Add observation terms relating to being upright.
             ('time', np.array([self.time])),
-            ('last_a', self.last_ctrl.copy()),
+            ('last_action', self.last_ctrl.copy()),
             ('upright', np.array([up])),
             ('root_pos', kitty_xyz.copy()), # sim.data.qpos[:3], torso_track_state.pos),
             ('root_euler', sim.data.qpos[3:6].copy()), #torso_track_state.rot_euler),
@@ -133,55 +136,59 @@ class WalkBaseV0(env_base.MujocoEnv):
             ('heading', np.array([heading])),
             ('target_pos', target_xy),
             ('target_error', target_error_rel),
+            ('pose_error', self._desired_pose - sim.data.qpos[self.dof_range]),
         ))
         return obs_dict
 
 
     def get_reward_dict(self, obs_dict):
         """Returns the reward for the given action and observation."""
-        target_xy_dist = np.linalg.norm(obs_dict['target_error'], axis=-1)
-        heading = obs_dict['heading'][:,:,0] if obs_dict['heading'].ndim==3 else obs_dict['heading'][0]
-        upright = obs_dict['upright'][:,:,0] if obs_dict['upright'].ndim==3 else obs_dict['upright'][0]
-        quad_height = obs_dict['root_pos'][:,:,2] if obs_dict['root_pos'].ndim==3 else obs_dict['root_pos'][2]
 
-        target_distance_th = np.mean(self.target_distance_range)
-        target_height_th = np.mean(self.target_height_range)
+        pose_mean_error = np.abs(obs_dict['pose_error']).mean(axis=-1)
+        upright = obs_dict['upright'][:,:,0] if obs_dict['upright'].ndim==3 else obs_dict['upright'][0]
+        center_dist = np.linalg.norm(obs_dict['root_pos'][:2], axis=-1)
 
         rwd_dict = collections.OrderedDict((
-            # Reward for proximity to the target.
-            ('target_dist_cost', -1.0 * target_xy_dist),
             # staying upright
-            ('upright', (upright - self._upright_threshold)),
+            ('upright', (upright - self._upright_threshold)/(1 - self._upright_threshold)),
             # not falling
             ('falling', -1.0* (upright < self._upright_threshold)),
-            # Heading - 1 @ cos(0) to 0 @ cos(25deg).
-            ('heading', (heading - 0.9) / 0.1),
-            # height
-            ('height', -1.*abs(quad_height-target_height_th)),
-            # Bonus
-            ('bonus_small', 1.0*(target_xy_dist < 0.75*target_distance_th) + 1.0*(heading > 0.9)),
-            ('bonus_big', 1.0 * (target_xy_dist < 0.5*target_distance_th) * (heading > 0.9)),
+            # Reward for closeness to desired pose.
+            ('pose_error_cost', -1 * pose_mean_error),
+            # Reward for closeness to center; i.e. being stationary.
+            ('center_distance_cost', -1 * center_dist),
+            # Bonus when mean error < 30deg, scaled by uprightedness.
+            ('bonus_small', 1.0 * (pose_mean_error < (np.pi / 6)) * upright),
+            # Bonus when mean error < 15deg and upright within 30deg.
+            ('bonus_big', 1.0 * (pose_mean_error < (np.pi / 12)) * (upright > 0.9)),
             # Must keys
-            ('sparse',  -1.0*target_xy_dist),
-            ('solved',  (target_xy_dist < 0.5)),
-            ('done',    upright < self._upright_threshold),
+            ('sparse', (1 - np.maximum(pose_mean_error / (np.pi / 3), 1))),  # Normalized pose error by 60deg.
+            ('solved', (pose_mean_error < (np.pi / 12)) * (upright > 0.9)),
+            ('done', upright < self._upright_threshold),
         ))
-
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
 
 
     def reset(self, reset_qpos=None, reset_qvel=None):
 
-        reset_qpos = self.init_qpos.copy() if reset_qpos is None else reset_qpos
-        reset_qpos[6:] += np.pi/8*self.np_random.uniform(low=-1, high=1, size=self.sim.model.nq-6)
+        if reset_qpos is None:
+            reset_qpos = self.init_qpos.copy()
+            quad_pose = np.zeros(len(self.dof_range))
 
-        target_dist = self.np_random.uniform(*self.target_distance_range)
-        target_theta = self.np_random.uniform(*self.target_angle_range)
+            if self.reset_type.lower() == 'fixed':
+                quad_pose[[0, 3, 6, 9]] = 0
+                quad_pose[[1, 4, 7, 10]] = np.pi / 4
+                quad_pose[[2, 5, 8, 11]] = -np.pi / 2
+                reset_qpos[self.dof_range] = quad_pose
 
-        self.sim.model.site_pos[self.target_sid] = target_dist * np.array([np.cos(target_theta), np.sin(target_theta), 0])
-        # Heading target is a bit farther away to avoid heading oscillations when quad is near xy_target
-        self.sim.model.site_pos[self.heading_sid] = (target_dist+0.5) * np.array([np.cos(target_theta), np.sin(target_theta), 0])
+            elif self.reset_type.lower() == 'random':
+                for name, device in self.robot.robot_config.items():
+                    for act_id, actuator in enumerate(device['actuator']):
+                        reset_qpos[actuator['data_id']] = self.np_random.uniform(low=actuator['pos_range'][0], high=actuator['pos_range'][1])
+            else:
+                raise TypeError(f"Unknown reset type: {self.reset_type}")
+
         obs = super().reset(reset_qpos, reset_qvel)
         return obs
 
