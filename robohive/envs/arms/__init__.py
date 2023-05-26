@@ -125,6 +125,21 @@ register(
     }
 )
 
+register(
+    id='FrankaBinPick-v0',
+    entry_point='robohive.envs.arms.bin_pick_v0:BinPickV0',
+    max_episode_steps=100, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_bin_pick_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_bin_pick_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_name': "obj0",
+        'target_site_name': "drop_target",
+        'randomize': True,
+        'target_xyz_range': {'high':[0.5, 0.0, 1.1], 'low':[0.5, 0.0, 1.1]}
+    }
+
+)
 
 # FETCH =======================================================================
 from robohive.envs.arms.reach_base_v0 import ReachBaseV0
