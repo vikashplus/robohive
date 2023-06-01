@@ -10,12 +10,12 @@
 
     <size njmax='1000' nconmax='1000'/>
 
+
     <include file="../../../../simhive/scene_sim/topfloor_scene.xml"/>
     <include file="../../../../simhive/franka_sim/assets/assets.xml"/>
-    <include file="../../../../simhive/franka_sim/assets/gripper_assets.xml"/>
+    <include file="../../../../simhive/robotiq_sim/assets/assets.xml"/>
     <include file="../../../../simhive/furniture_sim/simpleTable/simpleTable_asset.xml"/>
     <include file="../../../../simhive/franka_sim/assets/actuator0.xml"/>
-    <include file="../../../../simhive/franka_sim/assets/gripper_actuator0.xml"/>
 
     <include file="../../../../simhive/YCB_sim/includes/defaults_ycb.xml"/>
     <include file="../../../../simhive/YCB_sim/includes/assets_004_sugar_box.xml"/>
@@ -24,27 +24,36 @@
 
     <worldbody>
 
-        <camera name='left_cam' pos='-1.2 -0.5 1.8' quat='0.78 0.49 -0.22 -0.32'/>
-        <camera name='right_cam' pos='1.2 -0.5 1.8' quat='0.76 0.5 0.21 0.35'/>
+        <camera name='left_cam' pos='-0.5 1.2 1.8' quat='-0.32 -0.22 0.49 0.78'/>
+        <camera name='right_cam' pos='-0.5 -1.2 1.8' quat='0.76 0.5 -0.21 -0.35'/>
+        <camera name='top_cam' pos='0.5 0 2.2' euler='0 0 -1.57'/>
         <site name='workspace' type='box' size='.6 .375 .25' pos='0 0.475 1.0' group='3' rgba='0 0 .4 .2'/>
 
-        <!-- Robot -->
-        <body pos='0 0 .775' euler='0 0 1.57'>
+        <!-- Franka Arm-->
+        <body pos='0 0 .823' euler='0 0 0'>
             <geom type='cylinder' size='.120 .4' pos='-.04 0 -.4'/>
-            <include file="../../../../simhive/franka_sim/assets/chain0.xml"/>
+            <include file="../../../../simhive/franka_sim/assets/chain0_nogripper.xml"/>
+        </body>
+
+        <!-- Robotiq Hand-->
+        <body name="ee_mount" pos="0 0 .11" euler="0 0 0">
+            <include file="../../../../simhive/robotiq_sim/assets/chain.xml"/>
         </body>
 
         <!-- simple Table -->
-        <body pos='0 0.475 0'>
+        <body pos='0.475 0 0' euler='0 0 1.57'>
             <include file="../../../../simhive/furniture_sim/simpleTable/simpleWoodTable_body.xml"/>
         </body>
+
+
 
         <!-- tasks details added here via include-->
         <site name='target' type='cylinder' size='.088 0.021' pos='0.4 0.5 0.78' group='1' rgba='.1 .8 .2 .4'/>
 
         <!-- object -->
-        <body pos="0.0 0.5 .8">
+        <body pos="0.5 0.0 .8">
             <include file="../../../../simhive/YCB_sim/includes/body_004_sugar_box.xml"/>
+
             <site name="sugarbox" size="0.01" pos="0 0 .088"/>
             <joint name="Tx" axis="1 0 0" type="slide" damping="0" limited="true" range="-1.0 1.0"/>
             <joint name="Ty" axis="0 1 0" type="slide" damping="0" limited="true" range="-0.5 0.5"/>
