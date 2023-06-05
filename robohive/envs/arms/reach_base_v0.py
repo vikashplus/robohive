@@ -15,7 +15,10 @@ from robohive.envs import env_base
 class ReachBaseV0(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS = [
-        'qp', 'qv', 'reach_err'
+        'qp_robot', 'qv_robot', 'reach_err'
+    ]
+    DEFAULT_PROPRIO_KEYS = [
+        'qp_robot', 'qv_robot'
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
         "reach": -1.0,
@@ -50,6 +53,7 @@ class ReachBaseV0(env_base.MujocoEnv):
                frame_skip = 40,
                reward_mode = "dense",
                obs_keys=DEFAULT_OBS_KEYS,
+               proprio_keys=DEFAULT_PROPRIO_KEYS,
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
                **kwargs,
         ):
@@ -60,6 +64,7 @@ class ReachBaseV0(env_base.MujocoEnv):
         self.target_xyz_range = target_xyz_range
 
         super()._setup(obs_keys=obs_keys,
+                       proprio_keys=proprio_keys,
                        weighted_reward_keys=weighted_reward_keys,
                        reward_mode=reward_mode,
                        frame_skip=frame_skip,
@@ -69,8 +74,8 @@ class ReachBaseV0(env_base.MujocoEnv):
     def get_obs_dict(self, sim):
         obs_dict = {}
         obs_dict['time'] = np.array([self.sim.data.time])
-        obs_dict['qp'] = sim.data.qpos.copy()
-        obs_dict['qv'] = sim.data.qvel.copy()
+        obs_dict['qp_robot'] = sim.data.qpos.copy()
+        obs_dict['qv_robot'] = sim.data.qvel.copy()
         obs_dict['reach_err'] = sim.data.site_xpos[self.target_sid]-sim.data.site_xpos[self.grasp_sid]
         return obs_dict
 
