@@ -11,7 +11,7 @@ import robohive.envs.myo.myochallenge # noqa
 import robohive.envs.fm # noqa
 import robohive.envs.hands # noqa
 import robohive.envs.multi_task # noqa
-import robohive.envs.tcdm # noqa
+# import robohive.envs.tcdm # noqa # WIP
 import robohive.envs.claws # noqa
 import robohive.envs.quadrupeds # noqa
 
