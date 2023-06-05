@@ -102,34 +102,35 @@ for env_name in ["door", "relocate", "hammer", "pen"]:
 # from robohive.envs.hands.baoding_v0 import BaodingEnvV0
 
 # V0: baoding balls new
-register(
-    id='baoding-v1',
-    entry_point='robohive.envs.hands:BaodingFixedEnvV1',
-    max_episode_steps=200,
-     kwargs={
-            'model_path': curr_dir+'/assets/baoding_v1.mjb',
-     }
-)
-from robohive.envs.hands.baoding_v1 import BaodingFixedEnvV1
-register(
-    id='baoding4th-v1',
-    entry_point='robohive.envs.hands:BaodingFixedEnvV1',
-    max_episode_steps=200,
-     kwargs={
-            'model_path': curr_dir+'/assets/baoding_v1.mjb',
-            'n_shifts_per_period':4,
-     }
-)
-register(
-    id='baoding8th-v1',
-    entry_point='robohive.envs.hands:BaodingFixedEnvV1',
-    max_episode_steps=200,
-     kwargs={
-            'model_path': curr_dir+'/assets/baoding_v1.mjb',
-            'n_shifts_per_period':8,
-     }
-)
-from robohive.envs.hands.baoding_v1 import BaodingFixedEnvV1
+if False: # WIP
+    register(
+        id='baoding-v1',
+        entry_point='robohive.envs.hands:BaodingFixedEnvV1',
+        max_episode_steps=200,
+        kwargs={
+                'model_path': curr_dir+'/assets/baoding_v1.mjb',
+        }
+    )
+    from robohive.envs.hands.baoding_v1 import BaodingFixedEnvV1
+    register(
+        id='baoding4th-v1',
+        entry_point='robohive.envs.hands:BaodingFixedEnvV1',
+        max_episode_steps=200,
+        kwargs={
+                'model_path': curr_dir+'/assets/baoding_v1.mjb',
+                'n_shifts_per_period':4,
+        }
+    )
+    register(
+        id='baoding8th-v1',
+        entry_point='robohive.envs.hands:BaodingFixedEnvV1',
+        max_episode_steps=200,
+        kwargs={
+                'model_path': curr_dir+'/assets/baoding_v1.mjb',
+                'n_shifts_per_period':8,
+        }
+    )
+    from robohive.envs.hands.baoding_v1 import BaodingFixedEnvV1
 
 
 # ==================================================================================
