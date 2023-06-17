@@ -173,3 +173,26 @@ def quat2mat(quat):
     mat[..., 2, 1] = yZ + wX
     mat[..., 2, 2] = 1.0 - (xX + yY)
     return np.where((Nq > _FLOAT_EPS)[..., np.newaxis, np.newaxis], mat, np.eye(3))
+
+
+
+# multiply vector by 3D rotation matrix transpose
+def rotVecMatT(vec, mat):
+    return np.array([
+        mat[0,0]*vec[0] + mat[1,0]*vec[1] + mat[2,0]*vec[2],
+        mat[0,1]*vec[0] + mat[1,1]*vec[1] + mat[2,1]*vec[2],
+        mat[0,2]*vec[0] + mat[1,2]*vec[1] + mat[2,2]*vec[2]
+        ])
+
+# multiply vector by 3D rotation matrix
+def rotVecMat(vec, mat):
+    return np.array([
+        mat[0,0]*vec[0] + mat[0,1]*vec[1] + mat[0,2]*vec[2],
+        mat[1,0]*vec[0] + mat[1,1]*vec[1] + mat[1,2]*vec[2],
+        mat[2,0]*vec[0] + mat[2,1]*vec[1] + mat[2,2]*vec[2]
+        ])
+
+# multiply vector by quat
+def rotVecQuat(vec, quat):
+    mat = quat2mat(quat)
+    return rotVecMat(vec,mat)
