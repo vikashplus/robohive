@@ -28,6 +28,9 @@ class TestMyo(TestEnvs):
 
             'myoHandBaodingFixed-v1', 'myoHandBaodingRandom-v1',
             'myoHandBaodingFixed4th-v1','myoHandBaodingFixed8th-v1',
+
+            # Legs
+            'myoLegReachFixed-v0'
         ]
         for k in range(10): env_names+=['myoHandPose'+str(k)+'Fixed-v0']
 
