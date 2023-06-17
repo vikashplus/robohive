@@ -23,4 +23,4 @@ import robohive.envs.quadrupeds # noqa
 robohive_envs = set(gym.envs.registration.registry.env_specs.keys()) - _current_gym_envs
 robohive_envs = sorted(robohive_envs)
 
-__version__ = "0.5.0"
+__version__ = "0.6.0"
