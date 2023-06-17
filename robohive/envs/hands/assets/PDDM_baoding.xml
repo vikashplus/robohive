@@ -1,0 +1,96 @@
+<mujoco>
+
+    <include file="../../../simhive/Adroit/resources/assets.xml"/>
+    <include file="../../../simhive/Adroit/resources/joint_position_actuation.xml"/>
+
+    <compiler meshdir="../../../simhive/Adroit/" />
+    <option timestep="0.0025"/>
+
+    <asset>
+        <texture name="texplane" type="2d" builtin="checker" rgb1=".2 .3 .4" rgb2=".1 0.15 0.2"
+            width="512" height="512"/>
+
+        <material name='MatGnd' reflectance='0.5' texture="texplane" texrepeat="2 2" texuniform="true"/>
+        <!-- black background, so can filter it out in images from camera, if wanted -->
+        <material name='MatGnd2' rgba="0.4 0.4 0.4 0.0" shininess="15.0" specular="2.0"  reflectance="0.9"/>
+
+        <material name='MatPlane' reflectance='0.05' texture="texplane" texrepeat="1 1" texuniform="true"/>
+        <material name="metal" rgba="0.4 0.4 0.4 1.0" shininess="15.0" specular="2.0"  reflectance= "0.9"/>
+        <material name="MatBallY" specular=".1" shininess=".1" reflectance=".1" rgba="1 .8 .31 1.0"/>
+        <material name="MatBallP" specular=".1" shininess=".1" reflectance="0.1" rgba=".84 .59 .53 1.0"/>
+        <!-- <material name="MatVizBioTac" specular="1" shininess=".3" reflectance="0.5" rgba="0 .9 .6 1"/> -->
+        <!-- <mesh scale=".001 .001 .001" file="../Adroit/resources/meshes/biotacSP.stl" name='TH1_z'/> -->
+		<!-- <mesh scale=".001 .001 .001" file="../Adroit/resources/meshes/biotacSP.stl" name='biotac'/> -->
+
+    </asset>
+
+
+    <!-- ======= WORLD ======= -->
+    <worldbody>
+        <light directional='false' diffuse='.8 .8 .8' specular='0.3 0.3 0.3' pos='0 1.0 4.0' dir='0 -1.0 -4'/>
+        <geom name="ground" pos="0 0 0" size="1 1 5" material="MatGnd" type="plane" contype="1" conaffinity="1"/>
+
+
+        <body name="hand mount" pos="0 -.54 0.190" euler='-1.57 0 0'>
+            <inertial mass="0.100" pos="0 0 0" diaginertia="0.001 0.001 0.001"/>
+            <include file="../../../simhive/Adroit/resources/chain.xml"/>
+
+            <body name='tagR' pos='0 -.062 .195' euler='1.45 0 0'>
+                <geom name='R0' type='box' size='0.017 0.017 0.001' rgba='.8 .5 .5 0'/>
+                <site name='R1' type='sphere' size='0.002' pos='0.017 0.017 0' rgba='0 1 1 0'/>
+                <site name='R2' type='sphere' size='0.002' pos='-.017 0.017 0' rgba='1 0 1 0'/>
+                <site name='R3' type='sphere' size='0.002' pos='-.017 -.017 0' rgba='1 1 0 0'/>
+                <site name='R4' type='sphere' size='0.002' pos='0.017 -.017 0' rgba='1 1 1 0'/>
+            </body>
+
+            <body name='tagG' pos='-.062 0 .195' euler='0 -1.45 -1.57'>
+                <geom name='G0' type='box' size='0.017 0.017 0.001' rgba='.5 .8 .5 0'/>
+                <site name='G1' type='sphere' size='0.002' pos='0.017 0.017 0' rgba='0 1 1 0'/>
+                <site name='G2' type='sphere' size='0.002' pos='-.017 0.017 0' rgba='1 0 1 0'/>
+                <site name='G3' type='sphere' size='0.002' pos='-.017 -.017 0' rgba='1 1 0 0'/>
+                <site name='G4' type='sphere' size='0.002' pos='0.017 -.017 0' rgba='1 1 1 0'/>
+            </body>
+
+            <body name='tagB' pos='-.034 -.0565 .0720' euler='1.57 -.525 0'>
+                <geom name='B0' type='box' size='0.017 0.017 0.001' rgba='.5 .5 .8 0'/>
+                <site name='B1' type='sphere' size='0.002' pos='0.017 0.017 0' rgba='0 1 1 0'/>
+                <site name='B2' type='sphere' size='0.002' pos='-.017 0.017 0' rgba='1 0 1 0'/>
+                <site name='B3' type='sphere' size='0.002' pos='-.017 -.017 0' rgba='1 1 0 0'/>
+                <site name='B4' type='sphere' size='0.002' pos='0.017 -.017 0' rgba='1 1 1 0'/>
+            </body>
+
+        </body>
+
+
+        <!-- cameras -->
+        <camera name="cam0" pos="-0.32 0 0.6" quat='0.3 0.19 -0.43 -0.83' fovy='55'/>
+        <camera name="cam1" pos="-0.32 0 0.6" quat='0.3 0.19 -0.43 -0.83' fovy='55'/>
+
+        <!-- yellow ball -->
+        <body name="ball1" pos="-0.02 -0.03 0.24">
+            <freejoint/>
+            <geom material="MatBallY" type="sphere" size="0.028" group='0' mass='0.043' condim='4'/>
+            <site name="ball1_site"  type="sphere" size="0.005" material="MatBallY" group="0"/>
+        </body>
+        <site name="target1_site" type="sphere" size="0.007" material="MatBallY" group="0" pos="-0.07 0 0.24" />
+
+        <!-- pink ball -->
+        <body name="ball2" pos="0.031 -0.03 0.24">
+            <freejoint/>
+            <geom material="MatBallP" type="sphere" size="0.028" group='0' mass='0.043' condim='4'/>
+            <site name="ball2_site"  type="sphere" size="0.005" material="MatBallP" group="0"/>
+        </body>
+        <site name="target2_site" type="sphere" size="0.007" material="MatBallP" group="0" pos="0.07 0 0.24" />
+
+        <!-- Reach Task -->
+        <site name="new_task_site" type="sphere" size="0.01" rgba="1 0 0 0.5" group="0" pos="0 0 0" />
+
+
+
+    </worldbody>
+
+    <keyframe>
+        <key qpos='0.0126 -0.398 0.379 0.0564 1.167 0.0407 0.265 -0.136 1.144 0.045 0.074 0.139 1.112 0.234 -0.022 -0.368 -0.000 1.25 0.152 -0.021 0.374 0.0939 -0.126 -0.536 -0.029 -0.001 0.19 1 0 0 0 0.03 0.01 0.19 1 0 0 0'/>
+    </keyframe>
+
+</mujoco>

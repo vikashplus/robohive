@@ -11,6 +11,7 @@ import gym
 import numpy as np
 
 from robohive.envs import env_base
+from robohive.utils.quat_math import rotVecQuat
 
 # Define the task enum
 class Task(enum.Enum):
@@ -75,6 +76,11 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
             **kwargs,
         ):
 
+        # relax motor gains
+        for sim in [self.sim, self.sim_obsd]:
+            sim.model.actuator_gainprm *= 0.1
+            sim.model.actuator_biasprm *= 0.1
+
         # user parameters
         self.which_task = Task(WHICH_TASK)
         self.drop_height_threshold = 0.06
@@ -96,6 +102,7 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
         self.goal = self.create_goal_trajectory(time_step=frame_skip*self.sim.model.opt.timestep, time_period=6)
 
         # init target and body sites
+        self.palm_bid = self.sim.model.body_name2id('palm')
         self.object1_sid = self.sim.model.site_name2id('ball1_site')
         self.object2_sid = self.sim.model.site_name2id('ball2_site')
         self.target1_sid = self.sim.model.site_name2id('target1_site')
@@ -140,7 +147,7 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
         # pos_bounds=[[-40, 40]] * self.n_dofs, #dummy
         # vel_bounds=[[-3, 3]] * self.n_dofs,
 
-    def step(self, a):
+    def step(self, a, **kwargs):
         if self.which_task==Task.MOVE_TO_LOCATION:
             desired_pos = self.goal[self.counter].copy()
             # update both simhive with desired targets
@@ -150,31 +157,35 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
                 sim.model.site_pos[self.target1_sid, 1] = desired_pos[1]
                 sim.model.site_pos[self.target1_sid, 2] = desired_pos[2]+0.02
         else :
+            # get desired targets
             desired_angle_wrt_palm = self.goal[self.counter].copy()
             desired_angle_wrt_palm[0] = desired_angle_wrt_palm[0] + self.ball_1_starting_angle
             desired_angle_wrt_palm[1] = desired_angle_wrt_palm[1] + self.ball_2_starting_angle
 
-            desired_positions_wrt_palm = [0,0,0,0]
-            desired_positions_wrt_palm[0] = self.x_radius*np.cos(desired_angle_wrt_palm[0]) + self.center_pos[0]
-            desired_positions_wrt_palm[1] = self.y_radius*np.sin(desired_angle_wrt_palm[0]) + self.center_pos[1]
-            desired_positions_wrt_palm[2] = self.x_radius*np.cos(desired_angle_wrt_palm[1]) + self.center_pos[0]
-            desired_positions_wrt_palm[3] = self.y_radius*np.sin(desired_angle_wrt_palm[1]) + self.center_pos[1]
+            ball1_desired_pos_wrt_palm = np.array([
+                self.x_radius*np.cos(desired_angle_wrt_palm[0]) + self.center_pos[0],
+                -0.045,
+                self.y_radius*np.sin(desired_angle_wrt_palm[0]) + self.center_pos[1]
+            ])
+            ball2_desired_pos_wrt_palm = np.array([
+                self.x_radius*np.cos(desired_angle_wrt_palm[1]) + self.center_pos[0],
+                -0.045,
+                self.y_radius*np.sin(desired_angle_wrt_palm[1]) + self.center_pos[1]
+            ])
 
             # update both simhive with desired targets
+            palm_pos =  self.sim.data.body_xpos[self.palm_bid]
+            palm_quat =  self.sim.data.body_xquat[self.palm_bid]
+
             for sim in [self.sim, self.sim_obsd]:
-                sim.model.site_pos[self.target1_sid, 0] = desired_positions_wrt_palm[0]
-                sim.model.site_pos[self.target1_sid, 2] = desired_positions_wrt_palm[1]
-                sim.model.site_pos[self.target2_sid, 0] = desired_positions_wrt_palm[2]
-                sim.model.site_pos[self.target2_sid, 2] = desired_positions_wrt_palm[3]
-                # move upward, to be seen
-                sim.model.site_pos[self.target1_sid, 1] = -0.07
-                sim.model.site_pos[self.target2_sid, 1] = -0.07
+                sim.model.site_pos[self.target1_sid,:] = palm_pos + rotVecQuat(ball1_desired_pos_wrt_palm, palm_quat)
+                sim.model.site_pos[self.target2_sid,:] = palm_pos + rotVecQuat(ball2_desired_pos_wrt_palm, palm_quat)
 
         self.counter +=1
         # V0: mean center and scaled differently
         # a[a>0] = self.act_mid[a>0] + a[a>0]*self.upper_rng[a>0]
         # a[a<=0] = self.act_mid[a<=0] + a[a<=0]*self.lower_rng[a<=0]
-        return super().step(a)
+        return super().step(a, **kwargs)
 
     def get_obs_dict(self, sim):
         obs_dict = {}
@@ -208,7 +219,10 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
         target1_dist = np.linalg.norm(obs_dict['target1_err'], axis=-1)
         target2_dist = np.linalg.norm(obs_dict['target2_err'], axis=-1)
         target_dist = target1_dist if self.which_task==Task.MOVE_TO_LOCATION else (target1_dist+target2_dist)
-        act_mag = np.linalg.norm(self.obs_dict['act'], axis=-1)/self.sim.model.na if self.sim.model.na !=0 else 0
+        if self.sim.model.na ==0:
+            act_mag = np.array([[0]]) if obs_dict['hand_pos'].ndim==3 else 0
+        else:
+            act_mag = np.linalg.norm(self.obs_dict['act'], axis=-1)/self.sim.model.na
 
         # wrist pose err (New in V1)
         hand_pos = obs_dict['hand_pos'][:,:,:3] if obs_dict['hand_pos'].ndim==3 else obs_dict['hand_pos'][:3]
