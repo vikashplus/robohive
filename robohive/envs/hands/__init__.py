@@ -14,7 +14,7 @@ print("RoboHive:> Registering Hand Envs")
 
 # ==================================================================================
 # V1 envs:
-#   - env_base class independet of mjrl, making it self contained
+#   - env_base class independent of mjrl, making it self contained
 #   - Updated obs such that rwd are recoverable from obs
 #   - Vectorized obs and rwd calculations
 # ==================================================================================
@@ -52,7 +52,7 @@ register(
 )
 from robohive.envs.hands.pen_v1 import PenEnvV1
 
-# Relcoate an object to the target
+# Relocate an object to the target
 register(
     id='relocate-v1',
     entry_point='robohive.envs.hands:RelocateEnvV1',
@@ -90,47 +90,36 @@ for env_name in ["door", "relocate", "hammer", "pen"]:
 
 
 # ==================================================================================
-# V0: Old Baoding ball
+# Baoding ball
 # ==================================================================================
-
-# V0: Old Baoding ball
-# register(
-#     id='baoding-v0',
-#     entry_point='robohive.envs.hands:BaodingEnvV0',
-#     max_episode_steps=200,
-# )
-# from robohive.envs.hands.baoding_v0 import BaodingEnvV0
-
-# V0: baoding balls new
-if False: # WIP
-    register(
-        id='baoding-v1',
-        entry_point='robohive.envs.hands:BaodingFixedEnvV1',
-        max_episode_steps=200,
-        kwargs={
-                'model_path': curr_dir+'/assets/baoding_v1.mjb',
-        }
-    )
-    from robohive.envs.hands.baoding_v1 import BaodingFixedEnvV1
-    register(
-        id='baoding4th-v1',
-        entry_point='robohive.envs.hands:BaodingFixedEnvV1',
-        max_episode_steps=200,
-        kwargs={
-                'model_path': curr_dir+'/assets/baoding_v1.mjb',
-                'n_shifts_per_period':4,
-        }
-    )
-    register(
-        id='baoding8th-v1',
-        entry_point='robohive.envs.hands:BaodingFixedEnvV1',
-        max_episode_steps=200,
-        kwargs={
-                'model_path': curr_dir+'/assets/baoding_v1.mjb',
-                'n_shifts_per_period':8,
-        }
-    )
-    from robohive.envs.hands.baoding_v1 import BaodingFixedEnvV1
+register(
+    id='baoding-v1',
+    entry_point='robohive.envs.hands:BaodingFixedEnvV1',
+    max_episode_steps=200,
+    kwargs={
+            'model_path': curr_dir+'/assets/PDDM_baoding.xml',
+    }
+)
+from robohive.envs.hands.baoding_v1 import BaodingFixedEnvV1
+register(
+    id='baoding4th-v1',
+    entry_point='robohive.envs.hands:BaodingFixedEnvV1',
+    max_episode_steps=200,
+    kwargs={
+            'model_path': curr_dir+'/assets/PDDM_baoding.xml',
+            'n_shifts_per_period':4,
+    }
+)
+register(
+    id='baoding8th-v1',
+    entry_point='robohive.envs.hands:BaodingFixedEnvV1',
+    max_episode_steps=200,
+    kwargs={
+            'model_path': curr_dir+'/assets/PDDM_baoding.xml',
+            'n_shifts_per_period':8,
+    }
+)
+from robohive.envs.hands.baoding_v1 import BaodingFixedEnvV1
 
 
 # ==================================================================================

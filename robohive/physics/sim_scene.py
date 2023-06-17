@@ -21,6 +21,17 @@ class SimBackend(enum.Enum):
     MUJOCO_PY = 0
     MUJOCO = 1
 
+    # resolve sim backend
+    @staticmethod
+    def get_sim_backend()->'SimBackend':
+        sim_backend = os.getenv('sim_backend')
+        if sim_backend == 'MUJOCO_PY':
+            return SimBackend.MUJOCO_PY
+        elif sim_backend == 'MUJOCO' or sim_backend == None:
+            return SimBackend.MUJOCO
+        else:
+            raise ValueError("Unknown sim_backend: {}. Available choices: MUJOCO_PY, MUJOCO")
+
 
 class SimScene(metaclass=abc.ABCMeta):
     """Encapsulates a MuJoCo robotics simulation."""
@@ -48,13 +59,13 @@ class SimScene(metaclass=abc.ABCMeta):
             raise NotImplementedError(backend)
 
 
-    # resolve  backend and return the sim
+    # Get sim as per the sim_backend
     @staticmethod
     def get_sim(model_handle: Any) -> 'SimScene':
-        sim_backend = os.getenv('sim_backend')
-        if sim_backend == 'MUJOCO_PY':
+        sim_backend = SimBackend.get_sim_backend()
+        if sim_backend == SimBackend.MUJOCO_PY:
             return SimScene.create(model_handle=model_handle, backend=SimBackend.MUJOCO_PY)
-        elif sim_backend == 'MUJOCO' or sim_backend == None:
+        elif sim_backend == SimBackend.MUJOCO:
             return SimScene.create(model_handle=model_handle, backend=SimBackend.MUJOCO)
         else:
             raise ValueError("Unknown sim_backend: {}. Available choices: MUJOCO_PY, MUJOCO")
