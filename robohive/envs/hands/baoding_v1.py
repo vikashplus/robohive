@@ -78,8 +78,8 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
 
         # relax motor gains
         for sim in [self.sim, self.sim_obsd]:
-            sim.model.actuator_gainprm *= 0.1
-            sim.model.actuator_biasprm *= 0.1
+            sim.model.actuator_gainprm[:] *= 0.1
+            sim.model.actuator_biasprm[:] *= 0.1
 
         # user parameters
         self.which_task = Task(WHICH_TASK)

@@ -7,6 +7,7 @@ from robohive.tutorials.examine_robot import main as examine_robot
 class TestExamineRobot(unittest.TestCase):
     def test_main(self):
         # Call your function and test its output/assertions
+        print("\n=================================", flush=True)
         print("Testing examine robot")
         runner = click.testing.CliRunner()
         result = runner.invoke(examine_robot, ["--sim_path", "envs/arms/franka/assets/franka_reach_v0.xml", \
@@ -38,4 +39,6 @@ class TestExamineRobot(unittest.TestCase):
     #     self.assertEqual(result.exception, None)
 
 if __name__ == '__main__':
+    print("\n=================================", flush=True)
+    print("Testing Examine Robot")
     unittest.main()

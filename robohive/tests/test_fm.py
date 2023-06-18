@@ -1,16 +1,10 @@
 import unittest
 from robohive.tests.test_envs import TestEnvs
+from robohive import robohive_fm_suite
 
 class TestFM(TestEnvs):
-    def test_fm(self):
-        env_names = [
-        'rpFrankaDmanusPoseFixed-v0',
-        'rpFrankaDmanusPoseRandom-v0',
-        'rpFrankaRobotiqPoseFixed-v0',
-        'rpFrankaRobotiqPoseRandom-v0',
-        'rpFrankaRobotiqData-v0'
-        ]
-        self.check_envs('FM', env_names)
+    def test_envs(self):
+        self.check_envs('FM Suite', robohive_fm_suite)
 
 if __name__ == '__main__':
     unittest.main()

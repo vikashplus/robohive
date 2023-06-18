@@ -54,4 +54,6 @@ class TestExamineTrace(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    print("\n=================================", flush=True)
+    print("Testing logger")
     unittest.main()

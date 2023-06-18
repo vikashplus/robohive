@@ -49,11 +49,12 @@ def register_visual_envs(env_id, encoder_type):
         env_id=env_id,
         variant_id=env_id[:-3]+'_v'+encoder_type+env_id[-3:],
         variants={'obs_keys':
-                    ['qp', 'qv',
-                    "rgb:center_cam:224x224:{}".format(encoder_type)]
+                    ['qp', 'qv'],
+                'visual_keys':[
+                    "rgb:center_cam:224x224:{}".format(encoder_type),]
         },
         silent=True
     )
 for env in ['TrifingerReachFixed-v0', 'TrifingerReachRandom-v0']:
-    for enc in ["r3m18", "r3m34", "r3m50", "rrl18", "rrl34", "rrl50", "flat"]:
+    for enc in ["r3m18", "r3m34", "r3m50", "rrl18", "rrl34", "rrl50", "2d"]:
         register_visual_envs(env, enc)
