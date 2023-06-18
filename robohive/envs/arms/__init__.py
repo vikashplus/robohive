@@ -58,8 +58,7 @@ def register_visual_envs(encoder_type):
     register_env_variant(
         env_id='FrankaReachRandom-v0',
         variant_id='FrankaReachRandom_v{}-v0'.format(encoder_type),
-        variants={'proprio_keys':
-                    ['qp', 'qv'],
+        variants={
                 'visual_keys':[
                     "rgb:left_cam:224x224:{}".format(encoder_type),
                     "rgb:right_cam:224x224:{}".format(encoder_type),

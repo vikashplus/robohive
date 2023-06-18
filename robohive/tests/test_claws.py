@@ -1,13 +1,10 @@
 import unittest
 from robohive.tests.test_envs import TestEnvs
+from robohive import robohive_claw_suite
 
 class TestClaws(TestEnvs):
-    def test_claws(self):
-        env_names = [
-            'TrifingerReachFixed-v0',
-            'TrifingerReachRandom-v0',
-            ]
-        self.check_envs('Claws', env_names)
+    def test_envs(self):
+        self.check_envs('Claw Suite', robohive_claw_suite)
 
 if __name__ == '__main__':
     unittest.main()

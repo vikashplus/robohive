@@ -17,7 +17,8 @@ import torch.testing
 class TestEnvs(unittest.TestCase):
 
     def check_envs(self, module_name, env_names, lite=False, input_seed=1234):
-        print("\nTesting module:: ", module_name)
+        print("\n=================================", flush=True)
+        print("Testing module:: ", module_name)
         for env_name in env_names:
             print("Testing env: ", env_name, flush=True)
             self.check_env(env_name, input_seed)
