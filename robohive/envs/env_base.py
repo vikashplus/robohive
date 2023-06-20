@@ -10,7 +10,7 @@ import numpy as np
 import os
 import time as timer
 
-from robohive.envs.obj_vec_dict import ObsVecDict
+from robohive.envs.obs_vec_dict import ObsVecDict
 from robohive.utils import tensor_utils
 from robohive.robot.robot import Robot
 from robohive.utils.prompt_utils import prompt, Prompt
