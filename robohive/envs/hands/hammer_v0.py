@@ -11,7 +11,7 @@ from mjrl.envs import mujoco_env
 from mujoco_py import MjViewer
 from robohive.utils.quat_math import *
 import os
-from envs.obj_vec_dict import ObsVecDict
+from robohive.envs.obs_vec_dict import ObsVecDict
 import collections
 
 ADD_BONUS_REWARDS = True

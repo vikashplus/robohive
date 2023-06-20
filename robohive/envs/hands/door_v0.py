@@ -10,7 +10,7 @@ from gym import utils
 from mjrl.envs import mujoco_env
 from mujoco_py import MjViewer
 import os
-from envs.obj_vec_dict import ObsVecDict
+from robohive.envs.obs_vec_dict import ObsVecDict
 import collections
 
 # NOTES:
