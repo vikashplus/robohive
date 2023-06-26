@@ -95,7 +95,7 @@ class BinReorientV0(env_base.MujocoEnv):
                obs_keys=DEFAULT_OBS_KEYS,
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
                randomize=False,
-               geom_sizes={'high': [0.0635,0.0525], 'low': [0.0585,0.0475]},
+               geom_sizes={'high': [0.0585,0.0525], 'low': [0.0585,0.0475]},
                pos_limits = {'eef_low': [0.368, -0.25, 0.86, -np.pi, 0, -np.pi],
                              'eef_high':[0.72, 0.25,  1.3, np.pi, 2*np.pi, np.pi]},
                vel_limits = {'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6], #SET in INIT
@@ -196,6 +196,10 @@ class BinReorientV0(env_base.MujocoEnv):
         upright = 1.0*(self.sim.data.site_xmat[self.object_sid][-1] > 0.999 and
                        (self.sim.data.site_xpos[self.object_sid][:2] >= self.pos_limits['eef_low'][:2]).all() and
                        (self.sim.data.site_xpos[self.object_sid][:2] <= self.pos_limits['eef_high'][:2]).all())
+        end_posed = 1.0*(obs_dict['qp'][0,0,8] > 0.5 and obs_dict['qp'] [0,0,8] < 1.0 and
+                         obs_dict['qp'] [0,0,12] > 0.75 and obs_dict['qp'] [0,0,12] < 1.25 and
+                         obs_dict['qp'] [0,0,15] > 0.5 and obs_dict['qp'] [0,0,15] < 1.0 and
+                         obs_dict['grasp_pos'][0,0,2] > 1.05 and obs_dict['grasp_pos'][0,0,2] < 1.1)
         far_th = 1.25
 
         rwd_dict = collections.OrderedDict((
@@ -205,8 +209,8 @@ class BinReorientV0(env_base.MujocoEnv):
             ('bonus',   (target_dist<.01) + (target_dist<.001)),
             ('penalty', (object_dist>far_th)),
             # Must keys
-            ('sparse',  upright),
-            ('solved',  upright),
+            ('sparse',  upright*end_posed),
+            ('solved',  upright*end_posed),
             ('done',    object_dist > far_th),
         ))
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
@@ -491,9 +495,9 @@ class BinReorientPolicy():
             self.release_config = np.array([0.75,1.5,1.75,-np.pi/2+0.2, # Thumb
                                             0.75,0.35,0.65,     # Middle
                                             -0.75,1.75,0.0])    # Pinky
-        self.done_config = np.array([0.57,1.2,1.55,-np.pi/2+1.3, # Thumb
-                                         0.75,1.2,-0.2,     # Middle
-                                         -0.75,1.2,0.3])    # Pinky
+        self.done_config = np.array([0.57, 0.75, 1.55, -np.pi / 2 + 1.3,  # Thumb
+                                        0.75, 1.0, -0.2,  # Middle
+                                        -0.75, 0.75, 0.3])  # Pinky
         self.grasp_pose = None
         self.grasp_yaw = None
         self.grasp_count = 0
@@ -615,11 +619,12 @@ class BinReorientPolicy():
                 #if obs_dict['grasp_pos'][0,0,2] > self.grasp_pose[2] and obs_dict['qp'][0,0,12] > self.lift_config[5] and obs_dict['qp'][0,0,13] > self.lift_config[6]:
                     self.stage = 4
                     #self.grasp_pose[2] += 0.02
+                    self.grasp_pose[2] = 1.1125
         elif self.stage == 4:
-            if self.env.robot.is_hardware:
-                self.grasp_count += 1
-                if self.grasp_count >= 25:
-                    self.stage = 5
+            #if self.env.robot.is_hardware:
+            self.grasp_count += 1
+            if self.grasp_count >= 25:
+                self.stage = 5
 
 
         #if self.last_qp is not None:
@@ -658,7 +663,8 @@ class BinReorientPolicy():
         elif self.stage == 5:
             action[:3] = self.grasp_pose
             action[5] = self.grasp_yaw
-            action[6:] = self.done_config            
+            action[6:] = self.done_config
+            #print('height {}'.format(obs_dict['grasp_pos'][0,0,2]))
         self.last_eef = obs_dict['grasp_pos'][0,0,:].copy()
         action = np.clip(action, self.env.pos_limits['eef_low'], self.env.pos_limits['eef_high'])
 
