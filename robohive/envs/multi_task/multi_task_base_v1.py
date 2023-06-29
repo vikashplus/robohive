@@ -168,7 +168,7 @@ class KitchenBase(env_base.MujocoEnv):
         )
         obs_dict["pose_err"] = self.robot_meanpos - obs_dict["robot_jnt"]
         obs_dict["end_effector"] = self.sim.data.site_xpos[self.grasp_sid]
-        ee_pos = self.sim.data.site_xpos[self.grasp_sid]
+        ee_pos = self.sim.data.site_xpos[self.grasp_sid] - self.sim.model.body_pos[self.robot_base_bid] # ee_pose is wrt to robot base now. Bug was introduced in v0.5, and it led to information leakage about the relative robot-kitchen positioning"
         ee_euler = mat2euler(np.reshape(sim.data.site_xmat[self.grasp_sid],(3,3)))
         obs_dict["ee_pose"] = np.concatenate([ee_pos, ee_euler])
         obs_dict["qpos"] = self.sim.data.qpos.copy()
