@@ -41,10 +41,10 @@
    - For PyPI installation: Encoders can't be directly installated from PyPi as these encoders don't have PyPi packages. (we are working with the authors for a fix). To use the encoders, simply try using the encoders and follow the instructions on the console
    - For editable installation
       Open [setup.py](/setup.py), uncomment the `r3m` and `vc_models` dependency under `encoder` and then run
-         ```
-         # all visual encoders
-         pip install robohive[encoder]
-         ```
+   ```
+      # all visual encoders
+      pip install robohive[encoder]
+   ```
 
 4. You can visualize the environments with random controls using the below command
    ```
