@@ -15,6 +15,8 @@ permissions:
 
 jobs:
   build:
+    env:
+      DISPLAY: :0
 
     runs-on: ubuntu-latest
 
@@ -33,6 +35,10 @@ jobs:
             libosmesa6-dev \
             software-properties-common
         sudo apt-get install -y patchelf
+        sudo apt-get update -y -qq
+        sudo apt-get install -y xvfb x11-xserver-utils
+        sudo /usr/bin/Xvfb $DISPLAY -screen 0 1280x1024x24 &               
+
     - name: Checkout submodules
       run: git submodule update --init --recursive
     - name: Install dependencies
