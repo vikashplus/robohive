@@ -40,7 +40,7 @@ setup(
     install_requires=[
         'click',
         'gym==0.13',
-        'mujoco==2.3.5',
+        'mujoco==2.3.6',
         'dm-control==1.0.11',
         'termcolor',
         'sk-video',

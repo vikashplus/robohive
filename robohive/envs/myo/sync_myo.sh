@@ -19,18 +19,18 @@ xml2mjb()
 }
 
 # Models
-cd $mjc_path
-xml2mjb arm myo_elbow_1dof6muscles_1dofexo
-xml2mjb arm myo_elbow_1dof6muscles
-xml2mjb basic myo_load
-xml2mjb finger motor_finger_v0
-xml2mjb finger myo_finger_v0
-xml2mjb hand myo_hand_baoding
-xml2mjb hand myo_hand_hold
-xml2mjb hand myo_hand_keyturn
-xml2mjb hand myo_hand_pen
-xml2mjb hand myo_hand_pose
-xml2mjb hand myo_hand_die
+# cd $mjc_path
+# xml2mjb arm myo_elbow_1dof6muscles_1dofexo
+# xml2mjb arm myo_elbow_1dof6muscles
+# xml2mjb basic myo_load
+# xml2mjb finger motor_finger_v0
+# xml2mjb finger myo_finger_v0
+# xml2mjb hand myo_hand_baoding
+# xml2mjb hand myo_hand_hold
+# xml2mjb hand myo_hand_keyturn
+# xml2mjb hand myo_hand_pen
+# xml2mjb hand myo_hand_pose
+# xml2mjb hand myo_hand_die
 cd $src_path
 echo $PWD
 
@@ -38,11 +38,13 @@ echo $PWD
 mkdir -p $2/myosuite/envs/myo
 rsync -av --progress $src_path/robohive/envs/env_base.py $dst_path/myosuite/envs/
 rsync -av --progress $src_path/robohive/envs/env_variants.py $dst_path/myosuite/envs/
+rsync -av --progress $src_path/robohive/envs/obs_vec_dict.py $dst_path/myosuite/envs/
 rsync -av --progress $src_path/robohive/envs/myo/*.md $dst_path/myosuite/envs/myo/
+rsync -av --progress $src_path/robohive/envs/myo/assets/* $dst_path/myosuite/envs/myo/assets
 rsync -av --progress $src_path/robohive/envs/myo/*.py $dst_path/myosuite/envs/myo/
 rsync -av --progress $src_path/robohive/envs/myo/myochallenge/*.py $dst_path/myosuite/envs/myo/myochallenge/
-sed -i '' "s/xml/mjb/g" $dst_path/myosuite/envs/myo/__init__.py
-sed -i '' "s/xml/mjb/g" $dst_path/myosuite/envs/myo/myochallenge/__init__.py
+# sed -i '' "s/xml/mjb/g" $dst_path/myosuite/envs/myo/__init__.py
+# sed -i '' "s/xml/mjb/g" $dst_path/myosuite/envs/myo/myochallenge/__init__.py
 
 # Robot
 mkdir -p $2/myosuite/robot
@@ -52,14 +54,31 @@ rsync -av --progress $src_path/robohive/robot/robot.py $dst_path/myosuite/robot/
 mkdir -p $2/myosuite/utils
 rsync -av --progress $src_path/robohive/utils/*.py $dst_path/myosuite/utils/
 
+# Physics
+mkdir -p $2/myosuite/physics
+rsync -av --progress $src_path/robohive/physics/*.py $dst_path/myosuite/physics/
+
+# renderer
+mkdir -p $2/myosuite/renderer
+rsync -av --progress $src_path/robohive/renderer/*.py $dst_path/myosuite/renderer/
+
+# logger
+mkdir -p $2/myosuite/logger
+rsync -av --progress $src_path/robohive/logger/*.py $dst_path/myosuite/logger/
+
 # Test
 mkdir -p $2/myosuite/tests
 rsync -av --progress $src_path/robohive/tests/test_envs.py $dst_path/myosuite/tests/
 rsync -av --progress $src_path/robohive/tests/test_myo.py $dst_path/myosuite/tests/
 
 # Replace
-# sed -i '' "s/robohive/myosuite/g" $dst_path/myosuite/envs/myo/__init__.py
-find $dst_path/myosuite -type f -name "*.py" -exec sed -i '' "s/robohive\./myosuite\./g" {} \;
+# sed -i "s/robohive\./myosuite\./g" $dst_path/myosuite/envs/myo/__init__.py
+find $dst_path/myosuite -type f -name "*.py" -exec sed -i "s/robohive\./myosuite\./g" {} \;
+find $dst_path/myosuite -type f -name "*.py" -exec sed -i "s/RoboHive:>/MyoSuite:>/g" {} \;
 
 # configs
 rsync -av --progress $src_path/.gitignore $dst_path/
+
+# Clean unnecessary
+rm $dst_path/myosuite/envs/myo/baoding_v1.py
+rm $dst_path/myosuite/envs/myo/reorient_v0.py
