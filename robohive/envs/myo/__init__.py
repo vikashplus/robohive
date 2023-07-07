@@ -290,7 +290,7 @@ sim_backend = SimBackend.get_sim_backend()
 if sim_backend == SimBackend.MUJOCO_PY:
     leg_model='/../../simhive/myo_sim/leg/myolegs_v0.52(mj210).mjb'
 elif sim_backend == SimBackend.MUJOCO:
-    leg_model='/../../simhive/myo_sim/leg/myolegs_v0.52(mj234).mjb'
+    leg_model='/../../simhive/myo_sim/leg/myolegs_v0.52(mj236).mjb'
 
 register_env_with_variants(id='myoLegReachFixed-v0',
         entry_point='robohive.envs.myo.walk_v0:ReachEnvV0',
@@ -306,6 +306,24 @@ register_env_with_variants(id='myoLegReachFixed-v0',
             'far_th': 0.44
         }
     )
+
+# Gait Torso Walking ==============================
+register_env_with_variants(id='myoLegWalk-v0',
+        entry_point='robohive.envs.myo.walk_v0:WalkEnvV0',
+        max_episode_steps=1000,
+        kwargs={
+            'model_path': curr_dir + leg_model,
+            'normalize_act': True,
+            'min_height':0.8,    # minimum center of mass height before reset
+            'max_rot':0.8,       # maximum rotation before reset
+            'hip_period':100,    # desired periodic hip angle movement
+            'reset_type':'init', # none, init, random
+            'target_x_vel':0.0,  # desired x velocity in m/s
+            'target_y_vel':1.2,  # desired y velocity in m/s
+            'target_rot': None   # if None then the initial root pos will be taken, otherwise provide quat
+        }
+    )
+
 
 
 # Hand-Joint Reaching ==============================
