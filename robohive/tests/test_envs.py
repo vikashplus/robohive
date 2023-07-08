@@ -12,7 +12,7 @@ import numpy as np
 import pickle
 import copy
 import torch.testing
-
+import os
 
 class TestEnvs(unittest.TestCase):
 
@@ -25,6 +25,13 @@ class TestEnvs(unittest.TestCase):
 
 
     def check_env(self, environment_id, input_seed):
+
+        # Skip tests for envs that requires encoder downloading
+        ROBOHIVE_TEST = os.getenv('ROBOHIVE_TEST')
+        if ROBOHIVE_TEST == 'LITE':
+            if "r3m" in environment_id or "rrl" in environment_id or "vc1" in environment_id:
+                return
+
         # test init
         env1 = gym.make(environment_id, seed=input_seed)
         assert env1.get_input_seed() == input_seed
