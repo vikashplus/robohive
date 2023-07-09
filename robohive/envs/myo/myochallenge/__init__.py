@@ -4,6 +4,25 @@ import os
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 import numpy as np
 
+# MyoChallenge 2023 envs ==============================================
+# MyoChallenge Die: Trial env
+register(id='myoChallengeRelocateDemo-v0',
+        entry_point='robohive.envs.myo.myochallenge.relocate_v0:RelocateEnvV0',
+        max_episode_steps=150,
+        kwargs={
+            'model_path': curr_dir+'/../../../simhive/myo_sim/arm/myoarm_object_v0.1(mj236).mjb',
+            'normalize_act': True,
+            'frame_skip': 5,
+            'rot_th': np.inf,           # ignore rotation errors
+            'goal_pos': (-.2, .2),      # +-20 cm
+            'goal_rot': (0, 0)          # +-0 degrees
+        }
+    )
+
+
+
+# MyoChallenge 2022 envs ==============================================
+
 # MyoChallenge Die: Trial env
 register(id='myoChallengeDieReorientDemo-v0',
         entry_point='robohive.envs.myo.myochallenge.reorient_v0:ReorientEnvV0',
