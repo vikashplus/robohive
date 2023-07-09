@@ -32,9 +32,10 @@ class RelocateEnvV0(BaseV0):
             goal_rot = (.785, .785),        # goal rotation range (relative to initial rot)
             pos_th = .025,                  # position error threshold
             rot_th = 0.262,                 # rotation error threshold
-            drop_th = .200,                 # drop height threshold
+            drop_th = 0.50,                 # drop height threshold
             **kwargs,
         ):
+        self.palm_sid = self.sim.model.site_name2id("S_grasp")
         self.object_sid = self.sim.model.site_name2id("object_o")
         self.goal_sid = self.sim.model.site_name2id("target_o")
         self.success_indicator_sid = self.sim.model.site_name2id("target_ball")
@@ -61,7 +62,9 @@ class RelocateEnvV0(BaseV0):
         obs_dict['hand_qvel'] = sim.data.qvel[:-6].copy()*self.dt
         obs_dict['obj_pos'] = sim.data.site_xpos[self.object_sid]
         obs_dict['goal_pos'] = sim.data.site_xpos[self.goal_sid]
+        obs_dict['palm_pos'] = sim.data.site_xpos[self.palm_sid]
         obs_dict['pos_err'] = obs_dict['goal_pos'] - obs_dict['obj_pos']
+        obs_dict['reach_err'] = obs_dict['palm_pos'] - obs_dict['obj_pos']
         obs_dict['obj_rot'] = mat2euler(np.reshape(sim.data.site_xmat[self.object_sid],(3,3)))
         obs_dict['goal_rot'] = mat2euler(np.reshape(sim.data.site_xmat[self.goal_sid],(3,3)))
         obs_dict['rot_err'] = obs_dict['goal_rot'] - obs_dict['obj_rot']
@@ -71,11 +74,11 @@ class RelocateEnvV0(BaseV0):
         return obs_dict
 
     def get_reward_dict(self, obs_dict):
+        reach_dist = np.abs(np.linalg.norm(self.obs_dict['reach_err'], axis=-1))
         pos_dist = np.abs(np.linalg.norm(self.obs_dict['pos_err'], axis=-1))
         rot_dist = np.abs(np.linalg.norm(self.obs_dict['rot_err'], axis=-1))
         act_mag = np.linalg.norm(self.obs_dict['act'], axis=-1)/self.sim.model.na if self.sim.model.na !=0 else 0
-        drop = pos_dist > self.drop_th
-
+        drop = reach_dist > self.drop_th
         rwd_dict = collections.OrderedDict((
             # Perform reward tuning here --
             # Update Optional Keys section below
@@ -89,8 +92,7 @@ class RelocateEnvV0(BaseV0):
             ('act_reg', -1.*act_mag),
             ('sparse', -rot_dist-10.0*pos_dist),
             ('solved', (pos_dist<self.pos_th) and (rot_dist<self.rot_th) and (not drop) ),
-            ('done', False),
-            # ('done', drop),
+            ('done', drop),
         ))
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
 

@@ -95,8 +95,7 @@ class ReachEnvV0(BaseV0):
             # Must keys
             ('sparse',  -1.*reach_dist),
             ('solved',  reach_dist<near_th),
-            ('done',    True),
-            # ('done',    reach_dist > far_th),
+            ('done',    reach_dist > far_th),
         ))
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
