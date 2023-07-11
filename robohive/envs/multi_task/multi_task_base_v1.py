@@ -48,6 +48,7 @@ class KitchenBase(env_base.MujocoEnv):
                obj_jnt_names,
                obj_interaction_site,
                obj_goal,
+               robot_base_name = "chef",           # Name of the robot chef
                interact_site="end_effector",
                obj_init=None,
                obs_keys_wt=list(DEFAULT_OBS_KEYS_AND_WEIGHTS.keys()),
@@ -68,6 +69,8 @@ class KitchenBase(env_base.MujocoEnv):
         # configure env-site
         self.grasp_sid = self.sim.model.site_name2id("end_effector")
         self.obj_interaction_site = obj_interaction_site
+        self.robot_base_bid = self.sim.model.body_name2id(robot_base_name)
+        self.robot_base_pos = self.sim.model.body_pos[self.robot_base_bid].copy()
 
         # configure env-robot
         self.robot_dofs = []

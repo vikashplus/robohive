@@ -13,7 +13,7 @@ import copy
 print("RoboHive:> Registering FrankaKitchen (FK1) Envs")
 
 # ===================================================================
-# ENVs are provided in three VARIANTs (controling env's behavior)
+# ENVs are provided in three VARIANTs (controlling env's behavior)
 # - Fixed-v4:       State based stationary environments with no randomization
 # - Random-v4:      State based environments with random robot initialization (joint pose + relative position wrt to kitchen)
 # - Random_v2d-v4:  Visual environment with random robot initialization (joint pose + relative position wrt to kitchen)
@@ -22,9 +22,9 @@ print("RoboHive:> Registering FrankaKitchen (FK1) Envs")
 
 # ===================================================================
 # ENVs are organized into SUBGROUPS:
-# - SUBGROUPS are arragned to ensure diversity and a balance between the groups
-# - SUBGROUPS are helpful for standardizing partial results, Test-Train spilit, generalization studies, etc
-# - Without these subgroups, random subsets were being picked by different papers making comparisions difficult
+# - SUBGROUPS are arranged to ensure diversity and a balance between the groups
+# - SUBGROUPS are helpful for standardizing partial results, Test-Train spilt, generalization studies, etc
+# - Without these subgroups, random subsets were being picked by different papers making comparisons difficult
 # ===================================================================
 
 # Fixed-v4: State based stationary environments with no randomization

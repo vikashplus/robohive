@@ -29,7 +29,7 @@
         <site name='workspace' type='box' size='.6 .375 .25' pos='0 0.475 1.0' group='3' rgba='0 0 .4 .2'/>
 
         <!-- Franka Arm-->
-        <body pos='0 0 .823' euler='0 0 1.57'>
+        <body name="chef" pos='0 0 .823' euler='0 0 1.57'>
             <include file="../../../../simhive/franka_sim/assets/chain0.xml"/>
         </body>
 
