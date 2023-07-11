@@ -26,13 +26,13 @@ class RelocateEnvV0(BaseV0):
         self._setup(**kwargs)
 
     def _setup(self,
+            target_xyz_range,       # target position range (relative to initial pos)
+            target_rxryrz_range,    # target rotation range (relative to initial rot)
             obs_keys:list = DEFAULT_OBS_KEYS,
             weighted_reward_keys:list = DEFAULT_RWD_KEYS_AND_WEIGHTS,
-            goal_pos = (0.0, 0.0),          # goal position range (relative to initial pos)
-            goal_rot = (.785, .785),        # goal rotation range (relative to initial rot)
-            pos_th = .025,                  # position error threshold
-            rot_th = 0.262,                 # rotation error threshold
-            drop_th = 0.50,                 # drop height threshold
+            pos_th = .025,          # position error threshold
+            rot_th = 0.262,         # rotation error threshold
+            drop_th = 0.50,         # drop height threshold
             **kwargs,
         ):
         self.palm_sid = self.sim.model.site_name2id("S_grasp")
@@ -40,9 +40,8 @@ class RelocateEnvV0(BaseV0):
         self.goal_sid = self.sim.model.site_name2id("target_o")
         self.success_indicator_sid = self.sim.model.site_name2id("target_ball")
         self.goal_bid = self.sim.model.body_name2id("target")
-        self.goal_init_pos = self.sim.data.site_xpos[self.goal_sid].copy()
-        self.goal_pos = goal_pos
-        self.goal_rot = goal_rot
+        self.target_xyz_range = target_xyz_range
+        self.target_rxryrz_range = target_rxryrz_range
         self.pos_th = pos_th
         self.rot_th = rot_th
         self.drop_th = drop_th
@@ -125,11 +124,7 @@ class RelocateEnvV0(BaseV0):
         return metrics
 
     def reset(self, reset_qpos=None, reset_qvel=None):
-        self.sim.model.body_pos[self.goal_bid] = self.goal_init_pos + \
-            self.np_random.uniform( high=self.goal_pos[1], low=self.goal_pos[0], size=3)
-
-        self.sim.model.body_quat[self.goal_bid] = \
-            euler2quat(self.np_random.uniform(high=self.goal_rot[1], low=self.goal_rot[0], size=3))
-
+        self.sim.model.body_pos[self.goal_bid] = self.np_random.uniform(**self.target_xyz_range)
+        self.sim.model.body_quat[self.goal_bid] =  euler2quat(self.np_random.uniform(**self.target_rxryrz_range))
         obs = super().reset(reset_qpos, reset_qvel)
         return obs
