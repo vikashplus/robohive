@@ -10,12 +10,12 @@ register(id='myoChallengeRelocateDemo-v0',
         entry_point='robohive.envs.myo.myochallenge.relocate_v0:RelocateEnvV0',
         max_episode_steps=150,
         kwargs={
-            'model_path': curr_dir+'/../../../simhive/myo_sim/arm/myoarm_object_v0.11(mj236).mjb',
+            'model_path': curr_dir+'/../../../simhive/myo_sim/arm/myoarm_object_v0.13(mj236).mjb',
             'normalize_act': True,
             'frame_skip': 5,
             'rot_th': np.inf,           # ignore rotation errors
-            'goal_pos': (-.2, .2),      # +-20 cm
-            'goal_rot': (0, 0)          # +-0 degrees
+            'target_xyz_range': {'high':[0.2, -.35, 0.9], 'low':[0.0, -.1, 0.9]},
+            'target_rxryrz_range': {'high':[0.0, 0.0, 0.0], 'low':[0.0, 0.0, 0.0]}
         }
     )
 
