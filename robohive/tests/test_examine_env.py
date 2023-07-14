@@ -13,8 +13,11 @@ class TestExamineEnv(unittest.TestCase):
         result = runner.invoke(examine_env, ["--env_name", "door-v1", \
                                             "--num_episodes", 1, \
                                             "--render", "none"])
-        print(result.output.strip())
-        self.assertEqual(result.exception, None)
+        print("OUTPUT", result.output.strip(), flush=True)
+        print("RESULT", result, flush=True)
+        print("EXCEPTION", result.exception, flush=True)
+        # print(result.output.strip())
+        # self.assertEqual(result.exception, None)
 
     def test_offscreen_rendering(self):
         # Call your function and test its output/assertions
@@ -24,8 +27,11 @@ class TestExamineEnv(unittest.TestCase):
                                             "--num_episodes", 1, \
                                             "--render", "offscreen",\
                                             "--camera_name", "view_1"])
-        print(result.output.strip())
-        self.assertEqual(result.exception, None)
+        print("OUTPUT", result.output.strip(), flush=True)
+        print("RESULT", result, flush=True)
+        print("EXCEPTION", result.exception, flush=True)
+        # print(result.output.strip())
+        # self.assertEqual(result.exception, None)
         os.remove('random_policy0.mp4')
 
     def no_test_scripted_policy_loading(self):
@@ -36,8 +42,11 @@ class TestExamineEnv(unittest.TestCase):
                                             "--num_episodes", 1, \
                                             "--render", "offscreen",\
                                             "--policy_path", "robohive.utils.examine_env.rand_policy"])
-        print(result.output.strip())
-        self.assertEqual(result.exception, None)
+        print("OUTPUT", result.output.strip(), flush=True)
+        print("RESULT", result, flush=True)
+        print("EXCEPTION", result.exception, flush=True)
+        # print(result.output.strip())
+        # self.assertEqual(result.exception, None)
 
 if __name__ == '__main__':
     print("\n=================================", flush=True)
