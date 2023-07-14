@@ -2,22 +2,24 @@ import click
 import click.testing
 import unittest
 from robohive.tutorials.examine_robot import main as examine_robot
-
+import os
 
 class TestExamineRobot(unittest.TestCase):
     def test_main(self):
         # Call your function and test its output/assertions
         print("\n=================================", flush=True)
         print("Testing examine robot")
+        curr_dir = os.path.dirname(os.path.abspath(__file__))
+
         runner = click.testing.CliRunner()
-        result = runner.invoke(examine_robot, ["--sim_path", "envs/arms/franka/assets/franka_reach_v0.xml", \
-                                            "--config_path", "envs/arms/franka/assets/franka_reach_v0.config", \
+        result = runner.invoke(examine_robot, ["--sim_path", curr_dir+"/../envs/arms/franka/assets/franka_reach_v0.xml", \
+                                            "--config_path", curr_dir+"/../envs/arms/franka/assets/franka_reach_v0.config", \
                                             "--live_render", "False"])
         print("OUTPUT", result.output.strip(), flush=True)
         print("RESULT", result, flush=True)
         print("EXCEPTION", result.exception, flush=True)
 
-        # self.assertEqual(result.exception, None)
+        self.assertEqual(result.exception, None)
 
     # def test_offscreen_rendering(self):
     #     # Call your function and test its output/assertions
