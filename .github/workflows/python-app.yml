@@ -40,6 +40,10 @@ jobs:
         sudo apt-get install -y xvfb x11-xserver-utils
         sudo /usr/bin/Xvfb $DISPLAY -screen 0 1280x1024x24 &
 
+    - name: Install ffmpeg
+      run: |
+        sudo apt-get install --no-install-recommends ffmpeg && pip3 install ffmpeg scikit-video
+
     - name: Checkout submodules
       run: git submodule update --init --recursive
     - name: Install dependencies
