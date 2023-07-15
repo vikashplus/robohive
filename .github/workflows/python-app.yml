@@ -40,6 +40,10 @@ jobs:
         sudo apt-get install -y xvfb x11-xserver-utils
         sudo /usr/bin/Xvfb $DISPLAY -screen 0 1280x1024x24 &
 
+    - name: Install ffmpeg
+      run: |
+        sudo apt-get install --no-install-recommends ffmpeg && pip3 install ffmpeg scikit-video
+
     - name: Checkout submodules
       run: git submodule update --init --recursive
     - name: Install dependencies
@@ -48,6 +52,10 @@ jobs:
         pip install -e ".[mujoco,encoder]"
         pip install 'r3m@git+https://github.com/facebookresearch/r3m.git'
         pip install 'vc_models@git+https://github.com/facebookresearch/eai-vc.git@9958b278666bcbde193d665cc0df9ccddcdb8a5a#egg=vc_models&subdirectory=vc_models'
+    
+    - name: Run MuJoCo Rendering test
+      run: python3 -m mujoco.render_test
+
     - name: Test with pytest
       run: |
         python robohive/tests/test_all.py
