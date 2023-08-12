@@ -9,12 +9,12 @@
 
 
     <actuator>
-        <position name="A_ARTx" joint="ARTx" ctrllimited="true" ctrlrange="-0.25 0.35" kp="175" />
-        <position name="A_ARTy" joint="ARTy" ctrllimited="true" ctrlrange="-0.2 0.3" kp="175" />
-        <position name="A_ARTz" joint="ARTz" ctrllimited="true" ctrlrange="-0.3 0.5" kp="175" />
+        <position name="A_ARTx" joint="ARTx" ctrllimited="true" ctrlrange="-0.75 0.5" kp="175" />
+        <position name="A_ARTy" joint="ARTy" ctrllimited="true" ctrlrange="-0.5 0.5" kp="175" />
+        <position name="A_ARTz" joint="ARTz" ctrllimited="true" ctrlrange="-0.5 .3" kp="175" />
         <position name="A_ARRx" joint="ARRx" ctrllimited="true" ctrlrange="-1.75 1.75" kp="150" />
         <position name="A_ARRy" joint="ARRy" ctrllimited="true" ctrlrange="-1.75 1.75" kp="150" />
-        <position name="A_ARRz" joint="ARRz" ctrllimited="true" ctrlrange="-2.5 2.5" kp="150" />
+        <position name="A_ARRz" joint="ARRz" ctrllimited="true" ctrlrange="-1.75 1.75" kp="150" />
     </actuator>
     <include file="../../../simhive/myo_sim/hand/assets/myo_hand_assets.xml"/>
     <include file="../../../simhive/furniture_sim/simpleTable/simpleTable_asset.xml"/>
@@ -40,13 +40,13 @@
         <!-- <body pos="-0.05 -0.83 -1.0" euler="0 0 3.14"> -->
 
         <!-- Hand -->
-        <body pos="-0.05 -0.75 0.32" euler="0 0 0">
+        <body pos="0.1 -0.55 0.32" euler="0 1.57 0">
             <inertial pos="0.001 -0.002 0.29" quat="0.982037 -0.0160006 0 -0.188007" mass="40" diaginertia="0.01 0.01 0.0075" />
-            <joint name="ARTx" pos="0 0 0" axis="1 0 0" type="slide" range="-0.05 0.05" damping="20" limited="true"/>
-            <joint name="ARTy" pos="0 0 0" axis="0 1 0" type="slide" range="-0.07 0.03" damping="20" limited="true"/>
-            <joint name="ARTz" pos="0 0 0" axis="0 0 1" type="slide" range="-0.3 0.7" damping="20" limited="true"/>
+            <joint name="ARTx" pos="0 0 0" axis="1 0 0" type="slide" range="-.05 .05" damping="20" limited="true"/>
+            <joint name="ARTy" pos="0 0 0" axis="0 1 0" type="slide" range="-.3 .4" damping="20" limited="true"/>
+            <joint name="ARTz" pos="0 0 0" axis="0 0 1" type="slide" range="-0.1 .1" damping="20" limited="true"/>
             <joint name="ARRx" pos="0 0 0" axis="1 0 0" range="-1.75 1.75" damping="20" limited="true"/>
-            <joint name="ARRy" pos="0 0 0" axis="0 1 0" range="-2.5 2.5" damping="20" limited="true"/>
+            <joint name="ARRy" pos="0 0 0" axis="0 1 0" range="-0.5 0.5" damping="20" limited="true"/>
             <joint name="ARRz" pos="0 0 0" axis="0 0 1" range="-1.75 1.75" damping="20" limited="true"/>
             <body pos="1.4 .1 -.175" euler="0 -1.57 3.14">
                 <include file="../../../simhive/myo_sim/hand/assets/myo_hand_body.xml"/>
@@ -89,23 +89,22 @@
         <!-- tasks details added here via include-->
         <site name='target' type='sphere' size='.03' pos='0 0 0.001' group='1' rgba='.1 .8 .2 .4'/>
 
-
-        <body mocap="true" name="j0_mocap" pos="-0.08344206 -0.20986985  0.3265495 "><site name="j0" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j1_mocap" pos="-0.10504791 -0.13143292  0.30602588"><site name="j1" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j2_mocap" pos="-0.11407083 -0.08992714  0.30296199"><site name="j2" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j3_mocap" pos="-0.11756308 -0.06545863  0.29836786"><site name="j3" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j4_mocap" pos="-0.08824545 -0.13083157  0.31080563"><site name="j4" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j5_mocap" pos="-0.09131468 -0.08637877  0.30753818"><site name="j5" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j6_mocap" pos="-0.09307484 -0.0575989   0.30329197"><site name="j6" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j7_mocap" pos="-0.06112682 -0.14177433  0.30442677"><site name="j7" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j8_mocap" pos="-0.05524462 -0.10722426  0.29590761"><site name="j8" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j9_mocap" pos="-0.05187614 -0.08725541  0.29036592"><site name="j9" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j10_mocap" pos="-0.07267017 -0.13255313  0.30908455"><site name="j10" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j11_mocap" pos="-0.06952109 -0.0926732   0.30321977"><site name="j11" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j12_mocap" pos="-0.06737636 -0.06815946  0.29939139"><site name="j12" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j13_mocap" pos="-0.10400589 -0.1905571   0.29570758"><site name="j13" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j14_mocap" pos="-0.11681051 -0.16517439  0.27384574"><site name="j14" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j15_mocap" pos="-0.12784025 -0.14240538  0.25571465"><site name="j15" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
+        <body mocap="true" name="j0_mocap" pos="0.1387345329258017 -0.00380051706882375 0.3355614371631799 " ><site name="j0" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>"
+        <body mocap="true" name="j1_mocap" pos="0.1396453988091884 0.07676201295699155 0.35899713841537406 " ><site name="j1" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>"
+        <body mocap="true" name="j2_mocap" pos="0.14706100798295155 0.1179724367829704 0.3667586211129773 " ><site name="j2" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>"
+        <body mocap="true" name="j3_mocap" pos="0.14833007766893774 0.14284531065191802 0.37018490782478847 " ><site name="j3" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>"
+        <body mocap="true" name="j4_mocap" pos="0.14046009862701728 0.0766936312272471 0.34153683732559137 " ><site name="j4" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>"
+        <body mocap="true" name="j5_mocap" pos="0.1467640920593427 0.12088428145305427 0.3434326275105978 " ><site name="j5" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>"
+        <body mocap="true" name="j6_mocap" pos="0.14873887012593026 0.1499238454277467 0.3449204197499477 " ><site name="j6" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>"
+        <body mocap="true" name="j7_mocap" pos="0.12598924506246734 0.06771556737215265 0.31692297431046923 " ><site name="j7" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>"
+        <body mocap="true" name="j8_mocap" pos="0.12313154123558337 0.1033117783003043 0.31186068753507323 " ><site name="j8" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>"
+        <body mocap="true" name="j9_mocap" pos="0.12090867041570987 0.12400570967375227 0.30909806765004 " ><site name="j9" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>"
+        <body mocap="true" name="j10_mocap" pos="0.1349022913034358 0.07562176340372183 0.3268236870129345 " ><site name="j10" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>"
+        <body mocap="true" name="j11_mocap" pos="0.13629081675083674 0.1158928237298121 0.3235018605132031 " ><site name="j11" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>"
+        <body mocap="true" name="j12_mocap" pos="0.13688707727942595 0.14069203149662668 0.3213055575922903 " ><site name="j12" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>"
+        <body mocap="true" name="j13_mocap" pos="0.11788415277423248 0.020902401957566465 0.36205869275900826 " ><site name="j13" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>"
+        <body mocap="true" name="j14_mocap" pos="0.10522429409284814 0.04993406201638202 0.37888339758247397 " ><site name="j14" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>"
+        <body mocap="true" name="j15_mocap" pos="0.09515552550438147 0.07571730043848103 0.3931194263679571 " ><site name="j15" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>"
 
     </worldbody>
 
