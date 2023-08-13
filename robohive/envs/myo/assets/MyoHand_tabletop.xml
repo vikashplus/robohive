@@ -9,13 +9,6 @@
 
 
     <actuator>
-        <!-- <position name="A_ARTx" joint="ARTx" ctrllimited="true" ctrlrange="-0.25 0.35" kp="175" />
-        <position name="A_ARTy" joint="ARTy" ctrllimited="true" ctrlrange="-0.2 0.3" kp="175" />
-        <position name="A_ARTz" joint="ARTz" ctrllimited="true" ctrlrange="-0.3 0.5" kp="175" />
-        <position name="A_ARRx" joint="ARRx" ctrllimited="true" ctrlrange="-1.75 1.75" kp="150" />
-        <position name="A_ARRy" joint="ARRy" ctrllimited="true" ctrlrange="-1.75 1.75" kp="150" />
-        <position name="A_ARRz" joint="ARRz" ctrllimited="true" ctrlrange="-2.5 2.5" kp="150" /> -->
-
         <position name="A_ARTx" joint="ARTx" ctrllimited="true" ctrlrange="-0.75 0.5" kp="175" />
         <position name="A_ARTy" joint="ARTy" ctrllimited="true" ctrlrange="-0.5 0.5" kp="175" />
         <position name="A_ARTz" joint="ARTz" ctrllimited="true" ctrlrange="-0.5 .3" kp="175" />
@@ -56,15 +49,15 @@
             <joint name="ARRx" pos="0 0 0" axis="1 0 0" range="-1.75 1.75" damping="20" limited="true"/>
             <joint name="ARRy" pos="0 0 0" axis="0 1 0" range="-2.5 2.5" damping="20" limited="true"/>
             <joint name="ARRz" pos="0 0 0" axis="0 0 1" range="-1.75 1.75" damping="20" limited="true"/> -->
-        <body pos="0.1 -0.55 0.32" euler="0 1.57 0">
-            <inertial pos="0.001 -0.002 0.29" quat="0.982037 -0.0160006 0 -0.188007" mass="40" diaginertia="0.01 0.01 0.0075" />
+        <body pos="0.1 -0.55 0.32" euler="0 0 0">
             <joint name="ARTx" pos="0 0 0" axis="1 0 0" type="slide" range="-.05 .05" damping="20" limited="true"/>
             <joint name="ARTy" pos="0 0 0" axis="0 1 0" type="slide" range="-.3 .4" damping="20" limited="true"/>
             <joint name="ARTz" pos="0 0 0" axis="0 0 1" type="slide" range="-0.1 .1" damping="20" limited="true"/>
             <joint name="ARRx" pos="0 0 0" axis="1 0 0" range="-1.75 1.75" damping="20" limited="true"/>
             <joint name="ARRy" pos="0 0 0" axis="0 1 0" range="-0.5 0.5" damping="20" limited="true"/>
             <joint name="ARRz" pos="0 0 0" axis="0 0 1" range="-1.75 1.75" damping="20" limited="true"/>
-            <body pos="1.4 .1 -.175" euler="0 -1.57 3.14">
+
+            <body pos="-.175 .1 -1.4" euler="0 0 3.14">
                 <include file="../../../simhive/myo_sim/hand/assets/myohand_body.xml"/>
             </body>
         </body>
