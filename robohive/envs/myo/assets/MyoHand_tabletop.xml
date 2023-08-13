@@ -40,15 +40,25 @@
         <!-- <body pos="-0.05 -0.83 -1.0" euler="0 0 3.14"> -->
 
         <!-- Hand -->
-        <body pos="0.1 -0.55 0.32" euler="0 1.57 0">
-            <inertial pos="0.001 -0.002 0.29" quat="0.982037 -0.0160006 0 -0.188007" mass="40" diaginertia="0.01 0.01 0.0075" />
+        <!-- <body pos="0.1 -0.55 0.32" euler="0 1.57 0"> -->
+        <body pos="0.1 -0.55 0.32" euler="0 0 0">
+            <!-- <inertial pos="0.001 -0.002 0.29" quat="0.982037 -0.0160006 0 -0.188007" mass="40" diaginertia="0.01 0.01 0.0075" /> -->
+            <!-- <joint name="ARTx" pos="0 0 0" axis="1 0 0" type="slide" range="-.05 .05" damping="20" limited="true"/>
+            <joint name="ARTy" pos="0 0 0" axis="0 1 0" type="slide" range="-.3 .4" damping="20" limited="true"/>
+            <joint name="ARTz" pos="0 0 0" axis="0 0 1" type="slide" range="-0.1 .1" damping="20" limited="true"/>
+            <joint name="ARRx" pos="0 0 0" axis="1 0 0" range="-1.75 1.75" damping="20" limited="true"/>
+            <joint name="ARRy" pos="0 0 0" axis="0 1 0" range="-0.5 0.5" damping="20" limited="true"/>
+            <joint name="ARRz" pos="0 0 0" axis="0 0 1" range="-1.75 1.75" damping="20" limited="true"/> -->
+
             <joint name="ARTx" pos="0 0 0" axis="1 0 0" type="slide" range="-.05 .05" damping="20" limited="true"/>
             <joint name="ARTy" pos="0 0 0" axis="0 1 0" type="slide" range="-.3 .4" damping="20" limited="true"/>
             <joint name="ARTz" pos="0 0 0" axis="0 0 1" type="slide" range="-0.1 .1" damping="20" limited="true"/>
             <joint name="ARRx" pos="0 0 0" axis="1 0 0" range="-1.75 1.75" damping="20" limited="true"/>
             <joint name="ARRy" pos="0 0 0" axis="0 1 0" range="-0.5 0.5" damping="20" limited="true"/>
             <joint name="ARRz" pos="0 0 0" axis="0 0 1" range="-1.75 1.75" damping="20" limited="true"/>
-            <body pos="1.4 .1 -.175" euler="0 -1.57 3.14">
+
+            <!-- <body pos="1.4 .1 -.175" euler="0 -1.57 3.14"> -->
+            <body pos="-.175 .1 -1.4" euler="0 0 3.14">
                 <include file="../../../simhive/myo_sim/hand/assets/myo_hand_body.xml"/>
             </body>
         </body>
@@ -108,28 +118,28 @@
 
     </worldbody>
 
-        <!-- ======= MOCAP connectS ======= -->
+    <!-- ======= MOCAP connectS ======= -->
     <equality>
-        <connect body1="j0_mocap" body2="wrist_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
+        <connect body1="j0_mocap" body2="wrist_point" anchor="0 0 0" solimp="0.95 0.99 0.001" solref="0.01 1" />
 
-        <connect body1="j1_mocap" body2="ffknuckle_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j4_mocap" body2="mfknuckle_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j7_mocap" body2="lfknuckle_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j10_mocap" body2="rfknuckle_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j13_mocap" body2="thknuckle_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
+        <connect body1="j1_mocap" body2="ffknuckle_point" anchor="0 0 0" solimp="0.95 0.99 0.001" solref="0.01 1" />
+        <connect body1="j4_mocap" body2="mfknuckle_point" anchor="0 0 0" solimp="0.95 0.99 0.001" solref="0.01 1" />
+        <connect body1="j7_mocap" body2="lfknuckle_point" anchor="0 0 0" solimp="0.95 0.99 0.001" solref="0.01 1" />
+        <connect body1="j10_mocap" body2="rfknuckle_point" anchor="0 0 0" solimp="0.95 0.99 0.001" solref="0.01 1" />
+        <connect body1="j13_mocap" body2="thknuckle_point" anchor="0 0 0" solimp="0.95 0.99 0.001" solref="0.01 1" />
 
-        <connect body1="j3_mocap" body2="ffdistal_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j6_mocap" body2="mfdistal_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j9_mocap" body2="lfdistal_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j12_mocap" body2="rfdistal_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j15_mocap" body2="thdistal_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1"  />
+        <connect body1="j3_mocap" body2="ffdistal_point" anchor="0 0 0" solimp="0.95 0.99 0.001" solref="0.01 1" />
+        <connect body1="j6_mocap" body2="mfdistal_point" anchor="0 0 0" solimp="0.95 0.99 0.001" solref="0.01 1" />
+        <connect body1="j9_mocap" body2="lfdistal_point" anchor="0 0 0" solimp="0.95 0.99 0.001" solref="0.01 1" />
+        <connect body1="j12_mocap" body2="rfdistal_point" anchor="0 0 0" solimp="0.95 0.99 0.001" solref="0.01 1" />
+        <connect body1="j15_mocap" body2="thdistal_point" anchor="0 0 0" solimp="0.95 0.99 0.001" solref="0.01 1"  />
 
-        <connect body1="j2_mocap" body2="ffmiddle_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1"/>
-        <connect body1="j5_mocap" body2="mfmiddle_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j8_mocap" body2="lfmiddle_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j11_mocap" body2="rfmiddle_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j14_mocap" body2="thmiddle_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
+        <connect body1="j2_mocap" body2="ffmiddle_point" anchor="0 0 0" solimp="0.95 0.99 0.001" solref="0.01 1"/>
+        <connect body1="j5_mocap" body2="mfmiddle_point" anchor="0 0 0" solimp="0.95 0.99 0.001" solref="0.01 1" />
+        <connect body1="j8_mocap" body2="lfmiddle_point" anchor="0 0 0" solimp="0.95 0.99 0.001" solref="0.01 1" />
+        <connect body1="j11_mocap" body2="rfmiddle_point" anchor="0 0 0" solimp="0.95 0.99 0.001" solref="0.01 1" />
+        <connect body1="j14_mocap" body2="thmiddle_point" anchor="0 0 0" solimp="0.95 0.99 0.001" solref="0.01 1" />
     </equality>
 
-
+<!-- <option gravity="0 0 0"/> -->
 </mujoco>
