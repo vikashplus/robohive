@@ -30,6 +30,8 @@ class TestExamineTrace(unittest.TestCase):
                                             "--rollout_path", log_name, \
                                             "--render", "none",\
                                             "--mode", "playback"])
+        self.assertEqual(result.exception, None, result.exception)
+
         print(result.output.strip())
         os.remove(log_name)
 
@@ -44,12 +46,16 @@ class TestExamineTrace(unittest.TestCase):
                                             "--save_paths", True,\
                                             "--output_name", "door_test_logs"])
         log_name = result.output.strip()[-38:]
+        self.assertEqual(result.exception, None, result.exception)
+
 
         result = runner.invoke(examine_logs, ["--env_name", "door-v1", \
                                             "--rollout_path", log_name, \
                                             "--render", "none",\
                                             "--mode", "render"])
         print(result.output.strip())
+        self.assertEqual(result.exception, None, result.exception)
+
         os.remove(log_name)
 
 
