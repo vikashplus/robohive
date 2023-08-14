@@ -22,11 +22,11 @@ class OrientBaseV0(env_base.MujocoEnv):
     # DEFAULT_OBS_KEYS = ['root_pos', 'root_euler', 'kitty_qpos', 'root_vel', 'root_angular_vel', 'kitty_qvel', 'last_action', 'upright', 'current_facing', 'desired_facing']
 
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
-                'target_dist_cost': 4.0,
+                'target_dist_cost': 1.0,
                 'upright': 2.0,
                 'falling': 100.0,
                 'heading': 5.0,
-                'height': 0.5,
+                'height': 10.0,
                 'bonus_small': 5.0,
                 'bonus_big': 10.0
                 }
@@ -164,8 +164,7 @@ class OrientBaseV0(env_base.MujocoEnv):
             # Must keys
             ('sparse',  heading),
             ('solved',  (upright > self._upright_threshold) * (heading > 0.996)),
-            # ('done',    upright < self._upright_threshold),
-            ('done',    False),
+            ('done',    upright < self._upright_threshold),
         ))
 
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
