@@ -71,7 +71,7 @@ register_env_variant(
     env_id='DKittyOrientFixed-v0',
     variants={
             'target_distance_range':(0, 0),
-            'target_angle_range':(-np.pi/6, 2*np.pi/3), # Robel was (-2*np.pi/3, -np.pi/6)
+            'target_angle_range':(-np.pi/6, 4*np.pi/3), # Robel was (-2*np.pi/3, -np.pi/6)
     },
     silent=True
 )
@@ -121,9 +121,6 @@ register_env_variant(
     env_id='DKittyStandRandom-v0',
     variants={
             "visual_keys": OrientBaseV0.DEFAULT_VISUAL_KEYS,
-            # override the obs to avoid accidental leakage of oracle state info while using the visual envs
-            # using time as dummy obs. time keys are added twice to avoid unintended singleton expansion errors.
-            # Use proprioceptive data if needed - proprio_keys to configure, env.get_proprioception() to access
             "obs_keys": ['time', 'time']
     },
     silent=True

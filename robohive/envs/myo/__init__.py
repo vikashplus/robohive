@@ -5,9 +5,11 @@ Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gma
 
 from gym.envs.registration import register
 from robohive.envs.env_variants import register_env_variant
-
+import collections
 import os
 import numpy as np
+curr_dir = os.path.dirname(os.path.abspath(__file__))
+
 
 # utility to register envs with all muscle conditions
 def register_env_with_variants(id, entry_point, max_episode_steps, kwargs):
