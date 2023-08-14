@@ -48,6 +48,7 @@ def examine_logs(env_name, rollout_path, rollout_format, mode, horizon, seed, nu
     # seed and load environments
     np.random.seed(seed)
     env = gym.make(env_name) if env_args==None else gym.make(env_name, **(eval(env_args)))
+    env = env.env
     env.seed(seed)
 
     # Start a "trace" for recording rollouts
@@ -77,7 +78,7 @@ def examine_logs(env_name, rollout_path, rollout_format, mode, horizon, seed, nu
 
     # Resolve rendering
     if render == 'onscreen':
-        env.env.mujoco_render_frames = True
+        env.mujoco_render_frames = True
     elif render =='offscreen':
         env.mujoco_render_frames = False
     elif render == None:
@@ -102,7 +103,7 @@ def examine_logs(env_name, rollout_path, rollout_format, mode, horizon, seed, nu
                 if "state" in path_data['env_infos'].keys():
                     path_state = tensor_utils.split_tensor_dict_list(path_data['env_infos']['state'])
                     env.reset(reset_qpos=path_state[0]['qpos'], reset_qvel=path_state[0]['qvel'])
-                    env.env.set_env_state(path_state[0])
+                    env.set_env_state(path_state[0])
                 else:
                     env.reset()
             elif path_data and rollout_format=='RoboSet':
@@ -156,7 +157,7 @@ def examine_logs(env_name, rollout_path, rollout_format, mode, horizon, seed, nu
                     elif rollout_format=='RoboHive':
                         act = path_data['env_infos']['obs_dict']['qp'][i_step]
                     if noise_scale:
-                        act = act + env.env.np_random.uniform(high=noise_scale, low=-noise_scale, size=len(act)).astype(act.dtype)
+                        act = act + env.np_random.uniform(high=noise_scale, low=-noise_scale, size=len(act)).astype(act.dtype)
                     if env.normalize_act:
                         act = env.robot.normalize_actions(controls=act)
 
