@@ -15,8 +15,8 @@
         <position name="A_ARRx" joint="ARRx" ctrllimited="true" ctrlrange="-1.75 1.75" kp="150" />
         <position name="A_ARRy" joint="ARRy" ctrllimited="true" ctrlrange="-1.75 1.75" kp="150" />
         <position name="A_ARRz" joint="ARRz" ctrllimited="true" ctrlrange="-1.75 1.75" kp="150" />
-
     </actuator>
+
     <include file="../../../simhive/myo_sim/hand/assets/myohand_assets.xml"/>
     <include file="../../../simhive/furniture_sim/simpleTable/simpleTable_asset.xml"/>
     <compiler angle="radian" meshdir="../../../simhive/myo_sim/" texturedir="../../../simhive/myo_sim/"/>
@@ -34,21 +34,8 @@
         <camera name='center_cam' pos='0 2 1.8' euler="-1.2 0 3.14"/>
         <site name='workspace' type='box' size='.6 .375 .25' pos='0 0.475 1.0' group='3' rgba='0 0 .4 .2'/>
 
-        <!-- <geom type="plane" rgba=".1 .1 .1 1" size="10 10 1" pos="0 0 -.76"/> -->
+        <geom type="plane" rgba=".1 .1 .1 1" size="10 10 1" pos="0 0 -.76"/>
 
-        <!-- Robot -->
-        <!-- <body pos="0 -0.6 -1.1" euler="0 0 3.14">  -->
-        <!-- <body pos="-0.05 -0.83 -1.0" euler="0 0 3.14"> -->
-
-        <!-- Hand -->
-        <!-- <body pos="-0.05 -0.75 0.32" euler="0 0 0">
-            <inertial pos="0.001 -0.002 0.29" quat="0.982037 -0.0160006 0 -0.188007" mass="40" diaginertia="0.01 0.01 0.0075" />
-            <joint name="ARTx" pos="0 0 0" axis="1 0 0" type="slide" range="-0.05 0.05" damping="20" limited="true"/>
-            <joint name="ARTy" pos="0 0 0" axis="0 1 0" type="slide" range="-0.07 0.03" damping="20" limited="true"/>
-            <joint name="ARTz" pos="0 0 0" axis="0 0 1" type="slide" range="-0.3 0.7" damping="20" limited="true"/>
-            <joint name="ARRx" pos="0 0 0" axis="1 0 0" range="-1.75 1.75" damping="20" limited="true"/>
-            <joint name="ARRy" pos="0 0 0" axis="0 1 0" range="-2.5 2.5" damping="20" limited="true"/>
-            <joint name="ARRz" pos="0 0 0" axis="0 0 1" range="-1.75 1.75" damping="20" limited="true"/> -->
         <body pos="0.1 -0.55 0.32" euler="0 0 0">
             <joint name="ARTx" pos="0 0 0" axis="1 0 0" type="slide" range="-.05 .05" damping="20" limited="true"/>
             <joint name="ARTy" pos="0 0 0" axis="0 1 0" type="slide" range="-.3 .4" damping="20" limited="true"/>
@@ -62,34 +49,6 @@
             </body>
         </body>
 
-        <!-- HACK: Somewhat works with the old motion files -->
-        <!-- <body pos="-0.05 -0.75 0.32" euler="0 0 0">
-            <inertial pos="0.001 -0.002 0.29" quat="0.982037 -0.0160006 0 -0.188007" mass="40" diaginertia="0.01 0.01 0.0075" />
-            <joint name="ARTx" pos="0 0 0" axis="-1 0 0" type="slide" range="-0.05 0.05" damping="20" limited="true"/>
-            <joint name="ARTy" pos="0 0 0" axis="0 0 1" type="slide" range="-0.07 0.03" damping="20" limited="true"/>
-            <joint name="ARTz" pos="0 0 0" axis="0 1 0" type="slide" range="-0.3 0.7" damping="20" limited="true"/>
-
-            <joint name="ARRx" pos="0 0 0" axis="1 0 0" range="-1.75 1.75" damping="20" limited="true"/>
-            <joint name="ARRy" pos="0 0 0" axis="0 0 1" range="-1.75 1.75" damping="20" limited="true"/>
-            <joint name="ARRz" pos="0 0 0" axis="0 1 0" range="-2.5 2.5" damping="20" limited="true"/>
-            <body pos="1.4 .1 -.175" euler="0 -1.57 3.14">
-                <include file="../../../simhive/myo_sim/hand/assets/myohand_body.xml"/>
-            </body>
-        </body> -->
-
-        <!-- Moving the joints instead of moving the hand -->
-        <!-- HACK: Somewhat works with the old motion files -->
-        <!-- <body pos="-.175 .1 -1.4" euler="0 0 3.14">
-            <inertial pos="0.001 -0.002 0.29" quat="0.982037 -0.0160006 0 -0.188007" mass="40" diaginertia="0.01 0.01 0.0075" />
-            <joint name="ARTx" pos="-.175 .1 1.4" axis="1 0 0" type="slide" range="-0.25 0.25" damping="20" limited="true"/>
-            <joint name="ARTy" pos="-.175 .1 1.4" axis="0 1 0" type="slide" range="-0.2 0.1" damping="20" limited="true"/>
-            <joint name="ARTz" pos="-.175 .1 1.4" axis="0 0 1" type="slide" range="-0.3 0.5" damping="20" limited="true"/>
-            <joint name="ARRx" pos="-.175 .1 1.4" axis="1 0 0" range="-1.75 1.75" damping="20" limited="true"/>
-            <joint name="ARRy" pos="-.175 .1 1.4" axis="0 1 0" range="-1.75 1.75" damping="20" limited="true"/>
-            <joint name="ARRz" pos="-.175 .1 1.4" axis="0 0 1" range="-2.5 2.5" damping="20" limited="true"/>
-            <include file="../../../simhive/myo_sim/hand/assets/myohand_body.xml"/>
-        </body> -->
-
         <!-- simple Table -->
         <body pos='0 0 -.76'>
             <include file="../../../simhive/furniture_sim/simpleTable/simpleGraniteTable_body.xml"/>
@@ -98,48 +57,6 @@
         <!-- tasks details added here via include-->
         <site name='target' type='sphere' size='.03' pos='0 0 0.001' group='1' rgba='.1 .8 .2 .4'/>
 
-
-        <!-- <body mocap="true" name="j0_mocap" pos="-0.08344206 -0.20986985  0.3265495 "><site name="j0" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j1_mocap" pos="-0.10504791 -0.13143292  0.30602588"><site name="j1" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j2_mocap" pos="-0.11407083 -0.08992714  0.30296199"><site name="j2" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j3_mocap" pos="-0.11756308 -0.06545863  0.29836786"><site name="j3" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j4_mocap" pos="-0.08824545 -0.13083157  0.31080563"><site name="j4" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j5_mocap" pos="-0.09131468 -0.08637877  0.30753818"><site name="j5" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j6_mocap" pos="-0.09307484 -0.0575989   0.30329197"><site name="j6" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j7_mocap" pos="-0.06112682 -0.14177433  0.30442677"><site name="j7" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j8_mocap" pos="-0.05524462 -0.10722426  0.29590761"><site name="j8" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j9_mocap" pos="-0.05187614 -0.08725541  0.29036592"><site name="j9" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j10_mocap" pos="-0.07267017 -0.13255313  0.30908455"><site name="j10" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j11_mocap" pos="-0.06952109 -0.0926732   0.30321977"><site name="j11" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j12_mocap" pos="-0.06737636 -0.06815946  0.29939139"><site name="j12" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j13_mocap" pos="-0.10400589 -0.1905571   0.29570758"><site name="j13" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j14_mocap" pos="-0.11681051 -0.16517439  0.27384574"><site name="j14" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body>
-        <body mocap="true" name="j15_mocap" pos="-0.12784025 -0.14240538  0.25571465"><site name="j15" size="0.015" rgba="0 0 1 0.5" pos="0 0 0"/></body> -->
-
     </worldbody>
-
-        <!-- ======= MOCAP connectS ======= -->
-    <!-- <equality>
-        <connect body1="j0_mocap" body2="wrist_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-
-        <connect body1="j1_mocap" body2="ffknuckle_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j4_mocap" body2="mfknuckle_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j7_mocap" body2="lfknuckle_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j10_mocap" body2="rfknuckle_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j13_mocap" body2="thknuckle_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-
-        <connect body1="j3_mocap" body2="ffdistal_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j6_mocap" body2="mfdistal_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j9_mocap" body2="lfdistal_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j12_mocap" body2="rfdistal_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j15_mocap" body2="thdistal_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1"  />
-
-        <connect body1="j2_mocap" body2="ffmiddle_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1"/>
-        <connect body1="j5_mocap" body2="mfmiddle_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j8_mocap" body2="lfmiddle_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j11_mocap" body2="rfmiddle_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-        <connect body1="j14_mocap" body2="thmiddle_point" anchor="0 0 0" solimp="0.9 0.95 0.001" solref="0.02 1" />
-    </equality> -->
-
 
 </mujoco>
