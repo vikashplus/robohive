@@ -120,6 +120,30 @@ register(
 )
 
 register(
+    # Init position: [0.51,0.23,0.98]
+    # Init euler: [-np.pi/4+0.3, np.pi+0.3, -3*np.pi/4,]
+    id='FrankaBinPushSmall-v0',
+    entry_point='robohive.envs.arms.push_base_v0:PushBaseV0',
+    max_episode_steps=50, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_bin_push_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_bin_push_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_name': "obj0",
+        'obj_pos_limits': {'high':[0.52, 0.126, 0.955], 'low':[0.48, 0.125, 0.945]},
+        'target_site_name': "target",
+        'target_xyz_range': {'high':[0.5, -0.22, 1.085], 'low':[0.5, -0.22, 1.085]},
+        'pos_limits': {'eef_low': [0.315, -0.3, 0.89, -0.485, 3.14, -2.36, 0.4],
+                       'eef_high': [0.695, 0.275, 1.175, -0.485, 3.14, -2.36, 0.4]
+                       },
+        'vel_limits': {'eef':[0.15, 0.15, 0.15],
+                        'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.25, 0.2, 1.0]
+                        },
+        'init_qpos': [0.534, 0.401, 0.0, -1.971, -0.457, 0.490, 1.617, 0.4, 0.4],
+    }
+)
+
+register(
     id='FrankaBinPushTeleop-v0',
     entry_point='robohive.envs.arms.push_base_v0:PushBaseV0',
     max_episode_steps=100, #50steps*40Skip*2ms = 4s
@@ -214,6 +238,30 @@ register(
 register(
     # Init position: [0.36, 0.0,  1.34]
     # Init euler: [3.14, 0.5, -0.8,]
+    id='FrankaPlanarPushSmall-v0',
+    entry_point='robohive.envs.arms.push_base_v0:PushBaseV0',
+    max_episode_steps=50, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_planar_push_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_planar_push_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_name': "obj0",
+        'obj_pos_limits': {'high':[0.52, 0.31, 0.855], 'low':[0.44, 0.25, 0.845]},
+        'target_site_name': "target",
+        'target_xyz_range': {'high':[0.48, -0.1, 0.845], 'low':[0.48, -0.1, 0.845]},
+        'pos_limits': {'eef_low': [0.3, -0.4, 0.865, 3.14, 0.0, 0.28, 0.2],
+                       'eef_high': [0.8, 0.4, 0.965, 3.14, 0.0, 1.28, 0.2]
+                       },
+        'vel_limits': {'eef':[0.15, 0.15, 0.15],
+                        'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.25, 0.2, 1.0]
+                        },
+        'init_qpos': [0.665, 0.567,  0.0, -1.999, 0.0,  0.9172, 1.4541, 0.2, 0.2],
+    }
+)
+
+register(
+    # Init position: [0.36, 0.0,  1.34]
+    # Init euler: [3.14, 0.5, -0.8,]
     id='FrankaPlanarPushTeleop-v0',
     entry_point='robohive.envs.arms.push_base_v0:PushBaseV0',
     max_episode_steps=100, #50steps*40Skip*2ms = 4s
@@ -262,14 +310,19 @@ register(
 )
 
 # Reach to random target using visual inputs
-def register_push_visual_envs(env_name, encoder_type, cams, real=False, real_cams=None):
+def register_push_visual_envs(env_name, encoder_type, cams, real=False, real_cams=None, small=False):
     proprio_keys = ['qp', 'qv', 'grasp_pos', 'grasp_rot']
     visual_keys = []
     assert((not real and real_cams is None) or (real and real_cams is not None))
     if not real:
-        for cam in cams:
-            visual_keys.append('rgb:'+cam+':224x224:{}'.format(encoder_type))
-            visual_keys.append('d:'+cam+':224x224:{}'.format(encoder_type))
+        if small:
+            for cam in cams:
+                visual_keys.append('rgb:'+cam+':100x100:{}'.format(encoder_type))
+                visual_keys.append('d:'+cam+':100x100:{}'.format(encoder_type))
+        else:
+            for cam in cams:
+                visual_keys.append('rgb:'+cam+':224x224:{}'.format(encoder_type))
+                visual_keys.append('d:'+cam+':224x224:{}'.format(encoder_type))
     else:
         for cam in cams:
             visual_keys.append('rgb:'+cam+':240x424:{}'.format(encoder_type))
@@ -291,6 +344,7 @@ push_cams =  ['top_cam', 'Franka_wrist_cam']
 real_cams = ['left_cam', 'right_cam']
 for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
     register_push_visual_envs('FrankaBinPush', enc, cams=push_cams)
+    register_push_visual_envs('FrankaBinPushSmall', enc, cams=push_cams, small=True)
     register_push_visual_envs('FrankaBinPushTeleop', enc, cams=push_cams, real_cams=real_cams, real=True)
     register_push_visual_envs('FrankaBinPushReal', enc, cams=push_cams, real_cams=real_cams, real=True)
 
@@ -301,6 +355,7 @@ planar_push_cams = ['right_cam', 'Franka_wrist_cam']
 planar_push_real_cams = ['top_cam', 'left_cam']
 for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
     register_push_visual_envs('FrankaPlanarPush', enc, cams=planar_push_cams)
+    register_push_visual_envs('FrankaPlanarPushSmall', enc, cams=planar_push_cams, small=True)
     register_push_visual_envs('FrankaPlanarPushTeleop', enc, cams=planar_push_cams, real_cams=planar_push_real_cams, real=True)
     register_push_visual_envs('FrankaPlanarPushReal', enc, cams=planar_push_cams, real_cams=planar_push_real_cams, real=True)
 
@@ -336,6 +391,22 @@ register(
 
 register(
     id='FrankaBinPick-v0',
+    entry_point='robohive.envs.arms.bin_pick_v0:BinPickV0',
+    max_episode_steps=100, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_bin_pick_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_bin_pick_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_name': "obj0",
+        'target_site_name': "drop_target",
+        'randomize': True,
+        'target_xyz_range': {'high':[0.5, 0.0, 1.1], 'low':[0.5, 0.0, 1.1]}
+    }
+
+)
+
+register(
+    id='FrankaBinPickSmall-v0',
     entry_point='robohive.envs.arms.bin_pick_v0:BinPickV0',
     max_episode_steps=100, #50steps*40Skip*2ms = 4s
     kwargs={
@@ -399,14 +470,20 @@ register(
 )
 
 # Reach to random target using visual inputs
-def register_bin_pick_visual_envs(env_name, encoder_type, real=False):
+def register_bin_pick_visual_envs(env_name, encoder_type, real=False, small=False):
     proprio_keys = ['qp', 'qv', 'grasp_pos', 'grasp_rot']
 
     if not real:
-        visual_keys = ["rgb:left_cam:224x224:{}".format(encoder_type),
-                       "d:left_cam:224x224:{}".format(encoder_type),
-                       "rgb:right_cam:224x224:{}".format(encoder_type),
-                       "d:right_cam:224x224:{}".format(encoder_type)]
+        if small:
+            visual_keys = ["rgb:left_cam:100x100:{}".format(encoder_type),
+                        "d:left_cam:100x100:{}".format(encoder_type),
+                        "rgb:right_cam:100x100:{}".format(encoder_type),
+                        "d:right_cam:100x100:{}".format(encoder_type)]
+        else:
+            visual_keys = ["rgb:left_cam:224x224:{}".format(encoder_type),
+                        "d:left_cam:224x224:{}".format(encoder_type),
+                        "rgb:right_cam:224x224:{}".format(encoder_type),
+                        "d:right_cam:224x224:{}".format(encoder_type)]
     else:
         visual_keys = ["rgb:left_cam:240x424:{}".format(encoder_type),
                        "d:left_cam:240x424:{}".format(encoder_type),
@@ -427,6 +504,7 @@ def register_bin_pick_visual_envs(env_name, encoder_type, real=False):
     )
 for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
     register_bin_pick_visual_envs('FrankaBinPick', enc)
+    register_bin_pick_visual_envs('FrankaBinPickSmall', enc, small=True)
 for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
     register_bin_pick_visual_envs('FrankaBinPickReal', enc, real=True)    
     register_bin_pick_visual_envs('FrankaBinPickRealRP03', enc, real=True) 
@@ -451,7 +529,129 @@ register(
                 'jnt_slow': [0.1, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6],
                 'eef': [0.075, 0.075, 0.15, 0.3, 0.3, 0.5],
                 'eef_slow': [0.075, 0.075, 0.075, 0.3, 0.3, 0.5]},
-        'max_slow_height': 0.95
+        'max_slow_height': 0.95,
+        'noise_scale': 0.0,
+        'obs_delay': 0
+    }
+
+)
+
+register(
+    id='FrankaBinReorientSmall-v0',
+    entry_point='robohive.envs.arms.bin_reorient_v0:BinReorientV0',
+    max_episode_steps=150, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_dmanus_reorient_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_dmanus_reorient_sim_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_name': "obj0",
+        'target_site_name': "drop_target",
+        'hand_site_name': 'palm_site',
+        'randomize': True,
+        'target_xyz_range': {'high':[0.5, 0.0, 1.1], 'low':[0.5, 0.0, 1.1]},
+        'vel_limits': {'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6],
+                'jnt_slow': [0.1, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6],
+                'eef': [0.075, 0.075, 0.15, 0.3, 0.3, 0.5],
+                'eef_slow': [0.075, 0.075, 0.075, 0.3, 0.3, 0.5]},
+        'max_slow_height': 0.95,
+        'noise_scale': 0.0,
+        'obs_delay': 0
+    }
+
+)
+
+register(
+    id='FrankaBinReorientNoisy50-v0',
+    entry_point='robohive.envs.arms.bin_reorient_v0:BinReorientV0',
+    max_episode_steps=150, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_dmanus_reorient_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_dmanus_reorient_sim_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_name': "obj0",
+        'target_site_name': "drop_target",
+        'hand_site_name': 'palm_site',
+        'randomize': True,
+        'target_xyz_range': {'high':[0.5, 0.0, 1.1], 'low':[0.5, 0.0, 1.1]},
+        'vel_limits': {'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6],
+                'jnt_slow': [0.1, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6],
+                'eef': [0.075, 0.075, 0.15, 0.3, 0.3, 0.5],
+                'eef_slow': [0.075, 0.075, 0.075, 0.3, 0.3, 0.5]},
+        'max_slow_height': 0.95,
+        'noise_scale': 0.5,
+        'obs_delay': 0
+    }
+
+)
+
+register(
+    id='FrankaBinReorientNoisy100-v0',
+    entry_point='robohive.envs.arms.bin_reorient_v0:BinReorientV0',
+    max_episode_steps=150, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_dmanus_reorient_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_dmanus_reorient_sim_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_name': "obj0",
+        'target_site_name': "drop_target",
+        'hand_site_name': 'palm_site',
+        'randomize': True,
+        'target_xyz_range': {'high':[0.5, 0.0, 1.1], 'low':[0.5, 0.0, 1.1]},
+        'vel_limits': {'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6],
+                'jnt_slow': [0.1, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6],
+                'eef': [0.075, 0.075, 0.15, 0.3, 0.3, 0.5],
+                'eef_slow': [0.075, 0.075, 0.075, 0.3, 0.3, 0.5]},
+        'max_slow_height': 0.95,
+        'noise_scale': 1.0,
+        'obs_delay': 0
+    }
+
+)
+
+register(
+    id='FrankaBinReorientDelay1-v0',
+    entry_point='robohive.envs.arms.bin_reorient_v0:BinReorientV0',
+    max_episode_steps=150, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_dmanus_reorient_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_dmanus_reorient_sim_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_name': "obj0",
+        'target_site_name': "drop_target",
+        'hand_site_name': 'palm_site',
+        'randomize': True,
+        'target_xyz_range': {'high':[0.5, 0.0, 1.1], 'low':[0.5, 0.0, 1.1]},
+        'vel_limits': {'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6],
+                'jnt_slow': [0.1, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6],
+                'eef': [0.075, 0.075, 0.15, 0.3, 0.3, 0.5],
+                'eef_slow': [0.075, 0.075, 0.075, 0.3, 0.3, 0.5]},
+        'max_slow_height': 0.95,
+        'noise_scale': 0.0,
+        'obs_delay': 1
+    }
+
+)
+
+register(
+    id='FrankaBinReorientDelay2-v0',
+    entry_point='robohive.envs.arms.bin_reorient_v0:BinReorientV0',
+    max_episode_steps=150, #50steps*40Skip*2ms = 4s
+    kwargs={
+        'model_path': curr_dir+'/franka/assets/franka_dmanus_reorient_v0.xml',
+        'config_path': curr_dir+'/franka/assets/franka_dmanus_reorient_sim_v0.config',
+        'robot_site_name': "end_effector",
+        'object_site_name': "obj0",
+        'target_site_name': "drop_target",
+        'hand_site_name': 'palm_site',
+        'randomize': True,
+        'target_xyz_range': {'high':[0.5, 0.0, 1.1], 'low':[0.5, 0.0, 1.1]},
+        'vel_limits': {'jnt': [0.15, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6],
+                'jnt_slow': [0.1, 0.25, 0.1, 0.25, 0.1, 0.1, 0.6],
+                'eef': [0.075, 0.075, 0.15, 0.3, 0.3, 0.5],
+                'eef_slow': [0.075, 0.075, 0.075, 0.3, 0.3, 0.5]},
+        'max_slow_height': 0.95,
+        'noise_scale': 0.0,
+        'obs_delay': 2
     }
 
 )
@@ -479,14 +679,20 @@ register(
 )
 
 # Reach to random target using visual inputs
-def register_bin_reorient_visual_envs(env_name, encoder_type, real=False):
+def register_bin_reorient_visual_envs(env_name, encoder_type, real=False, small=False):
     proprio_keys = ['qp', 'qv', 'grasp_pos', 'grasp_rot']
 
     if not real:
-        visual_keys = ["rgb:left_cam:224x224:{}".format(encoder_type),
-                       "d:left_cam:224x224:{}".format(encoder_type),
-                       "rgb:right_cam:224x224:{}".format(encoder_type),
-                       "d:right_cam:224x224:{}".format(encoder_type)]
+        if small:
+            visual_keys = ["rgb:left_cam:100x100:{}".format(encoder_type),
+                        "d:left_cam:100x100:{}".format(encoder_type),
+                        "rgb:right_cam:100x100:{}".format(encoder_type),
+                        "d:right_cam:100x100:{}".format(encoder_type)]
+        else:
+            visual_keys = ["rgb:left_cam:224x224:{}".format(encoder_type),
+                        "d:left_cam:224x224:{}".format(encoder_type),
+                        "rgb:right_cam:224x224:{}".format(encoder_type),
+                        "d:right_cam:224x224:{}".format(encoder_type)]
     else:
         visual_keys = ["rgb:left_cam:240x424:{}".format(encoder_type),
                        "d:left_cam:240x424:{}".format(encoder_type),
@@ -506,6 +712,11 @@ def register_bin_reorient_visual_envs(env_name, encoder_type, real=False):
 
 for enc in ["r3m18", "r3m34", "r3m50", "1d", "2d"]:
     register_bin_reorient_visual_envs('FrankaBinReorient', enc)
+    register_bin_reorient_visual_envs('FrankaBinReorientSmall', enc, small=True)
+    register_bin_reorient_visual_envs('FrankaBinReorientNoisy50', enc)
+    register_bin_reorient_visual_envs('FrankaBinReorientNoisy100', enc)
+    register_bin_reorient_visual_envs('FrankaBinReorientDelay1', enc)
+    register_bin_reorient_visual_envs('FrankaBinReorientDelay2', enc)
     register_bin_reorient_visual_envs('FrankaBinReorientReal', enc, real=True)
 
 # FETCH =======================================================================

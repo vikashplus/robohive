@@ -49,6 +49,7 @@ class Robot():
                 sensor_cache_maxsize = 5,   # cache size for sensors
                 noise_scale = 0,            # scale for sensor noise
                 random_generator = None,    # random number generator
+                obs_delay = 0,              # timesteps to delays observations by
                 **kwargs,
             ):
 
@@ -63,10 +64,14 @@ class Robot():
             self.np_random = np.random
         else:
             self.np_random = random_generator
+        self.obs_delay = obs_delay
+        assert(self.obs_delay < self._sensor_cache_maxsize)
+        assert(self.obs_delay >= 0)
 
         # sensor cache
         self._sensor_cache = deque([], maxlen=self._sensor_cache_maxsize)
-
+        self._img_cache = deque([], maxlen=self._sensor_cache_maxsize)
+        self._depth_cache = deque([], maxlen=self._sensor_cache_maxsize)
         # create robot sim
         if mj_sim is None:
             # (creates new robot everytime to facilitate parallelization)
@@ -353,8 +358,11 @@ class Robot():
 
     # refresh the sensor cache
     def _sensor_cache_refresh(self):
+        self._img_cache = deque([], maxlen=self._sensor_cache_maxsize)
+        self._depth_cache = deque([], maxlen=self._sensor_cache_maxsize)
         for _ in range(self._sensor_cache_maxsize):
             self.get_sensors()
+
 
 
     # get past sensor
@@ -391,11 +399,11 @@ class Robot():
                     sen = []
                     for sensor in device['sensor']:
                         s = self.sim.data.sensordata[sensor['sim_id']]
-                        # ensure range
-                        s = np.clip(s, sensor['range'][0], sensor['range'][1])
                         # add noise
                         if noise_scale!=0:
                             s += noise_scale*sensor['noise']*self.np_random.uniform(low=-1.0, high=1.0)
+                        # ensure range
+                        s = np.clip(s, sensor['range'][0], sensor['range'][1])
                         sen.append(s)
                     current_sen[name] = np.array(sen)
 
@@ -412,7 +420,11 @@ class Robot():
         # Update time
         self.time = current_sen['time']
 
-        return current_sen
+        #return current_sen
+        cache_idx = -1-self.obs_delay
+        while -1*cache_idx > len(self._sensor_cache):
+            cache_idx += 1        
+        return self._sensor_cache[cache_idx]
 
 
     # get sensor data and update robot time accordingly
@@ -447,14 +459,32 @@ class Robot():
         else:
             imgs = np.zeros((len(cameras), height, width, 3), dtype=np.uint8)
             depths = np.zeros((len(cameras), height, width))
+
             for ind, cam in enumerate(cameras):
                 # img, depth = sim.render(width=width, height=height, depth=True, mode='offscreen', camera_name=cam, device_id=device_id)
+                device = self.robot_config[cam]
+                assert device['cam'][0]['hdr_id'] == 'rgb'
+                assert device['cam'][1]['hdr_id'] == 'd'
                 img, depth = sim.renderer.render_offscreen(width=width, height=height, depth=True, camera_id=cam, device_id=device_id)
+                
+                if self._noise_scale!=0:
+
+                    img = img.astype(float) + self._noise_scale * device['cam'][0]['noise']*self.np_random.normal(size=img.shape)
+                    img = np.clip(img, 0, 255).astype(np.uint8)
+                    depth += self._noise_scale * device['cam'][1]['noise']*self.np_random.normal(size=depth.shape)
+                    depth = np.clip(depth, 0, 1.0)
+
                 # img = img[::-1, :, :] # Image has to be flipped
                 imgs[ind, :, :, :] = img
                 depths[ind, :, :] = 255*depth[::-1]
 
-        return imgs, depths
+        self._img_cache.append(imgs)
+        self._depth_cache.append(depths)
+        
+        cache_idx = -1-self.obs_delay
+        while -1*cache_idx > len(self._img_cache):
+            cache_idx += 1
+        return self._img_cache[cache_idx], self._depth_cache[cache_idx]
 
 
     # Propagate sensor values back through the sim.
@@ -467,7 +497,8 @@ class Robot():
           (2) can be used to feed noisy sim sensors back into the robot-sim. Note: Be careful, sim might not be stable for simulation after
         """
         if not self.is_hardware and (self._noise_scale!=0):
-            print("WARNING: Propagating noisy sensors back to sim can destablize simulation")
+            pass
+            #print("WARNING: Propagating noisy sensors back to sim can destablize simulation")
 
         sim.data.time = sensor['time']
         for name, device in self.robot_config.items():

@@ -71,6 +71,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                obs_range:tuple = (-10, 10), # Permissible range of values in obs vector returned by get_obs()
                rwd_viz:bool = False,        # Visualize rewards (WIP, needs vtils)
                device_id:int = 0,           # Device id for rendering
+               torque_scale:float=1.0,
                **kwargs,                    # Additional arguments
         ):
 
@@ -135,6 +136,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         assert not done, "Check initialization. Simulation starts in a done state."
         self.obs_dim = observation.size
         self.observation_space = gym.spaces.Box(obs_range[0]*np.ones(self.obs_dim), obs_range[1]*np.ones(self.obs_dim), dtype=np.float32)
+
+        self.sim.model.actuator_forcerange[:] *= torque_scale
 
         return
 
@@ -341,44 +344,58 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         # collect visuals
         visual_dict = {}
         visual_dict['time'] = np.array([self.sim.data.time])
+        cameras = []
+        img_keys = []
+        height = None
+        width = None
         for key in visual_keys:
             if key.startswith('rgb'):
                 _, cam, wxh, rgb_encoder_id = key.split(':')
-                height = int(wxh.split('x')[0])
-                width = int(wxh.split('x')[1])
-                # render images ==> returns (ncams, height, width, 3)
-                img, dpt = self.robot.get_visual_sensors(
-                                    height=height,
-                                    width=width,
-                                    cameras=[cam],
-                                    device_id=device_id,
-                                    sim=sim,
-                                  )
-                # encode images
-                if rgb_encoder_id == '1d':
-                    rgb_encoded = img[0].reshape(-1)
-                elif rgb_encoder_id == '2d':
-                    rgb_encoded = img[0]
-                elif rgb_encoder_id[:3] == 'r3m' or rgb_encoder_id[:3] == 'rrl':
-                    with torch.no_grad():
-                        rgb_encoded = 255.0 * self.rgb_transform(img[0]).reshape(-1, 3, 224, 224)
-                        rgb_encoded = rgb_encoded.to(self.device_encoder)
-                        rgb_encoded = self.rgb_encoder(rgb_encoded).cpu().numpy()
-                        rgb_encoded = np.squeeze(rgb_encoded)
-                elif rgb_encoder_id[:3] == 'vc1':
-                    with torch.no_grad():
-                        rgb_encoded = self.rgb_transform(torch.Tensor(img.transpose(0,3,1,2)))
-                        rgb_encoded = rgb_encoded.to(self.device_encoder)
-                        rgb_encoded = self.rgb_encoder(rgb_encoded).cpu().numpy()
-                        rgb_encoded = np.squeeze(rgb_encoded)
-                else:
-                    raise ValueError("Unsupported visual encoder: {}".format(rgb_encoder_id))
 
-                visual_dict.update({key:rgb_encoded})
+                if height is None:
+                    height = int(wxh.split('x')[0])
+                    width = int(wxh.split('x')[1])
+                else:
+                    assert(height == int(wxh.split('x')[0]))
+                    assert(width == int(wxh.split('x')[1]))
+                cameras.append(cam)
+                img_keys.append(key)
+
+        if len(cameras) >= 1:
+            # render images ==> returns (ncams, height, width, 3)
+            img, dpt = self.robot.get_visual_sensors(
+                                height=height,
+                                width=width,
+                                cameras=cameras,
+                                device_id=device_id,
+                                sim=sim,
+                                )
+                # encode images
+            if rgb_encoder_id == '1d':
+                rgb_encoded = img.reshape(-1)
+            elif rgb_encoder_id == '2d':
+                rgb_encoded = img
+            elif rgb_encoder_id[:3] == 'r3m' or rgb_encoder_id[:3] == 'rrl':
+                with torch.no_grad():
+                    rgb_encoded = 255.0 * self.rgb_transform(img).reshape(-1, 3, 224, 224)
+                    rgb_encoded = rgb_encoded.to(self.device_encoder)
+                    rgb_encoded = self.rgb_encoder(rgb_encoded).cpu().numpy()
+                    rgb_encoded = np.squeeze(rgb_encoded)
+            elif rgb_encoder_id[:3] == 'vc1':
+                with torch.no_grad():
+                    rgb_encoded = self.rgb_transform(torch.Tensor(img.transpose(0,3,1,2)))
+                    rgb_encoded = rgb_encoded.to(self.device_encoder)
+                    rgb_encoded = self.rgb_encoder(rgb_encoded).cpu().numpy()
+                    rgb_encoded = np.squeeze(rgb_encoded)
+            else:
+                raise ValueError("Unsupported visual encoder: {}".format(rgb_encoder_id))
+
+            for key_idx, key in enumerate(img_keys):
+                visual_dict.update({key:rgb_encoded[key_idx]})
                 # add depth observations if requested in the keys (assumption d will always be accompanied by rgb keys)
                 d_key = 'd:'+key[4:]
                 if d_key in self.visual_keys:
-                    visual_dict.update({d_key:dpt})
+                    visual_dict.update({d_key:np.expand_dims(dpt[key_idx],axis=0)})
 
         return visual_dict
 
