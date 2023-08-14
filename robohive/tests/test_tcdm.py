@@ -83,7 +83,7 @@ class TestTCDM(TestEnvs):
         result = runner.invoke(playback_default_traj, ["--env_name", "AdroitAirplanePass-v0", \
                                             "--render", "none",])
         print(result.output.strip())
-        self.assertEqual(result.exception, None)
+        self.assertEqual(result.exception, None, result.exception)
 
 if __name__ == '__main__':
     unittest.main()

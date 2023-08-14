@@ -19,7 +19,7 @@ class TestExamineRobot(unittest.TestCase):
         print("RESULT", result, flush=True)
         print("EXCEPTION", result.exception, flush=True)
 
-        self.assertEqual(result.exception, None)
+        self.assertEqual(result.exception, None, result.exception)
 
     # def test_offscreen_rendering(self):
     #     # Call your function and test its output/assertions
@@ -30,7 +30,7 @@ class TestExamineRobot(unittest.TestCase):
     #                                         "--render", "offscreen",\
     #                                         "--camera_name", "top_cam"])
     #     print(result.output.strip())
-    #     self.assertEqual(result.exception, None)
+    #     self.assertEqual(result.exception, None, result.exception)
 
     # def no_test_scripted_policy_loading(self):
     #     # Call your function and test its output/assertions
@@ -41,7 +41,7 @@ class TestExamineRobot(unittest.TestCase):
     #                                         "--render", "offscreen",\
     #                                         "--policy_path", "robohive.utils.examine_env.rand_policy"])
     #     print(result.output.strip())
-    #     self.assertEqual(result.exception, None)
+    #     self.assertEqual(result.exception, None, result.exception)
 
 if __name__ == '__main__':
     print("\n=================================", flush=True)

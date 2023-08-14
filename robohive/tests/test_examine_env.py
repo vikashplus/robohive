@@ -17,7 +17,7 @@ class TestExamineEnv(unittest.TestCase):
         print("RESULT", result, flush=True)
         print("EXCEPTION", result.exception, flush=True)
         # print(result.output.strip())
-        self.assertEqual(result.exception, None)
+        self.assertEqual(result.exception, None, result.exception)
 
     def test_offscreen_rendering(self):
         # Call your function and test its output/assertions
@@ -31,7 +31,7 @@ class TestExamineEnv(unittest.TestCase):
         print("RESULT", result, flush=True)
         print("EXCEPTION", result.exception, flush=True)
         # print(result.output.strip())
-        self.assertEqual(result.exception, None)
+        self.assertEqual(result.exception, None, result.exception)
         os.remove('random_policy0.mp4')
 
     def no_test_scripted_policy_loading(self):
@@ -46,7 +46,7 @@ class TestExamineEnv(unittest.TestCase):
         print("RESULT", result, flush=True)
         print("EXCEPTION", result.exception, flush=True)
         # print(result.output.strip())
-        self.assertEqual(result.exception, None)
+        self.assertEqual(result.exception, None, result.exception)
 
 if __name__ == '__main__':
     print("\n=================================", flush=True)

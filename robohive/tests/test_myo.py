@@ -26,6 +26,7 @@ class TestMyo(TestEnvs):
                                                         "--horizon", -1, \
                                                         "--num_playback", 1, \
                                                         "--render", "none"])
+            self.assertEqual(result.exception, None, result.exception)
 
 
     def no_test_myomimic(self):
@@ -42,6 +43,7 @@ class TestMyo(TestEnvs):
                                                         "--horizon", -1, \
                                                         "--num_playback", 1, \
                                                         "--render", "none"])
+            self.assertEqual(result.exception, None, result.exception)
 
 
 if __name__ == '__main__':
