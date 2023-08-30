@@ -4,7 +4,6 @@ Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gma
 ================================================= """
 
 import collections
-from traceback import print_tb
 import numpy as np
 import gym
 
@@ -24,6 +23,7 @@ class RelocateEnvV0(BaseV0):
         gym.utils.EzPickle.__init__(self, model_path, obsd_model_path, seed, **kwargs)
         super().__init__(model_path=model_path, obsd_model_path=obsd_model_path, seed=seed, env_credits=self.MYO_CREDIT)
         self._setup(**kwargs)
+
 
     def _setup(self,
             target_xyz_range,       # target position range (relative to initial pos)
@@ -72,6 +72,7 @@ class RelocateEnvV0(BaseV0):
             obs_dict['act'] = sim.data.act[:].copy()
         return obs_dict
 
+
     def get_reward_dict(self, obs_dict):
         reach_dist = np.abs(np.linalg.norm(self.obs_dict['reach_err'], axis=-1))
         pos_dist = np.abs(np.linalg.norm(self.obs_dict['pos_err'], axis=-1))
@@ -95,7 +96,7 @@ class RelocateEnvV0(BaseV0):
         ))
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
 
-        # Sucess Indicator
+        # Success Indicator
         self.sim.model.site_rgba[self.success_indicator_sid, :2] = np.array([0, 2]) if rwd_dict['solved'] else np.array([2, 0])
         return rwd_dict
 
@@ -122,6 +123,7 @@ class RelocateEnvV0(BaseV0):
             'effort':effort,
             }
         return metrics
+
 
     def reset(self, reset_qpos=None, reset_qvel=None):
         self.sim.model.body_pos[self.goal_bid] = self.np_random.uniform(**self.target_xyz_range)

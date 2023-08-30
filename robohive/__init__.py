@@ -22,15 +22,19 @@ robohive_arm_suite = set(gym.envs.registration.registry.env_specs.keys())-robohi
 robohive_arm_suite = set(sorted(robohive_arm_suite))
 robohive_env_suite = robohive_env_suite | robohive_arm_suite
 
-# Register Myo Suite
-import robohive.envs.myo # noqa
+# Register MyoBase Suite
+import robohive.envs.myo.myobase # noqa
+robohive_myobase_suite = set(gym.envs.registration.registry.env_specs.keys())-robohive_env_suite-_current_gym_envs
+robohive_env_suite  = robohive_env_suite | robohive_myobase_suite
+robohive_myobase_suite = sorted(robohive_myobase_suite)
+
+# Register MyoChal Suite
 import robohive.envs.myo.myochallenge # noqa
-robohive_myo_suite = set(gym.envs.registration.registry.env_specs.keys())-robohive_env_suite-_current_gym_envs
-robohive_env_suite  = robohive_env_suite | robohive_myo_suite
-robohive_myo_suite = sorted(robohive_myo_suite)
+robohive_myochal_suite = set(gym.envs.registration.registry.env_specs.keys())-robohive_env_suite-_current_gym_envs
+robohive_env_suite  = robohive_env_suite | robohive_myochal_suite
+robohive_myochal_suite = sorted(robohive_myochal_suite)
 
 # Register MyoDex Suite
-import robohive.envs.myo # noqa
 import robohive.envs.myo.myodex # noqa
 robohive_myodex_suite = set(gym.envs.registration.registry.env_specs.keys())-robohive_env_suite-_current_gym_envs
 robohive_env_suite  = robohive_env_suite | robohive_myodex_suite

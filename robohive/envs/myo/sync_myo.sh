@@ -39,12 +39,19 @@ mkdir -p $2/myosuite/envs/myo
 rsync -av --progress $src_path/robohive/envs/env_base.py $dst_path/myosuite/envs/
 rsync -av --progress $src_path/robohive/envs/env_variants.py $dst_path/myosuite/envs/
 rsync -av --progress $src_path/robohive/envs/obs_vec_dict.py $dst_path/myosuite/envs/
+
+# Envs/Myo
 rsync -av --progress $src_path/robohive/envs/myo/*.md $dst_path/myosuite/envs/myo/
 rsync -av --progress $src_path/robohive/envs/myo/assets/* $dst_path/myosuite/envs/myo/assets
-rsync -av --progress $src_path/robohive/envs/myo/*.py $dst_path/myosuite/envs/myo/
+
+# MyoBase Envs
+rsync -av --progress $src_path/robohive/envs/myo/myobase/ $dst_path/myosuite/envs/myo/myobase/
+
+# MyoChallenge Envs
 rsync -av --progress $src_path/robohive/envs/myo/myochallenge/*.py $dst_path/myosuite/envs/myo/myochallenge/
-# sed -i '' "s/xml/mjb/g" $dst_path/myosuite/envs/myo/__init__.py
-# sed -i '' "s/xml/mjb/g" $dst_path/myosuite/envs/myo/myochallenge/__init__.py
+
+# MyoDex Envs
+rsync -av --progress $src_path/robohive/envs/myo/myodex/* $dst_path/myosuite/envs/myo/myodex
 
 # Robot
 mkdir -p $2/myosuite/robot
@@ -74,11 +81,13 @@ rsync -av --progress $src_path/robohive/tests/test_myo.py $dst_path/myosuite/tes
 # Replace
 # sed -i "s/robohive\./myosuite\./g" $dst_path/myosuite/envs/myo/__init__.py
 find $dst_path/myosuite -type f -name "*.py" -exec sed -i "s/robohive\./myosuite\./g" {} \;
+find $dst_path/myosuite/tests -type f -name "*.py" -exec sed -i "s/robohive/myosuite/g" {} \;
+find $dst_path/myosuite/logger -type f -name "examine_reference.py" -exec sed -i "s/robohive/myosuite/g" {} \;
 find $dst_path/myosuite -type f -name "*.py" -exec sed -i "s/RoboHive:>/MyoSuite:>/g" {} \;
 
 # configs
 rsync -av --progress $src_path/.gitignore $dst_path/
 
 # Clean unnecessary
-rm $dst_path/myosuite/envs/myo/baoding_v1.py
-rm $dst_path/myosuite/envs/myo/reorient_v0.py
+rm $dst_path/myosuite/envs/myo/myobase/baoding_v1.py
+# rm $dst_path/myosuite/envs/myo/myobase/reorient_v0.py

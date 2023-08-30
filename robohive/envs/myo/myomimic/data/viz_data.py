@@ -1,7 +1,6 @@
 import pickle
 import os
-from robohive.envs.tcdm.reference_motion import ReferenceMotion
-
+from robohive.logger.reference_motion import ReferenceMotion
 
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 

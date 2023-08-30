@@ -4,9 +4,10 @@ import os
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 import numpy as np
 
+
 # MyoChallenge 2023 envs ==============================================
-# MyoChallenge Die: Trial env
-register(id='myoChallengeRelocateDemo-v0',
+# MyoChallenge Manipulation
+register(id='myoChallengeRelocateP1-v0',
         entry_point='robohive.envs.myo.myochallenge.relocate_v0:RelocateEnvV0',
         max_episode_steps=150,
         kwargs={
@@ -20,9 +21,21 @@ register(id='myoChallengeRelocateDemo-v0',
     )
 
 
+# MyoChallenge Locomotion
+register(id='myoChallengeChaseTagP1-v0',
+        entry_point='robohive.envs.myo.myochallenge.chasetag_v0:ChaseTagEnvV0',
+        max_episode_steps=2000,
+        kwargs={
+            'model_path': curr_dir+'/../../../simhive/myo_sim/leg/myolegs_chasetag_v0.10(mj236).mjb',
+            'normalize_act': True,
+            'reset_type':'init', # none, init, random
+            'win_distance': 0.5,
+            'min_spawn_distance': 2
+        }
+    )
+
 
 # MyoChallenge 2022 envs ==============================================
-
 # MyoChallenge Die: Trial env
 register(id='myoChallengeDieReorientDemo-v0',
         entry_point='robohive.envs.myo.myochallenge.reorient_v0:ReorientEnvV0',

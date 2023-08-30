@@ -12,7 +12,7 @@ Script to render trajectories embeded in the env"
 @click.option('-h', '--horizon', type=int, help='playback horizon', default=-1)
 @click.option('-n', '--num_playback', type=int, help='Number of time to loop playback', default=1)
 @click.option('-r', '--render', type=click.Choice(['onscreen', 'none']), help='visualize onscreen?', default='onscreen')
-def playback_default_traj(env_name, horizon, num_playback, render):
+def examine_reference(env_name, horizon, num_playback, render):
     env = gym.make(env_name)
 
     # infer reference horizon
@@ -36,4 +36,4 @@ def playback_default_traj(env_name, horizon, num_playback, render):
 
 
 if __name__ == '__main__':
-    playback_default_traj()
+    examine_reference()

@@ -7,7 +7,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 import gym
 from robohive.envs import env_base
-from robohive.envs.tcdm.reference_motion import ReferenceMotion
+from robohive.logger.reference_motion import ReferenceMotion
 from robohive.utils.quat_math import quat2euler, euler2quat, quatDiff2Vel, mat2quat
 import numpy as np
 import os
