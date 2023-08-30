@@ -4,10 +4,10 @@ import yaml
 import glob
 # import matplotlib.pyplot as plt
 
-path_myo_traj = "../myo/myodex/data/"
+path_myo_traj = "../myo/myodm/data/"
 os.makedirs('./'+path_myo_traj+'/', exist_ok=True)
 
-with open('./myodex_selection.yaml', 'r') as g:
+with open('./myodm_selection.yaml', 'r') as g:
     _DEXMAN_TRAJS = yaml.safe_load(g)['grab_myo']
 
 targ_names=[]

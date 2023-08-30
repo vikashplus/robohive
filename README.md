@@ -48,7 +48,7 @@ Arm-Manipulation-Suite
 ![Alt text](https://github.com/vikashplus/robohive/assets/12837145/ef072b90-42e7-414b-9da0-45c87c31443a?raw=false "Arm Manipulation Suite") A collection of environments centered around Arm manipulation.
 
 
-Myo-Suite [(Website)](https://sites.google.com/view/myosuite)
+Myo-Suite [(website)](https://sites.google.com/view/myosuite)
 :-------------------------:
 ![Alt text](https://github.com/vikashplus/robohive/assets/12837145/0db70854-cb90-4360-8bd9-42cd1b5446c1?raw=false "Myo_Suite") A collection of environments centered around Musculoskeletal control.
 

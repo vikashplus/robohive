@@ -9,7 +9,7 @@ import click.testing
 from robohive.tests.test_envs import TestEnvs
 from robohive import robohive_myobase_suite
 from robohive import robohive_myochal_suite
-from robohive import robohive_myodex_suite
+from robohive import robohive_myodm_suite
 
 class TestMyo(TestEnvs):
     def test_myosuite_envs(self):
@@ -20,12 +20,12 @@ class TestMyo(TestEnvs):
         self.check_envs('MyoChallenge Suite', robohive_myochal_suite)
 
 
-    def test_myodex_envs(self):
-        self.check_envs('MyoDex Suite', robohive_myodex_suite)
+    def test_myodm_envs(self):
+        self.check_envs('MyoDM Suite', robohive_myodm_suite)
 
         # Check trajectory playback
         from robohive.logger.examine_reference import examine_reference
-        for env in robohive_myodex_suite:
+        for env in robohive_myodm_suite:
             print(f"Testing reference motion playback on: {env}")
             runner = click.testing.CliRunner()
             result = runner.invoke(examine_reference, ["--env_name", env, \
@@ -38,7 +38,7 @@ class TestMyo(TestEnvs):
     def no_test_myomimic(self):
         env_names=['MyoLegJump-v0', 'MyoLegLunge-v0', 'MyoLegSquat-v0', 'MyoLegLand-v0', 'MyoLegRun-v0', 'MyoLegWalk-v0']
         # Check the envs
-        self.check_envs('MyoDex', env_names)
+        self.check_envs('MyoDM', env_names)
 
         # Check trajectory playback
         from robohive.logger.examine_reference import examine_reference
