@@ -53,6 +53,11 @@ Myo-Suite [(Website)](https://sites.google.com/view/myosuite)
 ![Alt text](https://github.com/vikashplus/robohive/assets/12837145/0db70854-cb90-4360-8bd9-42cd1b5446c1?raw=false "Myo_Suite") A collection of environments centered around Musculoskeletal control.
 
 
+Myo/MyoDM-Suite [(Website)](https://sites.google.com/view/myodex)
+:-------------------------:
+![myodm_task_suite](https://github.com/vikashplus/robohive/assets/12837145/2ca62e77-6827-4029-930e-b95ab86ae0f4) A collection of musculoskeletal environments for dexterous manipulation introduced as MyoDM in [MyoDeX](https://sites.google.com/view/myodex).
+
+
 MultiTask Suite
 :-------------------------:
 ![Alt text](https://github.com/vikashplus/robohive/assets/12837145/b7f314b9-8d4e-4e58-b791-6df774b91d21?raw=false "Myo_Suite") A collection of environments centered around multi-task. Standard [RelayKitchen benchmarks](https://relay-policy-learning.github.io/) are a part of this suite.
