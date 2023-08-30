@@ -34,11 +34,11 @@ robohive_myochal_suite = set(gym.envs.registration.registry.env_specs.keys())-ro
 robohive_env_suite  = robohive_env_suite | robohive_myochal_suite
 robohive_myochal_suite = sorted(robohive_myochal_suite)
 
-# Register MyoDex Suite
-import robohive.envs.myo.myodex # noqa
-robohive_myodex_suite = set(gym.envs.registration.registry.env_specs.keys())-robohive_env_suite-_current_gym_envs
-robohive_env_suite  = robohive_env_suite | robohive_myodex_suite
-robohive_myodex_suite = sorted(robohive_myodex_suite)
+# Register MyoDM Suite
+import robohive.envs.myo.myodm # noqa
+robohive_myodm_suite = set(gym.envs.registration.registry.env_specs.keys())-robohive_env_suite-_current_gym_envs
+robohive_env_suite  = robohive_env_suite | robohive_myodm_suite
+robohive_myodm_suite = sorted(robohive_myodm_suite)
 
 # Register FM suite
 import robohive.envs.fm # noqa

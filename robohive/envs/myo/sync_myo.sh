@@ -50,8 +50,8 @@ rsync -av --progress $src_path/robohive/envs/myo/myobase/ $dst_path/myosuite/env
 # MyoChallenge Envs
 rsync -av --progress $src_path/robohive/envs/myo/myochallenge/*.py $dst_path/myosuite/envs/myo/myochallenge/
 
-# MyoDex Envs
-rsync -av --progress $src_path/robohive/envs/myo/myodex/* $dst_path/myosuite/envs/myo/myodex
+# MyoDM Envs
+rsync -av --progress $src_path/robohive/envs/myo/myodm/* $dst_path/myosuite/envs/myo/myodm
 
 # Robot
 mkdir -p $2/myosuite/robot

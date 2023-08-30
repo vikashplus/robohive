@@ -11,5 +11,5 @@ This routine also generate files of the mocap. See also sample bash routing `gen
 2. Generate MyoDM trajectories
 
 ``` bash
-python generate_myodex_traj.py
+python generate_myodm_traj.py
 ```
