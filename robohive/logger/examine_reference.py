@@ -2,6 +2,8 @@ import robohive
 import gym
 import time
 import click
+from tqdm import tqdm
+
 
 DESC="""
 Script to render trajectories embeded in the env"
@@ -20,12 +22,13 @@ def examine_reference(env_name, horizon, num_playback, render):
         horizon =  env.env.ref.horizon
 
     # Start playback loops
+    print(f"Rending reference motion (total frames: {horizon})")
     for n in range(num_playback):
         print(f"Playback loop: {n}")
         env.reset()
 
         # Rollout a traj
-        for h in range(horizon):
+        for h in tqdm(range(horizon)):
             env.playback()
 
             # render onscreen if asked

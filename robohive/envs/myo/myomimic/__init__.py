@@ -31,7 +31,7 @@ def register_myoleg_trackref(task_name, object_name, motion_path=None):
         entry_point='robohive.envs.myo.myomimic.myomimic_v0:TrackEnv',
         max_episode_steps=75, #50steps*40Skip*2ms = 4s
         kwargs={
-                'model_path': curr_dir+'/../../../simhive/myo_sim/myoleg/myoleg_v0.5(mj120).mjb',
+                'model_path': curr_dir+'/../../../simhive/myo_sim/leg/myolegs_v0.55(mj236).mjb',
                 'reference':curr_dir+'/data/'+motion_path,
             }
     )
