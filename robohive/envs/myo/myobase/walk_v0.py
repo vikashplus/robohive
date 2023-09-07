@@ -87,7 +87,7 @@ class ReachEnvV0(BaseV0):
         near_th = len(self.tip_sids)*.050
         rwd_dict = collections.OrderedDict((
             # Optional Keys
-            ('reach',   -1.*reach_dist -10.*vel_dist),
+            ('reach',   10.-1.*reach_dist -10.*vel_dist),
             ('bonus',   1.*(reach_dist<2*near_th) + 1.*(reach_dist<near_th)),
             ('act_reg', -100.*act_mag),
             ('penalty', -1.*(reach_dist>far_th)),
@@ -96,21 +96,41 @@ class ReachEnvV0(BaseV0):
             ('solved',  reach_dist<near_th),
             ('done',    reach_dist > far_th),
         ))
+        # print(f"reach_dist:{reach_dist}, far_th:{far_th}")
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
 
     # generate a valid target
-    def generate_target_pose(self):
+    def generate_target_pose_old(self):
         for site, span in self.target_reach_range.items():
             sid =  self.sim.model.site_name2id(site+'_target')
             self.sim.model.site_pos[sid] = self.np_random.uniform(low=span[0], high=span[1])
         self.sim.forward()
 
+    # generate a valid target
+    def generate_target_pose(self):
+        for site, span in self.target_reach_range.items():
+            sid =  self.sim.model.site_name2id(site)
+            sid_target =  self.sim.model.site_name2id(site+'_target')
+            self.sim.model.site_pos[sid_target] = self.sim.data.site_xpos[sid].copy() + 0.0*self.np_random.uniform(low=span[0], high=span[1])
+        self.sim.forward()
 
     def reset(self):
+        jnt_scale = 0.2
+        jnt_mean = (self.sim.model.jnt_range[:,1]+self.sim.model.jnt_range[:,0])/2.0
+        jnt_rng = (self.sim.model.jnt_range[:,1]-self.sim.model.jnt_range[:,0])/2.0
+
+        # generate random targets
+        target_jnt = jnt_mean + jnt_scale*jnt_rng*self.np_random.uniform(low=-1.0, high=1.0, size=jnt_mean.shape)
+        self.sim.data.qpos[:] = target_jnt
+        self.sim.forward()
         self.generate_target_pose()
+
+        # generate random initial pose
+        target_jnt = jnt_mean + jnt_scale*jnt_rng*self.np_random.uniform(low=-1.0, high=1.0, size=jnt_mean.shape)
         self.robot.sync_sims(self.sim, self.sim_obsd)
         obs = super().reset()
+        # obs = super().reset(reset_qpos=target_jnt)
         return obs
 
 class WalkEnvV0(BaseV0):
