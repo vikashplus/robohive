@@ -35,7 +35,8 @@ for target_fname in _DEXMAN_TRAJS:
 
         time = np.arange(0, horizon) * file['DATA_SUBSTEPS']*sim_dt
 
-        print("./"+path_myo_traj+"/MyoHand_"+obj_name+"_"+task_name+".npz")
+        # print("./"+path_myo_traj+"/MyoHand_"+obj_name+"_"+task_name+".npz")
+
         np.savez("./"+path_myo_traj+"/MyoHand_"+obj_name+"_"+task_name+".npz",
                 time=time,
                 robot=robot,
@@ -45,3 +46,5 @@ for target_fname in _DEXMAN_TRAJS:
                 robot_int=robot[file['grasp_frame']-1],
                 object_int=obj[file['grasp_frame']-1],
                 )
+    else:
+        print("FILE: "+target_fname+" NOT FOUND!")
