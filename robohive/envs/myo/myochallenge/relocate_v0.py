@@ -98,6 +98,7 @@ class RelocateEnvV0(BaseV0):
 
         # Success Indicator
         self.sim.model.site_rgba[self.success_indicator_sid, :2] = np.array([0, 2]) if rwd_dict['solved'] else np.array([2, 0])
+        self.sim.model.site_size[self.success_indicator_sid, :] = np.array([.25,]) if rwd_dict['solved'] else np.array([0.1,])
         return rwd_dict
 
 
