@@ -87,6 +87,9 @@ grab_myo:
 - s9/wineglass_drink_2_myo.npz
 - s9/binoculars_pass_1_myo.npz
 - s9/flashlight_pass_1_myo.npz
+- s9/gamecontroller_pass_1_myo.npz
+- s9/cylinderlarge_inspect_1_myo.npz
+- S9/cylinderlarge_pass_1_myo.npz
 - s10/wineglass_drink_1_myo.npz
 - s10/flute_pass_1_myo.npz
 - s10/lightbulb_pass_1_myo.npz
