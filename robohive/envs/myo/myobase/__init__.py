@@ -310,7 +310,6 @@ register_env_with_variants(id='myoLegStandRandom-v0',
     )
 
 
-print(curr_dir+'../assets/myolegs_suspended_v0.56(mj236).mjb')
 register_env_with_variants(id='myoLegReachRandom-v0',
         # entry_point='robohive.envs.myo.myobase.reach_v0:ReachEnvV0',
         entry_point='robohive.envs.myo.myobase.walk_v0:ReachEnvV0',
