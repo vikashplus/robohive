@@ -1,4 +1,7 @@
 import importlib
+import os
+from os.path import expanduser
+import git
 
 def mujoco_py_isavailable():
     help = """
@@ -76,6 +79,32 @@ def vc_isavailable():
     """
     if importlib.util.find_spec("vc_models") is None:
         raise ModuleNotFoundError(help)
+
+def fetch_git(repo_url, commit_hash, clone_directory):
+    home = os.path.join(expanduser("~"), ".robohive")
+    clone_directory = os.path.join(home, clone_directory)
+    try:
+
+        # Create the clone directory if it doesn't exist
+        os.makedirs(clone_directory, exist_ok=True)
+
+        # Clone the repository to the specified path
+        if not os.path.exists(os.path.join(clone_directory,'.git')):
+            repo = git.Repo.clone_from(repo_url, clone_directory)
+        else:
+            repo = git.Repo(clone_directory)
+            origin = repo.remote('origin')
+            origin.fetch()
+
+        # Check out the specific commit if not already
+        current_commit_hash = repo.head.commit.hexsha
+        if current_commit_hash != commit_hash:
+            repo.git.checkout(commit_hash)
+            print(f"{repo_url}@{commit_hash} fetched at {clone_directory}")
+    except git.GitCommandError as e:
+        print(f"Error: {e}")
+
+    return clone_directory
 
 
 if __name__ == '__main__':
