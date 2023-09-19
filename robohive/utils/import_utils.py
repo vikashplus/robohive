@@ -80,17 +80,19 @@ def vc_isavailable():
     if importlib.util.find_spec("vc_models") is None:
         raise ModuleNotFoundError(help)
 
-def fetch_git(repo_url, commit_hash, clone_directory):
-    home = os.path.join(expanduser("~"), ".robohive")
-    clone_directory = os.path.join(home, clone_directory)
-    try:
+def fetch_git(repo_url, commit_hash, clone_directory, clone_path=None):
+    if clone_path is None:
+        clone_path = os.path.join(expanduser("~"), ".robohive")
+    clone_directory = os.path.join(clone_path, clone_directory)
 
+    try:
         # Create the clone directory if it doesn't exist
         os.makedirs(clone_directory, exist_ok=True)
 
         # Clone the repository to the specified path
         if not os.path.exists(os.path.join(clone_directory,'.git')):
             repo = git.Repo.clone_from(repo_url, clone_directory)
+            print(f"{repo_url} cloned at {clone_directory}")
         else:
             repo = git.Repo(clone_directory)
             origin = repo.remote('origin')
