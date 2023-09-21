@@ -56,12 +56,12 @@ jobs:
     - name: Run MuJoCo Rendering test
       run: python3 -m mujoco.render_test
 
-    - name: Test RoboHive (Fetching SimHive via git-submodules)
-      run: |
-        python robohive/tests/test_all.py
+    # - name: Test RoboHive (Fetching SimHive via git-submodules)
+    #   run: |
+    #     python robohive/tests/test_all.py
 
     - name: Test RoboHive (Programmatically fetching SimHive)
       run: |
-        rm -rm robohive/simhive
+        rm -rf robohive/simhive
         python -m robohive_init
         python robohive/tests/test_all.py
