@@ -1,9 +1,44 @@
-from robohive.utils.import_utils import fetch_git
 import os
+from os.path import expanduser
+import git
+
+# from robohive.utils.import_utils import fetch_git
+def fetch_git(repo_url, commit_hash, clone_directory, clone_path=None):
+    if clone_path is None:
+        clone_path = os.path.join(expanduser("~"), ".robohive")
+    clone_directory = os.path.join(clone_path, clone_directory)
+
+    try:
+        # Create the clone directory if it doesn't exist
+        os.makedirs(clone_directory, exist_ok=True)
+
+        # Clone the repository to the specified path
+        if not os.path.exists(os.path.join(clone_directory,'.git')):
+            repo = git.Repo.clone_from(repo_url, clone_directory)
+            print(f"{repo_url} cloned at {clone_directory}")
+        else:
+            repo = git.Repo(clone_directory)
+            origin = repo.remote('origin')
+            origin.fetch()
+
+        # Check out the specific commit if not already
+        current_commit_hash = repo.head.commit.hexsha
+        if current_commit_hash != commit_hash:
+            repo.git.checkout(commit_hash)
+            print(f"{repo_url}@{commit_hash} fetched at {clone_directory}")
+    except git.GitCommandError as e:
+        print(f"Error: {e}")
+
+    return clone_directory
 
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 simhive_path = os.path.join(curr_dir, 'robohive', 'simhive')
+print("RoboHive:> Initializing...")
 
+# Mark the SimHive version (ToDo: Remove this when commits hashes are auto fetched from submodules)
+__version__ = "0.6.0"
+
+# Fetch SimHive
 fetch_git(repo_url="https://github.com/vikashplus/Adroit.git",
             commit_hash="2ef4b752e85782f84fa666fce10de5231cc5c917",
             clone_directory="Adroit",
@@ -28,7 +63,6 @@ fetch_git(repo_url="https://github.com/vikashplus/sawyer_sim.git",
             commit_hash="affaf56d56be307538e5eed34f647586281762b2",
             clone_directory="sawyer_sim",
             clone_path=simhive_path)
-
 
 fetch_git(repo_url="https://github.com/vikashplus/fetch_sim.git",
             commit_hash="58d561fa416b6a151761ced18f2dc8f067188909",
@@ -69,3 +103,10 @@ fetch_git(repo_url="https://github.com/MyoHub/myo_sim.git",
             commit_hash="1758d66ad066542e87ed2fa4ffc69121195aba2c",
             clone_directory="myo_sim",
             clone_path=simhive_path)
+
+ # mark successful creation of simhive
+filename = os.path.join(simhive_path, "simhive-version")
+with open(filename, 'w') as file:
+    file.write(__version__)
+
+print("RoboHive:> Successfully Initialized.")

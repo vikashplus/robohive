@@ -80,6 +80,28 @@ def vc_isavailable():
     if importlib.util.find_spec("vc_models") is None:
         raise ModuleNotFoundError(help)
 
+def simhive_isavailable(robohive_version):
+    help = """
+    RoboHive environments requires SimHive for simulation assets.
+    Steps:
+        (1) Ensure RoboHive is installed and visible (pip show robohive)
+        (2) Ensure RoboHive is initialized (python -m robohive_init) before using
+    """
+    file_dir = os.path.dirname(os.path.abspath(__file__))
+    if not os.path.exists(os.path.join(file_dir, "../simhive")):
+        raise ModuleNotFoundError(help)
+
+    # Check if touch file for SimHive exists
+    file_name = os.path.join(file_dir, "../simhive", 'simhive-version')
+    if os.path.isfile(file_name):
+        # Recover SimHive version
+        with open(file_name, 'r') as file:
+            simhive_version = file.read()
+
+        # Ensure that SimHive version matches RoboHive version
+        assert simhive_version==robohive_version, f"Version Mismatch: SimHive({simhive_version}) != RoboHive({robohive_version}). \nReinitialize RoboHive (python -m robohive_init)"
+
+
 def fetch_git(repo_url, commit_hash, clone_directory, clone_path=None):
     if clone_path is None:
         clone_path = os.path.join(expanduser("~"), ".robohive")
@@ -103,6 +125,7 @@ def fetch_git(repo_url, commit_hash, clone_directory, clone_path=None):
         if current_commit_hash != commit_hash:
             repo.git.checkout(commit_hash)
             print(f"{repo_url}@{commit_hash} fetched at {clone_directory}")
+
     except git.GitCommandError as e:
         print(f"Error: {e}")
 
