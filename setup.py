@@ -8,7 +8,6 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 import os
 import sys
 from setuptools import setup, find_packages
-
 if sys.version_info.major != 3:
     print("This library is only compatible with Python 3, but you are running "
           "Python {}. The installation will likely fail.".format(sys.version_info.major))
@@ -70,5 +69,10 @@ setup(
         # 'r3m @ git+https://github.com/facebookresearch/r3m.git',
         # 'vc_models @ git+https://github.com/facebookresearch/eai-vc.git@9958b278666bcbde193d665cc0df9ccddcdb8a5a#egg=vc_models&subdirectory=vc_models',
       ]
-    }
+    },
+    entry_points={
+        'console_scripts': [
+            'robohive_init = robohive.robohive_init:main',
+        ],
+    },
 )
