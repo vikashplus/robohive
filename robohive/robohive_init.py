@@ -34,7 +34,7 @@ def fetch_git(repo_url, commit_hash, clone_directory, clone_path=None):
 # Fetch SimHive
 def main():
     curr_dir = os.path.dirname(os.path.abspath(__file__))
-    simhive_path = os.path.join(curr_dir, 'robohive', 'simhive')
+    simhive_path = os.path.join(curr_dir, 'simhive')
     print("RoboHive:> Initializing...")
 
     # Mark the SimHive version (ToDo: Remove this when commits hashes are auto fetched from submodules)
