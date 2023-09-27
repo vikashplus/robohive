@@ -20,16 +20,22 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 # Getting Started
    Getting started with RoboHive is as simple as -
    ``` bash
-   # Install RoboHive and demo an environemnt
+   # Install RoboHive
    pip install robohive
+   # Initialize RoboHive
+   robohive_init
+   # Demo an environment
    python -m robohive.utils.examine_env -e FrankaReachRandom-v0
    ```
 
-   or, alternatively,
+   or, alternatively for editable installation -
 
    ``` bash
+   # Clone RoboHive
    git clone --recursive https://github.com/vikashplus/robohive.git; cd robohive
+   # Install (editable) RoboHive
    pip install -e .
+   # Demo an environment
    python -m robohive.utils.examine_env -e FrankaReachRandom-v0
    ```
 

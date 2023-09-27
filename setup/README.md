@@ -15,9 +15,13 @@
    # mujoco_py+mujoco+visual encoders
    pip install robohive[mujoco_py, encoder]
    ```
-   RoboHive will throw informative errors if any of these packages are invokes but not installed
+   RoboHive will throw informative errors if any of these packages are invoked but not installed
+   ```bash
+   # Initialize robohive (one time)
+   robohive_init
+   ```
 
-2. For editable installation, clone this repo (on a [tag](https://github.com/vikashplus/robohive/releases)) with pre-populated submodule dependencies as -
+2. For **editable installation**, clone this repo (on a [tag](https://github.com/vikashplus/robohive/releases)) with pre-populated submodule dependencies as -
    ```
    git clone --branch <tag_name/branch_name> --recursive https://github.com/vikashplus/robohive.git
    ```
@@ -33,10 +37,16 @@
    # with a0 binding for realworld robot
    $ pip install -e robohive[a0]
    ```
-   **OR** Add repo to pythonpath by updating `~/.bashrc` or `~/.bash_profile`
-   ```
+   <!-- **OR** Add repo to pythonpath by updating `~/.bashrc` or `~/.bash_profile`
+   ```bash
    export PYTHONPATH="<path/to/robohive>:$PYTHONPATH"
+   ```-->
+   RoboHive will throw informative errors if any of these packages are invoked but not installed
+   ```bash
+   # Initialize robohive (one time)
+   robohive_init
    ```
+
 3. To use `R3M`, `RRL`, `VC` as visual encoders.
    - For PyPI installation: Encoders can't be directly installated from PyPi as these encoders don't have PyPi packages. (we are working with the authors for a fix). To use the encoders, simply try using the encoders and follow the instructions on the console
    - For editable installation

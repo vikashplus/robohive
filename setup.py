@@ -70,5 +70,11 @@ setup(
         # 'r3m @ git+https://github.com/facebookresearch/r3m.git',
         # 'vc_models @ git+https://github.com/facebookresearch/eai-vc.git@9958b278666bcbde193d665cc0df9ccddcdb8a5a#egg=vc_models&subdirectory=vc_models',
       ]
-    }
+    },
+    entry_points={
+        'console_scripts': [
+            'robohive_init = robohive_init:fetch_simhive',
+            'robohive_clean = robohive_init:clean_simhive',
+        ],
+    },
 )

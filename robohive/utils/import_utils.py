@@ -85,7 +85,9 @@ def simhive_isavailable(robohive_version):
     RoboHive environments requires SimHive for simulation assets.
     Steps:
         (1) Ensure RoboHive is installed and visible (pip show robohive)
-        (2) Ensure RoboHive is initialized (python -m robohive_init) before using
+        (2) Ensure RoboHive is initialized before using. Options -
+            (a) robohive_init
+            (b) python -m robohive_init
     """
     file_dir = os.path.dirname(os.path.abspath(__file__))
     if not os.path.exists(os.path.join(file_dir, "../simhive")):
