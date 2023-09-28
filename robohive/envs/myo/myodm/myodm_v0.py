@@ -146,9 +146,9 @@ class TrackEnv(BaseV0):
 
         # Adjust init as per the specified key
         robot_init, object_init = self.ref.get_init()
-        if robot_init is None:
+        if robot_init is not None:
             self.init_qpos[:self.ref.robot_dim] = robot_init
-        if object_init is None:
+        if object_init is not None:
             self.init_qpos[self.ref.robot_dim:self.ref.robot_dim+3] = object_init[:3]
             self.init_qpos[-3:] = quat2euler(object_init[3:])
 
@@ -172,8 +172,10 @@ class TrackEnv(BaseV0):
             self.sim_obsd.model.site_pos[self.target_sid][:] = curr_ref.object[:3]
             self.sim.forward()
 
+
     def norm2(self, x):
         return np.sum(np.square(x))
+
 
     def get_obs_dict(self, sim):
         obs_dict = {}
@@ -270,6 +272,7 @@ class TrackEnv(BaseV0):
         # print(rwd_dict['dense'], obj_com_err,rwd_dict['done'],rwd_dict['sparse'])
         return rwd_dict
 
+
     def qpos_from_robot_object(self, qpos, robot, object):
         qpos[:len(robot)] = robot
         qpos[len(robot):len(robot)+3] = object[:3]
@@ -277,9 +280,9 @@ class TrackEnv(BaseV0):
 
 
     def playback(self):
-        idxs = self.ref.find_timeslot_in_reference(self.time)
+        idxs = self.ref.find_timeslot_in_reference(self.time+self.motion_start_time)
         # print(f"Time {self.time} {idxs} {self.ref.horizon}")
-        ref_mot = self.ref.get_reference(self.time)
+        ref_mot = self.ref.get_reference(self.time+self.motion_start_time)
         self.qpos_from_robot_object(self.sim.data.qpos, ref_mot.robot, ref_mot.object )
         self.sim.forward()
         self.sim.data.time = self.sim.data.time + 0.02#self.env.env.dt
