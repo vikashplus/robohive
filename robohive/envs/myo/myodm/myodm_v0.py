@@ -21,9 +21,9 @@ from robohive.envs.myo.base_v0 import BaseV0
 class TrackEnv(BaseV0):
 
     DEFAULT_CREDIT = """\
-    Learning Dexterous Manipulation from Exemplar Object Trajectories and Pre-Grasps
-        Sudeep Dasari, Abhinav Gupta, Vikash Kumar
-        ICRA-2023 | https://pregrasps.github.io
+    MyoDex: A Generalizable Prior for Dexterous Manipulation
+        Vittorio Caggiano, Sudeep Dasari, Vikash Kumar
+        ICML-2023, https://arxiv.org/abs/2309.03130
     """
 
     DEFAULT_OBS_KEYS = [
@@ -88,7 +88,7 @@ class TrackEnv(BaseV0):
                motion_extrapolation:bool=True,  # Hold the last frame if motion is over
                obs_keys=DEFAULT_OBS_KEYS,
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
-               Termimate_obj_fail=False,
+               Termimate_obj_fail=True,
                Termimate_pose_fail=False,
                **kwargs):
 
@@ -114,7 +114,7 @@ class TrackEnv(BaseV0):
         self.qvel_err_scale = 0.1
 
         # TERMINATIONS FOR OBJ TRACK
-        self.obj_com_term = 0.5
+        self.obj_fail_thresh = 0.25
         # TERMINATIONS FOR HAND-OBJ DISTANCE
         self.base_fail_thresh = .25
         self.TermObj = Termimate_obj_fail
@@ -301,10 +301,16 @@ class TrackEnv(BaseV0):
 
         obj_term, qpos_term, base_term = False, False, False
         if self.TermObj: # termination on object
-            obj_term = True if self.norm2(obs_dict['obj_com_err']) >= self.obj_com_term ** 2 else False
+            # object too far from reference
+            obj_term = True if self.norm2(obs_dict['obj_com_err']) >= self.obj_fail_thresh ** 2 else False
+            # wrist too far from object
             base_term = True if self.norm2(obs_dict['base_error'] ) >= self.base_fail_thresh ** 2 else False
 
         if self.TermPose: # termination on posture
             qpos_term = True if self.norm2(obs_dict['hand_qpos_err']) >= self.qpos_fail_thresh else False
+
+        # if obj_term or qpos_term or base_term:
+        #     print(f"obj_term:{np.linalg.norm(obs_dict['obj_com_err'])}, base_term:{np.linalg.norm(obs_dict['base_error'])}")
+        #     print("=====================================>>")
 
         return obj_term or qpos_term or base_term # combining termination for object + posture
