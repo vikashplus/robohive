@@ -109,8 +109,8 @@ def register_MyoHand_object(object_name):
                 'reference': {'time':(0.0, 4.0),
                                 'robot':np.zeros((1, dof_robot)),
                                 'robot_vel':np.zeros((1,dof_robot)),
-                                'object_init':np.array((-.2, -.2, 0.0, 1.0, 0.0, 0.0, 0.0)),
-                                'object':np.reshape(np.array((.2, .2, 0.0, 1.0, 0.0, 0.0, 0.0)), (1,7))
+                                'object_init':np.array((-.2, -.2, 0.1, 1.0, 0.0, 0.0, 0.0)),
+                                'object':np.reshape(np.array((.2, .2, 0.1, 1.0, 0.0, 0.0, 0.1)), (1,7))
                             }
             }
     )
@@ -128,8 +128,9 @@ def register_MyoHand_object(object_name):
                 'reference': {'time':(0.0, 4.0),
                                 'robot':np.zeros((2, dof_robot)),
                                 'robot_vel':np.zeros((2, dof_robot)),
-                                'object':np.array([ [-.2, -.2, 0.0, 1.0, 0.0, 0.0, 0.0],
-                                                    [0.2, 0.2, 0.0, 1.0, 0.0, 0.0, 0.0]])
+                                'object_init':np.array((0.0, 0.0, 0.1, 1.0, 0.0, 0.0, 0.0)),
+                                'object':np.array([ [-.2, -.2, 0.1, 1.0, 0.0, 0.0, -1.0],
+                                                    [0.2, 0.2, 0.1, 1.0, 0.0, 0.0, 1.0]])
                             }
             }
     )
