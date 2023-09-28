@@ -10,7 +10,7 @@ from robohive.envs import env_base
 from robohive.logger.reference_motion import ReferenceMotion
 from robohive.utils.quat_math import quat2euler, euler2quat, quatDiff2Vel, mat2quat
 import numpy as np
-import os
+import os, time
 import collections
 from robohive.envs.myo.base_v0 import BaseV0
 
@@ -39,12 +39,13 @@ class TrackEnv(BaseV0):
 
         curr_dir = os.path.dirname(os.path.abspath(__file__))
         self.object_name = object_name
+        time_stamp = str(time.time())
 
         # Process model_path to import the right object
         with open(curr_dir+model_path, 'r') as file:
             processed_xml = file.read()
             processed_xml = processed_xml.replace('OBJECT_NAME', object_name)
-        processed_model_path = curr_dir+model_path[:-4]+"_processed.xml"
+        processed_model_path = curr_dir+model_path[:-4]+time_stamp+"_processed.xml"
         with open(processed_model_path, 'w') as file:
             file.write(processed_xml)
         # Process obsd_model_path to import the right object
@@ -54,7 +55,7 @@ class TrackEnv(BaseV0):
             with open(curr_dir+obsd_model_path, 'r') as file:
                 processed_xml = file.read()
                 processed_xml = processed_xml.replace('OBJECT_NAME', object_name)
-            processed_obsd_model_path = curr_dir+model_path[:-4]+"_processed.xml"
+            processed_obsd_model_path = curr_dir+model_path[:-4]+time_stamp+"_processed.xml"
             with open(processed_obsd_model_path, 'w') as file:
                 file.write(processed_xml)
         else:
