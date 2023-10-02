@@ -24,7 +24,7 @@ register(id='myoChallengeRelocateP1-v0',
 # MyoChallenge Manipulation
 register(id='myoChallengeRelocateP2-v0',
         entry_point='robohive.envs.myo.myochallenge.relocate_v0:RelocateEnvV0',
-        max_episode_steps=50,
+        max_episode_steps=150,
         kwargs={
             'model_path': curr_dir+'/../assets//myoarm_object_v0.15(mj236).mjb',
             # 'model_path': '/home/vik/Libraries/myohub/myo_sim_dev/myo_sim/arm/myochallenge_myoarm.xml',
