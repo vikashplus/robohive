@@ -124,7 +124,7 @@ def fetch_simhive():
                 clone_path=simhive_path)
 
     fetch_git(repo_url="https://github.com/MyoHub/myo_sim.git",
-                commit_hash="1758d66ad066542e87ed2fa4ffc69121195aba2c",
+                commit_hash="fd4e15ad6797db9351a921a8c8394a7070ba5541",
                 clone_directory="myo_sim",
                 clone_path=simhive_path)
 

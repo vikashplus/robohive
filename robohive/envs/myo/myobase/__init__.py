@@ -290,7 +290,7 @@ sim_backend = SimBackend.get_sim_backend()
 if sim_backend == SimBackend.MUJOCO_PY:
     leg_model='/../../../simhive/myo_sim/leg/myolegs_v0.54(mj210).mjb'
 elif sim_backend == SimBackend.MUJOCO:
-    leg_model='/../../../simhive/myo_sim/leg/myolegs_v0.55(mj236).mjb'
+    leg_model='/../../../simhive/myo_sim/leg/myolegs_v0.56(mj237).mjb'
     # leg_model='/../../../simhive/myo_sim/leg/myolegs_suspended_v0.56(mj236).mjb'
 
 
@@ -308,14 +308,14 @@ register_env_with_variants(id='myoLegStandRandom-v0',
         }
     )
 
-
+"""
 register_env_with_variants(id='myoLegReachRandom-v0',
         # entry_point='robohive.envs.myo.myobase.reach_v0:ReachEnvV0',
         entry_point='robohive.envs.myo.myobase.walk_v0:ReachEnvV0',
         max_episode_steps=75,
         kwargs={
-            'model_path': curr_dir+'/../assets/myolegs_suspended_v0.56(mj236).mjb', # temp model, remove this
-            # 'model_path': curr_dir+leg_model,
+            # 'model_path': curr_dir+'/../assets/myolegs_suspended_v0.56(mj236).mjb', # temp model, remove this
+            'model_path': curr_dir+leg_model,
             'joint_random_range': (0.2, -0.2), #range of joint randomization (jnt = init_qpos + random(range)
             'target_reach_range': {
                 # 'pelvis': ((-.050, -.050, -.050), (0.05, 0.05, .05)),
@@ -333,6 +333,7 @@ register_env_with_variants(id='myoLegReachRandom-v0',
             'far_th': 0.25
         }
     )
+"""
 
 # Gait Torso Walking ==============================
 register_env_with_variants(id='myoLegWalk-v0',
