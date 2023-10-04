@@ -20,6 +20,8 @@ def examine_reference(env_name, horizon, num_playback, render):
     # infer reference horizon
     if horizon==-1:
         horizon =  env.env.ref.horizon
+    if horizon==1: # fixed or random reference
+        horizon =  env.env.horizon
 
     # Start playback loops
     print(f"Rending reference motion (total frames: {horizon})")
