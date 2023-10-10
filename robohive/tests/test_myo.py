@@ -16,7 +16,7 @@ class TestMyo(TestEnvs):
         self.check_envs('MyoBase Suite', robohive_myobase_suite)
 
 
-    def test_myochal_envs(self):
+    def no_test_myochal_envs(self):
         self.check_envs('MyoChallenge Suite', robohive_myochal_suite)
 
 

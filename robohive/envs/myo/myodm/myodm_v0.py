@@ -309,8 +309,4 @@ class TrackEnv(BaseV0):
         if self.TermPose: # termination on posture
             qpos_term = True if self.norm2(obs_dict['hand_qpos_err']) >= self.qpos_fail_thresh else False
 
-        # if obj_term or qpos_term or base_term:
-        #     print(f"obj_term:{np.linalg.norm(obs_dict['obj_com_err'])}, base_term:{np.linalg.norm(obs_dict['base_error'])}")
-        #     print("=====================================>>")
-
         return obj_term or qpos_term or base_term # combining termination for object + posture

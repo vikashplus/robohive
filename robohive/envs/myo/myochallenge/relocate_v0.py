@@ -68,7 +68,8 @@ class RelocateEnvV0(BaseV0):
     def get_obs_dict(self, sim):
         obs_dict = {}
         obs_dict['time'] = np.array([sim.data.time])
-        obs_dict['hand_qpos'] = sim.data.qpos[:-6].copy()
+        obs_dict['hand_qpos'] = sim.data.qpos[:-7].copy()
+        obs_dict['hand_qpos_corrected'] = sim.data.qpos[:-6].copy()
         obs_dict['hand_qvel'] = sim.data.qvel[:-6].copy()*self.dt
         obs_dict['obj_pos'] = sim.data.site_xpos[self.object_sid]
         obs_dict['goal_pos'] = sim.data.site_xpos[self.goal_sid]
@@ -95,7 +96,6 @@ class RelocateEnvV0(BaseV0):
             # Update Optional Keys section below
             # Update reward keys (DEFAULT_RWD_KEYS_AND_WEIGHTS) accordingly to update final rewards
             # Examples: Env comes pre-packaged with two keys pos_dist and rot_dist
-
             # Optional Keys
             ('pos_dist', -1.*pos_dist),
             ('rot_dist', -1.*rot_dist),
@@ -175,8 +175,13 @@ class RelocateEnvV0(BaseV0):
 
         # randomize init arms pose
         if self.qpos_noise_range is not None:
-            reset_qpos = self.init_qpos + self.qpos_noise_range*(self.sim.model.jnt_range[:,1]-self.sim.model.jnt_range[:,0])
-            reset_qpos[-6:] = self.init_qpos[-6:]
+            reset_qpos_local = self.init_qpos + self.qpos_noise_range*(self.sim.model.jnt_range[:,1]-self.sim.model.jnt_range[:,0])
+            reset_qpos_local[-6:] = self.init_qpos[-6:]
+        else:
+            reset_qpos_local = reset_qpos
 
-        obs = super().reset(reset_qpos, reset_qvel)
+        obs = super().reset(reset_qpos_local, reset_qvel)
+        if self.sim.data.ncon>0:
+            self.reset(reset_qpos, reset_qvel)
+
         return obs

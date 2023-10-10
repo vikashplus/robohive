@@ -6,7 +6,7 @@ from robohive.utils.quat_math import euler2quat
 import glob
 import pickle
 
-# Time precision to use. Avoids rounding/resolution efforts during comparisons
+# Time precision to use. Avoids rounding/resolution errors during comparisons
 _TIME_PRECISION = 4
 
 # Reference structure
