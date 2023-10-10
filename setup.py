@@ -30,7 +30,7 @@ setup(
     version='0.6.0',
     license='Apache 2.0',
     packages=find_packages(),
-    package_data={"": extra_files},
+    package_data={"": extra_files+['../robohive_init.py']},
     include_package_data=True,
     description='environments simulated in MuJoCo',
     long_description=read('README.md'),
