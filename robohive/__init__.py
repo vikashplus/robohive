@@ -7,7 +7,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 
 # RoboHive version
-__version__ = "0.6.0"
+__version__ = "0.7.0"
 
 
 # Check for RoboHive initialization
