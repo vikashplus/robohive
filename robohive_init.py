@@ -59,7 +59,7 @@ def fetch_simhive():
     print("RoboHive:> Initializing...")
 
     # Mark the SimHive version (ToDo: Remove this when commits hashes are auto fetched from submodules)
-    __version__ = "0.6.0"
+    __version__ = "0.7.0"
 
     # Fetch SimHive
     print("RoboHive:> Downloading simulation assets (upto ~300MBs)")
@@ -89,7 +89,7 @@ def fetch_simhive():
                 clone_path=simhive_path)
 
     fetch_git(repo_url="https://github.com/vikashplus/fetch_sim.git",
-                commit_hash="58d561fa416b6a151761ced18f2dc8f067188909",
+                commit_hash="7f6d25ae8a6f5778379a48fa60c17d685075e64d",
                 clone_directory="fetch_sim",
                 clone_path=simhive_path)
 
