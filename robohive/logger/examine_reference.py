@@ -1,5 +1,5 @@
 import robohive
-import gym
+import gymnasium as gym
 import time
 import click
 from tqdm import tqdm
@@ -10,7 +10,7 @@ Script to render trajectories embeded in the env"
 """
 
 @click.command(help=DESC)
-@click.option('-e', '--env_name', type=str, help='environment to load', default="AdroitBananaPass-v0")
+@click.option('-e', '--env_name', type=str, help='environment to load', default="MyoHandBananaPass-v0")
 @click.option('-h', '--horizon', type=int, help='playback horizon', default=-1)
 @click.option('-n', '--num_playback', type=int, help='Number of time to loop playback', default=1)
 @click.option('-r', '--render', type=click.Choice(['onscreen', 'none']), help='visualize onscreen?', default='onscreen')
@@ -19,9 +19,9 @@ def examine_reference(env_name, horizon, num_playback, render):
 
     # infer reference horizon
     if horizon==-1:
-        horizon =  env.env.ref.horizon
+        horizon = env.env.ref.horizon
     if horizon==1: # fixed or random reference
-        horizon =  env.env.horizon
+        horizon = env.spec.max_episode_steps
 
     # Start playback loops
     print(f"Rending reference motion (total frames: {horizon})")

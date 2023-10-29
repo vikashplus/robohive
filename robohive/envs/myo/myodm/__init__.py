@@ -1,4 +1,4 @@
-from gym.envs.registration import register
+from gymnasium.envs import register
 import collections
 import os
 import numpy as np

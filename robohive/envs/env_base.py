@@ -5,7 +5,7 @@ Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
-import gym
+import gymnasium as gym
 import numpy as np
 import os
 import time as timer
@@ -130,10 +130,10 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self._setup_rgb_encoders(self.visual_keys, device=None)
 
         # reset to get the env ready
-        observation, _reward, done, _info = self.step(np.zeros(self.sim.model.nu))
+        observation, _reward, terminated, truncated, _info = self.step(np.zeros(self.sim.model.nu))
         # Question: Should we replace above with following? Its specially helpful for hardware as it forces a env reset before continuing, without which the hardware will make a big jump from its position to the position asked by step.
         # observation = self.reset()
-        assert not done, "Check initialization. Simulation starts in a done state."
+        assert not terminated, "Check initialization. Simulation starts in a terminated state."
         self.observation_space = gym.spaces.Box(obs_range[0]*np.ones(observation.size), obs_range[1]*np.ones(observation.size), dtype=np.float32)
 
         return
@@ -286,8 +286,10 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         # finalize step
         env_info = self.get_env_infos()
 
-        # returns obs(t+1), rwd(t+1), done(t+1), info(t+1)
-        return obs, env_info['rwd_'+self.rwd_mode], bool(env_info['done']), env_info
+        # returns obs(t+1), rwd(t+1), terminated(t+1), truncated(t+1), info(t+1)
+        terminated = bool(env_info['done']) or bool(env_info['solved']) # terminal state good or bad
+        truncated = bool(env_info['done']) # out of bounds
+        return obs, env_info['rwd_'+self.rwd_mode], terminated, truncated, env_info
 
 
     def get_obs(self, update_proprioception=True, update_exteroception=False):
@@ -509,6 +511,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
     @property
     def horizon(self):
+        Warning("WIP: Horizon isn't correct for gymnasium")
+        import ipdb; ipdb.set_trace()
         return self.spec.max_episode_steps # paths could have early termination before horizon
 
 

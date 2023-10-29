@@ -8,7 +8,7 @@ from robohive.utils.examine_env import main as examine_env
 import os
 
 class TestTrace(unittest.TestCase):
-    def teast_trace(self):
+    def no_test_trace(self):
         # Call your function and test its output/assertions
         print("Testing Trace Basics")
         test_trace()
@@ -17,15 +17,18 @@ class TestTrace(unittest.TestCase):
 class TestExamineTrace(unittest.TestCase):
     def test_logs_playback(self):
 
-        print("\nTesting logger: Logs playback")
+        print("\nTesting logger: Saving logs")
         runner = click.testing.CliRunner()
         result = runner.invoke(examine_env, ["--env_name", "door-v1", \
                                             "--num_episodes", 1, \
                                             "--render", "none",\
                                             "--save_paths", True,\
                                             "--output_name", "door_test_logs"])
-        log_name = result.output.strip()[-38:]
 
+        idx = result.output.find("door_test_logs")
+        log_name = result.output[idx:idx+38]
+
+        print("\nTesting logger: Logs playback")
         result = runner.invoke(examine_logs, ["--env_name", "door-v1", \
                                             "--rollout_path", log_name, \
                                             "--render", "none",\

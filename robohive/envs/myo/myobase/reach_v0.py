@@ -4,7 +4,7 @@ Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gma
 ================================================= """
 
 import collections
-import gym
+import gymnasium as gym
 import numpy as np
 
 from robohive.envs.myo.base_v0 import BaseV0

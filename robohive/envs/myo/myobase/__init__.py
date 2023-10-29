@@ -3,7 +3,7 @@
 Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gmail.com)
 ================================================= """
 
-from gym.envs.registration import register
+from gymnasium.envs import register
 from robohive.envs.env_variants import register_env_variant
 
 import os

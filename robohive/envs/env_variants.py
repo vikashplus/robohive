@@ -5,9 +5,8 @@ Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
-import gym
-from gym.envs.registration import register
-import collections
+import gymnasium as gym
+from gymnasium.envs.registration import register
 from copy import deepcopy
 from flatten_dict import flatten, unflatten
 
@@ -47,10 +46,10 @@ def register_env_variant(env_id:str, variants:dict, variant_id=None, silent=Fals
     """
 
     # check if the base env is registered
-    assert env_id in gym.envs.registry.env_specs.keys(), "ERROR: {} not found in env registry".format(env_id)
+    assert env_id in gym.envs.registry.keys(), "ERROR: {} not found in env registry".format(env_id)
 
     # recover the specs of the existing env
-    env_variant_specs = deepcopy(gym.envs.registry.env_specs[env_id])
+    env_variant_specs = deepcopy(gym.spec(env_id))
     env_variant_id = env_variant_specs.id[:-3]
 
     # update horizon if requested
@@ -59,17 +58,17 @@ def register_env_variant(env_id:str, variants:dict, variant_id=None, silent=Fals
         env_variant_id = env_variant_id+"-hor_{}".format(env_variant_specs.max_episode_steps)
         del variants['max_episode_steps']
 
-    # merge specs._kwargs with variants
-    env_variant_specs._kwargs, variants_update_keyval_str = update_dict(env_variant_specs._kwargs, variants, override_keys=override_keys)
+    # merge specs.kwargs with variants
+    env_variant_specs.kwargs, variants_update_keyval_str = update_dict(env_variant_specs.kwargs, variants, override_keys=override_keys)
     env_variant_id += variants_update_keyval_str
 
     # finalize name and register env
     env_variant_specs.id = env_variant_id+env_variant_specs.id[-3:] if variant_id is None else variant_id
     register(
         id=env_variant_specs.id,
-        entry_point=env_variant_specs._entry_point,
+        entry_point=env_variant_specs.entry_point,
         max_episode_steps=env_variant_specs.max_episode_steps,
-        kwargs=env_variant_specs._kwargs
+        kwargs=env_variant_specs.kwargs
     )
     if not silent:
         print("Registered a new env-variant:", env_variant_specs.id)
@@ -82,7 +81,7 @@ if __name__ == '__main__':
     import pprint
 
     # Register a variant
-    base_env_name = "kitchen-v3"
+    base_env_name = "FK1_OpenAllFixed-v4"
     base_env_variants={
         'max_episode_steps':50,                     # special key
         'obj_goal': {"lightswitch_joint": -0.7},    # obj_goal keys will be updated
@@ -96,16 +95,16 @@ if __name__ == '__main__':
 
     # Test variant
     print("Base-env kwargs: ")
-    pprint.pprint(gym.envs.registry.env_specs[base_env_name]._kwargs)
+    pprint.pprint(gym.spec(base_env_name).kwargs)
     print("Env-variant kwargs: ")
-    pprint.pprint(gym.envs.registry.env_specs[variant_env_name]._kwargs)
+    pprint.pprint(gym.spec(variant_env_name).kwargs)
     print("Env-variant (with override) kwargs: ")
-    pprint.pprint(gym.envs.registry.env_specs[variant_overide_env_name]._kwargs)
+    pprint.pprint(gym.spec(variant_overide_env_name).kwargs)
 
     # Test one of the newly minted env
     env = gym.make(variant_env_name)
     env.reset()
-    env.mj_render()
+    # env.mj_render()
     # env.sim.render(mode='window')
     for _ in range(50):
         env.step(env.action_space.sample()) # take a random action

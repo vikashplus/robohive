@@ -4,7 +4,7 @@ Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gma
 ================================================= """
 
 import collections
-import gym
+import gymnasium as gym
 import numpy as np
 from robohive.envs.myo.base_v0 import BaseV0
 from robohive.utils.quat_math import quat2mat
@@ -115,7 +115,7 @@ class ReachEnvV0(BaseV0):
 
     # generate random qpos for targets (only at linear joints)
     def generate_qpos(self):
-        qpos_rand = self.np_random.uniform(low= self.joint_random_range[0], high= self.joint_random_range[1], size=self.init_qpos.shape)
+        qpos_rand = self.np_random.uniform(high=self.joint_random_range[0], low=self.joint_random_range[1], size=self.init_qpos.shape)
         qpos_new = self.init_qpos.copy()
         qpos_new[self.sim.model.jnt_qposadr] += qpos_rand[self.sim.model.jnt_qposadr] # only linear joints
         qpos_new[self.sim.model.jnt_qposadr] = np.clip(qpos_new[self.sim.model.jnt_qposadr], self.sim.model.jnt_range[:,0], self.sim.model.jnt_range[:,1])

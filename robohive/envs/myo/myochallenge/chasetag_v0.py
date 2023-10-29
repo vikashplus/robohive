@@ -4,7 +4,7 @@ Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gma
 ================================================= """
 
 import collections
-import gym
+import gymnasium as gym
 import numpy as np
 import pink
 import os
@@ -223,7 +223,7 @@ class HeightField:
                 self._fill_patch(i, j, terrain_type)
         # put special terrain only once in 20% of episodes
         if self.rng.uniform() < 0.2:
-            i, j = self.rng.randint(0, self.patches_per_side, size=2)
+            i, j = self.rng.integers(0, self.patches_per_side, size=2)
             self._fill_patch(i, j, SpecialTerrains.RELIEF)
 
     def _fill_patch(self, i, j, terrain_type='FLAT'):

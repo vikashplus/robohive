@@ -17,7 +17,7 @@ USAGE:\n
 
 from robohive.utils.paths_utils import plot as plotnsave_paths
 from robohive.utils import tensor_utils
-import gym
+import gymnasium as gym
 import click
 import numpy as np
 import time
@@ -48,7 +48,7 @@ def examine_logs(env_name, rollout_path, rollout_format, mode, horizon, seed, nu
     # seed and load environments
     np.random.seed(seed)
     env = gym.make(env_name) if env_args==None else gym.make(env_name, **(eval(env_args)))
-    env = env.env
+    env = env.env.env.env
     env.seed(seed)
 
     # Start a "trace" for recording rollouts

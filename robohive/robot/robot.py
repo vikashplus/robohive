@@ -792,7 +792,7 @@ class Robot():
 
 
 def demo_robot():
-    import gym
+    import gymnasium as gym
 
     prompt("Starting Robot===================")
     env = gym.make('FrankaReachFixed-v0')

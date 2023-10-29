@@ -6,7 +6,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= """
 
 import collections
-import gym
+import gymnasium as gym
 import numpy as np
 from robohive.utils.quat_math import euler2quat
 

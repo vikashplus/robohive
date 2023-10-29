@@ -6,7 +6,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= """
 
 import os
-from gym.envs.registration import register
+from gymnasium.envs import register
 
 CURR_DIR = os.path.dirname(os.path.abspath(__file__))
 
