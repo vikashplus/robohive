@@ -106,7 +106,7 @@ class DoorEnvV1(env_base.MujocoEnv):
         self.sim.model.body_pos[self.door_bid, 1] = self.np_random.uniform(low=0.25, high=0.35)
         self.sim.model.body_pos[self.door_bid,2] = self.np_random.uniform(low=0.252, high=0.35)
         self.sim.forward()
-        return self.get_obs()
+        return self.get_obs(), {}
 
 
     def get_env_state(self):

@@ -712,7 +712,8 @@ class Robot():
     def reset(self,
               reset_pos,
               reset_vel,
-              blocking = True
+              blocking = True,
+              seed=12
               ):
 
         prompt("Resetting {}".format(self.name), 'white', 'on_grey', flush=True)
