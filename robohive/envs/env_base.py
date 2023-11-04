@@ -10,7 +10,7 @@ import numpy as np
 import os
 import time as timer
 
-from robohive.envs.obj_vec_dict import ObsVecDict
+from robohive.envs.obs_vec_dict import ObsVecDict
 from robohive.utils import tensor_utils
 from robohive.robot.robot import Robot
 from robohive.utils.prompt_utils import prompt, Prompt
@@ -48,7 +48,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         """
 
         prompt("RoboHive:> For environment credits, please cite -")
-        prompt(env_credits, color="cyan", type=Prompt.INFO)
+        prompt(env_credits, color="cyan", type=Prompt.ONCE)
 
         # Seed and initialize the random number generator
         self.seed(seed)
@@ -134,8 +134,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         # Question: Should we replace above with following? Its specially helpful for hardware as it forces a env reset before continuing, without which the hardware will make a big jump from its position to the position asked by step.
         # observation = self.reset()
         assert not done, "Check initialization. Simulation starts in a done state."
-        self.obs_dim = observation.size
-        self.observation_space = gym.spaces.Box(obs_range[0]*np.ones(self.obs_dim), obs_range[1]*np.ones(self.obs_dim), dtype=np.float32)
+        self.observation_space = gym.spaces.Box(obs_range[0]*np.ones(observation.size), obs_range[1]*np.ones(observation.size), dtype=np.float32)
 
         return
 
@@ -352,9 +351,22 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         visual_dict['time'] = np.array([self.sim.data.time])
         for key in visual_keys:
             if key.startswith('rgb'):
-                _, cam, wxh, rgb_encoder_id = key.split(':')
+
+                # _, cam, wxh, rgb_encoder_id = key.split(':') # faces issues if camera names have : in them
+
+                # get encoder
+                key_payload = key[4:]
+                rgb_encoder_id = key_payload.split(':')[-1]
+
+                # get image resolution
+                key_payload = key_payload[:-(len(rgb_encoder_id)+1)]
+                wxh = key_payload.split(':')[-1]
                 height = int(wxh.split('x')[0])
                 width = int(wxh.split('x')[1])
+
+                # get camera name
+                cam = key_payload[:-(len(wxh)+1)]
+
                 # render images ==> returns (ncams, height, width, 3)
                 img, dpt = self.robot.get_visual_sensors(
                                     height=height,
@@ -386,7 +398,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 visual_dict.update({key:rgb_encoded})
                 # add depth observations if requested in the keys (assumption d will always be accompanied by rgb keys)
                 d_key = 'd:'+key[4:]
-                if d_key in self.obs_keys:
+                if d_key in visual_keys:
                     visual_dict.update({d_key:dpt})
 
         return visual_dict
@@ -427,7 +439,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         - NOTE: Returned dict contains pointers that will be updated by the env. Deepcopy returned data if you want it to persist
         - Essential keys are added below. Users can add more keys by overriding this function in their task-env
         - Requires necessary keys (dense, sparse, solved, done) in rwd_dict to be populated
-        - Visual_dict can be {} if users hasn't explicitely updated it explicitely for current time
+        - Visual_dict can be {} if users hasn't explicitly updated it explicitly for current time
         """
 
         # resolve if current visuals are available
@@ -443,7 +455,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             'solved': self.rwd_dict['solved'][()],      # MDP(t)
             'done': self.rwd_dict['done'][()],          # MDP(t)
             'obs_dict': self.obs_dict,                  # MDP(t)
-            'visual_dict': visual_dict,                 # MDP(t), will be {} if user hasn't explicitely updated self.visual_dict at the current time
+            'visual_dict': visual_dict,                 # MDP(t), will be {} if user hasn't explicitly updated self.visual_dict at the current time
             'proprio_dict': self.proprio_dict,          # MDP(t)
             'rwd_dict': self.rwd_dict,                  # MDP(t)
             'state': self.get_env_state(),              # MDP(t)
@@ -629,7 +641,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.sim.renderer.render_to_window()
 
 
-    def viewer_setup(self, distance=2.5, azimuth=90, elevation=-30, lookat=None):
+    def viewer_setup(self, distance=2.5, azimuth=90, elevation=-30, lookat=None, render_actuator=None, render_tendon=None):
         """
         Setup the default camera
         """
@@ -639,8 +651,13 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 elevation=elevation,
                 lookat=lookat
         )
+        self.sim.renderer.set_viewer_settings(
+            render_actuator=render_actuator,
+            render_tendon=render_tendon
+        )
 
 
+    # Methods on policy (should it be a part of utils?) =================================
     def examine_policy(self,
             policy,
             horizon=1000,
@@ -833,7 +850,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                     skvideo.io.vwrite(file_name, np.asarray(frames),outputdict={"-pix_fmt": "yuv420p"})
                 else:
                     skvideo.io.vwrite(file_name, np.asarray(frames))
-                prompt("saved: "+file_name, type=Prompt.INFO)
+                prompt("saved: "+file_name, type=Prompt.ALWAYS)
 
         self.mujoco_render_frames = False
         prompt("Total time taken = %f"% (timer.time()-exp_t0), type=Prompt.INFO)

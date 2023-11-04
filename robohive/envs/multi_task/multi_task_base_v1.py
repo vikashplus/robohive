@@ -10,7 +10,7 @@ import gym
 import numpy as np
 
 from robohive.envs import env_base
-from robohive.utils.quat_math import mat2euler
+from robohive.utils.quat_math import mat2euler, quat2euler
 
 VIZ = False
 
@@ -40,7 +40,7 @@ class KitchenBase(env_base.MujocoEnv):
     DEFAULT_PROPRIO_KEYS_AND_WEIGHTS = {
         "robot_jnt": 1.0,   # radian
         "robot_vel": 1.0,   # radian
-        "ee_pose": 1.0      # [meters, radians]
+        "ee_pose_wrt_robot": 1.0    # [meters, radians]
     }
 
     def _setup(self,
@@ -48,6 +48,7 @@ class KitchenBase(env_base.MujocoEnv):
                obj_jnt_names,
                obj_interaction_site,
                obj_goal,
+               robot_base_name = "chef",           # Name of the robot chef
                interact_site="end_effector",
                obj_init=None,
                obs_keys_wt=list(DEFAULT_OBS_KEYS_AND_WEIGHTS.keys()),
@@ -68,6 +69,8 @@ class KitchenBase(env_base.MujocoEnv):
         # configure env-site
         self.grasp_sid = self.sim.model.site_name2id("end_effector")
         self.obj_interaction_site = obj_interaction_site
+        self.robot_base_bid = self.sim.model.body_name2id(robot_base_name)
+        self.robot_base_pos = self.sim.model.body_pos[self.robot_base_bid].copy()
 
         # configure env-robot
         self.robot_dofs = []
@@ -167,10 +170,19 @@ class KitchenBase(env_base.MujocoEnv):
             - self.sim.data.site_xpos[self.grasp_sid]
         )
         obs_dict["pose_err"] = self.robot_meanpos - obs_dict["robot_jnt"]
-        obs_dict["end_effector"] = self.sim.data.site_xpos[self.grasp_sid]
-        ee_pos = self.sim.data.site_xpos[self.grasp_sid]
+
+        # End effector global pose
+        ee_pos = self.sim.data.site_xpos[self.grasp_sid].copy()
         ee_euler = mat2euler(np.reshape(sim.data.site_xmat[self.grasp_sid],(3,3)))
         obs_dict["ee_pose"] = np.concatenate([ee_pos, ee_euler])
+
+        # End effector local pose wrt robot (for proprioception).
+        # ee_pose as proprioception introduced bug in v0.5 that led to information
+        # leakage about the relative robot-kitchen positioning
+        robot_pos = self.sim.model.body_pos[self.robot_base_bid].copy()
+        robot_euler = quat2euler(self.sim.model.body_quat[self.robot_base_bid])
+        obs_dict["ee_pose_wrt_robot"] = np.concatenate([ee_pos-robot_pos, ee_euler-robot_euler])
+
         obs_dict["qpos"] = self.sim.data.qpos.copy()
         for site in self.obj_interaction_site:
             site_id = self.sim.model.site_name2id(site)

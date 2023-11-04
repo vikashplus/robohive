@@ -23,20 +23,24 @@ class MjPyRenderer(Renderer):
         self._onscreen_renderer = None
         self._offscreen_renderer = None
 
+
     def render_to_window(self):
         """Renders the simulation to a window."""
         if not self._onscreen_renderer:
             self._onscreen_renderer = mujoco_py.MjViewer(self._sim)
             self._update_camera_properties(self._onscreen_renderer.cam)
+            self._update_viewer_settings(self._onscreen_renderer.vopt)
 
-        self._onscreen_renderer.render()
+        self.refresh_window()
         # self._onscreen_renderer.cam.azimuth+=.1 # trick to rotate camera for 360 videos
+
 
     def refresh_window(self):
         """Refreshes the rendered window if one is present."""
         if self._onscreen_renderer is None:
             return
         self._onscreen_renderer.render()
+
 
     def render_offscreen(self,
                          width: int,
@@ -93,3 +97,11 @@ class MjPyRenderer(Renderer):
             return data[::-1, :]
         else:
             raise NotImplementedError(mode)
+
+    def _update_viewer_settings(self, viewer):
+        """Updates the given camera object with the current camera settings."""
+        for key, value in self._viewer_settings.items():
+            if key == 'render_tendon':
+                viewer.flags[7] = value
+            if key == 'render_actuator':
+                viewer.flags[3] = value # mujoco

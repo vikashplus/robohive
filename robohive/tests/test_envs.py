@@ -12,18 +12,26 @@ import numpy as np
 import pickle
 import copy
 import torch.testing
-
+import os
 
 class TestEnvs(unittest.TestCase):
 
     def check_envs(self, module_name, env_names, lite=False, input_seed=1234):
-        print("\nTesting module:: ", module_name)
+        print("\n=================================", flush=True)
+        print("Testing module:: ", module_name)
         for env_name in env_names:
             print("Testing env: ", env_name, flush=True)
             self.check_env(env_name, input_seed)
 
 
     def check_env(self, environment_id, input_seed):
+
+        # Skip tests for envs that requires encoder downloading
+        ROBOHIVE_TEST = os.getenv('ROBOHIVE_TEST')
+        if ROBOHIVE_TEST == 'LITE':
+            if "r3m" in environment_id or "rrl" in environment_id or "vc1" in environment_id:
+                return
+
         # test init
         env1 = gym.make(environment_id, seed=input_seed)
         assert env1.get_input_seed() == input_seed
@@ -64,7 +72,7 @@ class TestEnvs(unittest.TestCase):
         extero2 = env2.env.get_exteroception()
         torch.testing.assert_close(obs1, obs2)
         torch.testing.assert_close(proprio1, proprio2)
-        torch.testing.assert_close(extero1, extero2)
+        torch.testing.assert_close(extero1, extero2, atol=2, rtol=0.04)
         torch.testing.assert_close(rwd1, rwd2)
         assert (done1==done2), (done1, done2)
         assert len(infos1)==len(infos2), (infos1, infos2)

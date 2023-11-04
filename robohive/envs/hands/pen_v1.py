@@ -110,9 +110,9 @@ class PenEnvV1(env_base.MujocoEnv):
 
     def reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
         self.sim.reset()
-        qp = self.init_qpos.copy() if reset_qpos==None else reset_qpos
-        qv = self.init_qvel.copy() if reset_qvel==None else reset_qvel
-        self.sim.set_state(qpos=qp, qvel=qv)
+        qp = self.init_qpos.copy() if reset_qpos is None else reset_qpos
+        qv = self.init_qvel.copy() if reset_qvel is None else reset_qvel
+        self.robot.reset(reset_pos=qp, reset_vel=qv, **kwargs)
 
         desired_orien = np.zeros(3)
         desired_orien[0] = self.np_random.uniform(low=-1, high=1)

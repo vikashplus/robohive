@@ -6,7 +6,6 @@ Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gma
 from robohive.envs import env_base
 import numpy as np
 
-
 class BaseV0(env_base.MujocoEnv):
 
     MYO_CREDIT = """\
@@ -46,9 +45,8 @@ class BaseV0(env_base.MujocoEnv):
                     weighted_reward_keys=weighted_reward_keys,
                     frame_skip=frame_skip,
                     **kwargs)
+        self.viewer_setup(azimuth=90, distance=1.5, render_actuator=True)
 
-        self.viewer_setup(azimuth=90, distance=1.5)
-        # self.sim.renderer._onscreen_renderer.vopt.flags[3] = 1 # render actuators #ToDo: make it binding agnostic
 
     def initializeConditions(self):
         # for muscle weakness we assume that a weaker muscle has a
@@ -78,13 +76,13 @@ class BaseV0(env_base.MujocoEnv):
     def step(self, a, **kwargs):
         muscle_a = a.copy()
 
-        # Explicitely project normalized space (-1,1) to actuator space (0,1) if muscles
-        if self.sim.model.na:
+        # Explicitly project normalized space (-1,1) to actuator space (0,1) if muscles
+        if self.sim.model.na and self.normalize_act:
             # find muscle actuators
             muscle_act_ind = self.sim.model.actuator_dyntype==3
             muscle_a[muscle_act_ind] = 1.0/(1.0+np.exp(-5.0*(muscle_a[muscle_act_ind]-0.5)))
             # TODO: actuator space may not always be (0,1) for muscle or (-1, 1) for others
-            isNormalized = False # refuse internal reprojection as we explicitely did it here
+            isNormalized = False # refuse internal reprojection as we explicitly did it here
         else:
             isNormalized = self.normalize_act # accept requested reprojection
 

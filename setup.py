@@ -27,7 +27,7 @@ extra_files = package_files('robohive')
 
 setup(
     name='robohive',
-    version='0.5.0',
+    version='0.6.0',
     license='Apache 2.0',
     packages=find_packages(),
     package_data={"": extra_files},
@@ -40,7 +40,8 @@ setup(
     install_requires=[
         'click',
         'gym==0.13',
-        'free-mujoco-py',
+        'mujoco==2.3.7',
+        'dm-control==1.0.14',
         'termcolor',
         'sk-video',
         'flatten_dict',
@@ -49,12 +50,13 @@ setup(
         'absl-py',
         'torch',
         'h5py==3.7.0',
+        'pink-noise-rl',
+        'gitpython'
     ],
     extras_require={
       # To use mujoco bindings, run (pip install -e ".[mujoco]") and set sim_backend=MUJOCO
-      'mujoco':[
-        'mujoco==2.3.3',
-        'dm-control==1.0.11'
+      'mujoco_py':[
+        'free-mujoco-py',
         ],
       # To use hardware dependencies, run (pip install -e ".[a0]") and follow install instructions inside robot
       'a0': [
@@ -68,5 +70,11 @@ setup(
         # 'r3m @ git+https://github.com/facebookresearch/r3m.git',
         # 'vc_models @ git+https://github.com/facebookresearch/eai-vc.git@9958b278666bcbde193d665cc0df9ccddcdb8a5a#egg=vc_models&subdirectory=vc_models',
       ]
-    }
+    },
+    entry_points={
+        'console_scripts': [
+            'robohive_init = robohive_init:fetch_simhive',
+            'robohive_clean = robohive_init:clean_simhive',
+        ],
+    },
 )

@@ -16,10 +16,12 @@ import os
 DESC = '''
 Helper script to examine an environment and associated policy for behaviors; \n
 - either onscreen, or offscreen, or just rollout without rendering.\n
-- save resulting paths as pickle or as 2D plots
+- save resulting paths as pickle or as 2D plots \n
+- rollout either learned policies or scripted policies (e.g. see rand_policy class below) \n
 USAGE:\n
-    $ python examine_env.py --env_name door-v0 \n
-    $ python examine_env.py --env_name door-v0 --policy my_policy.pickle --mode evaluation --episodes 10 \n
+    $ python examine_env.py --env_name door-v1 \n
+    $ python examine_env.py --env_name door-v1 --policy_path robohive.utils.examine_env.rand_policy \n
+    $ python examine_env.py --env_name door-v1 --policy_path my_policy.pickle --mode evaluation --episodes 10 \n
 '''
 
 # Random policy
@@ -30,7 +32,14 @@ class rand_policy():
 
     def get_action(self, obs):
         # return self.env.np_random.uniform(high=self.env.action_space.high, low=self.env.action_space.low)
-        return self.env.action_space.sample(), {'mode': 'random samples'}
+        return self.env.action_space.sample(), {'mode': 'random samples', 'evaluation':self.env.action_space.sample()}
+
+def load_class_from_str(module_name, class_name):
+    try:
+        m = __import__(module_name, globals(), locals(), class_name)
+        return getattr(m, class_name)
+    except (ImportError, AttributeError):
+        return None
 
 # MAIN =========================================================
 @click.command(help=DESC)
@@ -57,17 +66,23 @@ def main(env_name, policy_path, mode, seed, num_episodes, render, camera_name, o
 
     # resolve policy and outputs
     if policy_path is not None:
-        pi = pickle.load(open(policy_path, 'rb'))
-        if output_dir == './': # overide the default
-            output_dir, pol_name = os.path.split(policy_path)
-            output_name = os.path.splitext(pol_name)[0]
-        if output_name is None:
-            pol_name = os.path.split(policy_path)[1]
-            output_name = os.path.splitext(pol_name)[0]
+        policy_tokens = policy_path.split('.')
+        pi = load_class_from_str('.'.join(policy_tokens[:-1]), policy_tokens[-1])
+
+        if pi is not None:
+            pi = pi(env, seed)
+        else:
+            pi = pickle.load(open(policy_path, 'rb'))
+            if output_dir == './': # overide the default
+                output_dir, pol_name = os.path.split(policy_path)
+                output_name = os.path.splitext(pol_name)[0]
+            if output_name is None:
+                pol_name = os.path.split(policy_path)[1]
+                output_name = os.path.splitext(pol_name)[0]
     else:
         pi = rand_policy(env, seed)
         mode = 'exploration'
-        output_name ='random_policy'
+        output_name ='random_policy' if output_name is None else output_name
 
     # resolve directory
     if (os.path.isdir(output_dir) == False) and (render=='offscreen' or save_paths or plot_paths is not None):

@@ -10,7 +10,108 @@ from gym.envs.registration import register
 from robohive.envs.multi_task.common.franka_kitchen_v2 import FrankaKitchen
 import copy
 
+print("RoboHive:> Registering FrankaKitchen (FK1) Envs")
+
+# ===================================================================
+# ENVs are provided in three VARIANTs (controlling env's behavior)
+# - Fixed-v4:       State based stationary environments with no randomization
+# - Random-v4:      State based environments with random robot initialization (joint pose + relative position wrt to kitchen)
+# - Random_v2d-v4:  Visual environment with random robot initialization (joint pose + relative position wrt to kitchen)
+# ===================================================================
+
+
+# ===================================================================
+# ENVs are organized into SUBGROUPS:
+# - SUBGROUPS are arranged to ensure diversity and a balance between the groups
+# - SUBGROUPS are helpful for standardizing partial results, Test-Train spilt, generalization studies, etc
+# - Without these subgroups, random subsets were being picked by different papers making comparisons difficult
+# ===================================================================
+
+# Fixed-v4: State based stationary environments with no randomization
+FK1_FIXED_5A = [
+    "FK1_MicroOpenFixed-v4",
+    "FK1_Knob1OnFixed-v4",
+    "FK1_Knob2OffFixed-v4",
+    "FK1_SdoorOpenFixed-v4",
+    "FK1_LdoorOpenFixed-v4"]
+FK1_FIXED_5B = [
+    "FK1_MicroCloseFixed-v4",
+    "FK1_Knob1OffFixed-v4",
+    "FK1_Knob2OnFixed-v4",
+    "FK1_LightOnFixed-v4",
+    "FK1_RdoorOpenFixed-v4",]
+FK1_FIXED_5C = [
+    "FK1_Stove1KettleFixed-v4",
+    "FK1_Knob3OnFixed-v4",
+    "FK1_Knob4OffFixed-v4",
+    "FK1_SdoorCloseFixed-v4",
+    "FK1_RdoorCloseFixed-v4"]
+FK1_FIXED_5D = [
+    "FK1_Stove4KettleFixed-v4",
+    "FK1_Knob3OffFixed-v4",
+    "FK1_Knob4OnFixed-v4",
+    "FK1_LightOffFixed-v4",
+    "FK1_LdoorCloseFixed-v4"]
+FK1_FIXED_20 = FK1_FIXED_5A+FK1_FIXED_5B+FK1_FIXED_5C+FK1_FIXED_5D
+
+# Random-v4: State based environments with random robot initialization (joint pose + relative position wrt to kitchen)
+FK1_RANDOM_5A = [
+    "FK1_MicroOpenRandom-v4",
+    "FK1_Knob1OnRandom-v4",
+    "FK1_Knob2OffRandom-v4",
+    "FK1_SdoorOpenRandom-v4",
+    "FK1_LdoorOpenRandom-v4"]
+FK1_RANDOM_5B = [
+    "FK1_MicroCloseRandom-v4",
+    "FK1_Knob1OffRandom-v4",
+    "FK1_Knob2OnRandom-v4",
+    "FK1_LightOnRandom-v4",
+    "FK1_RdoorOpenRandom-v4",]
+FK1_RANDOM_5C = [
+    "FK1_Stove1KettleRandom-v4",
+    "FK1_Knob3OnRandom-v4",
+    "FK1_Knob4OffRandom-v4",
+    "FK1_SdoorCloseRandom-v4",
+    "FK1_RdoorCloseRandom-v4"]
+FK1_RANDOM_5D = [
+    "FK1_Stove4KettleRandom-v4",
+    "FK1_Knob3OffRandom-v4",
+    "FK1_Knob4OnRandom-v4",
+    "FK1_LightOffRandom-v4",
+    "FK1_LdoorCloseRandom-v4"]
+FK1_RANDOM_20 = FK1_RANDOM_5A+FK1_RANDOM_5B+FK1_RANDOM_5C+FK1_RANDOM_5D
+
+# Random_v2d-v4:  Visual environment with random robot initialization (joint pose + relative position wrt to kitchen)
+FK1_RANDOM_V2D_5A = [
+    "FK1_MicroOpenRandom_v2d-v4",
+    "FK1_Knob1OnRandom_v2d-v4",
+    "FK1_Knob2OffRandom_v2d-v4",
+    "FK1_SdoorOpenRandom_v2d-v4",
+    "FK1_LdoorOpenRandom_v2d-v4"]
+FK1_RANDOM_V2D_5B = [
+    "FK1_MicroCloseRandom_v2d-v4",
+    "FK1_Knob1OffRandom_v2d-v4",
+    "FK1_Knob2OnRandom_v2d-v4",
+    "FK1_LightOnRandom_v2d-v4",
+    "FK1_RdoorOpenRandom_v2d-v4",]
+FK1_RANDOM_V2D_5C = [
+    "FK1_Stove1KettleRandom_v2d-v4",
+    "FK1_Knob3OnRandom_v2d-v4",
+    "FK1_Knob4OffRandom_v2d-v4",
+    "FK1_SdoorCloseRandom_v2d-v4",
+    "FK1_RdoorCloseRandom_v2d-v4"]
+FK1_RANDOM_V2D_5D = [
+    "FK1_Stove4KettleRandom_v2d-v4",
+    "FK1_Knob3OffRandom_v2d-v4",
+    "FK1_Knob4OnRandom_v2d-v4",
+    "FK1_LightOffRandom_v2d-v4",
+    "FK1_LdoorCloseRandom_v2d-v4"]
+FK1_RANDOM_V2D_20 = FK1_RANDOM_V2D_5A+FK1_RANDOM_V2D_5B+FK1_RANDOM_V2D_5C+FK1_RANDOM_V2D_5D
+
+
+# ===================================================================
 # Global Configs
+# ===================================================================
 CURR_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = CURR_DIR + "/../common/kitchen/franka_kitchen.xml"
 CONFIG_PATH = CURR_DIR + "/../common/kitchen/franka_kitchen.config"
@@ -18,7 +119,9 @@ ENTRY_POINT = "robohive.envs.multi_task.common.franka_kitchen_v2:FrankaKitchen"
 ENV_VERSION = "-v4"
 VISUAL_ENCODER = "v2d"
 
-# Register different env variants - Fixed, Random, Random_v2d
+# ===================================================================
+# Register env variants
+# ===================================================================
 def register_all_env_variants(
         task_id:str,                # task
         task_configs:dict,          # task details
@@ -32,7 +135,7 @@ def register_all_env_variants(
             "config_path": CONFIG_PATH
             })
 
-    # register state based fixed variants
+    # register state based fixed variants, no randomization
     register(
         id = task_id+"Fixed"+ENV_VERSION,
         entry_point=ENTRY_POINT,
@@ -41,7 +144,7 @@ def register_all_env_variants(
     )
     # print("'"+task_id+"Fixed"+ENV_VERSION+"'", end=", ")
 
-    # update env's randomization configs
+    # update env's randomization configs: random robot initialization (joint pose + relative position wrt to kitchen)
     if random_configs == None:
         random_configs = {
         "robot_jnt_reset_noise_scale": 0.05,    # Joint noise scale for reset
@@ -61,7 +164,7 @@ def register_all_env_variants(
     # print("'"+task_id+"Fixed"+ENV_VERSION+"'", end=", ")
 
 
-    # update env's visual configs
+    # update env's visual configs: random robot initialization (joint pose + relative position wrt to kitchen)
     task_configs.update({
             "visual_keys": FrankaKitchen.DEFAULT_VISUAL_KEYS,
             # override the obs to avoid accidental leakage of oracle state info while using the visual envs
@@ -284,85 +387,3 @@ register_all_env_variants(
         "interact_site": "kettle_site0",
     },
 )
-
-
-# ===================================================================
-# SUB GROUPS: helpful for standardizing partial results, Test-Train spilit, generalization studies, etc
-# ===================================================================
-FK1_FIXED_5A = [
-    "FK1_MicroOpenFixed-v4",
-    "FK1_Knob1OnFixed-v4",
-    "FK1_Knob2OffFixed-v4",
-    "FK1_SdoorOpenFixed-v4",
-    "FK1_LdoorOpenFixed-v4"]
-FK1_FIXED_5B = [
-    "FK1_MicroCloseFixed-v4",
-    "FK1_Knob1OffFixed-v4",
-    "FK1_Knob2OnFixed-v4",
-    "FK1_LightOnFixed-v4",
-    "FK1_RdoorOpenFixed-v4",]
-FK1_FIXED_5C = [
-    "FK1_Stove1KettleFixed-v4",
-    "FK1_Knob3OnFixed-v4",
-    "FK1_Knob4OffFixed-v4",
-    "FK1_SdoorCloseFixed-v4",
-    "FK1_RdoorCloseFixed-v4"]
-FK1_FIXED_5D = [
-    "FK1_Stove4KettleFixed-v4",
-    "FK1_Knob3OffFixed-v4",
-    "FK1_Knob4OnFixed-v4",
-    "FK1_LightOffFixed-v4",
-    "FK1_LdoorCloseFixed-v4"]
-FK1_FIXED_20 = FK1_FIXED_5A+FK1_FIXED_5B+FK1_FIXED_5C+FK1_FIXED_5D
-
-FK1_RANDOM_5A = [
-    "FK1_MicroOpenRandom-v4",
-    "FK1_Knob1OnRandom-v4",
-    "FK1_Knob2OffRandom-v4",
-    "FK1_SdoorOpenRandom-v4",
-    "FK1_LdoorOpenRandom-v4"]
-FK1_RANDOM_5B = [
-    "FK1_MicroCloseRandom-v4",
-    "FK1_Knob1OffRandom-v4",
-    "FK1_Knob2OnRandom-v4",
-    "FK1_LightOnRandom-v4",
-    "FK1_RdoorOpenRandom-v4",]
-FK1_RANDOM_5C = [
-    "FK1_Stove1KettleRandom-v4",
-    "FK1_Knob3OnRandom-v4",
-    "FK1_Knob4OffRandom-v4",
-    "FK1_SdoorCloseRandom-v4",
-    "FK1_RdoorCloseRandom-v4"]
-FK1_RANDOM_5D = [
-    "FK1_Stove4KettleRandom-v4",
-    "FK1_Knob3OffRandom-v4",
-    "FK1_Knob4OnRandom-v4",
-    "FK1_LightOffRandom-v4",
-    "FK1_LdoorCloseRandom-v4"]
-FK1_RANDOM_20 = FK1_RANDOM_5A+FK1_RANDOM_5B+FK1_RANDOM_5C+FK1_RANDOM_5D
-
-FK1_RANDOM_V2D_5A = [
-    "FK1_MicroOpenRandom_v2d-v4",
-    "FK1_Knob1OnRandom_v2d-v4",
-    "FK1_Knob2OffRandom_v2d-v4",
-    "FK1_SdoorOpenRandom_v2d-v4",
-    "FK1_LdoorOpenRandom_v2d-v4"]
-FK1_RANDOM_V2D_5B = [
-    "FK1_MicroCloseRandom_v2d-v4",
-    "FK1_Knob1OffRandom_v2d-v4",
-    "FK1_Knob2OnRandom_v2d-v4",
-    "FK1_LightOnRandom_v2d-v4",
-    "FK1_RdoorOpenRandom_v2d-v4",]
-FK1_RANDOM_V2D_5C = [
-    "FK1_Stove1KettleRandom_v2d-v4",
-    "FK1_Knob3OnRandom_v2d-v4",
-    "FK1_Knob4OffRandom_v2d-v4",
-    "FK1_SdoorCloseRandom_v2d-v4",
-    "FK1_RdoorCloseRandom_v2d-v4"]
-FK1_RANDOM_V2D_5D = [
-    "FK1_Stove4KettleRandom_v2d-v4",
-    "FK1_Knob3OffRandom_v2d-v4",
-    "FK1_Knob4OnRandom_v2d-v4",
-    "FK1_LightOffRandom_v2d-v4",
-    "FK1_LdoorCloseRandom_v2d-v4"]
-FK1_RANDOM_V2D_20 = FK1_RANDOM_V2D_5A+FK1_RANDOM_V2D_5B+FK1_RANDOM_V2D_5C+FK1_RANDOM_V2D_5D

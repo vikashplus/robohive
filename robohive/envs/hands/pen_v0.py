@@ -11,7 +11,7 @@ import collections
 from gym import utils
 from mjrl.envs import mujoco_env
 from robohive.utils.quat_math import euler2quat
-from envs.obj_vec_dict import ObsVecDict
+from robohive.envs.obs_vec_dict import ObsVecDict
 from mujoco_py import MjViewer
 
 OBS_KEYS = ['hand_jnt', 'obj_pos', 'obj_vel', 'obj_rot', 'obj_des_rot', 'obj_err_pos', 'obj_err_rot']

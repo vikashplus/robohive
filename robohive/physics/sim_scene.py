@@ -19,7 +19,18 @@ from robohive.renderer.renderer import Renderer
 class SimBackend(enum.Enum):
     """Simulation library types."""
     MUJOCO_PY = 0
-    DM_CONTROL = 1
+    MUJOCO = 1
+
+    # resolve sim backend
+    @staticmethod
+    def get_sim_backend()->'SimBackend':
+        sim_backend = os.getenv('sim_backend')
+        if sim_backend == 'MUJOCO_PY':
+            return SimBackend.MUJOCO_PY
+        elif sim_backend == 'MUJOCO' or sim_backend == None:
+            return SimBackend.MUJOCO
+        else:
+            raise ValueError("Unknown sim_backend: {}. Available choices: MUJOCO_PY, MUJOCO")
 
 
 class SimScene(metaclass=abc.ABCMeta):
@@ -41,21 +52,21 @@ class SimScene(metaclass=abc.ABCMeta):
         if backend == SimBackend.MUJOCO_PY:
             from robohive.physics import mjpy_sim_scene  # type: ignore
             return mjpy_sim_scene.MjPySimScene(*args, **kwargs)
-        elif backend == SimBackend.DM_CONTROL:
+        elif backend == SimBackend.MUJOCO:
             from robohive.physics import mj_sim_scene  # type: ignore
             return mj_sim_scene.DMSimScene(*args, **kwargs)
         else:
             raise NotImplementedError(backend)
 
 
-    # resolve  backend and return the sim
+    # Get sim as per the sim_backend
     @staticmethod
     def get_sim(model_handle: Any) -> 'SimScene':
-        sim_backend = os.getenv('sim_backend')
-        if sim_backend == 'MUJOCO_PY' or sim_backend == None:
+        sim_backend = SimBackend.get_sim_backend()
+        if sim_backend == SimBackend.MUJOCO_PY:
             return SimScene.create(model_handle=model_handle, backend=SimBackend.MUJOCO_PY)
-        elif sim_backend == 'MUJOCO':
-            return SimScene.create(model_handle=model_handle, backend=SimBackend.DM_CONTROL)
+        elif sim_backend == SimBackend.MUJOCO:
+            return SimScene.create(model_handle=model_handle, backend=SimBackend.MUJOCO)
         else:
             raise ValueError("Unknown sim_backend: {}. Available choices: MUJOCO_PY, MUJOCO")
 

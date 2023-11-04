@@ -37,7 +37,7 @@
         <camera name="right_cap" pos="1.2 -0.5 1.8" quat="0.76 0.5 0.21 0.35"/>
 
         <!-- Robot -->
-        <body pos="0 0 .775" euler="0 0 1.57">
+        <body name="chef" pos="0 0 .775" euler="0 0 1.57">
             <geom type="cylinder" size=".120 .4" pos="-.04 0 -.4"/>
             <include file="../../../../simhive/franka_sim/assets/chain0.xml"/>
         </body>

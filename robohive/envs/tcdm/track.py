@@ -7,8 +7,8 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 import gym
 from robohive.envs import env_base
-from robohive.envs.tcdm.reference_motion import ReferenceMotion
-from robohive.utils.quat_math import quat2euler, euler2quat, quatDiff2Vel
+from robohive.logger.reference_motion import ReferenceMotion
+from robohive.utils.quat_math import quat2euler, euler2quat, quatDiff2Vel, mat2quat
 import numpy as np
 import os
 import collections
@@ -37,6 +37,7 @@ class TrackEnv(env_base.MujocoEnv):
     def __init__(self, object_name, model_path, obsd_model_path=None, seed=None, **kwargs):
 
         curr_dir = os.path.dirname(os.path.abspath(__file__))
+        self.object_name = object_name
 
         # Process model_path to import the right object
         with open(curr_dir+model_path, 'r') as file:
@@ -45,7 +46,6 @@ class TrackEnv(env_base.MujocoEnv):
         processed_model_path = curr_dir+model_path[:-4]+"_processed.xml"
         with open(processed_model_path, 'w') as file:
             file.write(processed_xml)
-        self._object_name = object_name
         # Process obsd_model_path to import the right object
         if obsd_model_path == model_path:
             processed_obsd_model_path = processed_model_path
@@ -76,6 +76,27 @@ class TrackEnv(env_base.MujocoEnv):
         if processed_obsd_model_path and processed_obsd_model_path!=processed_model_path:
             os.remove(processed_obsd_model_path)
 
+        self.initialized_pos = False
+        self._setup(**kwargs)
+
+
+    def _setup(self,
+               reference,                       # reference target/motion for behaviors
+               motion_start_time:float=0,       # useful to skip initial motion
+               motion_extrapolation:bool=True,  # Hold the last frame if motion is over
+               obs_keys=DEFAULT_OBS_KEYS,
+               weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
+               Termimate_obj_fail=False,
+               Termimate_pose_fail=False,
+               **kwargs):
+
+        # prep reference
+        self.ref = ReferenceMotion(reference_data=reference, motion_extrapolation=motion_extrapolation, random_generator=self.np_random)
+        self.motion_start_time = motion_start_time
+        self.target_sid = self.sim.model.site_name2id("target")
+
+
+
         ##########################################
         self.lift_bonus_thresh =  0.02
         ### PRE-GRASP
@@ -94,43 +115,35 @@ class TrackEnv(env_base.MujocoEnv):
         self.obj_com_term = 0.5
         # TERMINATIONS FOR HAND-OBJ DISTANCE
         self.base_fail_thresh = .25
-        self.TermObj = True
+        self.TermObj = Termimate_obj_fail
 
         # TERMINATIONS FOR MIMIC
         self.qpos_fail_thresh = .75
-        self.TermPose = False
+        self.TermPose = Termimate_pose_fail
         ##########################################
 
-        self._lift_z = self.sim.data.get_body_xipos(self._object_name)[2] + self.lift_bonus_thresh
-        self.initialized_pos = False
-        self._setup(**kwargs)
+        self.object_bid = self.sim.model.body_name2id(self.object_name)
+        self.wrist_bid = self.sim.model.body_name2id("wrist")
 
+        self._lift_z = self.sim.data.xipos[self.object_bid][2] + self.lift_bonus_thresh
 
-    def _setup(self,
-               reference,                       # reference target/motion for behaviors
-               motion_start_time:float=0,       # useful to skip initial motion
-               motion_extrapolation:bool=True,  # Hold the last frame if motion is over
-               obs_keys=DEFAULT_OBS_KEYS,
-               weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
-               **kwargs):
-
-        # prep reference
-        self.ref = ReferenceMotion(reference=reference, motion_extrapolation=motion_extrapolation)
-        self.motion_start_time = motion_start_time
-        self.target_sid = self.sim.model.site_name2id("target")
 
         super()._setup(obs_keys=obs_keys,
                        weighted_reward_keys=weighted_reward_keys,
                        frame_skip=10,
                        **kwargs)
+
         # Adjust horizon if not motion_extrapolation
         if motion_extrapolation == False:
             self.spec.max_episode_steps = self.ref.horizon # doesn't work always. WIP
+
         # Adjust init as per the specified key
-        ref0 = self.ref.get_reference(self.motion_start_time)
-        self.init_qpos[:self.ref.robot_dim] = ref0.robot
-        self.init_qpos[self.ref.robot_dim:self.ref.robot_dim+3] = ref0.object[:3]
-        self.init_qpos[-3:] = quat2euler(ref0.object[3:])
+        robot_init, object_init = self.ref.get_init()
+        if robot_init is None:
+            self.init_qpos[:self.ref.robot_dim] = robot_init
+        if object_init is None:
+            self.init_qpos[self.ref.robot_dim:self.ref.robot_dim+3] = object_init[:3]
+            self.init_qpos[-3:] = quat2euler(object_init[3:])
 
         # hack because in the super()._setup the initial posture is set to the average qpos and when a step is called, it ends in a `done` state
         self.initialized_pos = True
@@ -148,9 +161,8 @@ class TrackEnv(env_base.MujocoEnv):
 
     def update_reference_insim(self, curr_ref):
         if curr_ref.object is not None:
-            # print(curr_ref.object)
-            self.sim.model.site_pos[:] = curr_ref.object[:3]
-            self.sim_obsd.model.site_pos[:] = curr_ref.object[:3]
+            self.sim.model.site_pos[self.target_sid][:] = curr_ref.object[:3]
+            self.sim_obsd.model.site_pos[self.target_sid][:] = curr_ref.object[:3]
             self.sim.forward()
 
     def norm2(self, x):
@@ -166,7 +178,7 @@ class TrackEnv(env_base.MujocoEnv):
         obs_dict['time'] = np.array([self.sim.data.time])
         obs_dict['qp'] = sim.data.qpos.copy()
         obs_dict['qv'] = sim.data.qvel.copy()
-        obs_dict['robot_err'] = obs_dict['qp'][:30].copy() - curr_ref.robot
+        obs_dict['robot_err'] = obs_dict['qp'][:-6].copy() - curr_ref.robot
 
         ## info about current hand pose + vel
         obs_dict['curr_hand_qpos'] = sim.data.qpos[:-6].copy() ## assuming only 1 object and the last values are posision + rotation
@@ -174,14 +186,13 @@ class TrackEnv(env_base.MujocoEnv):
 
         ## info about target hand pose + vel
         obs_dict['targ_hand_qpos'] = curr_ref.robot
-        # import ipdb; ipdb.set_trace()
-        obs_dict['targ_hand_qvel'] = curr_ref.robot_vel
+        obs_dict['targ_hand_qvel'] = np.array([0]) if curr_ref.robot_vel is None else curr_ref.robot_vel
 
         ## info about current object com + rotations
-        obs_dict['curr_obj_com'] = sim.data.get_body_xipos(self._object_name).copy()
-        obs_dict['curr_obj_rot'] = sim.data.get_body_xquat(self._object_name).copy()
+        obs_dict['curr_obj_com'] = self.sim.data.xipos[self.object_bid].copy()
+        obs_dict['curr_obj_rot'] = mat2quat(np.reshape(self.sim.data.ximat[self.object_bid].copy(), (3,3)))
 
-        obs_dict['wrist_err'] = sim.data.get_body_xipos('wrist')
+        obs_dict['wrist_err'] = self.sim.data.xipos[self.wrist_bid].copy()
 
         obs_dict['base_error'] = obs_dict['curr_obj_com'] - obs_dict['wrist_err']
 
@@ -191,7 +202,7 @@ class TrackEnv(env_base.MujocoEnv):
 
         ## Errors
         obs_dict['hand_qpos_err'] = obs_dict['curr_hand_qpos']-obs_dict['targ_hand_qpos']
-        obs_dict['hand_qvel_err'] = obs_dict['curr_hand_qvel']-obs_dict['targ_hand_qvel']
+        obs_dict['hand_qvel_err'] = np.array([0]) if curr_ref.robot_vel is None else (obs_dict['curr_hand_qvel']-obs_dict['targ_hand_qvel'])
 
         obs_dict['obj_com_err'] =  obs_dict['curr_obj_com'] - obs_dict['targ_obj_com']
 
@@ -220,7 +231,7 @@ class TrackEnv(env_base.MujocoEnv):
 
         # calculate reward terms
         qpos_reward = np.exp(-self.qpos_err_scale * self.norm2(obs_dict['hand_qpos_err']))
-        qvel_reward = np.exp(-self.qvel_err_scale * self.norm2(obs_dict['hand_qvel_err']))
+        qvel_reward = np.array([0]) if obs_dict['hand_qvel_err'] is None else np.exp(-self.qvel_err_scale * self.norm2(obs_dict['hand_qvel_err']))
 
 
         # weight and sum individual reward terms
@@ -244,30 +255,27 @@ class TrackEnv(env_base.MujocoEnv):
             ('sparse',  0),
             ('solved',  0),
             ('done',    self.initialized_pos and self.check_termination(obs_dict)),
-            # ('done',   False),
         ))
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
 
         # print(rwd_dict['dense'], obj_com_err,rwd_dict['done'],rwd_dict['sparse'])
         return rwd_dict
 
+    def qpos_from_robot_object(self, qpos, robot, object):
+        qpos[:len(robot)] = robot
+        qpos[len(robot):len(robot)+3] = object[:3]
+        qpos[len(robot)+3:] = quat2euler(object[3:])
+
+
     def playback(self):
         idxs = self.ref.find_timeslot_in_reference(self.time)
         # print(f"Time {self.time} {idxs} {self.ref.horizon}")
         ref_mot = self.ref.get_reference(self.time)
-        rob_mot = ref_mot.robot
-        obj_mot = ref_mot.object
-        # import ipdb; ipdb.set_trace()
-        # objt = self.ref.ref_file['object_translation'][int(self.ref.ref_file['grasp_frame'])+idxs[0],:]
-        # print(idxs,np.sum(objt - obj_mot[:3]),objt,obj_mot[:3])
-        self.sim.data.qpos[:len(rob_mot)] = rob_mot
-        self.sim.data.qpos[len(rob_mot):len(rob_mot)+3] = obj_mot[:3]
-
-        self.sim.data.qpos[len(rob_mot)+3:] = quat2euler(obj_mot[3:])
+        self.qpos_from_robot_object(self.sim.data.qpos, ref_mot.robot, ref_mot.object )
         self.sim.forward()
         self.sim.data.time = self.sim.data.time + 0.02#self.env.env.dt
-
         return idxs[0] < self.ref.horizon-1
+
 
     def reset(self):
         # print("Reset")
@@ -279,15 +287,12 @@ class TrackEnv(env_base.MujocoEnv):
 
     def check_termination(self, obs_dict):
 
+        obj_term, qpos_term, base_term = False, False, False
         if self.TermObj: # termination on object
-            obj_term = self.norm2(obs_dict['obj_com_err']) >= self.obj_com_term ** 2
-            base_term =self.norm2(obs_dict['base_error'] ) >= self.base_fail_thresh ** 2
-        else:
-            obj_term, base_term = False, False
+            obj_term = True if self.norm2(obs_dict['obj_com_err']) >= self.obj_com_term ** 2 else False
+            base_term = True if self.norm2(obs_dict['base_error'] ) >= self.base_fail_thresh ** 2 else False
 
         if self.TermPose: # termination on posture
-            qpos_term = self.norm2(obs_dict['hand_qpos_err']) >= self.qpos_fail_thresh
-        else:
-            qpos_term = False
+            qpos_term = True if self.norm2(obs_dict['hand_qpos_err']) >= self.qpos_fail_thresh else False
 
         return obj_term or qpos_term or base_term # combining termination for object + posture

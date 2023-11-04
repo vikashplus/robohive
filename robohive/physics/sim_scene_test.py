@@ -64,7 +64,7 @@ def mjpy_and_dm(fn):
                 fn(
                     self,
                     SimScene.create(
-                        test_file_path, backend=SimBackend.DM_CONTROL))
+                        test_file_path, backend=SimBackend.MUJOCO))
 
     return test_fn
 

@@ -14,7 +14,10 @@ from robohive.envs import env_base
 class PushBaseV0(env_base.MujocoEnv):
 
     DEFAULT_OBS_KEYS = [
-        'qp', 'qv', 'object_err', 'target_err'
+        'qp_robot', 'qp_object', 'qv_robot', 'qv_object', 'object_err', 'target_err'
+    ]
+    DEFAULT_PROPRIO_KEYS = [
+        'qp_robot', 'qp_object', 'qv_robot', 'qv_object'
     ]
     DEFAULT_RWD_KEYS_AND_WEIGHTS = {
         "object_dist": -1.0,
@@ -43,6 +46,7 @@ class PushBaseV0(env_base.MujocoEnv):
 
 
     def _setup(self,
+               robot_ndof,
                robot_site_name,
                object_site_name,
                target_site_name,
@@ -50,10 +54,11 @@ class PushBaseV0(env_base.MujocoEnv):
                frame_skip=40,
                reward_mode="dense",
                obs_keys=DEFAULT_OBS_KEYS,
+               proprio_keys=DEFAULT_PROPRIO_KEYS,
                weighted_reward_keys=DEFAULT_RWD_KEYS_AND_WEIGHTS,
                **kwargs,
         ):
-
+        self.robot_ndof = robot_ndof
         # ids
         self.grasp_sid = self.sim.model.site_name2id(robot_site_name)
         self.object_sid = self.sim.model.site_name2id(object_site_name)
@@ -61,6 +66,7 @@ class PushBaseV0(env_base.MujocoEnv):
         self.target_xyz_range = target_xyz_range
 
         super()._setup(obs_keys=obs_keys,
+                       proprio_keys=proprio_keys,
                        weighted_reward_keys=weighted_reward_keys,
                        reward_mode=reward_mode,
                        frame_skip=frame_skip,
@@ -69,8 +75,10 @@ class PushBaseV0(env_base.MujocoEnv):
     def get_obs_dict(self, sim):
         obs_dict = {}
         obs_dict['time'] = np.array([self.sim.data.time])
-        obs_dict['qp'] = sim.data.qpos.copy()
-        obs_dict['qv'] = sim.data.qvel.copy()
+        obs_dict['qp_robot'] = sim.data.qpos[:self.robot_ndof].copy()
+        obs_dict['qv_robot'] = sim.data.qvel[:self.robot_ndof].copy()
+        obs_dict['qp_object'] = sim.data.qpos[self.robot_ndof:].copy()
+        obs_dict['qv_object'] = sim.data.qvel[self.robot_ndof:].copy()
         obs_dict['object_err'] = sim.data.site_xpos[self.object_sid]-sim.data.site_xpos[self.grasp_sid]
         obs_dict['target_err'] = sim.data.site_xpos[self.target_sid]-sim.data.site_xpos[self.object_sid]
         return obs_dict

@@ -69,8 +69,8 @@
         <texture name="texplane" type="2d" height="1" width="1" file="../scene_sim/textures/oak_floorboard.png"/>
         <material name="MatPlane" reflectance="0.01" texture="texplane" texrepeat="4 4" texuniform="true"/>
         <mesh name="room" file="../scene_sim/meshes/simpleroom1.stl" scale="1 1 1"/>
-        <mesh name="robohive" file="../scene_sim/meshes/robohive.stl" scale="1 1 1"/>
-        <mesh name="robohive_half" file="../scene_sim/meshes/robohive_half.stl" scale="4 4 4"/>
+        <mesh name="robohive" file="../scene_sim/meshes/robohive_text.stl" scale="1 1 1"/>
+        <mesh name="robohive_half" file="../scene_sim/meshes/robohive_logohalf.stl" scale="4 4 4"/>
     </asset>
 
     <contact>

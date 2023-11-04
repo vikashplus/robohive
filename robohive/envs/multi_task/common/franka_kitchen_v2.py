@@ -94,7 +94,6 @@ class FrankaKitchen(KitchenBase):
         obs_keys_wt = DEFAULT_OBS_KEYS_N_WT,
         robot_jnt_reset_noise_scale = 0.0,  # Joint noise amp (around qpos_init) for reset
         robot_base_reset_range = None,      # Randomization range (around the default pose) for the chef's base
-        robot_base_name = "chef",           # Name of the robot chef
         robot_jnt_names=ROBOT_JNT_NAMES,    # Robot joint names
         obj_jnt_names=OBJ_JNT_NAMES,        # Object joint name
         obj_interaction_site=OBJ_INTERACTION_SITES, # Interaction point for object of interest
@@ -102,9 +101,7 @@ class FrankaKitchen(KitchenBase):
 
         # configure resets
         self.robot_jnt_reset_noise_scale = robot_jnt_reset_noise_scale
-        self.robot_base_bid = self.sim.model.body_name2id(robot_base_name)
         self.robot_base_range = robot_base_reset_range
-        self.robot_base_pos = self.sim.model.body_pos[self.robot_base_bid].copy()
 
         # Setup env
         super()._setup(

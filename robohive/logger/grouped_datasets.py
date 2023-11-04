@@ -33,9 +33,9 @@ class TraceType(enum.Enum):
         A more robust way of getting trace type. Supports strings
         """
         if type(input_type) == str:
-            if input_type.to_lower() == "robohive":
+            if input_type.lower() == "robohive":
                 return TraceType.ROBOHIVE
-            elif input_type.to_lower() == "roboset":
+            elif input_type.lower() == "roboset":
                 return TraceType.ROBOSET
             else:
                 prompt(f"unknown TraceType{input_type}. Setting it to TraceType.UNSET", type=Prompt.WARN)
