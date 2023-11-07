@@ -275,7 +275,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         terminal = done
         return obs, reward, terminal, False, info
 
-    @implement_for("gymnasium", "0.24", None)
+    @implement_for("gymnasium")
     def forward(self, **kwargs):
         obs, reward, done, info = self._forward(**kwargs)
         terminal = done
@@ -505,6 +505,9 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     def reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
         return self._reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel, **kwargs)
     @implement_for("gym", "0.26", None)
+    def reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
+        return self._reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel, **kwargs), {}
+    @implement_for("gymnasium")
     def reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
         return self._reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel, **kwargs), {}
 
