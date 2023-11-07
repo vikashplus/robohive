@@ -13,6 +13,7 @@ import time as timer
 from robohive.envs.obs_vec_dict import ObsVecDict
 from robohive.utils import tensor_utils
 from robohive.robot.robot import Robot
+from robohive.utils.implement_for import implement_for
 from robohive.utils.prompt_utils import prompt, Prompt
 import skvideo.io
 from sys import platform
@@ -263,8 +264,17 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                                         render_cbk=self.mj_render if self.mujoco_render_frames else None)
         return self.forward(**kwargs)
 
-
+    @implement_for("gym", None, "0.24")
     def forward(self, **kwargs):
+        return self._forward(**kwargs)
+
+    @implement_for("gym", "0.24", None)
+    def forward(self, **kwargs):
+        obs, reward, done, info = self._forward(**kwargs)
+        terminal = done
+        return obs, reward, terminal, False, info
+
+    def _forward(self, **kwargs):
         """
         Forward propagate env to recover env details
         Returns current obs(t), rwd(t), done(t), info(t)
