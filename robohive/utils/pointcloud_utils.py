@@ -1,11 +1,58 @@
 import numpy as np
-from utils.rotations import *
-import cv2
+from robohive.utils.quat_math import mulQuat, euler2quat, quat2mat
 
 
-# -------------------- Generic ----------------------------
+# ------ MuJoCo specific functions ------
+
+def get_point_cloud(env, depth, camera_name):
+    # Make sure the depth values are in meters. If the depth comes 
+    # from robohive, it is already in meters. If it directly comes 
+    # from mujoco, you need to use the convert_depth function below. 
+    # Output is flattened. Each row is a point in 3D space.
+    fovy = env.sim.model.cam_fovy[env.sim.model.camera_name2id(camera_name)]
+    K = get_intrinsics(fovy, depth.shape[0], depth.shape[1])
+    pc = depth2xyz(depth, K)
+    pc = pc.reshape(-1, 3)
+
+    transform = get_extrinsics(env, camera_name=camera_name)
+    new_pc = np.ones((pc.shape[0], 4))
+    new_pc[:, :3] = pc
+    new_pc = (transform @ new_pc.transpose()).transpose()
+    return new_pc[:, :-1]
+
+
+def convert_depth(env, depth):
+    # Convert raw depth values into meters
+    # Check this as well: https://github.com/deepmind/dm_control/blob/master/dm_control/mujoco/engine.py#L734
+    extent = env.sim.model.stat.extent
+    near = env.sim.model.vis.map.znear * extent
+    far = env.sim.model.vis.map.zfar * extent
+    depth_m = depth * 2 - 1
+    depth_m = (2 * near * far) / (far + near - depth_m * (far - near))
+    return depth_m
+
+
+def get_extrinsics(env, camera_name):
+    # Transformation from camera frame to world frame
+    cam_id = env.sim.model.camera_name2id(camera_name)
+    cam_pos = env.sim.model.cam_pos[cam_id]
+    cam_quat = env.sim.model.cam_quat[cam_id]
+    cam_quat = mulQuat(cam_quat, euler2quat([np.pi, 0, 0]))
+    return get_transformation_matrix(cam_pos, cam_quat)
+
+
+def get_transformation_matrix(pos, quat):
+    # Convert the pose from MuJoCo format to a 4x4 transformation matrix
+    arr = np.identity(4)
+    arr[:3, :3] = quat2mat(quat)
+    arr[:3, 3] = pos
+    return arr
+
+
+# ------ General functions ------
+
 def get_intrinsics(fovy, img_width, img_height):
-    # fovy = self.sim.model.cam_fovy[cam_no]
+    # Get the camera intrinsics matrix
     aspect = float(img_width) / img_height
     fovx = 2 * np.arctan(np.tan(np.deg2rad(fovy) * 0.5) * aspect)
     fovx = np.rad2deg(fovx)
@@ -23,6 +70,7 @@ def get_intrinsics(fovy, img_width, img_height):
 
 
 def depth2xyz(depth, cam_K):
+    # Convert depth image to point cloud
     h, w = depth.shape
     ymap, xmap = np.meshgrid(np.arange(w), np.arange(h))
 
@@ -38,6 +86,7 @@ def depth2xyz(depth, cam_K):
 
 
 def visualize_point_cloud_from_nparray(d, c=None, vis_coordinate=False):
+    # Visualize a point cloud using open3d
     if c is not None:
         if len(c.shape) == 3:
             c = c.reshape(-1, 3)
@@ -51,62 +100,9 @@ def visualize_point_cloud_from_nparray(d, c=None, vis_coordinate=False):
         pcd.colors = o3d.utility.Vector3dVector(c)
 
     if vis_coordinate:
+        # Visualize coordinate frame
         mesh = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.5)
         o3d.visualization.draw_geometries([mesh, pcd])
     else:
         o3d.visualization.draw_geometries([pcd])
-
-
-# -------------------- MuJoCo Specific ----------------------------
-def get_transformation_matrix(pos, quat):
-    arr = np.identity(4)
-    arr[:3, :3] = quat2mat(quat)
-    arr[:3, 3] = pos
-    return arr
-
-
-def get_transformation(env, camera_name=None):
-    if camera_name is None:
-        camera_name = env.camera_names[0]
-    cam_id = env.sim.model.camera_name2id(camera_name)
-    cam_pos = env.sim.model.cam_pos[cam_id]
-    cam_quat = env.sim.model.cam_quat[cam_id]
-    cam_quat = quat_mul(cam_quat, euler2quat([np.pi, 0, 0]))
-    return get_transformation_matrix(cam_pos, cam_quat)
-
-
-def convert_depth(env, depth):
-    # Convert depth into meter
-    extent = env.sim.model.stat.extent
-    near = env.sim.model.vis.map.znear * extent
-    far = env.sim.model.vis.map.zfar * extent
-    depth_m = depth * 2 - 1
-    depth_m = (2 * near * far) / (far + near - depth_m * (far - near))
-    # Check this as well: https://github.com/deepmind/dm_control/blob/master/dm_control/mujoco/engine.py#L734
-    return depth_m
-
-
-def get_object_point_cloud(env, depth, img):
-    depth = convert_depth(env, depth)
-    full_pc = get_point_cloud(env, depth)
-    obj_mask = get_obj_mask(img)
-    pc = full_pc[obj_mask.reshape(-1),:]
-    return pc
-
-
-def get_point_cloud(env, depth, camera_name=None):
-    # make sure to convert the raw depth image from MuJoCo using convert_depth
-    # output is flattened
-    if camera_name is None:
-        camera_name = env.camera_names[0]
-    fovy = env.sim.model.cam_fovy[env.sim.model.camera_name2id(camera_name)]
-    K = get_intrinsics(fovy, depth.shape[0], depth.shape[1])
-    pc = depth2xyz(depth, K)
-    pc = pc.reshape(-1, 3)
-
-    transform = get_transformation(env, camera_name=camera_name)
-    new_pc = np.ones((pc.shape[0], 4))
-    new_pc[:, :3] = pc
-    new_pc = (transform @ new_pc.transpose()).transpose()
-    return new_pc[:, :-1]
 
