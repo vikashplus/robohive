@@ -132,7 +132,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self._setup_rgb_encoders(self.visual_keys, device=None)
 
         # reset to get the env ready
-        observation, _reward, done, _info = self.step(np.zeros(self.sim.model.nu))
+        observation, _reward, done, *_, _info = self.step(np.zeros(self.sim.model.nu))
         # Question: Should we replace above with following? Its specially helpful for hardware as it forces a env reset before continuing, without which the hardware will make a big jump from its position to the position asked by step.
         # observation = self.reset()
         assert not done, "Check initialization. Simulation starts in a done state."
@@ -492,6 +492,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     def get_input_seed(self):
         return self.input_seed
 
+
     def _reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
         """
         Reset the environment
@@ -511,9 +512,9 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     def reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
         return self._reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel, **kwargs), {}
 
-    @property
-    def _step(self, a):
-        return self.step(a)
+    # @property
+    # def _step(self, a):
+    #     return self.step(a)
 
 
     @property
