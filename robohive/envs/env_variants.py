@@ -30,6 +30,7 @@ def gym_registry_specs():
 @implement_for("gym", None, "0.24")
 def _update_env_spec_kwarg(env_variant_specs, variants, override_keys):
     env_variant_specs._kwargs, variants_update_keyval_str = update_dict(env_variant_specs._kwargs, variants, override_keys=override_keys)
+    return variants_update_keyval_str
 
 @implement_for("gym", "0.24", None)
 def _update_env_spec_kwarg(env_variant_specs, variants, override_keys):
