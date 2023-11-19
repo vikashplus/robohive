@@ -70,6 +70,12 @@ class PickPlaceV0(env_base.MujocoEnv):
         self.randomize = randomize
         self.geom_sizes = geom_sizes
 
+        # Save body init pos
+        self.init_body_pos = {}
+        for body in ["obj0", "obj1", "obj2"]:
+            bid = self.sim.model.body_name2id(body)
+            self.init_body_pos[body] = self.sim.model.body_pos[bid].copy()
+
         super()._setup(obs_keys=obs_keys,
                        weighted_reward_keys=weighted_reward_keys,
                        reward_mode=reward_mode,
@@ -119,7 +125,7 @@ class PickPlaceV0(env_base.MujocoEnv):
             # object shapes and locations
             for body in ["obj0", "obj1", "obj2"]:
                 bid = self.sim.model.body_name2id(body)
-                self.sim.model.body_pos[bid] += self.np_random.uniform(low=[-.010, -.010, -.010], high=[-.010, -.010, -.010])# random pos
+                self.sim.model.body_pos[bid] = self.init_body_pos[body] + self.np_random.uniform(low=[-.010, -.010, -.010], high=[-.010, -.010, -.010])# random pos
                 self.sim.model.body_quat[bid] = euler2quat(self.np_random.uniform(low=(-np.pi/2, -np.pi/2, -np.pi/2), high=(np.pi/2, np.pi/2, np.pi/2)) ) # random quat
 
                 for gid in range(self.sim.model.body_geomnum[bid]):
