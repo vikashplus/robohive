@@ -6,7 +6,8 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= """
 
 # TODO: find how to make this compatible with gymnasium. Maybe a global variable that indicates what to use as backend?
-import gym
+# from robohive.utils.import_utils import import_gym; gym = import_gym()
+from robohive.utils.import_utils import import_gym; gym = import_gym()
 import numpy as np
 import os
 import time as timer
@@ -727,7 +728,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             ep_rwd = 0.0
             while t < horizon and done is False:
                 a = policy.get_action(o)[0] if mode == 'exploration' else policy.get_action(o)[1]['evaluation']
-                next_o, rwd, done, env_info = self.step(a)
+                next_o, rwd, done, *_, env_info = self.step(a)
                 ep_rwd += rwd
                 # render offscreen visuals
                 if render =='offscreen':
@@ -819,7 +820,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             ep_rwd = 0.0
 
             # Rollout --------------------------------
-            obs, rwd, done, env_info = self.forward(update_exteroception=True) # t=0
+            obs, rwd, done, *_, env_info = self.forward(update_exteroception=True) # t=0
             while t < horizon and done is False:
 
                 # print(t, t*self.dt, self.time, t*self.dt-self.time)
@@ -850,7 +851,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
 
                 # step env using actions from t=>t+1 ----------------------
-                obs, rwd, done, env_info = self.step(act, update_exteroception=True)
+                obs, rwd, done, *_, env_info = self.step(act, update_exteroception=True)
                 t = t+1
                 ep_rwd += rwd
 

@@ -7,7 +7,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 import collections
 import enum
-import gym
+from robohive.utils.import_utils import import_gym; gym = import_gym()
 import numpy as np
 
 from robohive.envs import env_base
@@ -272,7 +272,7 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
 
         # populate go-to task with a target location
         if self.which_task==Task.MOVE_TO_LOCATION:
-            goal_pos = np.random.randint(4)
+            goal_pos = self.np_random.choice([0,1,2,3])
             desired_position = []
             if goal_pos==0:
                 desired_position.append(0.01)  #x

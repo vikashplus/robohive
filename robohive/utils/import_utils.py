@@ -3,6 +3,15 @@ import os
 from os.path import expanduser
 import git
 
+
+def import_gym():
+    if importlib.util.find_spec("gymnasium"):
+        import gymnasium as gg
+    elif importlib.util.find_spec("gym"):
+        import gym as gg
+    return gg
+
+
 def mujoco_py_isavailable():
     help = """
         Options:

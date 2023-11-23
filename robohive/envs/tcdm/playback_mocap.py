@@ -1,5 +1,5 @@
 import robohive
-import gym
+from robohive.utils.import_utils import import_gym; gym = import_gym()
 import numpy as np
 from mocap_utils import MoCapController, MoCapTask
 import dm_env

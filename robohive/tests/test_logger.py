@@ -6,6 +6,7 @@ from robohive.logger.grouped_datasets import test_trace
 from robohive.logger.examine_logs import examine_logs
 from robohive.utils.examine_env import main as examine_env
 import os
+import re
 
 class TestTrace(unittest.TestCase):
     def teast_trace(self):
@@ -24,7 +25,8 @@ class TestExamineTrace(unittest.TestCase):
                                             "--render", "none",\
                                             "--save_paths", True,\
                                             "--output_name", "door_test_logs"])
-        log_name = result.output.strip()[-38:]
+        log_name_pattern = re.compile(r'Saved: (?:.+\.h5)')
+        log_name = log_name_pattern.search(result.output)[0][7:]
 
         result = runner.invoke(examine_logs, ["--env_name", "door-v1", \
                                             "--rollout_path", log_name, \
