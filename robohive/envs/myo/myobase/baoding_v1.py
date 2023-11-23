@@ -5,7 +5,7 @@ Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gma
 
 import collections
 import enum
-import gym
+from robohive.utils.import_utils import import_gym; gym = import_gym()
 import numpy as np
 
 from robohive.envs.myo.base_v0 import BaseV0
@@ -281,7 +281,7 @@ class BaodingEnvV1(BaseV0):
 
         # populate go-to task with a target location (pos likely needs update)
         if self.which_task==Task.MOVE_TO_LOCATION:
-            goal_pos = np.random.randint(4)
+            goal_pos = self.np_random.choice([0,1,2,3])
             desired_position = []
             if goal_pos==0:
                 desired_position.append(-.195) #x

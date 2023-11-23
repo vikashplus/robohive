@@ -7,7 +7,8 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 import unittest
 
-import gym
+# from robohive.utils.import_utils import import_gym; gym = import_gym()
+from robohive.utils.import_utils import import_gym; gym = import_gym()
 import numpy as np
 import pickle
 import copy
@@ -50,7 +51,7 @@ class TestEnvs(unittest.TestCase):
         assert env1.get_input_seed() == input_seed
         # test reseed and reset
         env1.seed(input_seed)
-        reset_obs1 = env1.env.reset()
+        reset_obs1, *_ = env1.env.reset()
 
         # step
         u = 0.01*np.random.uniform(low=0, high=1, size=env1.env.sim.model.nu) # small controls
@@ -80,7 +81,7 @@ class TestEnvs(unittest.TestCase):
 
         # test reseed and reset
         env2.seed(input_seed)
-        reset_obs2 = env2.env.reset()
+        reset_obs2, *_ = env2.env.reset()
         assert_close(reset_obs1, reset_obs2)
 
         # step

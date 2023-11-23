@@ -6,7 +6,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= """
 
 import collections
-import gym
+from robohive.utils.import_utils import import_gym; gym = import_gym()
 import numpy as np
 
 from robohive.envs import env_base
@@ -130,7 +130,7 @@ class PickPlaceV0(env_base.MujocoEnv):
 
                 for gid in range(self.sim.model.body_geomnum[bid]):
                     gid+=self.sim.model.body_geomadr[bid]
-                    self.sim.model.geom_type[gid]=self.np_random.randint(low=2, high=7) # random shape
+                    self.sim.model.geom_type[gid]=self.np_random.choice([2,3,4,5,6,7]) # random shape
                     self.sim.model.geom_size[gid]=self.np_random.uniform(low=self.geom_sizes['low'], high=self.geom_sizes['high']) # random size
                     self.sim.model.geom_pos[gid]=self.np_random.uniform(low=-1*self.sim.model.geom_size[gid], high=self.sim.model.geom_size[gid]) # random pos
                     self.sim.model.geom_quat[gid]=euler2quat(self.np_random.uniform(low=(-np.pi/2, -np.pi/2, -np.pi/2), high=(np.pi/2, np.pi/2, np.pi/2)) ) # random quat

@@ -18,7 +18,7 @@ from robohive.logger.roboset_logger import RoboSet_Trace
 from robohive.logger.grouped_datasets import Trace as RoboHive_Trace
 import numpy as np
 import click
-import gym
+from robohive.utils.import_utils import import_gym; gym = import_gym()
 
 try:
     from vtils.input.keyboard import KeyInput as KeyBoard
