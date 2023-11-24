@@ -153,7 +153,7 @@ class RelocateEnvV0(BaseV0):
                 for gid in range(self.sim.model.body_geomnum[bid]):
                     gid+=self.sim.model.body_geomadr[bid] # get geom ids
                     # update type, size, and collision bounds
-                    self.sim.model.geom_type[gid]=self.np_random.choice([2,3,4,5,6,7]) # random shape
+                    self.sim.model.geom_type[gid]=self.np_random.choice([2,3,4,5,6]) # random shape
                     self.sim.model.geom_size[gid]=self.np_random.uniform(low=self.obj_geom_range['low'], high=self.obj_geom_range['high']) # random size
                     self.sim.model.geom_aabb[gid][3:]= self.obj_geom_range['high'] # bounding box, (center, size)
                     self.sim.model.geom_rbound[gid] = 2.0*max(self.obj_geom_range['high']) # radius of bounding sphere
