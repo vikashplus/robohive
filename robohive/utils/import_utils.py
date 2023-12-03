@@ -1,4 +1,5 @@
 import importlib
+import importlib.util
 import os
 from os.path import expanduser
 import git
