@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 DESC = """
 Vizualize model in a viewer\n
     - render forward kinematics if `qpos` is provided\n
