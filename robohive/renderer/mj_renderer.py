@@ -13,7 +13,7 @@ from mujoco import viewer
 import time
 
 from typing import Union
-from robohive.renderer.renderer import Renderer, RenderMode
+from robohive.renderer.renderer import Renderer
 
 # Default window dimensions.
 DEFAULT_WINDOW_WIDTH = 640

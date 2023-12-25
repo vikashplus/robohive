@@ -8,6 +8,15 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 import os
 import sys
 from setuptools import setup, find_packages
+import shutil
+
+# Check and warn if FFmpeg is not available
+if shutil.which("ffmpeg") is None:
+    help = """FFmpeg not found in your system. Please install FFmpeg before proceeding
+          Options:
+            (1) LINUX: apt-get install ffmpeg 
+            (2) OSX: brew install ffmpeg"""
+    raise ModuleNotFoundError(help)
 
 if sys.version_info.major != 3:
     print("This library is only compatible with Python 3, but you are running "
@@ -27,7 +36,7 @@ extra_files = package_files('robohive')
 
 setup(
     name='robohive',
-    version='0.6.0',
+    version='0.7.0',
     license='Apache 2.0',
     packages=find_packages(),
     package_data={"": extra_files+['../robohive_init.py']},
@@ -41,8 +50,8 @@ setup(
     install_requires=[
         'click',
         'gym==0.13',
-        'mujoco==2.3.7',
-        'dm-control==1.0.14',
+        'mujoco==3.1.1',
+        'dm-control==1.0.16',
         'termcolor',
         'sk-video',
         'flatten_dict',
