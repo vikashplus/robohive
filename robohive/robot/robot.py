@@ -793,7 +793,7 @@ class Robot():
 
 
 def demo_robot():
-    from robohive.utils.import_utils import import_gym; gym = import_gym()
+    from robohive.utils.import_utils import gym
 
     prompt("Starting Robot===================")
     env = gym.make('FrankaReachFixed-v0')

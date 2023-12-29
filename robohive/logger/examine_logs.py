@@ -17,7 +17,7 @@ USAGE:\n
 
 from robohive.utils.paths_utils import plot as plotnsave_paths
 from robohive.utils import tensor_utils
-from robohive.utils.import_utils import import_gym; gym = import_gym()
+from robohive.utils.import_utils import gym
 import click
 import numpy as np
 import time

@@ -23,7 +23,7 @@ from mjrl.utils.gym_env import GymEnv
 import robohive
 import time as timer
 # import skvideo.io
-from robohive.utils.import_utils import import_gym; gym = import_gym()
+from robohive.utils.import_utils import gym
 
 from tqdm import tqdm
 
