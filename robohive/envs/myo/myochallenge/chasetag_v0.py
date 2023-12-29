@@ -4,7 +4,7 @@ Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gma
 ================================================= """
 
 import collections
-from robohive.utils.import_utils import import_gym; gym = import_gym()
+from robohive.utils.import_utils import gym
 import numpy as np
 import pink
 import os

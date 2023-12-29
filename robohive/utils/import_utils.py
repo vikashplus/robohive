@@ -4,12 +4,14 @@ from os.path import expanduser
 import git
 
 
+# Utility to import gym/gymnasium
 def import_gym():
     if importlib.util.find_spec("gymnasium"):
         import gymnasium as gg
     elif importlib.util.find_spec("gym"):
         import gym as gg
     return gg
+gym = import_gym()
 
 
 def mujoco_py_isavailable():

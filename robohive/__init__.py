@@ -16,7 +16,7 @@ simhive_isavailable(robohive_version = __version__)
 
 
 # Register RoboHive Envs
-from robohive.utils.import_utils import import_gym; gym = import_gym()
+from robohive.utils.import_utils import gym
 from robohive.utils.implement_for import implement_for
 
 #TODO: check versions

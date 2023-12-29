@@ -5,7 +5,7 @@ Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gma
 
 import collections
 import numpy as np
-from robohive.utils.import_utils import import_gym; gym = import_gym()
+from robohive.utils.import_utils import gym
 
 from robohive.envs.myo.base_v0 import BaseV0
 from robohive.utils.quat_math import mat2euler, euler2quat

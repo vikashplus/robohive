@@ -7,7 +7,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 import unittest
 
-from robohive.utils.import_utils import import_gym; gym = import_gym()
+from robohive.utils.import_utils import gym
 import numpy as np
 import pickle
 import copy

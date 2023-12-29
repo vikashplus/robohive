@@ -4,7 +4,7 @@ Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gma
 ================================================= """
 
 import collections
-from robohive.utils.import_utils import import_gym; gym = import_gym()
+from robohive.utils.import_utils import gym
 import numpy as np
 from robohive.envs.myo.base_v0 import BaseV0
 from robohive.utils.quat_math import quat2mat
