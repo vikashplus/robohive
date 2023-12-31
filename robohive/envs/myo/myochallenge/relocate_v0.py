@@ -5,7 +5,7 @@ Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gma
 
 import collections
 import numpy as np
-from robohive.utils.import_utils import gym
+from robohive.utils import gym
 
 from robohive.envs.myo.base_v0 import BaseV0
 from robohive.utils.quat_math import mat2euler, euler2quat
@@ -137,7 +137,7 @@ class RelocateEnvV0(BaseV0):
         return metrics
 
 
-    def reset(self, reset_qpos=None, reset_qvel=None):
+    def reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
         self.sim.model.body_pos[self.goal_bid] = self.np_random.uniform(**self.target_xyz_range)
         self.sim.model.body_quat[self.goal_bid] = euler2quat(self.np_random.uniform(**self.target_rxryrz_range))
 
@@ -180,8 +180,8 @@ class RelocateEnvV0(BaseV0):
         else:
             reset_qpos_local = reset_qpos
 
-        obs = super().reset(reset_qpos_local, reset_qvel)
+        obs = super().reset(reset_qpos_local, reset_qvel,**kwargs)
         if self.sim.data.ncon>0:
-            self.reset(reset_qpos, reset_qvel)
+            self.reset(reset_qpos, reset_qvel,**kwargs)
 
         return obs
