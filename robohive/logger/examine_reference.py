@@ -1,5 +1,5 @@
 import robohive
-from robohive.utils.import_utils import gym
+from robohive.utils import gym
 import time
 import click
 from tqdm import tqdm

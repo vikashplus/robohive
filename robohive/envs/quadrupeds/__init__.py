@@ -1,4 +1,4 @@
-from robohive.utils.import_utils import gym; register=gym.register
+from robohive.utils import gym; register=gym.register
 
 from robohive.envs.env_variants import register_env_variant
 import numpy as np

@@ -6,7 +6,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= """
 
 import os
-from robohive.utils.import_utils import gym; register=gym.register
+from robohive.utils import gym; register=gym.register
 
 from robohive.envs.multi_task.common.franka_kitchen_v2 import FrankaKitchen
 import copy

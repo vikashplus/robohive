@@ -1,4 +1,4 @@
-from robohive.utils.import_utils import gym; register=gym.register
+from robohive.utils import gym; register=gym.register
 
 import collections
 import os
