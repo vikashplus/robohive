@@ -61,7 +61,17 @@ def prompt(data, color=None, on_color=None, flush=False, end="\n", type:Prompt=P
 
     global PROMPT_CACHE
 
-    # Resolve if we need to print
+    # Why is cprint None during exit? HACK as a workaround for now
+    if cprint is None:
+        # cprint(data, color=color, on_color=on_color, flush=flush, end=end) # throws error
+        print(data, flush=flush, end=end)
+
+    # Why is Prompt None during exit? HACK as a workaround for now
+    if Prompt is None:
+        # print(Prompt.ONCE, "=============", type, flush=True) # throws error
+        print(data, flush=flush, end=end)
+        return
+
     if type == Prompt.ONCE:
         data_hash = hash(data)
         if data_hash in PROMPT_CACHE:
