@@ -5,7 +5,7 @@ Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
-from robohive.utils.import_utils import gym
+from robohive.utils import gym
 import numpy as np
 import os
 import time as timer
@@ -492,14 +492,14 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         return self.input_seed
 
 
-    def _reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
+    def _reset(self, reset_qpos=None, reset_qvel=None, seed=None, **kwargs):
         """
         Reset the environment
         Default implemention provided. Override if env needs custom reset
         """
         qpos = self.init_qpos.copy() if reset_qpos is None else reset_qpos
         qvel = self.init_qvel.copy() if reset_qvel is None else reset_qvel
-        self.robot.reset(qpos, qvel, **kwargs)
+        self.robot.reset(reset_pos=qpos, reset_vel=qvel, seed=seed, **kwargs)
         return self.get_obs()
     @implement_for("gym", None, "0.26")
     def reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
@@ -508,8 +508,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     def reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
         return self._reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel, **kwargs), {}
     @implement_for("gymnasium")
-    def reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
-        return self._reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel, **kwargs), {}
+    def reset(self, reset_qpos=None, reset_qvel=None, seed=None, **kwargs):
+        return self._reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel, seed=seed, **kwargs), {}
 
     # @property
     # def _step(self, a):
