@@ -81,13 +81,13 @@ rsync -av --progress $src_path/robohive/tests/test_myo.py $dst_path/myosuite/tes
 # Replace
 if [ "$(uname)" == "Darwin" ]; then
     # macOS
-    sed -i '' "s/robohive\./myosuite\./g" $dst_path/myosuite/envs/myo/__init__.py
+    sed -i '' "s/robohive\./myosuite\./g" $dst_path/myosuite/envs/myo/myobase/__init__.py
     find $dst_path/myosuite -type f -name "*.py" -exec sed -i '' "s/robohive\./myosuite\./g" {} \;
     find $dst_path/myosuite/tests -type f -name "*.py" -exec sed -i '' "s/robohive/myosuite/g" {} \;
     find $dst_path/myosuite/logger -type f -name "examine_reference.py" -exec sed -i '' "s/robohive/myosuite/g" {} \;
     find $dst_path/myosuite -type f -name "*.py" -exec sed -i '' "s/RoboHive:>/MyoSuite:>/g" {} \;
 elif [ "$(uname)" == "Linux" ]; then
-    sed -i "s/robohive\./myosuite\./g" $dst_path/myosuite/envs/myo/__init__.py
+    sed -i "s/robohive\./myosuite\./g" $dst_path/myosuite/envs/myo/myobase/__init__.py
     find $dst_path/myosuite -type f -name "*.py" -exec sed -i "s/robohive\./myosuite\./g" {} \;
     find $dst_path/myosuite/tests -type f -name "*.py" -exec sed -i "s/robohive/myosuite/g" {} \;
     find $dst_path/myosuite/logger -type f -name "examine_reference.py" -exec sed -i "s/robohive/myosuite/g" {} \;
