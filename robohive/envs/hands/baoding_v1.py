@@ -7,7 +7,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 import collections
 import enum
-from robohive.utils.import_utils import gym
+from robohive.utils import gym
 import numpy as np
 
 from robohive.envs import env_base

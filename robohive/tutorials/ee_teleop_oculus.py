@@ -15,7 +15,7 @@ EXAMPLE:\n
 import time
 import numpy as np
 import click
-from robohive.utils.import_utils import gym
+from robohive.utils import gym
 from robohive.utils.quat_math import euler2quat, euler2mat, mat2quat, diffQuat, mulQuat
 from robohive.utils.inverse_kinematics import IKResult, qpos_from_site_pose
 from robohive.logger.roboset_logger import RoboSet_Trace

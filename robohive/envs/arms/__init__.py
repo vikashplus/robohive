@@ -6,7 +6,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= """
 
 # from gym.envs.registration import register
-from robohive.utils.import_utils import gym; register=gym.register
+from robohive.utils import gym; register=gym.register
 
 from robohive.envs.env_variants import register_env_variant
 import os
