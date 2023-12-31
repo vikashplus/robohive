@@ -713,7 +713,8 @@ class Robot():
     def reset(self,
               reset_pos,
               reset_vel,
-              blocking = True
+              blocking = True,
+              **kwargs
               ):
 
         prompt("Resetting {}".format(self.name), 'white', 'on_grey', flush=True)
@@ -793,7 +794,7 @@ class Robot():
 
 
 def demo_robot():
-    from robohive.utils.import_utils import gym
+    from robohive.utils import gym
 
     prompt("Starting Robot===================")
     env = gym.make('FrankaReachFixed-v0')

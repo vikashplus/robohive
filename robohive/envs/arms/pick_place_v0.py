@@ -6,7 +6,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= """
 
 import collections
-from robohive.utils.import_utils import gym
+from robohive.utils import gym
 import numpy as np
 
 from robohive.envs import env_base
@@ -115,7 +115,7 @@ class PickPlaceV0(env_base.MujocoEnv):
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
 
-    def reset(self):
+    def reset(self, **kwargs):
 
         if self.randomize:
             # target location
@@ -137,7 +137,7 @@ class PickPlaceV0(env_base.MujocoEnv):
                     self.sim.model.geom_rgba[gid]=self.np_random.uniform(low=[.2, .2, .2, 1], high=[.9, .9, .9, 1]) # random color
             self.sim.forward()
 
-        obs = super().reset(self.init_qpos, self.init_qvel)
+        obs = super().reset(self.init_qpos, self.init_qvel, **kwargs)
         return obs
 
     # def viewer_setup(self):
