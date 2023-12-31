@@ -781,16 +781,21 @@ class Robot():
 
 
     # close connection and exit out of the robot
-    def close(self):
-        prompt("Closing {}".format(self.name), 'white', 'on_grey', flush=True)
-        if self.is_hardware:
-            status = self.hardware_close()
-            prompt("Closed (Status: {})".format(status), 'white', 'on_grey', flush=True)
+    def close_robot(self):
+        if self.robot_config:
+            status = self.hardware_close() if self.is_hardware else True
+            if status:
+                prompt(f"Closed {self.name} (Status: {status})", 'white', 'on_grey', flush=True)
+                self.robot_config = None
+            else:
+                prompt(f"Error closing {self.name} (Status: {status})", 'red', 'on_grey', flush=True, type=Prompt.ERROR)
+        else:
+            prompt(f"Trying to close a non-existent robot", flush=True, type=Prompt.WARN)
 
 
     # destructor
     def __del__(self):
-        self.close()
+        self.close_robot()
 
 
 def demo_robot():
