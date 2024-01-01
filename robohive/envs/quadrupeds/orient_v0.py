@@ -171,7 +171,7 @@ class OrientBaseV0(env_base.MujocoEnv):
         return rwd_dict
 
 
-    def reset(self, reset_qpos=None, reset_qvel=None):
+    def reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
 
         reset_qpos = self.init_qpos.copy() if reset_qpos is None else reset_qpos
         reset_qpos[6:] += np.pi/8*self.np_random.uniform(low=-1, high=1, size=self.sim.model.nq-6)
@@ -182,5 +182,5 @@ class OrientBaseV0(env_base.MujocoEnv):
         self.sim.model.site_pos[self.target_sid] = target_dist * np.array([np.cos(target_theta), np.sin(target_theta), 0])
         # Heading target is a bit farther away to avoid heading oscillations when quad is near xy_target
         self.sim.model.site_pos[self.heading_sid] = (target_dist+0.5) * np.array([np.cos(target_theta), np.sin(target_theta), 0])
-        obs = super().reset(reset_qpos, reset_qvel)
+        obs = super().reset(reset_qpos, reset_qvel, **kwargs)
         return obs

@@ -98,7 +98,7 @@ class ReorientBaseV0(env_base.MujocoEnv):
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
 
-    def reset(self):
+    def reset(self, **kwargs):
         desired_pos = self.np_random.uniform(high=self.target_xyz_range['high'], low=self.target_xyz_range['low'])
         self.sim.model.site_pos[self.target_sid] = desired_pos
         self.sim_obsd.model.site_pos[self.target_sid] = desired_pos
@@ -108,5 +108,5 @@ class ReorientBaseV0(env_base.MujocoEnv):
         self.sim.model.site_quat[self.target_sid] = euler2quat(desired_orien)
         self.sim_obsd.model.site_quat[self.target_sid] = euler2quat(desired_orien)
 
-        obs = super().reset(self.init_qpos, self.init_qvel)
+        obs = super().reset(self.init_qpos, self.init_qvel, **kwargs)
         return obs

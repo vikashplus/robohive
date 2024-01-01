@@ -170,7 +170,7 @@ class StandBaseV0(env_base.MujocoEnv):
         return rwd_dict
 
 
-    def reset(self, reset_qpos=None, reset_qvel=None):
+    def reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
 
         if reset_qpos is None:
             reset_qpos = self.init_qpos.copy()
@@ -189,5 +189,5 @@ class StandBaseV0(env_base.MujocoEnv):
             else:
                 raise TypeError(f"Unknown reset type: {self.reset_type}")
 
-        obs = super().reset(reset_qpos, reset_qvel)
+        obs = super().reset(reset_qpos, reset_qvel, **kwargs)
         return obs

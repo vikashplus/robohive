@@ -119,9 +119,9 @@ class FrankaEEPose(env_base.MujocoEnv):
             return self.np_random.uniform(low=self.sim.model.actuator_ctrlrange[:,0], high=self.sim.model.actuator_ctrlrange[:,1])
 
 
-    def reset(self, reset_qpos=None, reset_qvel=None):
+    def reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
         self.target_pose = self.get_target_pose()
-        obs = super().reset(reset_qpos, reset_qvel)
+        obs = super().reset(reset_qpos, reset_qvel, **kwargs)
         return obs
 
 class FrankaRobotiqPose(FrankaEEPose):
