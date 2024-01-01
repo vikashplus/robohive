@@ -260,7 +260,7 @@ class BaodingEnvV1(BaseV0):
             logger.log_kv('effort', effort)
         return success_percentage
 
-    def reset(self, reset_pose=None, reset_vel=None, reset_goal=None, time_period=None):
+    def reset(self, reset_pose=None, reset_vel=None, reset_goal=None, time_period=None, **kwargs):
         # reset counters
         self.counter=0
         self.x_radius=self.np_random.uniform(low=self.goal_xrange[0], high=self.goal_xrange[1])
@@ -273,7 +273,7 @@ class BaodingEnvV1(BaseV0):
         self.goal = self.create_goal_trajectory(time_step=self.dt, time_period=time_period) if reset_goal is None else reset_goal.copy()
 
         # reset scene
-        obs = super().reset(reset_qpos=reset_pose, reset_qvel=reset_vel)
+        obs = super().reset(reset_qpos=reset_pose, reset_qvel=reset_vel, **kwargs)
         return obs
 
     def create_goal_trajectory(self, time_step=.1, time_period=6):

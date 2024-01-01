@@ -113,7 +113,7 @@ class FrankaKitchen(KitchenBase):
         )
 
 
-    def reset(self, reset_qpos=None, reset_qvel=None):
+    def reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
         if reset_qpos is None:
             reset_qpos = self.init_qpos.copy()
 
@@ -128,4 +128,4 @@ class FrankaKitchen(KitchenBase):
         if self.robot_base_range:
             self.sim.model.body_pos[self.robot_base_bid] = self.robot_base_pos + self.np_random.uniform(**self.robot_base_range)
 
-        return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel)
+        return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel, **kwargs)
