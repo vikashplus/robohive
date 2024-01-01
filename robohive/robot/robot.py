@@ -781,7 +781,7 @@ class Robot():
 
 
     # close connection and exit out of the robot
-    def close_robot(self):
+    def close(self):
         if self.robot_config:
             status = self.hardware_close() if self.is_hardware else True
             if status:
@@ -795,7 +795,7 @@ class Robot():
 
     # destructor
     def __del__(self):
-        self.close_robot()
+        self.close()
 
 
 def demo_robot():
