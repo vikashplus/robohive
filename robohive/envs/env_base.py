@@ -137,9 +137,6 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         assert not done, "Check initialization. Simulation starts in a done state."
         self.observation_space = gym.spaces.Box(obs_range[0]*np.ones(observation.size), obs_range[1]*np.ones(observation.size), dtype=np.float32)
 
-        # we copy the horizon to avoid having gymnasium hijacking it later
-        self._horizon = self.spec.max_episode_steps
-
         return
 
 
@@ -534,10 +531,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         return self.spec.id
 
 
-    @property
     def horizon(self):
-        return self._horizon # paths could have early termination before horizon
-
+        return gym.registry[self.spec.id].max_episode_steps # paths could have early termination before horizon
 
     def get_env_state(self):
         """
