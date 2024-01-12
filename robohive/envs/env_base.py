@@ -19,6 +19,7 @@ import skvideo.io
 from sys import platform
 from robohive.physics.sim_scene import SimScene
 import robohive.utils.import_utils as import_utils
+from robohive.envs.env_variants import gym_registry_specs
 
 # TODO
 # remove rwd_mode
@@ -532,7 +533,9 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
     @property
     def horizon(self):
-        return gym.registry[self.spec.id].max_episode_steps # paths could have early termination before horizon
+        # return self.spec.max_episode_steps # paths could have early termination before horizon
+        return gym_registry_specs()[self.spec.id].max_episode_steps
+
 
     def get_env_state(self):
         """
