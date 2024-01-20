@@ -22,7 +22,6 @@ def mujoco_isavailable():
         (1) install robohive with encoders (pip install robohive['mujoco'])
         (2) follow setup instructions here: https://github.com/deepmind/mujoco
         (3) install mujoco via pip (pip install mujoco)
-
     """
     if importlib.util.find_spec("mujoco") is None:
         raise ModuleNotFoundError(help)
