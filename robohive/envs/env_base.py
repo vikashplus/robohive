@@ -531,10 +531,16 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     def id(self):
         return self.spec.id
 
+
+    @implement_for("gym")
+    def _horizon(self):
+        return self.spec.max_episode_steps # paths could have early termination before horizon
+    @implement_for("gymnasium")
+    def _horizon(self):
+        return gym_registry_specs()[self.spec.id].max_episode_steps # gymnasium unwrapper overrides specs (https://github.com/Farama-Foundation/Gymnasium/issues/871)
     @property
     def horizon(self):
-        # return self.spec.max_episode_steps # paths could have early termination before horizon
-        return gym_registry_specs()[self.spec.id].max_episode_steps
+        return self._horizon()
 
 
     def get_env_state(self):
