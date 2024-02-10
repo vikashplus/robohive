@@ -9,7 +9,7 @@ class Prompt(enum.IntEnum):
     NONE = 4
 
 # Global verbose mode
-VERBOSE_MODE = Prompt.INFO
+VERBOSE_MODE = Prompt.ERROR
 
 def set_prompt_verbosity(verbose_mode:Prompt=Prompt.INFO):
     global VERBOSE_MODE

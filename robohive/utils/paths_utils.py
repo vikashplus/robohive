@@ -196,10 +196,10 @@ def render(rollout_path, render_format:str="mp4", cam_names:list=["left"]):
     for i_path, path in enumerate(paths):
 
         if output_type=='.h5':
-            data = paths[path]['data']
+            data = paths[path]['env_infos/visual_dict']
             path_horizon = data['time'].shape[0]
         else:
-            data = path['env_infos']['obs_dict']
+            data = path['env_infos/visual_dict']
             path_horizon = path['env_infos']['time'].shape[0]
 
         # find full key name
