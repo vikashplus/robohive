@@ -5,7 +5,7 @@ Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
-"""Rendering simulation using dm_control."""
+"""Rendering simulation using mujoco."""
 
 import numpy as np
 import mujoco
@@ -24,7 +24,7 @@ DEFAULT_WINDOW_TITLE = 'RoboHive Viewer'
 
 
 class MJRenderer(Renderer):
-    """Renders DM Control Physics objects."""
+    """Renders Mujoco Physics objects."""
 
     def __init__(self, sim):
         super().__init__(sim)
@@ -117,15 +117,12 @@ class MJRenderer(Renderer):
             self._renderer._mjr_context.readDepthMap = mujoco.mjtDepthMap.mjDEPTH_ZERONEAR
             self._renderer.update_scene(self._sim.data.ptr, camera=camera_id, scene_option=self._scene_option)
             dpt_arr = self._renderer.render()
-            dpt_arr = dpt_arr[::-1, :]
             self._renderer.disable_depth_rendering()
         if segmentation:
             self._renderer.enable_segmentation_rendering()
             self._renderer.update_scene(self._sim.data.ptr, camera=camera_id, scene_option=self._scene_option)
-            dpt_arr = self._renderer.render()
-            dpt_arr = dpt_arr[::-1, :]
+            seg_arr = self._renderer.render()
             self._renderer.disable_segmentation_rendering()
-            seg_arr = seg_arr[::-1, :]
 
         if depth and segmentation:
             return rgb_arr, dpt_arr, seg_arr
