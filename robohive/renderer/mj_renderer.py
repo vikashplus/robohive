@@ -114,7 +114,7 @@ class MJRenderer(Renderer):
             self._renderer.enable_depth_rendering()
             self._renderer.update_scene(self._sim.data.ptr, camera=camera_id, scene_option=self._scene_option)
             dpt_arr = self._renderer.render()
-            dpt_arr = dpt_arr[::-1, :]
+            # dpt_arr = dpt_arr[::-1, :]
             self._renderer.disable_depth_rendering()
         if segmentation:
             self._renderer.enable_segmentation_rendering()
