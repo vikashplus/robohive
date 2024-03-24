@@ -6,21 +6,22 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= """
 
 import os
-import sys
-from setuptools import setup, find_packages
 import shutil
+import sys
+
+from setuptools import find_packages, setup
 
 # Check and warn if FFmpeg is not available
 if shutil.which("ffmpeg") is None:
     help = """FFmpeg not found in your system. Please install FFmpeg before proceeding
           Options:
-            (1) LINUX: apt-get install ffmpeg 
+            (1) LINUX: apt-get install ffmpeg
             (2) OSX: brew install ffmpeg"""
     raise ModuleNotFoundError(help)
 
-if sys.version_info.major != 3:
-    print("This library is only compatible with Python 3, but you are running "
-          "Python {}. The installation will likely fail.".format(sys.version_info.major))
+if sys.version_info.major < 3 or (sys.version_info.major == 3 and sys.version_info.minor < 8):
+    print("This library requires Python 3.8 or higher, but you are running "
+          "Python {}.{}. The installation will likely fail.".format(sys.version_info.major, sys.version_info.minor))
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
@@ -50,7 +51,7 @@ setup(
     install_requires=[
         'click',
         'gym==0.13',
-        'mujoco==3.1.1',
+        'mujoco==3.1.3',
         'dm-control==1.0.16',
         'termcolor',
         'sk-video',
