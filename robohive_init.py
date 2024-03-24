@@ -1,5 +1,7 @@
-import os, shutil
+import os
+import shutil
 from os.path import expanduser
+
 import git
 
 curr_dir = os.path.dirname(os.path.abspath(__file__))
@@ -104,7 +106,7 @@ def fetch_simhive():
                 clone_path=simhive_path)
 
     fetch_git(repo_url="https://github.com/vikashplus/object_sim.git",
-                commit_hash="87cd8dd5a11518b94fca16bc22bb04f6836c6aa7",
+                commit_hash="ee0ff14a5369c277687a4636165c5b703bccbf84",
                 clone_directory="object_sim",
                 clone_path=simhive_path)
 
