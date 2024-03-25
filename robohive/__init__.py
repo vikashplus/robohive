@@ -12,12 +12,14 @@ __version__ = "0.7.0"
 
 # Check for RoboHive initialization
 from robohive.utils.import_utils import simhive_isavailable
+
 simhive_isavailable(robohive_version = __version__)
 
 
 # Register RoboHive Envs
 from robohive.utils import gym
 from robohive.utils.implement_for import implement_for
+
 
 #TODO: check versions
 @implement_for("gym", None, "0.24")
@@ -32,8 +34,7 @@ def gym_registry_specs():
 def gym_registry_specs():
     return gym.envs.registry
 
-_current_gym_envs = gym_registry_specs().keys()
-_current_gym_envs = set(_current_gym_envs)
+_current_gym_envs = set(gym_registry_specs().keys())
 robohive_env_suite = set()
 
 # Register Arms Suite
