@@ -1,4 +1,5 @@
-from gym.envs.registration import register
+from robohive.utils import gym; register=gym.register
+
 import numpy as np
 import os
 curr_dir = os.path.dirname(os.path.abspath(__file__))

@@ -7,15 +7,16 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 <!-- # RoboHive -->
 
-![PyPI](https://img.shields.io/pypi/v/robohive)
+[![report](https://img.shields.io/badge/Project-Page-blue)](https://sites.google.com/view/robohive/)
+[![report](https://img.shields.io/badge/ArXiv-Paper-green)](https://arxiv.org/abs/2310.06828)
+[![Documentation](https://img.shields.io/static/v1?label=Wiki&message=Documentation&color=<green)](https://github.com/vikashplus/robohive/wiki) ![PyPI](https://img.shields.io/pypi/v/robohive)
 ![PyPI - License](https://img.shields.io/pypi/l/robohive)
 [![Downloads](https://pepy.tech/badge/robohive)](https://pepy.tech/project/robohive)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1rdSgnsfUaE-eFLjAkFHeqfUWzAK8ruTs?usp=sharing)
 [![Slack](https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white)](https://robohiveworkspace.slack.com)
-[![Documentation](https://img.shields.io/static/v1?label=Wiki&message=Documentation&color=<green)](https://github.com/vikashplus/robohive/wiki)
 
 ![RoboHive Social Preview](https://github.com/vikashplus/robohive/assets/12837145/04aff6da-f9fa-4f5f-abc6-cfcd70c6cd90)
-`RoboHive` is a collection of environments/tasks simulated with the [MuJoCo](http://www.mujoco.org/) physics engine exposed using the OpenAI-Gym API.
+`RoboHive` is a collection of environments/tasks simulated with the [MuJoCo](http://www.mujoco.org/) physics engine exposed using the OpenAI-Gym API. Its compatible with any gym-compatible agents training framework ([Stable Baselines](https://stable-baselines3.readthedocs.io/en/master), [RLlib](https://docs.ray.io/en/latest/rllib/index.html), [TorchRL](https://pytorch.org/rl/), [AgentHive](https://sites.google.com/view/robohive/baseline), etc)
 
 # Getting Started
    Getting started with RoboHive is as simple as -

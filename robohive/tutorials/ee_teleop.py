@@ -18,10 +18,11 @@ from robohive.logger.roboset_logger import RoboSet_Trace
 from robohive.logger.grouped_datasets import Trace as RoboHive_Trace
 import numpy as np
 import click
-import gym
+from robohive.utils import gym
 
 try:
     from vtils.input.keyboard import KeyInput as KeyBoard
+    from vtils.input.gamepad import GamePad
     from vtils.input.spacemouse import SpaceMouse
 except ImportError as e:
     raise ImportError("Please install vtils -- https://github.com/vikashplus/vtils")
@@ -100,12 +101,59 @@ def poll_spacemouse(input_device):
     return delta_pos, delta_euler, delta_gripper, done
 
 
+# Poll and process gamepad values
+def poll_gamepad(input_device):
+    # get sensors
+    sen = input_device.get_sensors()
+
+    # exit request
+    done = True if (sen["BTN_START"] and sen["BTN_SELECT"]) else False
+
+    scale_factor = 1.0
+
+    if sen["BTN_NORTH"] == 1:
+        scale_factor = 0.25 # Hold X to slow down arm movement
+    
+    if sen["BTN_WEST"] == 1: # B: open gripper
+        delta_gripper = 1
+    elif sen["BTN_EAST"] == 1: # Y: close gripper
+        delta_gripper = -1
+    else:
+        delta_gripper = 0
+
+    # positions
+    delta_pos = np.array([0, 0, 0])
+    # Moving EE forward or backward, when facing the robot
+    delta_pos[0] = sen["ABS_Y"]
+    # Moving EE left or right, when facing the robot
+    delta_pos[1] = sen["ABS_X"]
+    # Raise or lower
+    delta_pos[2] = sen["ABS_Z"] - sen["ABS_RZ"]
+
+    # rotations
+    delta_euler = np.array([0, 0, 0])
+    if sen["ABS_HAT0X"] == -1:
+        delta_euler[0] = -1
+    elif sen["ABS_HAT0X"] == 1:
+        delta_euler[0] = 1
+    elif sen["ABS_HAT0Y"] == 1:
+        delta_euler[1] = -1
+    elif sen["ABS_HAT0Y"] == -1:
+        delta_euler[1] = 1
+    elif sen["BTN_TL"] == 1:
+        delta_euler[2] = -1
+    elif sen["BTN_TR"] == 1:
+        delta_euler[2] = 1
+
+    return delta_pos * scale_factor, delta_euler * scale_factor, delta_gripper, done
+
+
 @click.command(help=DESC)
 @click.option('-e', '--env_name', type=str, help='environment to load', default='rpFrankaRobotiqData-v0')
 @click.option('-ea', '--env_args', type=str, default=None, help=('env args. E.g. --env_args "{\'is_hardware\':True}"'))
 @click.option('-rn', '--reset_noise', type=float, default=0.0, help=('Amplitude of noise during reset'))
 @click.option('-an', '--action_noise', type=float, default=0.0, help=('Amplitude of action noise during rollout'))
-@click.option('-i', '--input_device', type=click.Choice(['keyboard', 'spacemouse']), help='input to use for teleOp', default='keyboard')
+@click.option('-i', '--input_device', type=click.Choice(['keyboard', 'spacemouse', 'gamepad']), help='input to use for teleOp', default='keyboard')
 @click.option('-o', '--output', type=str, default="teleOp_trace.h5", help=('Output name'))
 @click.option('-h', '--horizon', type=int, help='Rollout horizon', default=100)
 @click.option('-n', '--num_rollouts', type=int, help='number of repeats for the rollouts', default=1)
@@ -141,6 +189,8 @@ def main(env_name, env_args, reset_noise, action_noise, input_device, output, ho
     # prep input device
     if input_device=='keyboard':
         input = KeyBoard()
+    elif input_device=='gamepad':
+        input = GamePad()
     elif input_device=='spacemouse':
         input = SpaceMouse(vendor_id=vendor_id, product_id=product_id)
         print("Press both keys to stop listening")
@@ -171,6 +221,8 @@ def main(env_name, env_args, reset_noise, action_noise, input_device, output, ho
             # poll input device --------------------------------------
             if input_device=='keyboard':
                 delta_pos, delta_euler, delta_gripper, exit_request = poll_keyboard(input)
+            elif input_device=='gamepad':
+                delta_pos, delta_euler, delta_gripper, exit_request = poll_gamepad(input)
             elif input_device=='spacemouse':
                 delta_pos, delta_euler, delta_gripper, exit_request = poll_spacemouse(input)
             if exit_request:

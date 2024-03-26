@@ -40,4 +40,8 @@
 
     </worldbody>
 
+    <keyframe>
+        <key name="pick_pose" qpos='-0.000445298 0 0.4334 0.0803 -0.906015 -0.0314 0.87789 0 1.62 0 0.0315 0.0315'/>
+    </keyframe>
+
 </mujoco>

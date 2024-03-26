@@ -3,7 +3,8 @@
 Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gmail.com)
 ================================================= """
 
-from gym.envs.registration import register
+from robohive.utils import gym; register=gym.register
+
 from robohive.envs.env_variants import register_env_variant
 
 import os
@@ -287,11 +288,7 @@ register_env_with_variants(id='myoHandPoseRandom-v0',  #reconsider
 # Gait Torso Reaching ==============================
 from robohive.physics.sim_scene import SimBackend
 sim_backend = SimBackend.get_sim_backend()
-if sim_backend == SimBackend.MUJOCO_PY:
-    leg_model='/../../../simhive/myo_sim/leg/myolegs_v0.54(mj210).mjb'
-elif sim_backend == SimBackend.MUJOCO:
-    leg_model='/../../../simhive/myo_sim/leg/myolegs_v0.56(mj237).mjb'
-    # leg_model='/../../../simhive/myo_sim/leg/myolegs_suspended_v0.56(mj236).mjb'
+leg_model='/../../../simhive/myo_sim/leg/myolegs.xml'
 
 
 register_env_with_variants(id='myoLegStandRandom-v0',
@@ -299,7 +296,7 @@ register_env_with_variants(id='myoLegStandRandom-v0',
         max_episode_steps=150,
         kwargs={
             'model_path': curr_dir+leg_model,
-            'joint_random_range': (0.2, -0.2), #range of joint randomization (jnt = init_qpos + random(range)
+            'joint_random_range': (-.2, 0.2), #range of joint randomization (jnt = init_qpos + random(range)
             'target_reach_range': {
                 'pelvis': ((-.05, -.05, 0), (0.05, 0.05, 0)),
                 },

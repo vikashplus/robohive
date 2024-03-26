@@ -6,7 +6,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= """
 
 import collections
-import gym
+from robohive.utils import gym
 import numpy as np
 
 from robohive.envs import env_base
@@ -128,4 +128,3 @@ class DoorEnvV1(env_base.MujocoEnv):
         self.sim.set_state(qpos=qp, qvel=qv)
         self.sim.model.body_pos[self.door_bid] = state_dict['door_body_pos']
         self.sim.forward()
-

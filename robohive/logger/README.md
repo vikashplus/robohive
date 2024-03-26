@@ -7,7 +7,19 @@ name: {
     ...
 }
 ```
-Let's understand RoboHive's Logger details using its most common usecase -- i.e. recording Robot trajectories.
+Nested groups can be created simply by using nested `group` keys. For example keys `g1/sg1`, `g1/sg2` will lead to the following nesting -
+```
+name: {
+    group{g1:
+        group{sg1: dataset{k1:v1}, dataset{k2:v2}, ...}
+        group{sg2: dataset{kx:vx}, dataset{ky:vy}, ...}
+    }
+    ...
+}
+```
+Note: Logger preserves the nested keys allowing data access using `data["g1/sg1"]`. The saved H5 dataset is more flexible. Data can be accessed using either `data["g1/sg1"]` or `data["g1"]["sg1"]`.
+
+Next, let's understand RoboHive's Logger details using its most common usecase -- i.e. recording Robot trajectories.
 
 
 ## Robot Trajectories (Rollouts)

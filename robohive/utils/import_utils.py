@@ -1,7 +1,9 @@
 import importlib
+import importlib.util
 import os
 from os.path import expanduser
 import git
+
 
 def mujoco_py_isavailable():
     help = """
@@ -20,7 +22,6 @@ def mujoco_isavailable():
         (1) install robohive with encoders (pip install robohive['mujoco'])
         (2) follow setup instructions here: https://github.com/deepmind/mujoco
         (3) install mujoco via pip (pip install mujoco)
-
     """
     if importlib.util.find_spec("mujoco") is None:
         raise ModuleNotFoundError(help)
@@ -142,4 +143,3 @@ if __name__ == '__main__':
     torchvision_isavailable()
     r3m_isavailable()
     vc_isavailable()
-

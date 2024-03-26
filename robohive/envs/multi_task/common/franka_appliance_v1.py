@@ -6,7 +6,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= """
 
 import collections
-import gym
+from robohive.utils import gym
 import numpy as np
 from robohive.utils.quat_math import euler2quat
 
@@ -54,7 +54,7 @@ class FrankaAppliance(KitchenBase):
             **kwargs,
         )
 
-    def reset(self, reset_qpos=None, reset_qvel=None):
+    def reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
         # randomize object bodies, if requested
         if self.obj_body_randomize:
             for body_name in self.obj_body_randomize:
@@ -78,4 +78,4 @@ class FrankaAppliance(KitchenBase):
                 * (self.robot_ranges[:, 1] - self.robot_ranges[:, 0])
             )
 
-        return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel)
+        return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel, **kwargs)

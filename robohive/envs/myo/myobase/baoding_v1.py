@@ -5,7 +5,7 @@ Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gma
 
 import collections
 import enum
-import gym
+from robohive.utils import gym
 import numpy as np
 
 from robohive.envs.myo.base_v0 import BaseV0
@@ -260,7 +260,7 @@ class BaodingEnvV1(BaseV0):
             logger.log_kv('effort', effort)
         return success_percentage
 
-    def reset(self, reset_pose=None, reset_vel=None, reset_goal=None, time_period=None):
+    def reset(self, reset_pose=None, reset_vel=None, reset_goal=None, time_period=None, **kwargs):
         # reset counters
         self.counter=0
         self.x_radius=self.np_random.uniform(low=self.goal_xrange[0], high=self.goal_xrange[1])
@@ -273,7 +273,7 @@ class BaodingEnvV1(BaseV0):
         self.goal = self.create_goal_trajectory(time_step=self.dt, time_period=time_period) if reset_goal is None else reset_goal.copy()
 
         # reset scene
-        obs = super().reset(reset_qpos=reset_pose, reset_qvel=reset_vel)
+        obs = super().reset(reset_qpos=reset_pose, reset_qvel=reset_vel, **kwargs)
         return obs
 
     def create_goal_trajectory(self, time_step=.1, time_period=6):
@@ -281,7 +281,7 @@ class BaodingEnvV1(BaseV0):
 
         # populate go-to task with a target location (pos likely needs update)
         if self.which_task==Task.MOVE_TO_LOCATION:
-            goal_pos = np.random.randint(4)
+            goal_pos = self.np_random.choice([0,1,2,3])
             desired_position = []
             if goal_pos==0:
                 desired_position.append(-.195) #x
