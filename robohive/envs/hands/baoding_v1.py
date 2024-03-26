@@ -7,7 +7,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 import collections
 import enum
-import gym
+from robohive.utils import gym
 import numpy as np
 
 from robohive.envs import env_base
@@ -256,7 +256,7 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
 
-    def reset(self, reset_pose=None, reset_vel=None, reset_goal=None, time_period=6):
+    def reset(self, reset_pose=None, reset_vel=None, reset_goal=None, time_period=6, **kwargs):
         # reset counters
         self.counter=0
 
@@ -264,7 +264,7 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
         self.goal = self.create_goal_trajectory(time_period=time_period) if reset_goal is None else reset_goal.copy()
 
         # reset scene
-        obs = super().reset(reset_qpos=reset_pose, reset_qvel=reset_vel)
+        obs = super().reset(reset_qpos=reset_pose, reset_qvel=reset_vel, **kwargs)
         return obs
 
     def create_goal_trajectory(self, time_step=.1, time_period=6):
@@ -272,7 +272,7 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
 
         # populate go-to task with a target location
         if self.which_task==Task.MOVE_TO_LOCATION:
-            goal_pos = np.random.randint(4)
+            goal_pos = self.np_random.choice([0,1,2,3])
             desired_position = []
             if goal_pos==0:
                 desired_position.append(0.01)  #x
@@ -325,6 +325,6 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
 
 class BaodingRandomEnvV1(BaodingFixedEnvV1):
 
-    def reset(self):
-        obs = super().reset(time_period = self.np_random.uniform(high=5, low=7))
+    def reset(self, **kwargs):
+        obs = super().reset(time_period = self.np_random.uniform(high=5, low=7), **kwargs)
         return obs

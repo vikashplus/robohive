@@ -6,12 +6,22 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= """
 
 import os
+import shutil
 import sys
-from setuptools import setup, find_packages
 
-if sys.version_info.major != 3:
-    print("This library is only compatible with Python 3, but you are running "
-          "Python {}. The installation will likely fail.".format(sys.version_info.major))
+from setuptools import find_packages, setup
+
+# Check and warn if FFmpeg is not available
+if shutil.which("ffmpeg") is None:
+    help = """FFmpeg not found in your system. Please install FFmpeg before proceeding
+          Options:
+            (1) LINUX: apt-get install ffmpeg
+            (2) OSX: brew install ffmpeg"""
+    raise ModuleNotFoundError(help)
+
+if sys.version_info.major < 3 or (sys.version_info.major == 3 and sys.version_info.minor < 8):
+    print("This library requires Python 3.8 or higher, but you are running "
+          "Python {}.{}. The installation will likely fail.".format(sys.version_info.major, sys.version_info.minor))
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
@@ -27,21 +37,23 @@ extra_files = package_files('robohive')
 
 setup(
     name='robohive',
-    version='0.6.0',
+    version='0.7.0',
     license='Apache 2.0',
     packages=find_packages(),
-    package_data={"": extra_files},
+    package_data={"": extra_files+['../robohive_init.py']},
     include_package_data=True,
-    description='environments simulated in MuJoCo',
+    description='A Unified Framework for Robot Learning',
     long_description=read('README.md'),
     long_description_content_type="text/markdown",
     url='https://github.com/vikashplus/robohive.git',
-    author='Movement Control Lab, UW',
+    author='Vikash Kumar',
+    author_email="vikahsplus@gmail.com",
     install_requires=[
         'click',
-        'gym==0.13',
-        'mujoco==2.3.7',
-        'dm-control==1.0.14',
+        # 'gym==0.13',  # default to this stable point if caught in gym issues.
+        'gymnasium==0.29.1',
+        'mujoco==3.1.3',
+        'dm-control==1.0.16',
         'termcolor',
         'sk-video',
         'flatten_dict',
