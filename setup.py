@@ -50,7 +50,8 @@ setup(
     author_email="vikahsplus@gmail.com",
     install_requires=[
         'click',
-        'gym==0.13',
+        # 'gym==0.13',  # default to this stable point if caught in gym issues.
+        'gymnasium==0.29.1',
         'mujoco==3.1.3',
         'dm-control==1.0.16',
         'termcolor',
