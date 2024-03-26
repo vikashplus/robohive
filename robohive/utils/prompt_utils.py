@@ -24,6 +24,7 @@ class Prompt(enum.IntEnum):
     ERROR = 3
     ONCE = 4    # print: once and higher
     ALWAYS = 5  # print: only always (highest priority)
+    SILENT = 6  # Supress all prints
 
 
 # Prompt Cache (to track for Prompt.ONCE messages)
@@ -36,7 +37,9 @@ if VERBOSE_MODE==None:
     VERBOSE_MODE = Prompt.WARN
 else:
     VERBOSE_MODE = VERBOSE_MODE.upper()
-    if VERBOSE_MODE == 'ALWAYS':
+    if VERBOSE_MODE == 'SILENT':
+        VERBOSE_MODE = Prompt.SILENT
+    elif VERBOSE_MODE == 'ALWAYS':
         VERBOSE_MODE = Prompt.ALWAYS
     elif VERBOSE_MODE == 'ERROR':
         VERBOSE_MODE = Prompt.ERROR
@@ -78,7 +81,9 @@ def prompt(data, color=None, on_color=None, flush=False, end="\n", type:Prompt=P
             on_color = "on_red"
 
     # resolve printing
-    if type>=VERBOSE_MODE:
+    if VERBOSE_MODE == Prompt.SILENT:
+        return
+    elif type>=VERBOSE_MODE:
         if not isinstance(data, str):
             data = data.__str__()
         cprint(data, color=color, on_color=on_color, flush=flush, end=end)
