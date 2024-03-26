@@ -7,7 +7,9 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 <!-- # RoboHive -->
 
-[**[Homepage]**](https://sites.google.com/view/robohive) &ensp; [**[White Paper]**](https://arxiv.org/abs/2310.06828) &ensp; [![Documentation](https://img.shields.io/static/v1?label=Wiki&message=Documentation&color=<green)](https://github.com/vikashplus/robohive/wiki) ![PyPI](https://img.shields.io/pypi/v/robohive)
+[![report](https://img.shields.io/badge/Project-Page-blue)](https://sites.google.com/view/robohive/)
+[![report](https://img.shields.io/badge/ArXiv-Paper-green)](https://arxiv.org/abs/2310.06828)
+[![Documentation](https://img.shields.io/static/v1?label=Wiki&message=Documentation&color=<green)](https://github.com/vikashplus/robohive/wiki) ![PyPI](https://img.shields.io/pypi/v/robohive)
 ![PyPI - License](https://img.shields.io/pypi/l/robohive)
 [![Downloads](https://pepy.tech/badge/robohive)](https://pepy.tech/project/robohive)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1rdSgnsfUaE-eFLjAkFHeqfUWzAK8ruTs?usp=sharing)
