@@ -574,7 +574,7 @@ class Robot():
                         act_rng = (actuator['pos_range'][1]-actuator['pos_range'][0])/2.0
                     elif self._act_mode == "vel":
                         act_mid = (actuator['vel_range'][1]+actuator['vel_range'][0])/2.0
-                        act_rng = (actuator['vel_range'][1]-actuator['pos_range'][0])/2.0
+                        act_rng = (actuator['vel_range'][1]-actuator['vel_range'][0])/2.0
                     else:
                         raise TypeError("Unknown act mode: {}".format(self._act_mode))
 
