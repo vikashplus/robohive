@@ -54,6 +54,7 @@
 
 
         <!-- Robot -->
+        <site name='ee_target' type='box' size='.03 .07 .04' pos='-0.4 0.4 2.1' group='1' rgba='0 1 .4 0' euler="0 3.14 3.14"/>
         <body name="chef" pos='0. 0 1.8' euler='0 0 1.57'>
             <geom type='cylinder' size='.120 .90' pos='-.04 0 -0.90' class='panda_viz'/>
             <include file="../../../../simhive/franka_sim/assets/chain0.xml"/>
