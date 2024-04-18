@@ -5,7 +5,7 @@ Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
-import gym
+from robohive.utils import gym;
 import numpy as np
 from robohive.envs import env_base
 from robohive.physics.sim_scene import SimScene
@@ -119,9 +119,9 @@ class FrankaEEPose(env_base.MujocoEnv):
             return self.np_random.uniform(low=self.sim.model.actuator_ctrlrange[:,0], high=self.sim.model.actuator_ctrlrange[:,1])
 
 
-    def reset(self, reset_qpos=None, reset_qvel=None):
+    def reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
         self.target_pose = self.get_target_pose()
-        obs = super().reset(reset_qpos, reset_qvel)
+        obs = super().reset(reset_qpos, reset_qvel, **kwargs)
         return obs
 
 class FrankaRobotiqPose(FrankaEEPose):

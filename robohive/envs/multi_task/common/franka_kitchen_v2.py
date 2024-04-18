@@ -5,7 +5,7 @@ Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
-import gym
+from robohive.utils import gym
 from robohive.envs.multi_task.multi_task_base_v1 import KitchenBase
 
 class FrankaKitchen(KitchenBase):
@@ -113,7 +113,7 @@ class FrankaKitchen(KitchenBase):
         )
 
 
-    def reset(self, reset_qpos=None, reset_qvel=None):
+    def reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
         if reset_qpos is None:
             reset_qpos = self.init_qpos.copy()
 
@@ -128,4 +128,4 @@ class FrankaKitchen(KitchenBase):
         if self.robot_base_range:
             self.sim.model.body_pos[self.robot_base_bid] = self.robot_base_pos + self.np_random.uniform(**self.robot_base_range)
 
-        return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel)
+        return super().reset(reset_qpos=reset_qpos, reset_qvel=reset_qvel, **kwargs)

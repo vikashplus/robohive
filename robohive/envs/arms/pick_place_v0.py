@@ -6,11 +6,13 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= """
 
 import collections
-import gym
+
 import numpy as np
 
 from robohive.envs import env_base
+from robohive.utils import gym
 from robohive.utils.quat_math import euler2quat
+
 
 class PickPlaceV0(env_base.MujocoEnv):
 
@@ -70,6 +72,12 @@ class PickPlaceV0(env_base.MujocoEnv):
         self.randomize = randomize
         self.geom_sizes = geom_sizes
 
+        # Save body init pos
+        self.init_body_pos = {}
+        for body in ["obj0", "obj1", "obj2"]:
+            bid = self.sim.model.body_name2id(body)
+            self.init_body_pos[body] = self.sim.model.body_pos[bid].copy()
+
         super()._setup(obs_keys=obs_keys,
                        weighted_reward_keys=weighted_reward_keys,
                        reward_mode=reward_mode,
@@ -109,7 +117,7 @@ class PickPlaceV0(env_base.MujocoEnv):
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
 
-    def reset(self):
+    def reset(self, **kwargs):
 
         if self.randomize:
             # target location
@@ -119,19 +127,19 @@ class PickPlaceV0(env_base.MujocoEnv):
             # object shapes and locations
             for body in ["obj0", "obj1", "obj2"]:
                 bid = self.sim.model.body_name2id(body)
-                self.sim.model.body_pos[bid] += self.np_random.uniform(low=[-.010, -.010, -.010], high=[-.010, -.010, -.010])# random pos
+                self.sim.model.body_pos[bid] = self.init_body_pos[body] + self.np_random.uniform(low=[-.010, -.010, -.010], high=[-.010, -.010, -.010])# random pos
                 self.sim.model.body_quat[bid] = euler2quat(self.np_random.uniform(low=(-np.pi/2, -np.pi/2, -np.pi/2), high=(np.pi/2, np.pi/2, np.pi/2)) ) # random quat
 
                 for gid in range(self.sim.model.body_geomnum[bid]):
                     gid+=self.sim.model.body_geomadr[bid]
-                    self.sim.model.geom_type[gid]=self.np_random.randint(low=2, high=7) # random shape
+                    self.sim.model.geom_type[gid]=self.np_random.choice([2,3,4,5,6]) # random shape
                     self.sim.model.geom_size[gid]=self.np_random.uniform(low=self.geom_sizes['low'], high=self.geom_sizes['high']) # random size
                     self.sim.model.geom_pos[gid]=self.np_random.uniform(low=-1*self.sim.model.geom_size[gid], high=self.sim.model.geom_size[gid]) # random pos
                     self.sim.model.geom_quat[gid]=euler2quat(self.np_random.uniform(low=(-np.pi/2, -np.pi/2, -np.pi/2), high=(np.pi/2, np.pi/2, np.pi/2)) ) # random quat
                     self.sim.model.geom_rgba[gid]=self.np_random.uniform(low=[.2, .2, .2, 1], high=[.9, .9, .9, 1]) # random color
             self.sim.forward()
 
-        obs = super().reset(self.init_qpos, self.init_qvel)
+        obs = super().reset(self.init_qpos, self.init_qvel, **kwargs)
         return obs
 
     # def viewer_setup(self):
