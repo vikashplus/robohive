@@ -96,7 +96,7 @@ class DoorEnvV1(env_base.MujocoEnv):
         return rwd_dict
 
 
-    def reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
+    def _reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
         self.sim.reset()
         qp = self.init_qpos.copy() if reset_qpos is None else reset_qpos
         qv = self.init_qvel.copy() if reset_qvel is None else reset_qvel

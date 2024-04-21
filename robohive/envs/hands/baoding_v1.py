@@ -256,7 +256,7 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
         rwd_dict['dense'] = np.sum([wt*rwd_dict[key] for key, wt in self.rwd_keys_wt.items()], axis=0)
         return rwd_dict
 
-    def reset(self, reset_pose=None, reset_vel=None, reset_goal=None, time_period=6, **kwargs):
+    def _reset(self, reset_pose=None, reset_vel=None, reset_goal=None, time_period=6, **kwargs):
         # reset counters
         self.counter=0
 
