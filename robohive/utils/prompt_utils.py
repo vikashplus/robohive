@@ -7,7 +7,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 """
 Utility script to help with information verbosity produced by RoboHive
-To control verbosity set env variable ROBOHIVE_VERBOSITY=ALL/INFO/(WARN)/ERROR/ONCE/ALWAYS
+To control verbosity set env variable ROBOHIVE_VERBOSITY=ALL/INFO/(WARN)/ERROR/ONCE/ALWAYS/SILENT
 """
 
 from termcolor import cprint
@@ -19,9 +19,9 @@ import os
 class Prompt(enum.IntEnum):
     """Prompt verbosity types"""
     ALL = 0     # print everything (lowest priority)
-    INFO = 1
-    WARN = 2
-    ERROR = 3
+    INFO = 1    # useful info
+    WARN = 2    # warnings (default)
+    ERROR = 3   # errors
     ONCE = 4    # print: once and higher
     ALWAYS = 5  # print: only always (highest priority)
     SILENT = 6  # Supress all prints
