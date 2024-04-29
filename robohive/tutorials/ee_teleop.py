@@ -262,13 +262,13 @@ def main(env_name, env_args, reset_noise, action_noise, input_device, output, ho
                 elif env.env.robot._act_mode == "vel":
                     curr_qpos = env.sim.get_state()['qpos'][:7]
                     target_qpos = ik_result.qpos[:7]
-                    qvel = (target_qpos - curr_qpos)
+                    qvel = (target_qpos - curr_qpos) / env.dt
                     act[:7] = qvel
                     act[7:] = gripper_state
                     if action_noise:
                         act = act + env.env.np_random.uniform(high=action_noise, low=-action_noise, size=len(act)).astype(act.dtype)
-                    # if env.normalize_act:
-                    #     act = env.env.robot.normalize_actions(act)
+                    if env.normalize_act:
+                        act = env.env.robot.normalize_actions(act)
                 else:
                     raise TypeError("Unknown act mode: {}".format(env.env.robot._act_mode))
 
