@@ -108,19 +108,14 @@ class PenEnvV1(env_base.MujocoEnv):
         return rwd_dict
 
 
-    def _reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
+    def reset(self, **kwargs):
         self.sim.reset()
-        qp = self.init_qpos.copy() if reset_qpos is None else reset_qpos
-        qv = self.init_qvel.copy() if reset_qvel is None else reset_qvel
-        self.robot.reset(reset_pos=qp, reset_vel=qv, **kwargs)
-
         desired_orien = np.zeros(3)
         desired_orien[0] = self.np_random.uniform(low=-1, high=1)
         desired_orien[1] = self.np_random.uniform(low=-1, high=1)
         self.sim.model.body_quat[self.target_obj_bid] = euler2quat(desired_orien)
         self.sim.forward()
-
-        return self.get_obs()
+        return super().reset(**kwargs)
 
 
     def get_env_state(self):

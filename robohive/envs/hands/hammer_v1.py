@@ -120,15 +120,12 @@ class HammerEnvV1(env_base.MujocoEnv):
         return obs_dict
 
 
-    def _reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
+    def reset(self, **kwargs):
         self.sim.reset()
-        qp = self.init_qpos.copy() if reset_qpos is None else reset_qpos
-        qv = self.init_qvel.copy() if reset_qvel is None else reset_qvel
-        self.robot.reset(reset_pos=qp, reset_vel=qv, **kwargs)
-
         self.sim.model.body_pos[self.target_bid,2] = self.np_random.uniform(low=0.1, high=0.25)
         self.sim.forward()
-        return self.get_obs()
+        return super().reset(**kwargs)
+
 
     def get_env_state(self):
         """

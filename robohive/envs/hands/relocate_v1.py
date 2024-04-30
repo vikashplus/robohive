@@ -136,20 +136,16 @@ class RelocateEnvV1(env_base.MujocoEnv):
         return obs_dict
 
 
-    def _reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
+    def reset(self, **kwargs):
         self.sim.reset()
-        qp = self.init_qpos.copy() if reset_qpos is None else reset_qpos
-        qv = self.init_qvel.copy() if reset_qvel is None else reset_qvel
-        self.robot.reset(reset_pos=qp, reset_vel=qv, **kwargs)
-
-
         self.sim.model.body_pos[self.obj_bid,0] = self.np_random.uniform(low=-0.15, high=0.15)
         self.sim.model.body_pos[self.obj_bid,1] = self.np_random.uniform(low=-0.15, high=0.3)
         self.sim.model.site_pos[self.target_obj_sid, 0] = self.np_random.uniform(low=-0.2, high=0.2)
         self.sim.model.site_pos[self.target_obj_sid,1] = self.np_random.uniform(low=-0.2, high=0.2)
         self.sim.model.site_pos[self.target_obj_sid,2] = self.np_random.uniform(low=0.15, high=0.35)
         self.sim.forward()
-        return self.get_obs()
+        return super().reset(**kwargs)
+
 
     def get_env_state(self):
         """
