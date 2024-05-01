@@ -13,7 +13,7 @@ EXAMPLE:\n
 """
 # TODO: (1) Enforce pos/rot/grip limits (b) move gripper to delta commands
 
-from robohive.utils.quat_math import euler2quat, mulQuat
+from robohive.utils.quat_math import euler2quat, mulQuat, mat2quat
 from robohive.utils.inverse_kinematics import IKResult, qpos_from_site_pose
 from robohive.logger.roboset_logger import RoboSet_Trace
 from robohive.logger.grouped_datasets import Trace as RoboHive_Trace
@@ -148,6 +148,21 @@ def poll_gamepad(input_device):
 
     return delta_pos * scale_factor, delta_euler * scale_factor, delta_gripper, done
 
+def move_goal_site_to_end_effector(teleop_site, goal_site, physics):
+    """
+    Get the location of the teleop site (the end effector),
+    and place the goal site exactly at this location.
+
+    teleop_site: A string specifying the name of the teleoperation site.
+    goal_site: A string specifying the name of the goal site.
+    physics: A `mujoco.Physics` instance.
+    """
+    ee_sid = physics.model.site_name2id(teleop_site)
+    goal_sid = physics.model.site_name2id(goal_site)
+    ee_xpos = physics.data.site_xpos[ee_sid]
+    ee_xquat = mat2quat(physics.data.site_xmat[ee_sid].reshape(3,3))
+    physics.model.site_pos[goal_sid] = ee_xpos
+    physics.model.site_quat[goal_sid] = ee_xquat
 
 @click.command(help=DESC)
 @click.option('-e', '--env_name', type=str, help='environment to load', default='rpFrankaRobotiqData-v0')
@@ -215,6 +230,9 @@ def main(env_name, env_args, reset_noise, action_noise, input_device, output, ho
         obs, rwd, done, env_info = env.forward()
         act = np.zeros(env.action_space.shape)
         gripper_state = 0
+
+        # Position the goal site exactly at the init location of the end effector
+        move_goal_site_to_end_effector(teleop_site, goal_site, env.sim)
 
         # start rolling out
         for i_step in range(horizon+1):
