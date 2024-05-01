@@ -9,7 +9,7 @@ TUTORIAL: Arm+Gripper tele-op using input devices (keyboard / spacenav) \n
     - NOTE: Tutorial is written for franka arm and robotiq gripper. This demo is a tutorial, not a generic functionality for any any environment
 EXAMPLE:\n
     - python tutorials/ee_teleop.py -e rpFrankaRobotiqData-v0\n
-    - python tutorials/ee_teleop.py -e FK1_LightOnFixed-v4\n
+    - python tutorials/ee_teleop.py -e FK1_LightOnFixed-v4 --goal_site target\n
 """
 # TODO: (1) Enforce pos/rot/grip limits (b) move gripper to delta commands
 
@@ -252,26 +252,22 @@ def main(env_name, env_args, reset_noise, action_noise, input_device, output, ho
             if ik_result.success==False:
                 print(f"IK(t:{i_step}):: Status:{ik_result.success}, total steps:{ik_result.steps}, err_norm:{ik_result.err_norm}")
             else:
+                target_qpos = ik_result.qpos[:7]
                 if env.env.robot._act_mode == "pos":
-                    act[:7] = ik_result.qpos[:7]
+                    act[:7] = target_qpos
                     act[7:] = gripper_state
-                    if action_noise:
-                        act = act + env.env.np_random.uniform(high=action_noise, low=-action_noise, size=len(act)).astype(act.dtype)
-                    if env.normalize_act:
-                        act = env.env.robot.normalize_actions(act)
                 elif env.env.robot._act_mode == "vel":
                     curr_qpos = env.sim.get_state()['qpos'][:7]
-                    target_qpos = ik_result.qpos[:7]
                     qvel = (target_qpos - curr_qpos) / env.dt
                     act[:7] = qvel
                     act[7:] = gripper_state
-                    if action_noise:
-                        act = act + env.env.np_random.uniform(high=action_noise, low=-action_noise, size=len(act)).astype(act.dtype)
-                    if env.normalize_act:
-                        act = env.env.robot.normalize_actions(act)
                 else:
                     raise TypeError("Unknown act mode: {}".format(env.env.robot._act_mode))
 
+                if action_noise:
+                    act = act + env.env.np_random.uniform(high=action_noise, low=-action_noise, size=len(act)).astype(act.dtype)
+                if env.normalize_act:
+                    act = env.env.robot.normalize_actions(act)
             # nan actions for last log entry
             act = np.nan*np.ones(env.action_space.shape) if i_step == horizon else act
 
