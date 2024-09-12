@@ -32,6 +32,7 @@ def main(sim_path, qpos, ctrl, horizon):
         elif ctrl is not None:
             data.ctrl[:] = np.array(ctrl.split(','), dtype=np.float)
             mj_step(model, data)
+        
 
 if __name__ == '__main__':
     main()

@@ -16,11 +16,11 @@ EXAMPLE:\n
 from robohive.robot.robot import Robot
 import numpy as np
 import click
-
+import h5py
 
 @click.command(help=DESC)
-@click.option('-sp', '--sim_path', type=str, help='environment to load', required= True, default='envs/arms/franka/assets/franka_reach_v0.xml')
-@click.option('-cp', '--config_path', type=str, help='Config to load', required= True, default='envs/arms/franka/assets/franka_reach_v0.config')
+@click.option('-sp', '--sim_path', type=str, help='environment to load', required= True, default='/home/jaydv/Documents/robohive/robohive/envs/fm/assets/franka_robotiq.xml')
+@click.option('-cp', '--config_path', type=str, help='Config to load', required= True, default='/home/jaydv/Documents/robohive/robohive/envs/fm/assets/franka_robotiq.config')
 @click.option('-ih', '--is_hardware', type=bool, help='Use on real robot hardware', default=False)
 @click.option('-ja', '--jnt_amp', type=float, help='Range for random poses. 0:mean-pose. 1:full joint range', default=.15)
 @click.option('-fs', '--frame_skip', type=int, help='hardware_dt = frame_skip*sim_dt', default=40)
@@ -38,27 +38,23 @@ def main(sim_path, config_path, is_hardware, jnt_amp, frame_skip, traj_horizon, 
     traj_nsteps = int(traj_horizon/traj_dt)
     jnt_mean = np.mean(sim.model.jnt_range, axis=1)
     djnt_mean = np.zeros(sim.model.nv)
-    jnt_rng = 0.5*(sim.model.jnt_range[:,1]-sim.model.jnt_range[:,0])
 
-    # Goto joint targets
-    for iloop in range(10):
-        print(f"Loop ID:{iloop}")
-
-        # Sample a new desired position
-        des_jnt_pos = jnt_mean + jnt_amp*np.random.uniform(high=jnt_rng, low=-jnt_rng)
-        act = des_jnt_pos
-
-        # execute on robot
+    f = h5py.File('/home/jaydv/pd_old/scripts/dataset/pnp_data/pnp_1000_1.hdf5', 'r')
+    aux = h5py.File('/home/jaydv/pd_old/scripts/dataset/pnp_data/pnp_1000_1_aux.hdf5', 'r')
+    waypoints = aux['num_waypoints']
+    q = f['q']
+    for ti in range(len(q)):
+        print("NOW DOING: ", ti)
+        act = q[ti][:waypoints[ti]]
         robot.reset(reset_pos=jnt_mean, reset_vel=djnt_mean)
-        sensors = robot.get_sensors() # gets latest sensors and propage it in the sim
-        for _ in range(traj_nsteps):
-            robot.step(ctrl_desired=act, step_duration=traj_dt, ctrl_normalized=False, realTimeSim=(live_render==True), render_cbk=render_cbk)
-            sensors = robot.get_sensors() # gets current sensors and propage it in the sim
+        for i in act[::10]:
+            i[-2] -= np.pi/2
+            i = np.append(i, 0.)
+            i = np.append(i, 0.)
+            print(i)
+            sensors = robot.get_sensors() # gets latest sensors and propage it in the sim
+            robot.step(ctrl_desired=i, step_duration=0.5, ctrl_normalized=False, realTimeSim=(live_render==True), render_cbk=render_cbk)
 
-        # Report progress
-        jnt_err_0 = des_jnt_pos-jnt_mean
-        jnt_err_t = des_jnt_pos-sim.data.qpos
-        print("Mean joint pose error:: t[0]={:.3f} => t[{}]={:.3f} rad".format(np.linalg.norm(jnt_err_0), traj_nsteps, np.linalg.norm(jnt_err_t)))
 
 if __name__ == '__main__':
     main()
