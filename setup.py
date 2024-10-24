@@ -62,7 +62,7 @@ setup(
         # 'gym==0.13',  # default to this stable point if caught in gym issues.
         "gymnasium==0.29.1",
         "mujoco==3.1.3",
-        "numpy>=2.*",
+        "numpy>=2",
         "dm-control==1.0.16",
         "termcolor",
         "sk-video",
