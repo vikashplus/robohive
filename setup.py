@@ -19,74 +19,84 @@ if shutil.which("ffmpeg") is None:
             (2) OSX: brew install ffmpeg"""
     raise ModuleNotFoundError(help)
 
-if sys.version_info.major < 3 or (sys.version_info.major == 3 and sys.version_info.minor < 8):
-    print("This library requires Python 3.8 or higher, but you are running "
-          "Python {}.{}. The installation will likely fail.".format(sys.version_info.major, sys.version_info.minor))
+if sys.version_info.major < 3 or (
+    sys.version_info.major == 3 and sys.version_info.minor < 8
+):
+    print(
+        "This library requires Python 3.8 or higher, but you are running "
+        "Python {}.{}. The installation will likely fail.".format(
+            sys.version_info.major, sys.version_info.minor
+        )
+    )
+
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+
 def package_files(directory):
     paths = []
-    for (path, directories, filenames) in os.walk(directory):
+    for path, directories, filenames in os.walk(directory):
         for filename in filenames:
-            paths.append(os.path.join('..', path, filename))
+            paths.append(os.path.join("..", path, filename))
     return paths
 
-extra_files = package_files('robohive')
+
+extra_files = package_files("robohive")
 
 setup(
-    name='robohive',
-    version='0.7.0',
-    license='Apache 2.0',
+    name="robohive",
+    version="0.7.0",
+    license="Apache 2.0",
     packages=find_packages(),
-    package_data={"": extra_files+['../robohive_init.py']},
+    package_data={"": extra_files + ["../robohive_init.py"]},
     include_package_data=True,
-    description='A Unified Framework for Robot Learning',
-    long_description=read('README.md'),
+    description="A Unified Framework for Robot Learning",
+    long_description=read("README.md"),
     long_description_content_type="text/markdown",
-    url='https://github.com/vikashplus/robohive.git',
-    author='Vikash Kumar',
+    url="https://github.com/vikashplus/robohive.git",
+    author="Vikash Kumar",
     author_email="vikahsplus@gmail.com",
     install_requires=[
-        'click',
+        "click",
         # 'gym==0.13',  # default to this stable point if caught in gym issues.
-        'gymnasium==0.29.1',
-        'mujoco==3.1.3',
-        'dm-control==1.0.16',
-        'termcolor',
-        'sk-video',
-        'flatten_dict',
-        'matplotlib',
-        'ffmpeg',
-        'absl-py',
-        'torch',
-        'h5py==3.7.0',
-        'pink-noise-rl',
-        'gitpython'
+        "gymnasium==0.29.1",
+        "mujoco==3.1.3",
+        "numpy>=2.*",
+        "dm-control==1.0.16",
+        "termcolor",
+        "sk-video",
+        "flatten_dict",
+        "matplotlib",
+        "ffmpeg",
+        "absl-py",
+        "torch",
+        "h5py>=3.11.0",
+        "pink-noise-rl",
+        "gitpython",
     ],
     extras_require={
-      # To use mujoco bindings, run (pip install -e ".[mujoco]") and set sim_backend=MUJOCO
-      'mujoco_py':[
-        'free-mujoco-py',
+        # To use mujoco bindings, run (pip install -e ".[mujoco]") and set sim_backend=MUJOCO
+        "mujoco_py": [
+            "free-mujoco-py",
         ],
-      # To use hardware dependencies, run (pip install -e ".[a0]") and follow install instructions inside robot
-      'a0': [
-        'pycapnp>=1.1.1',
-        'alephzero', # real_sense subscribers dependency
+        # To use hardware dependencies, run (pip install -e ".[a0]") and follow install instructions inside robot
+        "a0": [
+            "pycapnp>=1.1.1",
+            "alephzero",  # real_sense subscribers dependency
         ],
-      'encoder':[
-          'torchvision',
-        # Unlike pypi, Git dependencies can be directly installed in editable mode.
-        # To use r3m/vc encoders, uncomment below and run (pip install -e ".[encoder]")
-        # 'r3m @ git+https://github.com/facebookresearch/r3m.git',
-        # 'vc_models @ git+https://github.com/facebookresearch/eai-vc.git@9958b278666bcbde193d665cc0df9ccddcdb8a5a#egg=vc_models&subdirectory=vc_models',
-      ]
+        "encoder": [
+            "torchvision",
+            # Unlike pypi, Git dependencies can be directly installed in editable mode.
+            # To use r3m/vc encoders, uncomment below and run (pip install -e ".[encoder]")
+            # 'r3m @ git+https://github.com/facebookresearch/r3m.git',
+            # 'vc_models @ git+https://github.com/facebookresearch/eai-vc.git@9958b278666bcbde193d665cc0df9ccddcdb8a5a#egg=vc_models&subdirectory=vc_models',
+        ],
     },
     entry_points={
-        'console_scripts': [
-            'robohive_init = robohive_init:fetch_simhive',
-            'robohive_clean = robohive_init:clean_simhive',
+        "console_scripts": [
+            "robohive_init = robohive_init:fetch_simhive",
+            "robohive_clean = robohive_init:clean_simhive",
         ],
     },
 )
