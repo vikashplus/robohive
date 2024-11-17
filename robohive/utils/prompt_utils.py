@@ -33,7 +33,7 @@ PROMPT_CACHE = []
 
 # Infer verbose mode to be used
 VERBOSE_MODE = os.getenv('ROBOHIVE_VERBOSITY')
-if VERBOSE_MODE==None:
+if VERBOSE_MODE is None:
     VERBOSE_MODE = Prompt.WARN
 else:
     VERBOSE_MODE = VERBOSE_MODE.upper()

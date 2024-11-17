@@ -2,17 +2,41 @@ import unittest
 import click
 import click.testing
 
-from robohive.logger.grouped_datasets import test_trace
+from robohive.logger.grouped_datasets import test_trace, test_trace_append, test_trace_plot
 from robohive.logger.examine_logs import examine_logs
 from robohive.utils.examine_env import main as examine_env
 import os
 import re
+import glob
 
 class TestTrace(unittest.TestCase):
-    def teast_trace(self):
+    def test_trace(self):
         # Call your function and test its output/assertions
         print("Testing Trace Basics")
         test_trace()
+
+    def test_trace_append(self):
+        # Call your function and test its output/assertions
+        print("Testing Trace complex appends")
+        test_trace_append()
+
+    def test_trace_plot(self):
+        # Call your function and test its output/assertions
+        print("Testing Trace plotting")
+        test_trace_plot()
+        # Define the pattern for the files you want to delete
+        pattern = "./*plot*.pdf"
+
+        # Use glob to find all files matching the pattern
+        files_to_delete = glob.glob(pattern)
+
+        # Iterate over the list of files and delete each one
+        for file_path in files_to_delete:
+            try:
+                os.remove(file_path)
+                print(f"Deleted: {file_path}")
+            except Exception as e:
+                print(f"Error deleting file {file_path}: {e}")
 
 
 class TestExamineTrace(unittest.TestCase):
