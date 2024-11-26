@@ -193,6 +193,7 @@ class Trace:
         # mpl.use('Agg')
         import matplotlib.pyplot as plt
         plt.rcParams.update({'font.size': 5})
+        h_fig = plt.figure(self.name)
         plt.clf()
 
         # Resolve groups
@@ -257,7 +258,10 @@ class Trace:
                 # h_axis.set_prop_cycle(None)
 
                 if x_dataset in grp_val.keys():
-                    plt.plot(grp_val[x_dataset], ds_val, label=f"{grp_key}/{ds_key}", marker='*')
+                    plt.plot(grp_val[x_dataset][:], ds_val, label=f"{ds_key}", marker='')
+                    h_axis.set_xlabel(x_dataset)
+                elif x_dataset in self.trace.keys():
+                    plt.plot(self.trace[x_dataset], ds_val, label=f"{ds_key}", marker='')
                     h_axis.set_xlabel(x_dataset)
                 else:
                     plt.plot(ds_val, label=f"{grp_key}/{ds_key}", marker='*')
@@ -268,10 +272,12 @@ class Trace:
         # show/save plot
         if output_format is None:
             plt.show()
+            return False
         else:
             file_name = os.path.join(output_dir, f"{self.name}_{grp_key}_{ds_key}_{output_format}".replace("/", "_"))
-            plt.savefig(file_name)
+            # plt.savefig(file_name)
             print("saved ", file_name)
+            return h_fig
 
 
     # Render frames/videos
@@ -525,6 +531,7 @@ class Trace:
             trace.trace = file_data[trace.name] # load data
             trace.root = file_data  # build root
             trace.trace_type=TraceType.get_type(trace_type)
+        trace.closed = True
         return trace
 
 
