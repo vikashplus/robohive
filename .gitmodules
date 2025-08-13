@@ -42,3 +42,4 @@
 [submodule "robohive/simhive/tetheria_pregen1"]
 	path = robohive/simhive/tetheria_pregen1
 	url = https://github.com/TetherIA/tetheria_assets.git
+	branch = main
