@@ -39,3 +39,6 @@
 [submodule "robohive/simhive/myo_sim"]
 	path = robohive/simhive/myo_sim
 	url = https://github.com/MyoHub/myo_sim.git
+[submodule "robohive/simhive/tetheria_pregen1"]
+	path = robohive/simhive/tetheria_pregen1
+	url = https://github.com/TetherIA/tetheria_assets.git
