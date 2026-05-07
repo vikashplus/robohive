@@ -47,7 +47,7 @@
             <geom type="box" group="3" pos='0 0 .142' size="0.02 0.10 0.03" contype="0" conaffinity="0" rgba=".9 .7 .95 1" euler="0 0 -.785"/>
         </body>
 
-        <site name='target' pos='0 0 0' size='0.1' rgba='0 2 0 .2'/>
+        <site name='target' type='box' size='.03 .07 .04' pos='0 0 0' group='1' rgba='0 1 .4 0' euler="0 3.14 3.14"/>
         <camera name='left_cam' pos='-1.4 -0.75 3' quat='0.78 0.49 -0.22 -0.32' />
         <camera name='right_cam' pos='1.4 -0.75 3' quat='0.76 0.5 0.21 0.35'/>
         <camera name='top_cam' pos='-.3 -.95 3.5' euler='0.785 0 0'/>
