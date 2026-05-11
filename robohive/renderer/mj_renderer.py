@@ -32,6 +32,7 @@ class MJRenderer(Renderer):
         self._renderer = None
         self._paused = False
         self._user_exit = False
+        self._closing = False
 
 
     # viewer callback
@@ -68,7 +69,7 @@ class MJRenderer(Renderer):
 
     def refresh_window(self):
         """Refreshes the rendered window if one is present."""
-        if self._window is None:
+        if self._window is None or self._closing:
             return
         self._window.sync()
 
@@ -152,7 +153,11 @@ class MJRenderer(Renderer):
 
     def close(self):
         """Cleans up any resources being used by the renderer."""
-        if self._window:
-            self._window.close()
+        if self._window and not self._closing:
+            self._closing = True
+            try:
+                if self._window.is_running():
+                    self._window.close()
+            except Exception:
+                pass
             self._window = None
-            quit()
