@@ -39,3 +39,6 @@
 [submodule "robohive/simhive/myo_sim"]
 	path = robohive/simhive/myo_sim
 	url = https://github.com/MyoHub/myo_sim.git
+[submodule "robohive/simhive/ur_sim"]
+	path = robohive/simhive/ur_sim
+	url = https://github.com/vikashplus/ur_sim.git
