@@ -5,21 +5,21 @@ Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
-from robohive.utils import gym
-import numpy as np
 import os
 import time as timer
-
-from robohive.envs.obs_vec_dict import ObsVecDict
-from robohive.utils import tensor_utils
-from robohive.robot.robot import Robot
-from robohive.utils.implement_for import implement_for
-from robohive.utils.prompt_utils import prompt, Prompt
-import skvideo.io
 from sys import platform
-from robohive.physics.sim_scene import SimScene
+
+import numpy as np
+import skvideo.io
+
 import robohive.utils.import_utils as import_utils
 from robohive.envs.env_variants import gym_registry_specs
+from robohive.envs.obs_vec_dict import ObsVecDict
+from robohive.physics.sim_scene import SimScene
+from robohive.robot.robot import Robot
+from robohive.utils import gym, tensor_utils
+from robohive.utils.implement_for import implement_for
+from robohive.utils.prompt_utils import Prompt, prompt
 
 # TODO
 # remove rwd_mode
@@ -183,7 +183,14 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             if "rrl" in id_encoder or "resnet" in id_encoder:
                 import_utils.torchvision_isavailable()
                 import torchvision.transforms as T
-                from torchvision.models import resnet50, ResNet50_Weights, resnet34, ResNet34_Weights, resnet18, ResNet18_Weights
+                from torchvision.models import (
+                    ResNet18_Weights,
+                    ResNet34_Weights,
+                    ResNet50_Weights,
+                    resnet18,
+                    resnet34,
+                    resnet50,
+                )
 
             if "r3m" in id_encoder:
                 import_utils.torchvision_isavailable()
