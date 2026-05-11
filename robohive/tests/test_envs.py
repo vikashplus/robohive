@@ -142,7 +142,7 @@ class TestEnvs(unittest.TestCase):
                 # assert (env.env.get_obs() == env.env.get_obs_vec()).all(), "check vectorized computations"
 
             # test env infos
-            infos = env.env.get_env_infos()
+            infos = env.unwrapped.get_env_infos()
 
             # test step (everything together)
             observation, _reward, done, _info = env.env.step(np.zeros(env.env.sim.model.nu))
