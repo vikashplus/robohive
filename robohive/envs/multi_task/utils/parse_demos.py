@@ -18,12 +18,16 @@ import click
 import glob
 import pickle
 import numpy as np
-from vive.source.parse_mjl import parse_mjl_logs, viz_parsed_mjl_logs
-from mjrl.utils.gym_env import GymEnv
+
+try:
+    from mjrl.utils.gym_env import GymEnv
+except ImportError:
+    GymEnv = None
 import robohive
 import time as timer
 # import skvideo.io
 from robohive.utils import gym
+from robohive.utils.parse_mjl import parse_mjl_logs, viz_parsed_mjl_logs
 
 from tqdm import tqdm
 
@@ -52,6 +56,7 @@ def viewer(env,
             render_buffer.append(curr_frame)
 
         if mode == 'save':
+            import skvideo
             skvideo.io.vwrite(filename, np.asarray(render_buffer))
             print("\noffscreen buffer saved", filename)
 
