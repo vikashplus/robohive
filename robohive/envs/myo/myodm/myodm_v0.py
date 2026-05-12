@@ -285,7 +285,7 @@ class TrackEnv(BaseV0):
         ref_mot = self.ref.get_reference(self.time+self.motion_start_time)
         self.qpos_from_robot_object(self.sim.data.qpos, ref_mot.robot, ref_mot.object )
         self.sim.forward()
-        self.sim.data.time = self.sim.data.time + 0.02#self.env.env.dt
+        self.sim.data.time = self.sim.data.time + 0.02#self.env.unwrapped.dt
         return idxs[0] < self.ref.horizon-1
 
 

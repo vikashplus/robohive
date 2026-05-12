@@ -802,8 +802,9 @@ def demo_robot():
     from robohive.utils import gym
 
     prompt("Starting Robot===================")
-    env = gym.make('FrankaReachFixed-v0')
-    rob = env.env.robot
+    envw = gym.make('FrankaReachFixed-v0')
+    env = envw.unwrapped
+    rob = env.robot
 
     prompt("Getting sensor data==============")
     sen = rob.get_sensors()
@@ -811,12 +812,12 @@ def demo_robot():
     prompt(sen)
 
     prompt("stepping forward=================")
-    ctrl = env.env.np_random.uniform(size=env.env.sim.model.nu)
+    ctrl = env.np_random.uniform(size=env.sim.model.nu)
     rob.step(ctrl, 1.0)
 
     prompt("Resetting Robot==================")
-    pos = env.env.np_random.uniform(size=env.env.sim.model.nq)
-    vel = env.env.np_random.uniform(size=env.env.sim.model.nv)
+    pos = env.np_random.uniform(size=env.sim.model.nq)
+    vel = env.np_random.uniform(size=env.sim.model.nv)
     rob.reset(pos, vel)
 
     prompt("Closing Robot====================")

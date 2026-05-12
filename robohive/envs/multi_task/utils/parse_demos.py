@@ -84,7 +84,7 @@ def render_demos(env, data, filename='demo_rendering.mp4', render=None):
 
 # playback demos and get data(physics respected)
 def gather_training_data(env, data, filename='demo_playback.mp4', render=None):
-    env = env.env
+    env = env.unwrapped
     FPS = 30
     render_skip = max(1, round(1. / \
         (FPS * env.sim.model.opt.timestep * env.frame_skip)))
@@ -127,7 +127,7 @@ def gather_training_data(env, data, filename='demo_playback.mp4', render=None):
         # normalization and env stepping
         act = (ctrl - act_mid) / act_rng
         act = np.clip(act, -0.999, 0.999)
-        next_obs, reward, done, env_info = env.step(act)
+        next_obs, reward, done, *_, env_info = env.step(act)
         path_reward += reward
 
         # populate path

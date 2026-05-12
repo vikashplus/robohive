@@ -83,9 +83,10 @@ def main(env_name, env_args, reset_noise, action_noise, output, horizon, num_rol
 
     # seed and load environments
     np.random.seed(seed)
-    env = gym.make(env_name) if env_args==None else gym.make(env_name, **(eval(env_args)))
+    envw = gym.make(env_name) if env_args==None else gym.make(env_name, **(eval(env_args)))
+    env = envw.unwrapped
     env.seed(seed)
-    env.env.mujoco_render_frames = True if 'onscreen'in render else False
+    env.mujoco_render_frames = True if 'onscreen'in render else False
     goal_sid = env.sim.model.site_name2id(goal_site)
     teleop_sid = env.sim.model.site_name2id(teleop_site)
     env.sim.model.site_rgba[goal_sid][3] = 0.2 # make visible
@@ -128,7 +129,7 @@ def main(env_name, env_args, reset_noise, action_noise, output, horizon, num_rol
         env.sim.model.site_quat[goal_sid] = mat2quat(np.reshape(env.sim.data.site_xmat[teleop_sid], [3,-1]))
 
         # recover init state
-        obs, rwd, done, env_info = env.forward()
+        obs, rwd, done, *_, env_info = env.forward()
         act = np.zeros(env.action_space.shape)
         gripper_state = 0
 
@@ -201,9 +202,9 @@ def main(env_name, env_args, reset_noise, action_noise, output, horizon, num_rol
                     act[:7] = ik_result.qpos[:7]
                     act[7:] = gripper_state
                     if action_noise:
-                        act = act + env.env.np_random.uniform(high=action_noise, low=-action_noise, size=len(act)).astype(act.dtype)
+                        act = act + env.np_random.uniform(high=action_noise, low=-action_noise, size=len(act)).astype(act.dtype)
                     if env.normalize_act:
-                        act = env.env.robot.normalize_actions(act)
+                        act = env.robot.normalize_actions(act)
 
             # nan actions for last log entry
             act = np.nan*np.ones(env.action_space.shape) if i_step == horizon else act
@@ -222,7 +223,7 @@ def main(env_name, env_args, reset_noise, action_noise, output, horizon, num_rol
 
             # step env using action from t=>t+1 ----------------------
             if i_step < horizon: #incase last actions (nans) can cause issues in step
-                obs, rwd, done, env_info = env.step(act)
+                obs, rwd, done, *_, env_info = env.step(act)
 
                 # Detect jumps
                 qpos_now = env_info['obs_dict']['qp_arm']
