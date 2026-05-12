@@ -4,6 +4,7 @@ Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gma
 ================================================= """
 
 from robohive.envs import env_base
+import mujoco
 import numpy as np
 
 class BaseV0(env_base.MujocoEnv):
@@ -88,15 +89,24 @@ class BaseV0(env_base.MujocoEnv):
 
         # implement abnormalities
         if self.muscle_condition == 'fatigue':
+            actuator_moment = np.zeros((self.sim.model.nu, self.sim.model.nv))
+            mujoco.mju_sparse2dense(
+                actuator_moment,
+                self.sim.data.actuator_moment.reshape(-1),
+                self.sim.data.moment_rownnz,
+                self.sim.data.moment_rowadr,
+                self.sim.data.moment_colind.reshape(-1),
+            )
             for mus_idx in range(self.sim.model.actuator_gainprm.shape[0]):
 
-                if self.sim.data.actuator_moment.shape[1]==1:
-                    self.f_load[mus_idx].append(self.sim.data.actuator_moment[mus_idx].copy())
+                if actuator_moment.shape[1] == 1:
+                    self.f_load[mus_idx].append(actuator_moment[mus_idx].copy())
                 else:
-                    self.f_load[mus_idx].append(self.sim.data.actuator_moment[mus_idx,1].copy())
+                    self.f_load[mus_idx].append(actuator_moment[mus_idx, 1].copy())
 
                 if self.MVC_rest[mus_idx] != 0:
-                    f_int = np.sum(self.f_load[mus_idx]-np.max(self.f_load[mus_idx],0),0)/self.MVC_rest[mus_idx]
+                    f_load = np.asarray(self.f_load[mus_idx])
+                    f_int = np.sum(f_load - np.max(f_load, 0), 0)/self.MVC_rest[mus_idx]
                     f_cem = self.MVC_rest[mus_idx]*np.exp(self.k_fatigue*f_int)
                 else:
                     f_cem = 0
