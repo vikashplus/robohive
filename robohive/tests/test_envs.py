@@ -123,30 +123,31 @@ class TestEnvs(unittest.TestCase):
         for env_name in env_names:
             print("Testing env: ", env_name)
             # test init
-            env = gym.make(env_name)
+            envw = gym.make(env_name)
+            env = envw.unwrapped
             env.seed(seed)
 
             # test reset
-            env.env.reset()
+            env.reset()
             # test obs vec
-            obs = env.env.get_obs()
+            obs = env.get_obs()
 
             if not lite:
                 # test obs dict
-                obs_dict = env.env.get_obs_dict(env.env.sim)
+                obs_dict = env.get_obs_dict(env.sim)
                 # test rewards
-                rwd = env.env.get_reward_dict(obs_dict)
+                rwd = env.get_reward_dict(obs_dict)
 
                 # test vector => dict upgrade
-                # print(env.env.get_obs() - env.env.get_obs_vec())
-                # assert (env.env.get_obs() == env.env.get_obs_vec()).all(), "check vectorized computations"
+                # print(env.get_obs() - env.get_obs_vec())
+                # assert (env.get_obs() == env.get_obs_vec()).all(), "check vectorized computations"
 
             # test env infos
-            infos = env.unwrapped.get_env_infos()
+            infos = env.get_env_infos()
 
             # test step (everything together)
-            observation, _reward, done, _info = env.env.step(np.zeros(env.env.sim.model.nu))
-            del(env)
+            observation, _reward, done, *_, _info = env.step(np.zeros(env.sim.model.nu))
+            del(envw)
 
 
 if __name__ == '__main__':
