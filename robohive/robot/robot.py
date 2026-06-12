@@ -347,6 +347,9 @@ class Robot():
                 if actuator_trntype == 0:  # mjTRN_JOINT // force on joint
                     actuator['data_type'] = 'qpos'
                     actuator['data_id'] = sim.model.jnt_dofadr[actuator_trnid]
+                elif actuator_trntype == 3:  # mjTRN_TENDON // tendon-driven (e.g. EZGripper)
+                    actuator['data_type'] = 'ctrl'
+                    actuator['data_id'] = actuator['sim_id']
                 else:
                     quit("ERROR: actuator {} has unsupported transmission_type: {}".format(actuator['name'],actuator_trntype))
         return robot_config
