@@ -5,14 +5,17 @@ Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
-from robohive.physics.sim_scene import SimScene
-from robohive.utils.quat_math import quat2euler
-from robohive.utils.prompt_utils import prompt, Prompt
-import mujoco
-import time
-import numpy as np
-from collections import deque
 import os
+import time
+from collections import deque
+
+import mujoco
+import numpy as np
+
+from robohive.physics.sim_scene import SimScene
+from robohive.utils.prompt_utils import Prompt, prompt
+from robohive.utils.quat_math import quat2euler
+
 np.set_printoptions(precision=4)
 
 
@@ -175,7 +178,7 @@ class Robot():
 
             else:
                 print("ERROR: interface ({}) not found".format(device['interface']['type']))
-                raise NotImplemented
+                raise NotImplementedError
 
         return robot_config
 
@@ -215,7 +218,7 @@ class Robot():
 
                 else:
                     print("ERROR: interface ({}) not found".format(device['interface']['type']))
-                    raise NotImplemented
+                    raise NotImplementedError
 
                 # calibrate sensors
                 for id, sensor in enumerate(device['sensor']):
@@ -332,6 +335,9 @@ class Robot():
                 elif sensor_type == mujoco.mjtSensor.mjSENS_JOINTVEL:  # mjSENS_JOINTVEL,// scalar joint position (hinge and slide only)
                     sensor['data_type'] = 'qvel'
                     sensor['data_id'] = sim.model.jnt_dofadr[sensor_objid]
+                elif sensor_type == mujoco.mjtSensor.mjSENS_TENDON:  # mjSENS_TENDON // tendon force
+                    sensor['data_type'] = 'ten_length'
+                    sensor['data_id'] = sensor_objid
                 else:
                     quit("ERROR: Sensor {} has unsupported sensor_type: {}".format(sensor['name'],sensor_type))
 
@@ -344,9 +350,12 @@ class Robot():
                 actuator['sim_id'] = sim.model.actuator_name2id(actuator['name'])
                 actuator_trntype = sim.model.actuator_trntype[actuator['sim_id']]
                 actuator_trnid = sim.model.actuator_trnid[actuator['sim_id'], 0]
-                if actuator_trntype == 0:  # mjTRN_JOINT // force on joint
+                if actuator_trntype == mujoco.mjtTrn.mjTRN_JOINT:  # // force on joint
                     actuator['data_type'] = 'qpos'
                     actuator['data_id'] = sim.model.jnt_dofadr[actuator_trnid]
+                elif actuator_trntype == mujoco.mjtTrn.mjTRN_TENDON:  # force on tendon
+                    actuator['data_type'] = 'ten_length'
+                    actuator['data_id'] = actuator_trnid
                 else:
                     quit("ERROR: actuator {} has unsupported transmission_type: {}".format(actuator['name'],actuator_trntype))
         return robot_config
@@ -720,7 +729,7 @@ class Robot():
         prompt("Resetting {}".format(self.name), 'white', 'on_grey', flush=True)
 
         # Enforce specs on the request
-        #   for actuated dofs => actoator specs
+        #   for actuated dofs => actuator specs
         #   for passive dofs => sensor specs
         feasibe_pos = reset_pos.copy()
         feasibe_vel = reset_vel.copy()
