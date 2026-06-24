@@ -15,13 +15,14 @@ USAGE:\n
     $ python logger/examine_logs.py --env_name rpFrankaRobotiqData-v0 --rollout_path teleOp_trace.h5 --rollout_format RoboSet --render offscreen --compress_paths False -c left_cam -c right_cam -c top_cam -c Franka_wrist_cam --plot_paths True
 '''
 
-from robohive.utils.paths_utils import plot as plotnsave_paths
-from robohive.utils import tensor_utils
-from robohive.utils import gym
+import os
+import time
+
 import click
 import numpy as np
-import time
-import os
+
+from robohive.utils import gym, tensor_utils
+from robohive.utils.paths_utils import plot as plotnsave_paths
 
 
 @click.command(help=DESC)

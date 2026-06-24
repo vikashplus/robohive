@@ -15,13 +15,14 @@ import xml.etree.ElementTree as ET
 from typing import Any
 
 import robohive.utils.import_utils as import_utils
-from robohive.utils.prompt_utils import prompt, Prompt
+from robohive.utils.prompt_utils import Prompt, prompt
+
 import_utils.dm_control_isavailable()
 import_utils.mujoco_isavailable()
 import dm_control.mujoco as dm_mujoco
 
-from robohive.renderer.mj_renderer import MJRenderer
 from robohive.physics.sim_scene import SimScene
+from robohive.renderer.mj_renderer import MJRenderer
 
 
 class DMSimScene(SimScene):
@@ -298,8 +299,8 @@ class DMSimScene(SimScene):
             return obj_id
 
         def get_xml():
-            from tempfile import TemporaryDirectory
             import os
+            from tempfile import TemporaryDirectory
             with TemporaryDirectory() as td:
                 filename = os.path.join(td, 'model.xml')
                 ret = mjlib.mj_saveLastXML(filename.encode(), model.ptr)
