@@ -419,9 +419,6 @@ class Robot():
         # cache sensors
         self._sensor_cache.append(current_sen)
 
-        # Update time
-        self.time_wall = time.time()-self.time_start
-
         return current_sen
 
 
@@ -709,6 +706,9 @@ class Robot():
                 time.sleep(time_left_in_step)
             elif time_left_in_step < 0.0:
                 prompt("Step duration %0.4fs, Step took %0.4fs, Time left %0.4f"% (step_duration, (time_now-self.time_wall), time_left_in_step), type=Prompt.WARN)
+
+        # Update time
+        self.time_wall = time.time()-self.time_start
 
         if _ROBOT_VIZ:
             global timing_SRV_t0
