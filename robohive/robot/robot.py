@@ -555,13 +555,12 @@ class Robot():
 
 
     # Normalize actions from absolute space to unit space
-    def normalize_actions(self, controls, out_space='sim', unnormalize=False):
+    def normalize_actions(self, controls, unnormalize=False):
         """
         Normalize actions from absolute space to unit space
         Recover actions from unit space to absolute space; if unnormalize==True
         in_space for controls has to be 'sim'
         """
-        act_id = -1
         controls_out = controls.copy()
         for name, device in self.robot_config.items():
             if name == "default_robot":
@@ -573,10 +572,8 @@ class Robot():
                     raise TypeError("only pos act supported")
             else:
                 for actuator in device['actuator']:
-                    act_id += 1
                     in_id = actuator['sim_id']
-                    # output ordering is as per the config order for hdr
-                    out_id = actuator['sim_id'] if out_space == 'sim' else act_id
+                    out_id = actuator['sim_id']
 
                     if self._act_mode == "pos":
                         act_mid = (actuator['pos_range'][1]+actuator['pos_range'][0])/2.0
@@ -606,7 +603,7 @@ class Robot():
             normalized=True,
             position_limits=True,
             velocity_limits=True,
-            out_space='sim'):
+            out_space='sim'):  # out_space kept for API compatibility; output is always sim_id-indexed
         """
         Process the actuation demands to
             (1) Remap provided controls to actuation space,
@@ -614,7 +611,6 @@ class Robot():
         """
         # last_obs = self.get_sensor_from_cache(-1)
         processed_controls = controls.copy()
-        act_id = -1
         for name, device in self.robot_config.items():
             if name == "default_robot":
                 if self._act_mode == "pos":
@@ -625,10 +621,8 @@ class Robot():
                     raise TypeError("only pos act supported")
             else:
                 for actuator in device['actuator']:
-                    act_id += 1
                     in_id = actuator['sim_id']
-                    # output ordering is as per the config order for hdr
-                    out_id = actuator['sim_id'] if out_space == 'sim' else act_id
+                    out_id = actuator['sim_id']
 
                     control = controls[in_id]
                     if self._act_mode == "pos":
