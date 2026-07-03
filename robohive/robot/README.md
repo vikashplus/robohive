@@ -6,7 +6,7 @@ RoboHive uses an abstract class called `robot` to interface with all agents/devi
 ![Alt text](robohive_robot_overview.png "Optional title")
 
 RoboHive's goal is to make hardware as seamless to use as simulations. In order to achieve this, RoboHive projects hardware into simulation. Conceptually, this implies that all our computations happen as if we are always working in a simulated setting, hardware merely is a dynamic function that updates the sim. This has a few fundamental benefits
-1. Interpretability of the simulation carried over to hardware. Users don't need to know all the hardware details.
+1. Interpretability of the simulation carried over to hardware. Users doesn't need to know all the hardware details.
 2. It's easy to prototype in simulation and later port results into hardware. This is very useful for paradigms like sim2real.
 3. Simulation provides a general parameterization to the hardware details when it's important.
 4. Simulation rendering can be used as a real time visualizer for the hardware updates.
@@ -42,12 +42,12 @@ Robot configurations are specified using config files. The file is essentially a
 'franka':{
    'interface': {'type': 'franka', 'ip_address':'172.16.0.1', 'gain_scale':0.5},
    'sensor':[
-       {'range':(-2.9, 2.9), 'noise':0.05, 'hdr_id':0, 'scale':1, 'offset':0, 'name':'fr_arm_jp1'},
-       {'range':(-1.8, 1.8), 'noise':0.05, 'hdr_id':1, 'scale':1, 'offset':0, 'name':'fr_arm_jp2'},
+       {'range':(-2.9, 2.9), 'noise':0.05, 'adr':0, 'scale':1, 'offset':0, 'name':'fr_arm_jp1'},
+       {'range':(-1.8, 1.8), 'noise':0.05, 'adr':1, 'scale':1, 'offset':0, 'name':'fr_arm_jp2'},
    ],
    'actuator':[
-       {'pos_range':(-2.9, 2.9), 'vel_range':(-2, 2), 'hdr_id':0, 'scale':1, 'offset':0, 'name':'panda0_joint1'},
-       {'pos_range':(-1.8, 1.8), 'vel_range':(-2, 2), 'hdr_id':1, 'scale':1, 'offset':0, 'name':'panda0_joint2'},
+       {'pos_range':(-2.9, 2.9), 'vel_range':(-2, 2), 'adr':0, 'scale':1, 'offset':0, 'name':'panda0_joint1'},
+       {'pos_range':(-1.8, 1.8), 'vel_range':(-2, 2), 'adr':1, 'scale':1, 'offset':0, 'name':'panda0_joint2'},
    ],
    'cam': []
 },
@@ -56,10 +56,10 @@ Robot configurations are specified using config files. The file is essentially a
 'robotiq':{
    'interface': {'type': 'robotiq', 'ip_address':'172.16.0.1'},
    'sensor':[
-       {'range':(0, 0.834), 'noise':0.0, 'hdr_id':0, 'name':'robotiq_2f_85', 'scale':-9.81, 'offset':0.834},
+       {'range':(0, 0.834), 'noise':0.0, 'adr':0, 'name':'robotiq_2f_85', 'scale':-9.81, 'offset':0.834},
    ],
    'actuator':[
-       {'pos_range':(0, 1), 'vel_range':(-2, 4), 'hdr_id':0, 'name':'robotiq_2f_85', 'scale':-0.08, 'offset':0.08},
+       {'pos_range':(0, 1), 'vel_range':(-2, 4), 'adr':0, 'name':'robotiq_2f_85', 'scale':-0.08, 'offset':0.08},
    ],
    'cam': []
 },
@@ -70,8 +70,8 @@ Robot configurations are specified using config files. The file is essentially a
    'sensor':[],
    'actuator':[]
    'cam': [
-       {'range':(0, 255), 'noise':0.00, 'hdr_id':'rgb', 'scale':1, 'offset':0, 'name':'/color/image_raw'},
-       {'range':(0, 255), 'noise':0.00, 'hdr_id':'d', 'scale':1, 'offset':0, 'name':'/depth_uncolored/image_raw'},
+       {'range':(0, 255), 'noise':0.00, 'adr':'rgb', 'scale':1, 'offset':0, 'name':'/color/image_raw'},
+       {'range':(0, 255), 'noise':0.00, 'adr':'d', 'scale':1, 'offset':0, 'name':'/depth_uncolored/image_raw'},
    ],
 },
 ```
@@ -90,7 +90,7 @@ Robot class is configured using a config file. The config file is essentially a 
    - `name`: Name of the sensor. Note: This has to be the same as the sensor name in the MuJoCo model.
    - `range`: Range of values expected from this sensor. Readings outside these ranges are clamped to the limits.
    - `noise`: expected amplitude of noise in the sensor readings. Use this parameter to add noise to the simulated sensor reading. Noise is sampled from a uniform distribution between `(-noise, +noise)` and added to the sensor reading. It has no effect if the robot is instantiated using hardware backend. ```sensor += noise_scale*sensor['noise']*self.np_random.uniform(low=-1.0, high=1.0)``` where `noise_scale` is a parameter (of the entire robot) to scale the noise of the whole robot.
-   - `hdr_id`: Hardware index of the sensor in the hardware's sensor array.
+   - `adr`: Hardware index of the sensor in the hardware's sensor array.
    - `scale`/`offset`: parameters to map hardware sensor values to simulated sensor values `sensor_sim = sensor_hdr*scale+offset`
 
    **Note**: Currently only scalar sensors are supported. Multi-valued sensor support is on the wishlist.
@@ -99,14 +99,14 @@ Robot class is configured using a config file. The config file is essentially a 
    - `name`: Name of the sensor. Since there are no explicit camera sensors in MuJoCo, there are no specific constraints on camera names. We internally use the pub-sub topics names as camera names.
    - `range`: see description in sensor
    - `noise`:see description in sensor
-   - `hdr_id`: see description in sensor
+   - `adr`: see description in sensor
    - `scale`/`offset`: see description in sensor
 
 - **`actuator`**: An ordered list of all available actuators. List ordering must follow the same order as specified in the MuJoCo model. List ordering is used to implicitly determine the actuator's index in the actuator array -
    - `name`: Name of the actuator. Note: This has to be the same as the actuator name in the MuJoCo model.
    - `range`: Range of values the actuator can accept in the sim space. Readings outside these ranges are clamped to the limits.
    - `noise`: [_Wishlist_] expected amplitude of noise in actuator's performance. Use this parameter to add noise to the simulated actuator demands. Noise is sampled from a uniform distribution between `(-noise, +noise)` and added to the actuator demands. It has no effect if the robot is instantiated using hardware backend. ```ctrl_sim += noise_scale*act['noise']*self.np_random.uniform(low=-1.0, high=1.0)``` where `noise_scale` is a parameter (of the entire robot) to scale the noise of the whole robot.
-   - `hdr_id`: Hardware index of the actuator in the hardware's sensor array.
+   - `adr`: Hardware index of the actuator in the hardware's sensor array.
    - `scale`/`offset`: parameters to map simulated desired values to hardware actuator demands `ctrl_hdr = ctrl_sim*scale+offset`
 
 
