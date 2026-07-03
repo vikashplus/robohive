@@ -30,6 +30,10 @@ _ROBOT_VIZ = False
 # Support for non uniform noise in sensor readings
 # Support for noisy actions + separate noise_scale for sensor and actuator
 # rename pos/vel to act/delta_act
+# Improve space definitions
+    # sim_id: ID of the sensor/actuator in the sim
+    # act_id: ID of the sensor/actuator in the robot_config (hardware) space ==> Rename to hdr_id (robot_config unified different hardware into a single unified hardware space)
+    # hdr_id: ID of the sensor/actuator in the hardware space (e.g. dynamixel) ==> Rename to adr (This is the address that is used to communicate with the hardware. It is not necessarily the same as the act_id or sim_id.)
 
 # NOTE/ GOOD PRACTICES ===========================
 # nq should be nv
@@ -229,7 +233,14 @@ class Robot():
 
 
     # apply controls to hardware
-    def hardware_apply_controls(self, control, is_reset=False):
+    def hardware_apply_controls(self, control, space='hdr', is_reset=False):
+        """
+        control: control vector in hdr or sim space
+        space: 'hdr' or 'sim' (defaults to 'hdr' as represented in robot_config)
+        is_reset: if True, reset the hardware to the control values
+        """
+
+        act_id = -1 # IDs as per the config order
         for name, device in self.robot_config.items():
             if 'actuator' in device.keys() and len(device['actuator'])>0:
                 if device['interface']['type'] == 'dynamixel':
@@ -239,8 +250,10 @@ class Robot():
                     pwm_ctrl = []
                     pwm_ids = []
                     for actuator in device['actuator']:
+                        act_id += 1
+                        ctrl = control[actuator['sim_id']] if space == 'sim' else control[act_id]
                         # calibrate
-                        calib_ctrl = control[actuator['sim_id']]*actuator['scale']+ actuator['offset']
+                        calib_ctrl = ctrl*actuator['scale']+ actuator['offset']
                         if actuator['mode'] == 'Position':
                             pos_ids.append(actuator['hdr_id'])
                             pos_ctrl.append(calib_ctrl)
@@ -249,34 +262,26 @@ class Robot():
                             pwm_ctrl.append(calib_ctrl)
                         else:
                             print("ERROR: Mode not found")
-                            raise NotImplemented
+                            raise NotImplementedError(f"ERROR: Actuator mode {actuator['mode']} not found")
                     # send controls
                     if pos_ids:
                         device['robot'].set_des_pos(pos_ids, pos_ctrl)
                     if pwm_ids:
                         device['robot'].set_des_pwm(pwm_ids, pwm_ctrl)
 
-                elif device['interface']['type'] == 'franka':
-                    franka_des_pos = []
+                elif device['interface']['type'] in ['franka', 'robotiq']:
+                    des_pos = []
                     for actuator in device['actuator']:
+                        act_id += 1
+                        ctrl = control[actuator['sim_id']] if space == 'sim' else control[act_id]
                         # calibrate
-                        franka_des_pos.append(control[actuator['sim_id']]*actuator['scale']+ actuator['offset'])
+                        des_pos.append(ctrl*actuator['scale']+ actuator['offset'])
                     if is_reset:
-                        device['robot'].reset(franka_des_pos)
+                        device['robot'].reset(des_pos)
                     else:
-                        device['robot'].apply_commands(franka_des_pos)
-
-                elif device['interface']['type'] == 'robotiq':
-                    robotiq_des_pos = []
-                    for actuator in device['actuator']:
-                        # calibrate
-                        robotiq_des_pos.append(control[actuator['sim_id']]*actuator['scale']+ actuator['offset'])
-                    if is_reset:
-                        device['robot'].reset(robotiq_des_pos[0])
-                    else:
-                        device['robot'].apply_commands(robotiq_des_pos[0])
+                        device['robot'].apply_commands(des_pos)
                 else:
-                    raise NotImplemented("ERROR: interface not found")
+                    raise NotImplementedError("ERROR: interface not found")
 
 
     # close hardware
@@ -561,7 +566,7 @@ class Robot():
         Recover actions from unit space to absolute space; if unnormalize==True
         in_space for controls has to be 'sim'
         """
-        act_id = -1
+        act_id = -1 # IDs as per the config order
         controls_out = controls.copy()
         for name, device in self.robot_config.items():
             if name == "default_robot":
@@ -614,7 +619,7 @@ class Robot():
         """
         # last_obs = self.get_sensor_from_cache(-1)
         processed_controls = controls.copy()
-        act_id = -1
+        act_id = -1 # IDs as per the config order
         for name, device in self.robot_config.items():
             if name == "default_robot":
                 if self._act_mode == "pos":
@@ -685,7 +690,7 @@ class Robot():
 
         # Send controls to the robot
         if self.is_hardware:
-            self.hardware_apply_controls(ctrl_feasible)
+            self.hardware_apply_controls(ctrl_feasible, space=robot_type)
             if render_cbk:
                 render_cbk()
         else:
