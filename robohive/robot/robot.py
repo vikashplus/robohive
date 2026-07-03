@@ -383,6 +383,9 @@ class Robot():
         current_sen={}
         noise_scale = self._noise_scale if noise_scale is None else noise_scale
 
+        # Update time
+        self.time_wall = time.time()-self.time_start
+
         if self.is_hardware:
             # record sensor*device['scale']+device['offset']
             current_sen = self.hardware_get_sensors()
@@ -418,9 +421,6 @@ class Robot():
 
         # cache sensors
         self._sensor_cache.append(current_sen)
-
-        # Update time
-        self.time_wall = time.time()-self.time_start
 
         return current_sen
 
