@@ -524,6 +524,13 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     #     return self.step(a)
 
 
+    def close(self):
+        """
+        Clean up the environment
+        """
+        if self.sim:
+            self.sim.close()
+
     @property
     def dt(self):
         return self.sim.model.opt.timestep * self.frame_skip
