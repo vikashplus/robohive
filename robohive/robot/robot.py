@@ -30,14 +30,15 @@ _ROBOT_VIZ = False
 # Support for non uniform noise in sensor readings
 # Support for noisy actions + separate noise_scale for sensor and actuator
 # rename pos/vel to act/delta_act
-# Improve space definitions
-    # sim_id: ID of the sensor/actuator in the sim
-    # act_id: ID of the sensor/actuator in the robot_config (hardware) space ==> Rename to hdr_id (robot_config unified different hardware into a single unified hardware space)
-    # hdr_id: ID of the sensor/actuator in the hardware space (e.g. dynamixel) ==> Rename to adr (This is the address that is used to communicate with the hardware. It is not necessarily the same as the act_id or sim_id.)
 
 # NOTE/ GOOD PRACTICES ===========================
 # nq should be nv
 # Order of sensors and actuators in config should follow XML order
+# Space definitions
+    # sim_id: ID of the sensor/actuator in the sim
+    # hdr_id: ID of the sensor/actuator in the robot_config (hardware) space (robot_config unifies different hardware into a single unified hardware space)
+    # adr: Address of the sensor/actuator in the individual hardware space (e.g. dynamixel) (This is the address used during communicate with the individual hardware)
+
 
 
 class Robot():
@@ -171,7 +172,7 @@ class Robot():
 
                 # set actuator mode
                 for actuator in device['actuator']:
-                    device['robot'].set_operation_mode(motor_id=[actuator['hdr_id']], mode=actuator['mode'])
+                    device['robot'].set_operation_mode(motor_id=[actuator['adr']], mode=actuator['mode'])
 
                 # engage motors
                 device['robot'].engage_motor(motor_id=device['actuator_ids'], enable=True)
@@ -240,7 +241,6 @@ class Robot():
         is_reset: if True, reset the hardware to the control values
         """
 
-        act_id = -1 # IDs as per the config order
         for name, device in self.robot_config.items():
             if 'actuator' in device.keys() and len(device['actuator'])>0:
                 if device['interface']['type'] == 'dynamixel':
@@ -250,15 +250,14 @@ class Robot():
                     pwm_ctrl = []
                     pwm_ids = []
                     for actuator in device['actuator']:
-                        act_id += 1
-                        ctrl = control[actuator['sim_id']] if space == 'sim' else control[act_id]
+                        ctrl = control[actuator['sim_id']] if space == 'sim' else control[actuator['hdr_id']]
                         # calibrate
                         calib_ctrl = ctrl*actuator['scale']+ actuator['offset']
                         if actuator['mode'] == 'Position':
-                            pos_ids.append(actuator['hdr_id'])
+                            pos_ids.append(actuator['adr'])
                             pos_ctrl.append(calib_ctrl)
                         elif actuator['mode'] == 'PWM':
-                            pwm_ids.append(actuator['hdr_id'])
+                            pwm_ids.append(actuator['adr'])
                             pwm_ctrl.append(calib_ctrl)
                         else:
                             print("ERROR: Mode not found")
@@ -272,8 +271,7 @@ class Robot():
                 elif device['interface']['type'] in ['franka', 'robotiq']:
                     des_pos = []
                     for actuator in device['actuator']:
-                        act_id += 1
-                        ctrl = control[actuator['sim_id']] if space == 'sim' else control[act_id]
+                        ctrl = control[actuator['sim_id']] if space == 'sim' else control[actuator['hdr_id']]
                         # calibrate
                         des_pos.append(ctrl*actuator['scale']+ actuator['offset'])
                     if is_reset:
@@ -322,6 +320,8 @@ class Robot():
         with open(config_path, 'r') as f:
             robot_config = eval(f.read())
 
+        hdr_sensor_id = -1 # IDs as per the config order
+        hdr_actuator_id = -1 # IDs as per the config order
         for name, device in robot_config.items():
             prompt("Configuring component %s"% name)
 
@@ -329,9 +329,11 @@ class Robot():
             device['sensor_ids'] = []
             device['sensor_names'] = []
             for sensor in device['sensor']:
-                device['sensor_names'].append(sensor['name']) # list of all ids
-                device['sensor_ids'].append(sensor['hdr_id']) # list of all ids
+                hdr_sensor_id += 1
+                sensor['hdr_id'] = hdr_sensor_id
                 sensor['sim_id'] = sim.model.sensor_name2id(sensor['name'])
+                device['sensor_names'].append(sensor['name']) # list of all ids
+                device['sensor_ids'].append(sensor['adr']) # list of all ids
                 sensor_type = sim.model.sensor_type[sensor['sim_id']]
                 sensor_objid = sim.model.sensor_objid[sensor['sim_id']]
                 if sensor_type == mujoco.mjtSensor.mjSENS_JOINTPOS:  # mjSENS_JOINTPOS,// scalar joint position (hinge and slide only)
@@ -350,9 +352,11 @@ class Robot():
             device['actuator_ids'] = []
             device['actuator_names'] = []
             for actuator in device['actuator']:
-                device['actuator_names'].append(actuator['name']) # list of all ids
-                device['actuator_ids'].append(actuator['hdr_id']) # list of all ids
+                hdr_actuator_id += 1
+                actuator['hdr_id'] = hdr_actuator_id
                 actuator['sim_id'] = sim.model.actuator_name2id(actuator['name'])
+                device['actuator_names'].append(actuator['name']) # list of all ids
+                device['actuator_ids'].append(actuator['adr']) # list of all ids
                 actuator_trntype = sim.model.actuator_trntype[actuator['sim_id']]
                 actuator_trnid = sim.model.actuator_trnid[actuator['sim_id'], 0]
                 if actuator_trntype == mujoco.mjtTrn.mjTRN_JOINT:  # // force on joint
@@ -453,7 +457,7 @@ class Robot():
 
                 # calibrate sensors
                 for cam in device['cam']:
-                    current_sensor_value[cam_name][cam['hdr_id']] = current_sensor_value[cam_name][cam['hdr_id']]*cam['scale'] + cam['offset']
+                    current_sensor_value[cam_name][cam['adr']] = current_sensor_value[cam_name][cam['adr']]*cam['scale'] + cam['offset']
                 device['sensor_data'] = current_sensor_value[cam_name]
                 device['sensor_time'] = current_sensor_value['time']
                 imgs[ind, :, :, :] = current_sensor_value[cam_name]['rgb']
@@ -566,7 +570,6 @@ class Robot():
         Recover actions from unit space to absolute space; if unnormalize==True
         in_space for controls has to be 'sim'
         """
-        act_id = -1 # IDs as per the config order
         controls_out = controls.copy()
         for name, device in self.robot_config.items():
             if name == "default_robot":
@@ -578,10 +581,9 @@ class Robot():
                     raise TypeError("only pos act supported")
             else:
                 for actuator in device['actuator']:
-                    act_id += 1
                     in_id = actuator['sim_id']
                     # output ordering is as per the config order for hdr
-                    out_id = actuator['sim_id'] if out_space == 'sim' else act_id
+                    out_id = actuator['sim_id'] if out_space == 'sim' else actuator['hdr_id']
 
                     if self._act_mode == "pos":
                         act_mid = (actuator['pos_range'][1]+actuator['pos_range'][0])/2.0
@@ -619,7 +621,6 @@ class Robot():
         """
         # last_obs = self.get_sensor_from_cache(-1)
         processed_controls = controls.copy()
-        act_id = -1 # IDs as per the config order
         for name, device in self.robot_config.items():
             if name == "default_robot":
                 if self._act_mode == "pos":
@@ -630,10 +631,9 @@ class Robot():
                     raise TypeError("only pos act supported")
             else:
                 for actuator in device['actuator']:
-                    act_id += 1
                     in_id = actuator['sim_id']
                     # output ordering is as per the config order for hdr
-                    out_id = actuator['sim_id'] if out_space == 'sim' else act_id
+                    out_id = actuator['sim_id'] if out_space == 'sim' else actuator['hdr_id']
 
                     control = controls[in_id]
                     if self._act_mode == "pos":
