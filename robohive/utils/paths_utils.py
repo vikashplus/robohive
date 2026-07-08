@@ -274,14 +274,6 @@ def plot(path_handle, env_handle=None, output_dir=None, output_name='', env_args
             ax.set_xlim(time[0], time[-1])
             if iplt1 != (nplt1 - 1):
                 ax.axes.xaxis.set_ticklabels([])
-            if iplt1 == 0:
-                plt.title('Observations')
-            ax.yaxis.tick_right()
-            if path['env_infos']['obs_dict'][key].ndim<3:
-                plt.plot(
-                    path['env_infos']['time'],
-                    path['env_infos']['obs_dict'][key],
-                    label=key)
             # plt.ylabel(key)
             plt.text(0.01, .01, f"{key}{path['env_infos']['obs_dict'][key].shape}", transform=ax.transAxes)
         plt.xlabel('time (sec)')
