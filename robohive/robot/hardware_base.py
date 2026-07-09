@@ -7,34 +7,45 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 # Base robot class for other hardware devices to inheret from
 import abc
+import warnings
+
 
 class hardwareBase(abc.ABC):
-    def __init__(self, name, *args, **kwargs):
+    def __init__(self, name, *args, **kwargs) -> None:
         self.name = name
 
     @abc.abstractmethod
-    def connect(self):
+    def connect(self) -> bool:
         """Establish hardware connection"""
 
     @abc.abstractmethod
-    def okay(self):
+    def okay(self) -> bool:
         """Return hardware health"""
 
     @abc.abstractmethod
-    def close(self):
+    def close(self) -> bool:
         """Close hardware connection"""
 
     @abc.abstractmethod
-    def reset(self):
+    def reset(self) -> None:
         """Reset hardware"""
 
     @abc.abstractmethod
-    def get_sensors(self):
-        """Get hardware sensors"""
+    def _get_sensors(self) -> dict:
+        """Get hardware sensors — returned dict must include a 'time' key"""
+
+    def get_sensors(self) -> dict:
+        """Get hardware sensors, enforcing 'time' key contract"""
+        data = self._get_sensors()
+        if not (isinstance(data, dict) and 'time' in data):
+            warnings.warn(
+                f"{self.name}: get_sensors() should return a dict containing a 'time' key, got {type(data)}. "
+                "Please add 'time' details to your sensor data to suppress this warning.")
+        return data
 
     @abc.abstractmethod
-    def apply_commands(self):
+    def apply_commands(self) -> None:
         """Apply hardware commands"""
 
-    def __del__(self):
+    def __del__(self) -> None:
         self.close()

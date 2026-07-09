@@ -134,7 +134,7 @@ class OptiTrack(hardwareBase):
                     self.data_float[2], self.data_float[3], self.data_float[4])
 
     # get latest sensor value (helpful when there is a single sensors)
-    def get_sensors(self):
+    def _get_sensors(self) -> dict:
         # sensor_data isn't updated in place ==> it can be easily passed around and cached
         # repeated calls will return the same data_frame ==> no overhead for multiple queries to the same sensor reading
         return self.sensor_data

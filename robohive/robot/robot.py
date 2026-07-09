@@ -336,17 +336,21 @@ class Robot():
                 device['sensor_ids'].append(sensor['adr']) # list of all ids
                 sensor_type = sim.model.sensor_type[sensor['sim_id']]
                 sensor_objid = sim.model.sensor_objid[sensor['sim_id']]
-                if sensor_type == mujoco.mjtSensor.mjSENS_JOINTPOS:  # mjSENS_JOINTPOS,// scalar joint position (hinge and slide only)
+                # sensordata_id: address in sim.data.sensordata for this sensor.
+                # Stored for all sensor types so Pass 2 of sensor2sim can write
+                # hardware readings into sensordata as the single authoritative source.
+                sensor['sensordata_id'] = int(sim.model.sensor_adr[sensor['sim_id']])
+                if sensor_type == mujoco.mjtSensor.mjSENS_JOINTPOS:  # scalar joint position (hinge and slide only)
                     sensor['data_type'] = 'qpos'
                     sensor['data_id'] = sim.model.jnt_qposadr[sensor_objid]
-                elif sensor_type == mujoco.mjtSensor.mjSENS_JOINTVEL:  # mjSENS_JOINTVEL,// scalar joint position (hinge and slide only)
+                elif sensor_type == mujoco.mjtSensor.mjSENS_JOINTVEL:  # scalar joint velocity (hinge and slide only)
                     sensor['data_type'] = 'qvel'
                     sensor['data_id'] = sim.model.jnt_dofadr[sensor_objid]
-                elif sensor_type == mujoco.mjtSensor.mjSENS_TENDON:  # mjSENS_TENDON // tendon force
-                    sensor['data_type'] = 'ten_length'
-                    sensor['data_id'] = sensor_objid
                 else:
-                    quit("ERROR: Sensor {} has unsupported sensor_type: {}".format(sensor['name'],sensor_type))
+                    # Non-invertible sensor: sim.forward() recomputes this from state.
+                    # Covers tendon position, joint actuator force, actuator force, etc.
+                    sensor['data_type'] = 'sensordata'
+                    sensor['data_id'] = sensor['sensordata_id']
 
             # configure device actuators
             device['actuator_ids'] = []
@@ -418,6 +422,8 @@ class Robot():
                         # add noise
                         if noise_scale!=0:
                             s += noise_scale*sensor['noise']*self.np_random.uniform(low=-1.0, high=1.0)
+                        # ensure range
+                        s = np.clip(s, sensor['range'][0], sensor['range'][1])
                         sen.append(s)
                     current_sen[name] = np.array(sen)
 
@@ -489,18 +495,30 @@ class Robot():
             print("WARNING: Propagating noisy sensors back to sim can destablize simulation")
 
         sim.data.time = sensor['time']
+
+        # Pass 1: write invertible state — qpos and qvel survive sim.forward()
         for name, device in self.robot_config.items():
             if name == "default_robot":
                 sim.data.qpos[:] = device['sensor_data']['qpos']
                 sim.data.qvel[:] = device['sensor_data']['qvel']
-                if self.sim.model.na >0:
+                if self.sim.model.na > 0:
                     sim.data.act[:] = device['sensor_data']['act']
             else:
                 for s_id, s_val in enumerate(device['sensor']):
-                    # prompt(getattr(sim.data, s_val["data_type"])[s_val["data_id"]], sensor[name][s_id])
-                    data = getattr(sim.data, s_val["data_type"])
-                    data[s_val["data_id"]] = sensor[name][s_id]
+                    if s_val['data_type'] in ('qpos', 'qvel'):
+                        getattr(sim.data, s_val['data_type'])[s_val['data_id']] = sensor[name][s_id]
+
+        # Propagate qpos/qvel through kinematics; also recomputes sensordata from sim physics
         sim.forward()
+
+        # Pass 2: write all hardware readings into sensordata, making it the single
+        # authoritative source regardless of sensor type.  For qpos/qvel sensors this
+        # is redundant (forward() already propagated them) but keeps sensordata complete.
+        for name, device in self.robot_config.items():
+            if name == "default_robot":
+                continue
+            for s_id, s_val in enumerate(device['sensor']):
+                sim.data.sensordata[s_val['sensordata_id']] = sensor[name][s_id]
 
 
     # synchronize states between two sims

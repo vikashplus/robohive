@@ -38,7 +38,7 @@ class Dynamixels(hardwareBase):
     def reset(self):
         """Reset hardware"""
 
-    def get_sensors(self):
+    def _get_sensors(self):
         """Get hardware sensors"""
 
     def apply_commands(self):

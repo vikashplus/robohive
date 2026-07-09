@@ -88,15 +88,15 @@ class Robotiq(hardwareBase):
         self.apply_commands(width=width, **kwargs)
 
 
-    def get_sensors(self):
+    def _get_sensors(self) -> dict:
         """Get hardware sensors"""
         try:
             curr_state = self.robot.get_state()
         except:
             print("RBQ:> Failed to get current sensors: ", end="")
             self.reconnect()
-            return self.get_sensors()
-        return np.array([curr_state.width])
+            return self._get_sensors()
+        return {'time': time.time(), 'width': np.array([curr_state.width])}
 
     def apply_commands(self, width:float, speed:float=0.1, force:float=0.1):
         assert width>=0.0 and width<=self.max_width, "Gripper desired width ({}) is out of bound (0,{})".format(width, self.max_width)
