@@ -7,6 +7,8 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 # Base robot class for other hardware devices to inheret from
 import abc
+import warnings
+
 
 class hardwareBase(abc.ABC):
     def __init__(self, name, *args, **kwargs) -> None:
@@ -35,8 +37,10 @@ class hardwareBase(abc.ABC):
     def get_sensors(self) -> dict:
         """Get hardware sensors, enforcing 'time' key contract"""
         data = self._get_sensors()
-        assert isinstance(data, dict) and 'time' in data, \
-            f"{self.name}: get_sensors() must return a dict containing a 'time' key, got {type(data)}"
+        if not (isinstance(data, dict) and 'time' in data):
+            warnings.warn(
+                f"{self.name}: get_sensors() should return a dict containing a 'time' key, got {type(data)}. "
+                "Please add 'time' details to your sensor data to suppress this warning.")
         return data
 
     @abc.abstractmethod
