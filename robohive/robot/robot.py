@@ -365,7 +365,10 @@ class Robot():
                 actuator_trnid = sim.model.actuator_trnid[actuator['sim_id'], 0]
                 if actuator_trntype == mujoco.mjtTrn.mjTRN_JOINT:  # // force on joint
                     actuator['data_type'] = 'qpos'
-                    actuator['data_id'] = sim.model.jnt_dofadr[actuator_trnid]
+                    # qpos is indexed by jnt_qposadr, not jnt_dofadr; the two
+                    # diverge when a free/ball joint precedes this joint
+                    # (freejoint: 7 qpos vs 6 dofs), shifting every read.
+                    actuator['data_id'] = sim.model.jnt_qposadr[actuator_trnid]
                 elif actuator_trntype == mujoco.mjtTrn.mjTRN_TENDON:  # force on tendon
                     actuator['data_type'] = 'ten_length'
                     actuator['data_id'] = actuator_trnid
