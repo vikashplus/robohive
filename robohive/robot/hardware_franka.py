@@ -185,7 +185,7 @@ class FrankaArm(hardwareBase):
             self.reset(reset_pos, time_to_go)
 
 
-    def _get_sensors(self) -> dict:
+    def get_sensors(self) -> dict:
         """Get hardware sensors"""
         try:
             joint_pos = self.robot.get_joint_positions()
@@ -193,7 +193,7 @@ class FrankaArm(hardwareBase):
         except:
             print("Failed to get current sensors: ", end="")
             self.reconnect()
-            return self._get_sensors()
+            return self.get_sensors()
         return {'time': time.time(), 'joint_pos': joint_pos, 'joint_vel': joint_vel}
 
 

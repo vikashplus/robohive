@@ -58,7 +58,7 @@ class RealSense(hardwareBase):
         timestamp_str_wo_nano = timestamp_str[:23] + timestamp_str[29:]
         self.most_recent_pkt_ts = datetime.datetime.fromisoformat(timestamp_str_wo_nano)
 
-    def _get_sensors(self) -> dict:
+    def get_sensors(self) -> dict:
         # get all data from all topics
         last_img = copy.deepcopy(self.last_image_pkt)
         last_depth = copy.deepcopy(self.last_depth_pkt)

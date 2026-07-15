@@ -11,6 +11,29 @@ import warnings
 
 
 class hardwareBase(abc.ABC):
+
+    # add tests to all defined subclasses to ensure that get_sensors() returns a dict with a 'time' key
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if 'connect' in cls.__dict__:
+            user_connect = cls.__dict__['connect']
+
+            def connect_then_check(self, *args, **kw):
+                result = user_connect(self, *args, **kw)
+                try:
+                    data = self.get_sensors()
+                    if not (isinstance(data, dict) and 'time' in data):
+                        warnings.warn(
+                            f"{self.name}: get_sensors() should return a dict containing a 'time' key, got {type(data)}"
+                        )
+                except Exception as e:
+                    warnings.warn(
+                        f"{self.name}: could not verify get_sensors() 'time'-key contract after connect: {e}"
+                    )
+                return result
+
+            cls.connect = connect_then_check
+
     def __init__(self, name, *args, **kwargs) -> None:
         self.name = name
 
@@ -31,17 +54,8 @@ class hardwareBase(abc.ABC):
         """Reset hardware"""
 
     @abc.abstractmethod
-    def _get_sensors(self) -> dict:
-        """Get hardware sensors — returned dict must include a 'time' key"""
-
     def get_sensors(self) -> dict:
-        """Get hardware sensors, enforcing 'time' key contract"""
-        data = self._get_sensors()
-        if not (isinstance(data, dict) and 'time' in data):
-            warnings.warn(
-                f"{self.name}: get_sensors() should return a dict containing a 'time' key, got {type(data)}. "
-                "Please add 'time' details to your sensor data to suppress this warning.")
-        return data
+        """Get hardware sensors — should return a dict containing a 'time' key"""
 
     @abc.abstractmethod
     def apply_commands(self) -> None:
