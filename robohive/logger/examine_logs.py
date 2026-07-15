@@ -211,6 +211,9 @@ def examine_logs(env_name, rollout_path, rollout_format, mode, horizon, seed, nu
                 elif i_step < trace_horizon: # incase last step actions (nans) can cause issues in step
                     obs, rwd, done, *_, env_info = env.step(act, update_exteroception=include_exteroception)
                     ep_rwd += rwd
+                    sleep_time = 1*env.dt if render=='onscreen' else 0.0
+                    if sleep_time>0:
+                        time.sleep(sleep_time)
 
             # save offscreen buffers as video and clear the dataset
             if render == 'offscreen':
@@ -230,7 +233,7 @@ def examine_logs(env_name, rollout_path, rollout_format, mode, horizon, seed, nu
     # plot paths
     if plot_paths:
         file_name = os.path.join(output_dir, output_name + '{}'.format(time_stamp))
-        plotnsave_paths(trace.trace, env=env, fileName_prefix=file_name)
+        plotnsave_paths(trace.trace, env_handle=env, output_name=file_name)
 
     # Close and save paths
     trace.close()
