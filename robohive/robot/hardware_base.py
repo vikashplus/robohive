@@ -43,7 +43,11 @@ class hardwareBase(abc.ABC):
 
     @abc.abstractmethod
     def okay(self) -> bool:
-        """Return hardware health"""
+        """Check if hardware is healthy and return the status"""
+
+    @abc.abstractmethod
+    def recover(self) -> None:
+        """Recover hardware from any error, connection loss, failure, etc """
 
     @abc.abstractmethod
     def close(self) -> bool:
@@ -51,7 +55,7 @@ class hardwareBase(abc.ABC):
 
     @abc.abstractmethod
     def reset(self) -> None:
-        """Reset hardware"""
+        """Reset hardware to a known state. Used for resetting the hardware to a known state"""
 
     @abc.abstractmethod
     def get_sensors(self) -> dict:
