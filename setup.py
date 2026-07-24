@@ -60,7 +60,7 @@ setup(
     install_requires=[
         "click",
         # 'gym==0.13',  # default to this stable point if caught in gym issues.
-        "gymnasium==0.29.1",
+        "gymnasium>=0.29.1",
         "mujoco==3.3.3",
         "numpy>=2",
         "dm-control==1.0.31",
