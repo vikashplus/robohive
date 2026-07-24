@@ -1,6 +1,6 @@
 import numpy as np
 # from hardware_base import hardwareBase
-from robohive.robot.hardware_base import hardwareBase
+from robohive.robot.hardware_base import hardwareBase, register_hardware
 
 import argparse
 import a0
@@ -19,6 +19,7 @@ sensor_msgs = serdes.get_capnp_msgs('sensor_msgs')
 class RealSense(hardwareBase):
     def __init__(self, name, rgb_topic=None, d_topic=None, **kwargs):
         assert rgb_topic or d_topic, "Atleast one of the topics is needed"
+        self.name = name
         self.rgb_topic = rgb_topic
         self.d_topic = d_topic
         self.last_image_pkt = None
@@ -26,6 +27,10 @@ class RealSense(hardwareBase):
         self.last_depth_pkt = None
         self.most_recent_pkt_ts = None
         self.timeout = 1 # in seconds
+
+    def recover(self) -> None:
+        """Recover hardware from any error, connection loss, failure, etc"""
+        self.connect()
 
     def connect(self):
         # sub to the topics
@@ -95,6 +100,17 @@ class RealSense(hardwareBase):
     def reset(self):
         return 0
 
+
+def _realsense_factory(name, **iface):
+    """Try the a0-based RealSense first, fall back to the direct pyrealsense2 wrapper."""
+    try:
+        return RealSense(name=name, **iface)
+    except Exception:
+        from .hardware_realsense_single import RealsenseAPI
+        return RealsenseAPI(name=name, **iface)
+
+
+register_hardware('realsense')(_realsense_factory)
 
 
 # Get inputs from user

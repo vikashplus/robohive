@@ -9,6 +9,31 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 import abc
 import warnings
 
+# Registry mapping robot_config's interface['type'] string -> hardwareBase subclass.
+# Populated by @register_hardware(type_name) decorators on concrete hardware classes.
+HARDWARE_REGISTRY = {}
+SENSOR_POSTPROCESS = {}
+
+
+def register_hardware(type_name, sensor_postprocess=None):
+    """Registers a hardwareBase subclass (or a factory function returning one) against an
+    interface['type'] string. Usable as a class decorator, or called directly with a
+    factory function (e.g. one that tries a preferred implementation and falls back to
+    an alternate one).
+
+    sensor_postprocess(raw: dict) -> np.ndarray, optional: transforms the dict returned by
+    get_sensors() into other formats.
+    """
+    def _decorator(cls_or_factory):
+        if isinstance(cls_or_factory, type):
+            assert issubclass(cls_or_factory, hardwareBase), \
+                f"{cls_or_factory} must subclass hardwareBase to be registered"
+        HARDWARE_REGISTRY[type_name] = cls_or_factory
+        if sensor_postprocess is not None:
+            SENSOR_POSTPROCESS[type_name] = sensor_postprocess
+        return cls_or_factory
+    return _decorator
+
 
 class hardwareBase(abc.ABC):
 

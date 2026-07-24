@@ -2,11 +2,14 @@ import numpy as np
 import pyrealsense2 as rs
 from collections import OrderedDict
 
+from robohive.robot.hardware_base import hardwareBase
 
-class RealsenseAPI:
+
+class RealsenseAPI(hardwareBase):
     """Wrapper that implements boilerplate code for RealSense cameras"""
 
-    def __init__(self, device_id=None, height=480, width=640, fps=30, warm_start=30, type=None,):
+    def __init__(self, name='realsense', device_id=None, height=480, width=640, fps=30, warm_start=30, type=None, **kwargs):
+        self.name = name
         self.height = height
         self.width = width
         self.fps = fps
@@ -72,6 +75,10 @@ class RealsenseAPI:
 
     def okay(self):
         return True
+
+    def recover(self) -> None:
+        """Recover hardware from any error, connection loss, failure, etc"""
+        self.connect()
 
     def apply_commands(self):
         return 0
