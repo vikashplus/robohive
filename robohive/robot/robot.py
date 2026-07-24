@@ -5,6 +5,7 @@ Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
+import inspect
 import os
 import time
 from collections import deque
@@ -13,8 +14,8 @@ import mujoco
 import numpy as np
 
 from robohive.physics.sim_scene import SimScene
+from robohive.robot.hardware_base import HARDWARE_REGISTRY, SENSOR_POSTPROCESS
 from robohive.utils.prompt_utils import Prompt, prompt
-from robohive.utils.quat_math import quat2euler
 
 np.set_printoptions(precision=4)
 
@@ -35,9 +36,9 @@ _ROBOT_VIZ = False
 # nq should be nv
 # Order of sensors and actuators in config should follow XML order
 # Space definitions
-    # sim_id: ID of the sensor/actuator in the sim
-    # hdr_id: ID of the sensor/actuator in the robot_config (hardware) space (robot_config unifies different hardware into a single unified hardware space)
-    # adr: Address of the sensor/actuator in the individual hardware space (e.g. dynamixel) (This is the address used during communicate with the individual hardware)
+    # sim_id: ID (defined by order in mujoco's xml) of the sensor/actuator in the sim
+    # hdr_id: ID (defined by the order in .config) of the sensor/actuator in the robot_config (hardware) space (robot_config unifies different hardware into a single unified hardware space)
+    # hdr_adr: Physical address of the sensor/actuator (defined by hardware specs) (e.g. dynamixel - This is the address/motor_id used to communicate with the individual motors)
 
 
 
@@ -127,63 +128,26 @@ class Robot():
         # initalize
         for name, device in robot_config.items():
             prompt("Initializing device: %s"%(name), 'white', 'on_grey')
-            if device['interface']['type'] == 'dynamixel':
-                # initialize dynamixels
-                from dynamixel_py import dxl
-                ids = np.unique([device['sensor_ids'] + device['actuator_ids']]).tolist()
-                device['robot'] = dxl(motor_id=ids, motor_type=\
-                    device['interface']['motor_type'], devicename= device['interface']['name'])
-
-                # from .hardware_dynamixel import Dynamixels
-                # motor_ids = np.unique([device['sensor_ids'] + device['actuator_ids']]).tolist()
-                # device['robot'] = Dynamixels(name=name, motor_ids=motor_ids, motor_type=device['interface']['motor_type'], devicename= device['interface']['name'])
-
-            elif device['interface']['type'] == 'optitrack':
-                from .hardware_optitrack import OptiTrack
-                device['robot'] = OptiTrack(ip=device['interface']['client_name'], \
-                    port=device['interface']['port'], packet_size=device['interface']['packet_size'])
-
-            elif device['interface']['type'] == 'franka':
-                from .hardware_franka import FrankaArm
-                device['robot'] = FrankaArm(name=name, **device['interface'])
-
-            elif device['interface']['type'] == 'realsense':
-                try:
-                    from .hardware_realsense import RealSense
-                    device['robot'] = RealSense(name=name, **device['interface'])
-                except:
-                    from .hardware_realsense_single import RealsenseAPI
-                    device['robot'] = RealsenseAPI(**device['interface'])
-
-            elif device['interface']['type'] == 'robotiq':
-                from .hardware_robotiq import Robotiq
-                device['robot'] = Robotiq(name=name, **device['interface'])
-
-            else:
-                print("ERROR: interface ({}) not found".format(device['interface']['type']))
-                raise NotImplemented
+            itype = device['interface']['type']
+            cls = HARDWARE_REGISTRY.get(itype)
+            if cls is None:
+                raise NotImplementedError(
+                    "No hardwareBase registered for interface.type={!r}. Registered types: {}. "
+                    "Import the module that registers this type before constructing "
+                    "Robot(is_hardware=True).".format(itype, sorted(HARDWARE_REGISTRY)))
+            iface = {k: v for k, v in device['interface'].items() if k != 'type'}
+            # Most hardware classes are self-contained (ip/port/etc. from `interface` is
+            # enough). A few (dynamixel-bus devices, which manage several motors sharing
+            # one connection and need per-motor address/mode bookkeeping) opt in to
+            # receiving the full robot_config device dict by naming `device` as a
+            # constructor parameter; everyone else never sees it.
+            if 'device' in inspect.signature(cls).parameters:
+                iface['device'] = device
+            device['robot'] = cls(name=name, **iface)
 
         # start all hardware
         for name, device in robot_config.items():
-
-            # Dynamixels
-            if device['interface']['type'] == 'dynamixel':
-                device['robot'].open_port()
-
-                # set actuator mode
-                for actuator in device['actuator']:
-                    device['robot'].set_operation_mode(motor_id=[actuator['adr']], mode=actuator['mode'])
-
-                # engage motors
-                device['robot'].engage_motor(motor_id=device['actuator_ids'], enable=True)
-
-            # Other devices
-            elif device['interface']['type'] in ['optitrack', 'franka', 'realsense', 'robotiq']:
-                device['robot'].connect()
-
-            else:
-                print("ERROR: interface ({}) not found".format(device['interface']['type']))
-                raise NotImplementedError
+            device['robot'].connect()
 
         return robot_config
 
@@ -194,115 +158,67 @@ class Robot():
         current_sensor_value['time'] = time.time() - self.time_start
         for name, device in self.robot_config.items():
             if 'sensor' in device.keys() and len(device['sensor'])>0:
-                # get sensors
-                if device['interface']['type'] == 'dynamixel':
-                    # TODO: choose between pos, vel, or posvel
-                    current_sensor_value[name] = device['robot'].get_pos(device['sensor_ids'])
-                    current_sensor_value[name+'_vel'] = device['robot'].get_vel(device['sensor_ids'])
+                itype = device['interface']['type']
+                raw = device['robot'].get_sensors()
+                postprocess = SENSOR_POSTPROCESS.get(itype, lambda raw: raw['pos'])
+                vals = postprocess(raw)
 
-                elif device['interface']['type'] == 'optitrack':
-                    data = device['robot'].get_sensors()
-                    c, b, a = quat2euler(data['quat'])
-                    rx = np.pi - a
-                    rx = (rx - 2*np.pi) if rx > np.pi else rx
-                    ry = b
-                    rz = -c
-                    # print("Pos:", x, y, z)
-                    # print("Rotations:", rx, ry, rz)
-                    current_sensor_value[name] = np.concatenate([data['pos'], np.array([rx, ry, rz])])
-                    # current_sensor_value[name] = np.array([x, y, z, 0, 0, 0])
-                    # current_sensor_value[name] = np.array([x, y, z, -(a+np.pi/2), -c, -b])
-
-                elif device['interface']['type'] == 'franka':
-                    sensors = device['robot'].get_sensors()
-                    current_sensor_value[name] = np.concatenate([sensors['joint_pos'], sensors['joint_vel']])
-
-                elif device['interface']['type'] == 'robotiq':
-                    sensors = device['robot'].get_sensors()
-                    current_sensor_value[name] = sensors
-
-                else:
-                    print("ERROR: interface ({}) not found".format(device['interface']['type']))
-                    raise NotImplementedError
-
-                # calibrate sensors
+                # calibrate sensors. vals is positionally ordered to match device['sensor']
+                # (both built by iterating the same config-declared list, see configure_robot()).
+                arr = np.empty(len(device['sensor']), dtype=np.float64)
                 for id, sensor in enumerate(device['sensor']):
-                    current_sensor_value[name][id] = current_sensor_value[name][id]*sensor['scale'] + sensor['offset']
-                device['sensor_data'] = current_sensor_value[name]
+                    arr[id] = vals[id]*sensor['scale'] + sensor['offset']
+                current_sensor_value[name] = arr
+                device['sensor_data'] = arr
                 device['sensor_time'] = current_sensor_value['time']
         return current_sensor_value
 
 
     # apply controls to hardware
-    def hardware_apply_controls(self, control, space='hdr', is_reset=False):
+    def hardware_apply_controls(self, control, space='hdr'):
         """
+        Send one dt's worth of (already-clipped, locally-achievable) controls to hardware.
         control: control vector in hdr or sim space
         space: 'hdr' or 'sim' (defaults to 'hdr' as represented in robot_config)
-        is_reset: if True, reset the hardware to the control values
         """
 
         for name, device in self.robot_config.items():
             if 'actuator' in device.keys() and len(device['actuator'])>0:
-                if device['interface']['type'] == 'dynamixel':
-                    # group as per mode
-                    pos_ctrl = []
-                    pos_ids = []
-                    pwm_ctrl = []
-                    pwm_ids = []
-                    for actuator in device['actuator']:
-                        ctrl = control[actuator['sim_id']] if space == 'sim' else control[actuator['hdr_id']]
-                        # calibrate
-                        calib_ctrl = ctrl*actuator['scale']+ actuator['offset']
-                        if actuator['mode'] == 'Position':
-                            pos_ids.append(actuator['adr'])
-                            pos_ctrl.append(calib_ctrl)
-                        elif actuator['mode'] == 'PWM':
-                            pwm_ids.append(actuator['adr'])
-                            pwm_ctrl.append(calib_ctrl)
-                        else:
-                            print("ERROR: Mode not found")
-                            raise NotImplementedError(f"ERROR: Actuator mode {actuator['mode']} not found")
-                    # send controls
-                    if pos_ids:
-                        device['robot'].set_des_pos(pos_ids, pos_ctrl)
-                    if pwm_ids:
-                        device['robot'].set_des_pwm(pwm_ids, pwm_ctrl)
+                # hw_q is positionally ordered to match device['actuator'] (both built by
+                # iterating the same config-declared list, see configure_robot()).
+                hw_q = []
+                for actuator in device['actuator']:
+                    ctrl = control[actuator['sim_id']] if space == 'sim' else control[actuator['hdr_id']]
+                    hw_q.append(ctrl*actuator['scale'] + actuator['offset'])
+                device['robot'].apply_commands(hw_q)
 
-                elif device['interface']['type'] in ['franka', 'robotiq']:
-                    des_pos = []
-                    for actuator in device['actuator']:
-                        ctrl = control[actuator['sim_id']] if space == 'sim' else control[actuator['hdr_id']]
-                        # calibrate
-                        des_pos.append(ctrl*actuator['scale']+ actuator['offset'])
-                    if is_reset:
-                        device['robot'].reset(des_pos)
-                    else:
-                        device['robot'].apply_commands(des_pos)
-                else:
-                    raise NotImplementedError("ERROR: interface not found")
 
+    # move actuated dofs to a target position (blocking, large-displacement — distinct from
+    # the per-dt hardware_apply_controls above; hardware classes implement this via their own
+    # min-jerk/via-point trajectories)
+    def hardware_reset(self, reset_pos):
+        for name, device in self.robot_config.items():
+            if name == 'default_robot':
+                continue
+            qpos_actuators = [a for a in device.get('actuator', []) if a['data_type'] == 'qpos']
+            if qpos_actuators:
+                hw_q = [np.clip(reset_pos[a['data_id']], a['pos_range'][0], a['pos_range'][1])
+                        for a in qpos_actuators]
+                device['robot'].reset(hw_q)
+            else:
+                # passive device (tendon-driven gripper, camera, etc.) — no qpos target to
+                # compute; let the device bring itself to its own known reset state
+                device['robot'].reset()
 
     # close hardware
     def hardware_close(self):
         status = True
         for name, device in self.robot_config.items():
-            if device['interface']['type'] == 'dynamixel':
-                if device['robot']:
-                    print("Closing dynamixel connection")
-                    ids = np.unique([device['sensor_ids'] + device['actuator_ids']]).tolist()
-                    status = device['robot'].close(ids)
-                    if status is True:
-                        device['robot']= None
-            elif device['interface']['type'] in ['optitrack', 'franka', 'realsense', 'robotiq']:
-                if device['robot']:
-                    print("Closing {} connection".format(device['interface']['type']))
-                    status = device['robot'].close()
-                    if status is True:
-                        device['robot']= None
-            else:
-                print("ERROR: interface not found")
-                raise NotImplemented
-
+            if device.get('robot'):
+                print("Closing {} connection".format(device['interface']['type']))
+                status = device['robot'].close()
+                if status is True:
+                    device['robot'] = None
         return status
 
 
@@ -333,7 +249,7 @@ class Robot():
                 sensor['hdr_id'] = hdr_sensor_id
                 sensor['sim_id'] = sim.model.sensor_name2id(sensor['name'])
                 device['sensor_names'].append(sensor['name']) # list of all ids
-                device['sensor_ids'].append(sensor['adr']) # list of all ids
+                device['sensor_ids'].append(sensor['hdr_adr']) # list of all ids
                 sensor_type = sim.model.sensor_type[sensor['sim_id']]
                 sensor_objid = sim.model.sensor_objid[sensor['sim_id']]
                 # sensordata_id: address in sim.data.sensordata for this sensor.
@@ -360,7 +276,7 @@ class Robot():
                 actuator['hdr_id'] = hdr_actuator_id
                 actuator['sim_id'] = sim.model.actuator_name2id(actuator['name'])
                 device['actuator_names'].append(actuator['name']) # list of all ids
-                device['actuator_ids'].append(actuator['adr']) # list of all ids
+                device['actuator_ids'].append(actuator['hdr_adr']) # list of all ids
                 actuator_trntype = sim.model.actuator_trntype[actuator['sim_id']]
                 actuator_trnid = sim.model.actuator_trnid[actuator['sim_id'], 0]
                 if actuator_trntype == mujoco.mjtTrn.mjTRN_JOINT:  # // force on joint
@@ -456,8 +372,14 @@ class Robot():
             for ind, cam_name in enumerate(cameras):
                 assert cam_name in self.robot_config.keys(), "{} camera not found".format(cam_name)
                 device = self.robot_config[cam_name]
-                assert device['interface']['type'] == 'realsense', "Check interface type for {}".format(cam)
-                data = device['robot'].get_sensors()
+
+                if hasattr(device['robot'], 'get_frame'):
+                    # RGB-only camera (e.g. a UVC/webcam) — no depth stream.
+                    rgb = device['robot'].get_frame()
+                    data = {'time': time.time() - self.time_start, 'rgb': rgb, 'd': None}
+                else:
+                    # RealSense-style camera: get_sensors() itself returns {'rgb','d'}.
+                    data = device['robot'].get_sensors()
                 data_height = data['rgb'].shape[0]
                 assert data_height == height, "Incorrect image height: required:{}, found:{}".format(height, data_height)
                 data_width = data['rgb'].shape[1]
@@ -466,11 +388,12 @@ class Robot():
 
                 # calibrate sensors
                 for cam in device['cam']:
-                    current_sensor_value[cam_name][cam['adr']] = current_sensor_value[cam_name][cam['adr']]*cam['scale'] + cam['offset']
+                    current_sensor_value[cam_name][cam['hdr_adr']] = current_sensor_value[cam_name][cam['hdr_adr']]*cam['scale'] + cam['offset']
                 device['sensor_data'] = current_sensor_value[cam_name]
                 device['sensor_time'] = current_sensor_value['time']
                 imgs[ind, :, :, :] = current_sensor_value[cam_name]['rgb']
-                depths[ind, :, :] = current_sensor_value[cam_name]['d'][:,:,0] # assumes single channel depth
+                if current_sensor_value[cam_name]['d'] is not None:
+                    depths[ind, :, :] = current_sensor_value[cam_name]['d'][:,:,0] # assumes single channel depth
 
         else:
             imgs = np.zeros((len(cameras), height, width, 3), dtype=np.uint8)
@@ -759,14 +682,12 @@ class Robot():
         #   for passive dofs => sensor specs
         feasibe_pos = reset_pos.copy()
         feasibe_vel = reset_vel.copy()
-        ctrl_feasible=[]
         for name, device in self.robot_config.items():
             if name != "default_robot":
                 if len(device['actuator'])>0: # actuated dofs
                     for actuator in device['actuator']:
                         if actuator['data_type'] == 'qpos':
                             feasibe_pos[actuator['data_id']] = np.clip(reset_pos[actuator['data_id']], actuator['pos_range'][0], actuator['pos_range'][1])
-                            ctrl_feasible.append(feasibe_pos[actuator['data_id']])
                 else: # passive dofs
                     for sensor in device['sensor']:
                         if sensor['data_type'] == 'qpos':
@@ -778,11 +699,8 @@ class Robot():
             t_reset_start = time.time()
             prompt("\nRollout took:{}".format(t_reset_start- self.time_start))
             prompt("\aResetting {}: ".format(self.name), 'white', 'on_grey', flush=True, end="")
-            # send request to the actuated dofs
-            self.hardware_apply_controls(ctrl_feasible, is_reset=True)
-
-            # engage other reset mechanisms for passive dofs
-            # TODO raise NotImplementedError
+            # send request to all devices, actuated and passive alike
+            self.hardware_reset(feasibe_pos)
 
             if blocking:
                 input("press a key to start rollout")
