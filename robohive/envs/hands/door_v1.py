@@ -59,8 +59,8 @@ class DoorEnvV1(env_base.MujocoEnv):
                        weighted_reward_keys=weighted_reward_keys,
                        reward_mode=reward_mode,
                        frame_skip=frame_skip,
+                       init_qpos=np.zeros(sim.data.qpos.shape),
                        **kwargs)
-        self.init_qpos = np.zeros(self.init_qpos.shape)
         self.init_qvel = np.zeros(self.init_qpos.shape)
 
 

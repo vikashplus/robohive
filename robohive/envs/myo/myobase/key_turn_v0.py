@@ -54,11 +54,14 @@ class KeyTurnEnvV0(BaseV0):
         self.key_init_range = key_init_range
         self.key_init_pos = self.sim.data.site_xpos[self.keyhead_sid].copy()
 
+        init_qpos = self.sim.data.qpos.ravel().copy()
+        init_qpos[:-1] *= 0 # Use fully open as init pos
+
         super()._setup(obs_keys=obs_keys,
                     weighted_reward_keys=weighted_reward_keys,
+                    init_qpos=init_qpos,
                     **kwargs,
         )
-        self.init_qpos[:-1] *= 0 # Use fully open as init pos
 
     def get_obs_vec(self):
         self.obs_dict['time'] = np.array([self.sim.data.time])
