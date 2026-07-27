@@ -131,11 +131,9 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
         super()._setup(obs_keys=obs_keys,
                     weighted_reward_keys=weighted_reward_keys,
                     frame_skip=frame_skip,
+                    init_qpos=self.sim.model.key_qpos[0].copy(),
                     **kwargs,
                 )
-
-        # reset position
-        self.init_qpos = self.sim.model.key_qpos[0].copy()
         # self.init_qpos[:-14] *= 0 # Use fully open as init pos
 
         # V0: Centered the action space around key_qpos[0]. Not sure if it matter.

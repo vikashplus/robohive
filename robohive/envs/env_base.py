@@ -74,6 +74,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                obs_range:tuple = (-10, 10), # Permissible range of values in obs vector returned by get_obs()
                rwd_viz:bool = False,        # Visualize rewards (WIP, needs vtils)
                device_id:int = 0,           # Device id for rendering
+               init_qpos = None,            # Explicit reset/home qpos. Auto-computed (mid actuator range) if not provided
                **kwargs,                    # Additional arguments
         ):
 
@@ -87,7 +88,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.viewer_setup()
 
         # resolve robot config
-        self.robot = Robot(mj_sim=self.sim,
+        robot_cls = kwargs.pop('robot_cls', Robot)
+        self.robot = robot_cls(mj_sim=self.sim,
                            random_generator=self.np_random,
                            **kwargs)
 
@@ -100,18 +102,25 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         # resolve initial state
         self.init_qvel = self.sim.data.qvel.ravel().copy()
-        self.init_qpos = self.sim.data.qpos.ravel().copy() # has issues with initial jump during reset
-        # self.init_qpos = np.mean(self.sim.model.actuator_ctrlrange, axis=1) if self.normalize_act else self.sim.data.qpos.ravel().copy() # has issues when nq!=nu
-        # self.init_qpos[self.sim.model.jnt_dofadr] = np.mean(self.sim.model.jnt_range, axis=1) if self.normalize_act else self.sim.data.qpos.ravel().copy()
-        if self.normalize_act:
-            # find all linear+actuated joints. Use mean(jnt_range) as init position
-            actuated_jnt_ids = self.sim.model.actuator_trnid[self.sim.model.actuator_trntype==self.sim.lib.mjtTrn.mjTRN_JOINT, 0] # dm
-            linear_jnt_ids = np.logical_or(self.sim.model.jnt_type==self.sim.lib.mjtJoint.mjJNT_SLIDE, self.sim.model.jnt_type==self.sim.lib.mjtJoint.mjJNT_HINGE)
-            linear_jnt_ids = np.where(linear_jnt_ids==True)[0]
-            linear_actuated_jnt_ids = np.intersect1d(actuated_jnt_ids, linear_jnt_ids)
-            # assert np.any(actuated_jnt_ids==linear_actuated_jnt_ids), "Wooho: Great evidence that it was important to check for actuated_jnt_ids as well as linear_actuated_jnt_ids"
-            linear_actuated_jnt_qposids = self.sim.model.jnt_qposadr[linear_actuated_jnt_ids]
-            self.init_qpos[linear_actuated_jnt_qposids] = np.mean(self.sim.model.jnt_range[linear_actuated_jnt_ids], axis=1)
+        if init_qpos is not None:
+            # use the provided init_pos
+            self.init_qpos = np.array(init_qpos, dtype=np.float64).ravel().copy()
+        else:
+            # create one if not provided
+            self.init_qpos = self.sim.data.qpos.ravel().copy() # has issues with initial jump during reset
+            if self.normalize_act:
+                # find all linear+actuated joints. Use mean(jnt_range) as init position
+                actuated_jnt_ids = self.sim.model.actuator_trnid[self.sim.model.actuator_trntype==self.sim.lib.mjtTrn.mjTRN_JOINT, 0] # dm
+                linear_jnt_ids = np.logical_or(self.sim.model.jnt_type==self.sim.lib.mjtJoint.mjJNT_SLIDE, self.sim.model.jnt_type==self.sim.lib.mjtJoint.mjJNT_HINGE)
+                linear_jnt_ids = np.where(linear_jnt_ids==True)[0]
+                linear_actuated_jnt_ids = np.intersect1d(actuated_jnt_ids, linear_jnt_ids)
+                linear_actuated_jnt_qposids = self.sim.model.jnt_qposadr[linear_actuated_jnt_ids]
+                self.init_qpos[linear_actuated_jnt_qposids] = np.mean(self.sim.model.jnt_range[linear_actuated_jnt_ids], axis=1)
+            if self.robot.is_hardware:
+                prompt(f"WARNING: {self.robot.name} is hardware-backed but no init_qpos was provided — "
+                       "defaulting to the mid-range actuator pose. Pass init_qpos explicitly "
+                       "to control where the robot homes to on reset.",
+                        type=Prompt.WARN)
 
         # resolve rewards
         self.rwd_dict = {}
@@ -131,10 +140,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.visual_keys = visual_keys if type(visual_keys)==list or visual_keys==None else [visual_keys]
         self._setup_rgb_encoders(self.visual_keys, device=None)
 
-        # reset to get the env ready
-        observation, _reward, done, *_, _info = self.step(np.zeros(self.sim.model.nu))
-        # Question: Should we replace above with following? Its specially helpful for hardware as it forces a env reset before continuing, without which the hardware will make a big jump from its position to the position asked by step.
-        # observation = self.reset()
+        # reset to get the env ready. Using reset() rather than step(zeros) routes hardware
+        # through Robot.reset()'s min-jerk hardware_reset(), instead of jumping straight to
+        # a raw ctrl command from whatever pose the robot is currently in.
+        self.reset()
+        observation, _reward, done, *_, _info = self.forward()
         assert not done, "Check initialization. Simulation starts in a done state."
         self.observation_space = gym.spaces.Box(obs_range[0]*np.ones(observation.size), obs_range[1]*np.ones(observation.size), dtype=np.float32)
 

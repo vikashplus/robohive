@@ -5,7 +5,8 @@ Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
-from darwin.darwin_robot.hardware_base import hardwareBase
+from robohive.robot.hardware_base import hardwareBase, register_hardware
+from robohive.utils.quat_math import quat2euler
 import numpy as np
 import socket
 import argparse
@@ -15,6 +16,17 @@ from collections import deque
 
 _USE_UDP = True
 
+
+def _optitrack_sensor_postprocess(raw):
+    c, b, a = quat2euler(raw['quat'])
+    rx = np.pi - a
+    rx = (rx - 2*np.pi) if rx > np.pi else rx
+    ry = b
+    rz = -c
+    return np.concatenate([raw['pos'], np.array([rx, ry, rz])])
+
+
+@register_hardware('optitrack', sensor_postprocess=_optitrack_sensor_postprocess)
 class OptiTrack(hardwareBase):
     """
     OptiTrack Client: Connects to the server and receives streaming data
@@ -27,9 +39,11 @@ class OptiTrack(hardwareBase):
     # Cached client that is shared for the application lifetime.
     _OPTI_CLIENT = None
 
-    def __init__(self, ip: str, port:int=5000, packet_size:int=36, cache_maxsize:int=0):
+    def __init__(self, name='optitrack', ip: str = None, client_name: str = None, port:int=5000, packet_size:int=36, cache_maxsize:int=0, **kwargs):
+        self.name = name
         if self._OPTI_CLIENT is None:
-            self.ip = ip
+            # robot_config's interface dict historically names this key 'client_name'
+            self.ip = ip if ip is not None else client_name
             self.port = port
             self.packet_size = packet_size
             self._sensor_cache_maxsize = cache_maxsize
@@ -93,6 +107,12 @@ class OptiTrack(hardwareBase):
         self.connect()
 
 
+    def recover(self) -> None:
+        """Recover hardware from any error, connection loss, failure, etc"""
+        self.close()
+        self.connect()
+
+
     # [t, id, x, y, z, q0, q1, q2, q3, q4]
     def read_sensor(self):
         # receive response
@@ -134,7 +154,7 @@ class OptiTrack(hardwareBase):
                     self.data_float[2], self.data_float[3], self.data_float[4])
 
     # get latest sensor value (helpful when there is a single sensors)
-    def _get_sensors(self) -> dict:
+    def get_sensors(self) -> dict:
         # sensor_data isn't updated in place ==> it can be easily passed around and cached
         # repeated calls will return the same data_frame ==> no overhead for multiple queries to the same sensor reading
         return self.sensor_data

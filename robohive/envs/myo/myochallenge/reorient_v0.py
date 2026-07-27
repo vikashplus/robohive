@@ -67,12 +67,15 @@ class ReorientEnvV0(BaseV0):
         self.obj_friction_range = {'low':self.sim.model.geom_friction[self.object_gid0:self.object_gidn] - obj_friction_change,
                                     'high':self.sim.model.geom_friction[self.object_gid0:self.object_gidn] + obj_friction_change}
 
+        init_qpos = self.sim.data.qpos.ravel().copy()
+        init_qpos[:-7] *= 0 # Use fully open as init pos
+        init_qpos[0] = -1.5 # Palm up
+
         super()._setup(obs_keys=obs_keys,
                     weighted_reward_keys=weighted_reward_keys,
+                    init_qpos=init_qpos,
                     **kwargs,
         )
-        self.init_qpos[:-7] *= 0 # Use fully open as init pos
-        self.init_qpos[0] = -1.5 # Palm up
 
     def get_obs_dict(self, sim):
         obs_dict = {}

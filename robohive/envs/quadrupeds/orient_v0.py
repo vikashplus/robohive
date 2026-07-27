@@ -91,6 +91,8 @@ class OrientBaseV0(env_base.MujocoEnv):
                        **kwargs)
 
         # configure
+        # self.robot (and its robot_config) is only created inside super()._setup(), so this
+        # can't be computed earlier and passed via the init_qpos kwarg like other envs.
         for name, device in self.robot.robot_config.items():
             for act_id, actuator in enumerate(device['actuator']):
                 self.init_qpos[actuator['data_id']] = np.mean(actuator['pos_range'])

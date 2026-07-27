@@ -112,6 +112,13 @@ class KitchenBase(env_base.MujocoEnv):
         self.input_obj_init = obj_init
         self.set_obj_goal(obj_goal=self.input_obj_goal, interact_site=interact_site)
 
+        # Recover init from the saved qposes and input specs before super()._setup(), since it
+        # triggers the first reset() which relies on init_qpos already reflecting these values.
+        keyFrame_id = 0
+        self.init_qpos = self.sim.model.key_qpos[keyFrame_id].copy()
+        if obj_init:
+            self.set_obj_init(self.input_obj_init)
+
         super()._setup(obs_keys=obs_keys_wt,
                        proprio_keys=proprio_keys_wt,
                        weighted_reward_keys=weighted_reward_keys,
@@ -119,15 +126,9 @@ class KitchenBase(env_base.MujocoEnv):
                        act_mode=act_mode,
                        obs_range=obs_range,
                        robot_name=robot_name,
+                       init_qpos=self.init_qpos,
                        **kwargs)
-
-
-        # Recover init from the saved qposes and input specs
-        keyFrame_id = 0
-        self.init_qpos[:] = self.sim.model.key_qpos[keyFrame_id].copy()
         self.init_qvel[:] = self.sim.model.key_qvel[keyFrame_id].copy()
-        if obj_init:
-            self.set_obj_init(self.input_obj_init)
 
 
     def get_dof_proximity(self, obj_dof_ranges, obj_dof_type):
