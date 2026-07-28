@@ -18,6 +18,7 @@ from PIL import Image
 
 from robohive.utils import gym
 from robohive.utils.dict_utils import dict_numpify, flatten_dict
+from robohive.logger.grouped_datasets import Trace
 
 #TODO: Harmonize names, remove rollout_paths, use path for one and paths for multiple
 
@@ -28,6 +29,8 @@ ROLLOUT_EXTENSIONS = ('.h5', '.pickle')
 def _normalize_paths(paths):
     if isinstance(paths, (list, tuple)):
         return {'Trial{}'.format(i): path for i, path in enumerate(paths)}
+    if isinstance(paths, Trace):
+        return dict(paths.trace)
     return paths
 
 
