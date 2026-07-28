@@ -113,8 +113,8 @@ def main(env_name, policy_path, mode, seed, num_episodes, render, camera_name, o
 
     # plot paths
     if plot_paths:
-        file_name = output_dir + '/' + output_name + '{}'.format(time_stamp)
-        plotnsave_paths(paths, env=env, fileName_prefix=file_name)
+        file_name = output_name + '{}'.format(time_stamp)
+        plotnsave_paths(paths, env_handle=env, output_dir=output_dir, output_name=file_name)
 
     # render visuals keys
     if env.visual_keys and render_visuals:
