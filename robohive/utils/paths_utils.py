@@ -10,7 +10,6 @@ import json
 import os
 import pickle
 
-import anthrohive
 import click
 import h5py
 import numpy as np
@@ -391,7 +390,11 @@ def render(path_handle, render_format:str="mp4", cam_names:list=["left"], output
             data = path['data']
             path_horizon = data['time'].shape[0]
         else:
-            data = path['env_infos']['obs_dict']
+            obs_dict = path['env_infos']['obs_dict']
+            data = {key: obs_dict[key] for key in obs_dict.keys()}
+            if 'visual_dict' in path['env_infos'].keys():
+                visual_dict = path['env_infos']['visual_dict']
+                data.update({key: visual_dict[key] for key in visual_dict.keys()})
             path_horizon = path['env_infos']['time'].shape[0]
 
         # find full key name
