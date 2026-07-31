@@ -196,14 +196,23 @@ class Robot():
     # move actuated dofs to a target position (blocking, large-displacement — distinct from
     # the per-dt hardware_apply_controls above; hardware classes implement this via their own
     # min-jerk/via-point trajectories)
-    def hardware_reset(self, reset_pos):
+    def hardware_reset(self, reset_pos, space='sim'):
+        """
+        reset_pos: target qpos vector
+        space: 'sim' (full sim qpos vector, addressed via data_id) or
+               'hdr' (per-actuator vector ordered by hdr_id, as in hardware_apply_controls)
+        """
+        assert space in ['sim', 'hdr'], "space must be 'sim' or 'hdr'"
         for name, device in self.robot_config.items():
             if name == 'default_robot':
                 continue
             qpos_actuators = [a for a in device.get('actuator', []) if a['data_type'] == 'qpos']
             if qpos_actuators:
-                hw_q = [np.clip(reset_pos[a['data_id']], a['pos_range'][0], a['pos_range'][1])
-                        for a in qpos_actuators]
+                hw_q = []
+                for a in qpos_actuators:
+                    pos = reset_pos[a['data_id']] if space == 'sim' else reset_pos[a['hdr_id']]
+                    pos = np.clip(pos, a['pos_range'][0], a['pos_range'][1])
+                    hw_q.append(pos*a['scale'] + a['offset'])
                 device['robot'].reset(hw_q)
             else:
                 # passive device (tendon-driven gripper, camera, etc.) — no qpos target to
@@ -534,7 +543,7 @@ class Robot():
                         act_rng = (actuator['pos_range'][1]-actuator['pos_range'][0])/2.0
                     elif self._act_mode == "vel":
                         act_mid = (actuator['vel_range'][1]+actuator['vel_range'][0])/2.0
-                        act_rng = (actuator['vel_range'][1]-actuator['pos_range'][0])/2.0
+                        act_rng = (actuator['vel_range'][1]-actuator['vel_range'][0])/2.0
                     else:
                         raise TypeError("Unknown act mode: {}".format(self._act_mode))
 
@@ -700,7 +709,8 @@ class Robot():
             prompt("\nRollout took:{}".format(t_reset_start- self.time_start))
             prompt("\aResetting {}: ".format(self.name), 'white', 'on_grey', flush=True, end="")
             # send request to all devices, actuated and passive alike
-            self.hardware_reset(feasibe_pos)
+            # feasibe_pos was built above via actuator['data_id'] indexing, i.e. sim space
+            self.hardware_reset(feasibe_pos, space='sim')
 
             if blocking:
                 input("press a key to start rollout")
