@@ -534,12 +534,32 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     #     return self.step(a)
 
 
-    def close(self):
+    def close(self, close_hardware=True):
         """
         Clean up the environment
+        close_hardware: True (default) closes the robot's persistent hardware connection.
+                        False leaves it open so a later env.make(is_hardware=True) can
+                        reuse the same connection instead of reconnecting.
         """
-        if self.sim:
+        self._explicitly_closed = True
+        if getattr(self, 'robot', None):
+            self.robot.close(close_hardware=close_hardware)
+        if getattr(self, 'sim_obsd', None) and self.sim_obsd is not self.sim:
+            self.sim_obsd.close()
+        if getattr(self, 'sim', None):
             self.sim.close()
+
+    # Warn (don't auto-cleanup) if a hardware-backed env is garbage collected without
+    # close() ever being called. Mirrors Robot.__del__: cleanup must stay an explicit,
+    # deliberate action (esp. for close_hardware=False reuse), not something GC timing decides.
+    def __del__(self):
+        if getattr(self, 'robot', None) and getattr(self.robot, 'is_hardware', False) \
+                and not getattr(self, '_explicitly_closed', False):
+            raise RuntimeWarning(
+                f"RoboHive:> {type(self).__name__} is being garbage collected without close() ever being called. "
+                "If hardware is still connected, this leaves the persistent connection dangling. "
+                "Call env.close() (or env.close(close_hardware=False) to intentionally keep the "
+                "hardware connection alive) before letting the env go out of scope.")
 
     @property
     def dt(self):
