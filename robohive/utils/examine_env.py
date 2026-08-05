@@ -122,5 +122,8 @@ def main(env_name, policy_path, mode, seed, num_episodes, render, camera_name, o
         render_keys = ['env_infos/visual_dict/'+ key for key in env.visual_keys]
         paths.render(output_dir=output_dir, output_format="mp4", groups=["Trial0",], datasets=render_keys, input_fps=1/env.dt)
 
+    # cleanup
+    env.close()
+
 if __name__ == '__main__':
     main()
