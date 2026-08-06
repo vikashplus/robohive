@@ -87,19 +87,25 @@ class Robot():
             self.sim = mj_sim
 
         # Configure the robot
-        if self.robot_config is None:
+        if self.is_hardware and type(self).robot_config is not None:
+            # Session persists on the class (not the instance).
+            # A hardware connection is shared across separate Robot() objects,
+            # e.g. across an env.close()/make() cycle, instead of reconnecting.
+            prompt("Reusing a previours session of {}".format(self.name), 'white', 'on_grey')
+        else:
             prompt("Configuring a new session for {}".format(self.name), 'white', 'on_grey')
-            # Assign via the class (not the instance) so the session is genuinely shared
-            # across separate Robot() objects, not just shadowed on this one.
-            type(self).robot_config = self.configure_robot(self.sim, config_path)
+            robot_config = self.configure_robot(self.sim, config_path)
             if _ROBOT_VIZ:
-                self.configure_robot_viz(self.robot_config)
+                self.configure_robot_viz(robot_config)
             # start the robot
             if self.is_hardware is True:
                 prompt("Initializing robot: %s"%(self.name), 'white', 'on_grey')
-                type(self).robot_config = self.hardware_init(self.robot_config)
-        else:
-            prompt("Reusing a previours session of {}".format(self.name), 'white', 'on_grey')
+                robot_config = self.hardware_init(robot_config)
+                # Only hardware sessions are persisted across instances
+                type(self).robot_config = robot_config
+            else:
+                # Sim sessions are NOT persisted across instances
+                self.robot_config = robot_config
 
         # Tracks whether close() has already been invoked on this instance (with either
         # close_hardware value), to avoid a spurious __del__ warning when the hardware
@@ -770,7 +776,10 @@ class Robot():
         status = self.hardware_close() if self.is_hardware else True
         if status:
             prompt(f"Closed {self.name} (Status: {status})", 'white', 'on_grey', flush=True)
+            # Clear both: hardware sessions live on the class, sim sessions
+            # shadow it as an instance attr — null out whichever is set.
             type(self).robot_config = None
+            self.__dict__.pop('robot_config', None)
         else:
             prompt(f"Error closing {self.name} (Status: {status})", 'red', 'on_grey', flush=True, type=Prompt.ERROR)
 
