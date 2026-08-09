@@ -534,12 +534,32 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     #     return self.step(a)
 
 
-    def close(self):
+    def close(self, close_hardware=True):
         """
         Clean up the environment
+        close_hardware: True (default) closes the robot's persistent hardware connection.
+                        False leaves it open so a later env.make(is_hardware=True) can
+                        reuse the same connection instead of reconnecting.
         """
-        if self.sim:
+        self._explicitly_closed = True
+        if getattr(self, 'robot', None):
+            self.robot.close(close_hardware=close_hardware)
+        if getattr(self, 'sim_obsd', None) and self.sim_obsd is not self.sim:
+            self.sim_obsd.close()
+        if getattr(self, 'sim', None):
             self.sim.close()
+
+    # Warn (don't auto-cleanup) if a hardware-backed env is garbage collected without
+    # close() ever being called. Mirrors Robot.__del__: cleanup must stay an explicit,
+    # deliberate action (esp. for close_hardware=False reuse), not something GC timing decides.
+    def __del__(self):
+        if getattr(self, 'robot', None) and getattr(self.robot, 'is_hardware', False) \
+                and not getattr(self, '_explicitly_closed', False):
+            raise RuntimeWarning(
+                f"RoboHive:> {type(self).__name__} is being garbage collected without close() ever being called. "
+                "If hardware is still connected, this leaves the persistent connection dangling. "
+                "Call env.close() (or env.close(close_hardware=False) to intentionally keep the "
+                "hardware connection alive) before letting the env go out of scope.")
 
     @property
     def dt(self):
@@ -696,6 +716,16 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.sim.renderer.render_to_window()
 
 
+    @property
+    def viewer_exit_requested(self):
+        """
+        True once the onscreen viewer has been asked to close (Escape / window close).
+        Always False for offscreen/none rendering, which has no interactive window;
+        use a KeyboardInterrupt (Ctrl+C) to break out of those rollouts instead.
+        """
+        return bool(self.sim) and self.sim.renderer.exit_requested
+
+
     def viewer_setup(self, distance=2.5, azimuth=90, elevation=-30, lookat=None, render_actuator=None, render_tendon=None):
         """
         Setup the default camera
@@ -741,8 +771,17 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             self.mujoco_render_frames = False
 
         # start rollouts
+        # stop_requested becomes True either when the onscreen viewer is closed
+        # (Escape / window close, only possible with render=='onscreen') or when the
+        # user hits Ctrl+C (the only way to interrupt offscreen/none rollouts, which
+        # have no interactive window). Either way we stop early but still finalize
+        # and return whatever paths were completed, instead of crashing or looping
+        # invisibly to the end of `horizon`/`num_episodes`.
         paths = []
+        stop_requested = False
         for ep in range(num_episodes):
+            if stop_requested:
+                break
             ep_t0 = timer.time()
             observations=[]
             actions=[]
@@ -755,27 +794,35 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             done = False
             t = 0
             ep_rwd = 0.0
-            while t < horizon and done is False:
-                a = policy.get_action(o)[0] if mode == 'exploration' else policy.get_action(o)[1]['evaluation']
-                next_o, rwd, done, *_, env_info = self.step(a)
-                ep_rwd += rwd
-                # render offscreen visuals
-                if render =='offscreen':
-                    curr_frame = self.sim.renderer.render_offscreen(
-                        width=frame_size[0],
-                        height=frame_size[1],
-                        camera_id=camera_name,
-                        device_id=device_id)
+            try:
+                while t < horizon and done is False and not self.viewer_exit_requested:
+                    a = policy.get_action(o)[0] if mode == 'exploration' else policy.get_action(o)[1]['evaluation']
+                    next_o, rwd, done, *_, env_info = self.step(a)
+                    ep_rwd += rwd
+                    # render offscreen visuals
+                    if render =='offscreen':
+                        curr_frame = self.sim.renderer.render_offscreen(
+                            width=frame_size[0],
+                            height=frame_size[1],
+                            camera_id=camera_name,
+                            device_id=device_id)
 
-                    frames[t,:,:,:] = curr_frame
-                    prompt(t, end=', ', flush=True, type=Prompt.INFO)
-                observations.append(o)
-                actions.append(a)
-                rewards.append(rwd)
-                # agent_infos.append(agent_info)
-                env_infos.append(env_info)
-                o = next_o
-                t = t+1
+                        frames[t,:,:,:] = curr_frame
+                        prompt(t, end=', ', flush=True, type=Prompt.INFO)
+                    observations.append(o)
+                    actions.append(a)
+                    rewards.append(rwd)
+                    # agent_infos.append(agent_info)
+                    env_infos.append(env_info)
+                    o = next_o
+                    t = t+1
+            except KeyboardInterrupt:
+                prompt("\nRollout interrupted by user (Ctrl+C)", type=Prompt.WARN)
+                stop_requested = True
+
+            if self.viewer_exit_requested:
+                prompt("Rollout stopped: viewer was closed", type=Prompt.WARN)
+                stop_requested = True
 
             prompt("Total reward = %3.3f, Total time = %2.3f" % (ep_rwd, timer.time()-ep_t0), type=Prompt.INFO)
             path = dict(
@@ -788,14 +835,14 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             )
             paths.append(path)
 
-            # save offscreen buffers as video
+            # save offscreen buffers as video (only the frames actually rendered so far)
             if render =='offscreen':
                 file_name = output_dir + filename + str(ep) + ".mp4"
                 # check if the platform is OS -- make it compatible with quicktime
                 if platform == "darwin":
-                    skvideo.io.vwrite(file_name, np.asarray(frames),outputdict={"-pix_fmt": "yuv420p"})
+                    skvideo.io.vwrite(file_name, np.asarray(frames[:t]),outputdict={"-pix_fmt": "yuv420p"})
                 else:
-                    skvideo.io.vwrite(file_name, np.asarray(frames))
+                    skvideo.io.vwrite(file_name, np.asarray(frames[:t]))
                 prompt("saved", file_name, type=Prompt.INFO)
 
         self.mujoco_render_frames = False
@@ -837,7 +884,16 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             self.mujoco_render_frames = False
 
         # start rollouts
+        # stop_requested becomes True either when the onscreen viewer is closed
+        # (Escape / window close, only possible with render=='onscreen') or when the
+        # user hits Ctrl+C (the only way to interrupt offscreen/none rollouts, which
+        # have no interactive window). Either way we stop early but still finalize
+        # and return whatever trace was completed, instead of crashing or looping
+        # invisibly to the end of `horizon`/`num_episodes`.
+        stop_requested = False
         for ep in range(num_episodes):
+            if stop_requested:
+                break
 
             # initialize -----------------------------
             ep_t0 = timer.time()
@@ -850,39 +906,47 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
             # Rollout --------------------------------
             obs, rwd, done, *_, env_info = self.forward(update_exteroception=True) # t=0
-            while t < horizon and done is False:
+            try:
+                while t < horizon and done is False and not self.viewer_exit_requested:
 
-                # print(t, t*self.dt, self.time, t*self.dt-self.time)
-                # Get step's actions ----------------------
-                act = policy.get_action(obs)[0] if mode == 'exploration' else policy.get_action(obs)[1]['evaluation']
+                    # print(t, t*self.dt, self.time, t*self.dt-self.time)
+                    # Get step's actions ----------------------
+                    act = policy.get_action(obs)[0] if mode == 'exploration' else policy.get_action(obs)[1]['evaluation']
 
-                # render offscreen visuals ----------------------
-                if render =='offscreen':
-                    curr_frame = self.sim.renderer.render_offscreen(
-                        width=frame_size[0],
-                        height=frame_size[1],
-                        camera_id=camera_name,
-                        device_id=device_id)
+                    # render offscreen visuals ----------------------
+                    if render =='offscreen':
+                        curr_frame = self.sim.renderer.render_offscreen(
+                            width=frame_size[0],
+                            height=frame_size[1],
+                            camera_id=camera_name,
+                            device_id=device_id)
 
-                    frames[t,:,:,:] = curr_frame
-                    prompt(str(t), end=', ', flush=True, type=Prompt.INFO)
+                        frames[t,:,:,:] = curr_frame
+                        prompt(str(t), end=', ', flush=True, type=Prompt.INFO)
 
-                # log values at time=t ----------------------------------
-                datum_dict = dict(
-                        time=self.time,
-                        observations=obs,
-                        actions=act.copy(),
-                        rewards=rwd,
-                        env_infos=env_info,
-                        done=done,
-                    )
-                trace.append_datums(group_key=group_key, dataset_key_val=datum_dict)
+                    # log values at time=t ----------------------------------
+                    datum_dict = dict(
+                            time=self.time,
+                            observations=obs,
+                            actions=act.copy(),
+                            rewards=rwd,
+                            env_infos=env_info,
+                            done=done,
+                        )
+                    trace.append_datums(group_key=group_key, dataset_key_val=datum_dict)
 
 
-                # step env using actions from t=>t+1 ----------------------
-                obs, rwd, done, *_, env_info = self.step(act, update_exteroception=True)
-                t = t+1
-                ep_rwd += rwd
+                    # step env using actions from t=>t+1 ----------------------
+                    obs, rwd, done, *_, env_info = self.step(act, update_exteroception=True)
+                    t = t+1
+                    ep_rwd += rwd
+            except KeyboardInterrupt:
+                prompt("\nRollout interrupted by user (Ctrl+C)", type=Prompt.WARN)
+                stop_requested = True
+
+            if self.viewer_exit_requested:
+                prompt("Rollout stopped: viewer was closed", type=Prompt.WARN)
+                stop_requested = True
 
             # record last step and finalize the rollout --------------------------------
             act = np.nan*np.ones(self.action_space.shape)
@@ -902,9 +966,9 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 file_name = output_dir + filename + str(ep) + ".mp4"
                 # check if the platform is OS -- make it compatible with quicktime
                 if platform == "darwin":
-                    skvideo.io.vwrite(file_name, np.asarray(frames),outputdict={"-pix_fmt": "yuv420p"})
+                    skvideo.io.vwrite(file_name, np.asarray(frames[:t]),outputdict={"-pix_fmt": "yuv420p"})
                 else:
-                    skvideo.io.vwrite(file_name, np.asarray(frames))
+                    skvideo.io.vwrite(file_name, np.asarray(frames[:t]))
                 prompt("saved: "+file_name, type=Prompt.ALWAYS)
 
         self.mujoco_render_frames = False

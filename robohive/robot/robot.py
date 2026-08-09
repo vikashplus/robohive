@@ -87,17 +87,30 @@ class Robot():
             self.sim = mj_sim
 
         # Configure the robot
-        if self.robot_config is None:
+        if self.is_hardware and type(self).robot_config is not None:
+            # Session persists on the class (not the instance).
+            # A hardware connection is shared across separate Robot() objects,
+            # e.g. across an env.close()/make() cycle, instead of reconnecting.
+            prompt("Reusing a previours session of {}".format(self.name), 'white', 'on_grey')
+        else:
             prompt("Configuring a new session for {}".format(self.name), 'white', 'on_grey')
-            self.robot_config = self.configure_robot(self.sim, config_path)
+            robot_config = self.configure_robot(self.sim, config_path)
             if _ROBOT_VIZ:
-                self.configure_robot_viz(self.robot_config)
+                self.configure_robot_viz(robot_config)
             # start the robot
             if self.is_hardware is True:
                 prompt("Initializing robot: %s"%(self.name), 'white', 'on_grey')
-                self.robot_config = self.hardware_init(self.robot_config)
-        else:
-            prompt("Reusing a previours session of {}".format(self.name), 'white', 'on_grey')
+                robot_config = self.hardware_init(robot_config)
+                # Only hardware sessions are persisted across instances
+                type(self).robot_config = robot_config
+            else:
+                # Sim sessions are NOT persisted across instances
+                self.robot_config = robot_config
+
+        # Tracks whether close() has already been invoked on this instance (with either
+        # close_hardware value), to avoid a spurious __del__ warning when the hardware
+        # connection was intentionally left open via close(close_hardware=False).
+        self._explicitly_closed = False
 
         # check robot health
         if self.is_hardware is True:
@@ -745,20 +758,30 @@ class Robot():
 
     # Clear the robot class. Note that it doesn't close the persistent connection
     def __del__(self):
-        if self.robot_config is not None and self.is_hardware:
+        if self.robot_config is not None and self.is_hardware and not getattr(self, '_explicitly_closed', False):
             raise RuntimeWarning("RoboHive:> Robot class is being cleared from the workspace. This is expected if we still need to maintain the active connection to the hardware. A persistent connection to robot is still maintained and will be used next time a robot class is created. Ensure that a robot.close() is called to terminate the persistent connection before exiting the program.")
 
-    # Close the persistnent connection to the robot. This should be called only once at the end when persistent connection is no longer needed.
-    def close(self):
-        if self.robot_config is not None:
-            status = self.hardware_close() if self.is_hardware else True
-            if status:
-                prompt(f"Closed {self.name} (Status: {status})", 'white', 'on_grey', flush=True)
-                self.robot_config = None
-            else:
-                prompt(f"Error closing {self.name} (Status: {status})", 'red', 'on_grey', flush=True, type=Prompt.ERROR)
-        else:
+    # Close the connection to the robot.
+    # close_hardware=True (default): permanently closes the persistent hardware connection.
+    # close_hardware=False: leaves the hardware connection open/untouched so a subsequent
+    # Robot(is_hardware=True) (e.g. via env.make()) can reuse it instead of reconnecting.
+    def close(self, close_hardware=True):
+        self._explicitly_closed = True
+        if self.robot_config is None:
             prompt(f"Trying to close a non-existent robot", flush=True, type=Prompt.WARN)
+            return
+        if not close_hardware:
+            prompt(f"Leaving {self.name}'s hardware connection open (persistent)", 'white', 'on_grey', flush=True)
+            return
+        status = self.hardware_close() if self.is_hardware else True
+        if status:
+            prompt(f"Closed {self.name} (Status: {status})", 'white', 'on_grey', flush=True)
+            # Clear both: hardware sessions live on the class, sim sessions
+            # shadow it as an instance attr — null out whichever is set.
+            type(self).robot_config = None
+            self.__dict__.pop('robot_config', None)
+        else:
+            prompt(f"Error closing {self.name} (Status: {status})", 'red', 'on_grey', flush=True, type=Prompt.ERROR)
 
 
 def demo_robot():

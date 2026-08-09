@@ -103,8 +103,8 @@ class TestEnvs(unittest.TestCase):
         # reset
         env2.reset()
 
-        del(env1)
-        del(env2)
+        env1.close()
+        env2.close()
 
 
     @implement_for("gym", None, "0.26")
@@ -149,7 +149,7 @@ class TestEnvs(unittest.TestCase):
 
             # test step (everything together)
             observation, _reward, done, *_, _info = env.step(np.zeros(env.sim.model.nu))
-            del(envw)
+            env.close()
 
 
 if __name__ == '__main__':

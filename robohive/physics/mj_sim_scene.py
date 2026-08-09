@@ -20,6 +20,7 @@ from robohive.utils.prompt_utils import Prompt, prompt
 import_utils.dm_control_isavailable()
 import_utils.mujoco_isavailable()
 import dm_control.mujoco as dm_mujoco
+from dm_control.rl.control import PhysicsError
 
 from robohive.physics.sim_scene import SimScene
 from robohive.renderer.mj_renderer import MJRenderer
@@ -232,8 +233,8 @@ class DMSimScene(SimScene):
         # Step the simulation substeps (frame_skip) times.
         try:
             self.sim.step(substeps)
-        except:
-            prompt("Simulation couldn't be stepped as intended. Issuing a reset", type=Prompt.WARN)
+        except PhysicsError as e:
+            prompt(f"Simulation couldn't be stepped as intended ({e}). Issuing a reset", type=Prompt.WARN)
             self.sim.reset()
 
         if render:
