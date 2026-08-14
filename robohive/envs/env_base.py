@@ -6,6 +6,7 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= """
 
 import os
+import re
 import time as timer
 from sys import platform
 
@@ -212,6 +213,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 import_utils.vc_isavailable()
                 from vc_models.models.vit import model_utils as vc
 
+            resize_crop_match = re.match(r'^(resize|crop)(\d+)x(\d+)$', id_encoder)
+            if resize_crop_match:
+                import_utils.torchvision_isavailable()
+                import torchvision.transforms as T
+
             # Load encoder
             prompt("Using {} visual inputs with {} encoder".format(wxh, id_encoder), type=Prompt.INFO)
             if id_encoder == "1d":
@@ -240,6 +246,13 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                     model,embd_size,model_transforms,model_info = vc.load_model(vc.VC1_LARGE_NAME)
                 self.rgb_encoder = model
                 self.rgb_transform = model_transforms
+            elif resize_crop_match:
+                self.rgb_encoder = IdentityEncoder()
+                target_h, target_w = int(resize_crop_match.group(2)), int(resize_crop_match.group(3))
+                if resize_crop_match.group(1) == "resize":
+                    self.rgb_transform = T.Resize((target_h, target_w), antialias=True)
+                else:
+                    self.rgb_transform = T.CenterCrop((target_h, target_w))
             else:
                 raise ValueError("Unsupported visual encoder: {}".format(id_encoder))
             self.rgb_encoder.eval()
@@ -363,6 +376,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             - 'rgb:cam_name:HxW:r3m18'
             - 'rgb:cam_name:HxW:r3m34'
             - 'rgb:cam_name:HxW:r3m50'
+            - 'rgb:cam_name:HxW:resize<H>x<W>'  (e.g. resize128x128)
+            - 'rgb:cam_name:HxW:crop<H>x<W>'    (e.g. crop224x224)
         """
         # return if no visual configured
         if self.visual_keys == None:
@@ -426,6 +441,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                         rgb_encoded = rgb_encoded.to(self.device_encoder)
                         rgb_encoded = self.rgb_encoder(rgb_encoded).cpu().numpy()
                         rgb_encoded = np.squeeze(rgb_encoded)
+                elif re.match(r'^(resize|crop)(\d+)x(\d+)$', rgb_encoder_id):
+                    with torch.no_grad():
+                        img_t = torch.from_numpy(img[0]).permute(2, 0, 1).unsqueeze(0).float()  # 1x3xHxW
+                        img_t = self.rgb_transform(img_t)
+                        rgb_encoded = img_t.squeeze(0).permute(1, 2, 0).clamp(0, 255).byte().numpy()  # HxWx3 uint8
                 else:
                     raise ValueError("Unsupported visual encoder: {}".format(rgb_encoder_id))
 
