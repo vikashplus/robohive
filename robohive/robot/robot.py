@@ -127,6 +127,13 @@ class Robot():
         # refresh the sensor cache
         self._sensor_cache_refresh()
 
+        # Hardware mode's last-feasible-control cache -- see process_actuator()'s use of
+        # it below. sim_id -> last feasible (post-clip) control value. Empty until the
+        # first process_actuator() call for a given actuator; cleared by hardware_reset()
+        # since a physical reset bypasses process_actuator() entirely and would otherwise
+        # leave this stale relative to the arm's new pose.
+        self._last_feasible_ctrl = {}
+
 
     # Check if all hardware components are okay
     def hardware_okay(self, robot_config):
@@ -216,6 +223,10 @@ class Robot():
                'hdr' (per-actuator vector ordered by hdr_id, as in hardware_apply_controls)
         """
         assert space in ['sim', 'hdr'], "space must be 'sim' or 'hdr'"
+        # A physical reset bypasses process_actuator() entirely -- clear its
+        # last-feasible-control cache so the next call falls back to a fresh sensor
+        # read (the arm's real new pose) instead of anchoring against a pre-reset value.
+        self._last_feasible_ctrl = {}
         for name, device in self.robot_config.items():
             if name == 'default_robot':
                 continue
@@ -602,15 +613,23 @@ class Robot():
                     out_id = actuator['sim_id'] if out_space == 'sim' else actuator['hdr_id']
 
                     control = controls[in_id]
+                    # Anchor the velocity-limit clip on our OWN last feasible (already-
+                    # clipped) control instead of a hardware sensor read, in hardware mode
+                    # only -- see process_actuator()'s use below and _last_feasible_ctrl's
+                    # comment in __init__. In sim mode, sim.data is exactly what physics
+                    # last did (perfectly synchronized), so the original sensor-based
+                    # anchor is unchanged/still correct there.
+                    if self.is_hardware and actuator['sim_id'] in self._last_feasible_ctrl:
+                        last_obs = self._last_feasible_ctrl[actuator['sim_id']]
+                    else:
+                        last_obs = getattr(self.sim.data, actuator["data_type"])[actuator["data_id"]]
                     if self._act_mode == "pos":
                         # remap to the limits if normalized
                         if normalized:
                             control = (actuator['pos_range'][1]+actuator['pos_range'][0])/2.0 + \
                                         control*(actuator['pos_range'][1]-actuator['pos_range'][0])/2.0
                         # enforce velocity limits
-                        # ALERT: This depends on previous sensor. This is not ideal as it breaks MDP addumptions. Be careful
                         if velocity_limits:
-                            last_obs = getattr(self.sim.data, actuator["data_type"])[actuator["data_id"]]
                             ctrl_desired_vel = (control - last_obs)/step_duration
                             ctrl_feasible_vel = np.clip(ctrl_desired_vel, actuator['vel_range'][0], actuator['vel_range'][1])
                             control = last_obs + ctrl_feasible_vel*step_duration
@@ -620,8 +639,6 @@ class Robot():
                             control = (actuator['vel_range'][1]+actuator['vel_range'][0])/2.0 + \
                                         control*(actuator['vel_range'][1]-actuator['vel_range'][0])/2.0
                         # enforce velocity limits
-                        # ALERT: This depends on previous sensor. This is not ideal as it breaks MDP addumptions. Be careful
-                        last_obs = getattr(self.sim.data, actuator["data_type"])[actuator["data_id"]]
                         control = last_obs + control*step_duration
                     else:
                         raise TypeError("Unknown act mode: {}".format(self._act_mode))
@@ -629,6 +646,9 @@ class Robot():
                     # enforce position limits
                     if position_limits:
                         control = np.clip(control, actuator['pos_range'][0], actuator['pos_range'][1])
+
+                    if self.is_hardware:
+                        self._last_feasible_ctrl[actuator['sim_id']] = control
 
                     # remap to desired space
                     processed_controls[out_id] = control
