@@ -92,7 +92,6 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         robot_cls = kwargs.pop('robot_cls', Robot)
         self.robot = robot_cls(mj_sim=self.sim,
                            random_generator=self.np_random,
-                           env_dt=self.sim.model.opt.timestep * frame_skip,
                            **kwargs)
 
         #resolve action space
