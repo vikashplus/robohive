@@ -293,32 +293,36 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                                         step_duration=self.dt,
                                         realTimeSim=self.mujoco_render_frames,
                                         render_cbk=self.mj_render if self.mujoco_render_frames else None)
-        return self.forward(**kwargs)
+        # robot.step() above already rendered this tick (render_cbk in hardware mode,
+        # sim.advance(render=True) in sim mode) -- forward()'s own render would
+        # otherwise duplicate it, uncompensated by robot.step()'s pacing sleep.
+        return self.forward(render=False, **kwargs)
 
     @implement_for("gym", None, "0.24")
-    def forward(self, **kwargs):
-        return self._forward(**kwargs)
+    def forward(self, render=True, **kwargs):
+        return self._forward(render=render, **kwargs)
 
     @implement_for("gym", "0.24", None)
-    def forward(self, **kwargs):
-        obs, reward, done, info = self._forward(**kwargs)
+    def forward(self, render=True, **kwargs):
+        obs, reward, done, info = self._forward(render=render, **kwargs)
         terminal = done
         return obs, reward, terminal, False, info
 
     @implement_for("gymnasium")
-    def forward(self, **kwargs):
-        obs, reward, done, info = self._forward(**kwargs)
+    def forward(self, render=True, **kwargs):
+        obs, reward, done, info = self._forward(render=render, **kwargs)
         terminal = done
         return obs, reward, terminal, False, info
 
-    def _forward(self, **kwargs):
+    def _forward(self, render=True, **kwargs):
         """
         Forward propagate env to recover env details
         Returns current obs(t), rwd(t), done(t), info(t)
         """
 
-        # render the scene
-        if self.mujoco_render_frames:
+        # render the scene -- render=False from step(), which already rendered via
+        # robot.step(); standalone callers (e.g. after reset()) keep the default.
+        if self.mujoco_render_frames and render:
             self.mj_render()
 
         # observation
