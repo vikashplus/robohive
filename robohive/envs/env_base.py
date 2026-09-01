@@ -293,6 +293,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                                         step_duration=self.dt,
                                         realTimeSim=self.mujoco_render_frames,
                                         render_cbk=self.mj_render if self.mujoco_render_frames else None)
+        # robot.step() above already rendered this tick when mujoco_render_frames is True
+        self._rendered_this_tick = self.mujoco_render_frames
         return self.forward(**kwargs)
 
     @implement_for("gym", None, "0.24")
@@ -317,9 +319,10 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         Returns current obs(t), rwd(t), done(t), info(t)
         """
 
-        # render the scene
-        if self.mujoco_render_frames:
+        # render the scene (skipped if step() already rendered this tick)
+        if self.mujoco_render_frames and not getattr(self, '_rendered_this_tick', False):
             self.mj_render()
+        self._rendered_this_tick = False
 
         # observation
         obs = self.get_obs(**kwargs)
