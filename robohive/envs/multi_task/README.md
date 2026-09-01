@@ -2,7 +2,7 @@
 This suite is designed to study generalization in multi-task settings. RoboHive's multi-task suite builds from `FrankaKitchen` environements originally studied in the [Relay Policy Learning](https://relay-policy-learning.github.io/) project.
 
 # Franka Kitchen
-`FrankaKitchen` domain offers a challenging set of manipulation problems in an unstructured environment with many possible tasks to perform. The original set consisted of a franka robot in a kitchen domain. Overtime, Franka Kitchen has became a popular choice of environments for studying multi-task generalization. Its widespread use has led to a few different publically available variations. To help navigate these changes, we name these variations and document its evolution of across various versions below -
+`FrankaKitchen` domain offers a challenging set of manipulation problems in an unstructured environment with many possible tasks to perform. The original set consisted of a franka robot in a kitchen domain. Overtime, Franka Kitchen has became a popular choice of environments for studying multi-task generalization. Its widespread use has led to a few different publically available variations. To help navigate these changes, we name these variations and document its evolution across various versions below -
 
 ## Change log/ History
 

@@ -1,8 +1,12 @@
 from robohive.utils import gym; register=gym.register
 import os
+
+from robohive.utils.prompt_utils import Prompt, prompt
+
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 import numpy as np
 
+prompt("RoboHive:> Registering MyoChallenge Envs", Prompt.ONCE)
 
 # MyoChallenge 2023 envs ==============================================
 # MyoChallenge Manipulation P1

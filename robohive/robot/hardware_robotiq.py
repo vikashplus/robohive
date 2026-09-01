@@ -1,11 +1,12 @@
 from enum import Flag
 from polymetis import GripperInterface
-from robohive.robot.hardware_base import hardwareBase
+from robohive.robot.hardware_base import hardwareBase, register_hardware
 
 import numpy as np
 import argparse
 import time
 
+@register_hardware('robotiq')
 class Robotiq(hardwareBase):
     def __init__(self, name, ip_address, **kwargs):
         self.name = name
@@ -81,6 +82,11 @@ class Robotiq(hardwareBase):
         print("RBQ:> Re-connection success")
 
 
+    def recover(self) -> None:
+        """Recover hardware from any error, connection loss, failure, etc"""
+        self.reconnect()
+
+
     def reset(self, width=None, **kwargs):
         """Reset hardware"""
         if not width:
@@ -88,7 +94,7 @@ class Robotiq(hardwareBase):
         self.apply_commands(width=width, **kwargs)
 
 
-    def get_sensors(self):
+    def get_sensors(self) -> dict:
         """Get hardware sensors"""
         try:
             curr_state = self.robot.get_state()
@@ -96,9 +102,12 @@ class Robotiq(hardwareBase):
             print("RBQ:> Failed to get current sensors: ", end="")
             self.reconnect()
             return self.get_sensors()
-        return np.array([curr_state.width])
+        return {'time': time.time(), 'pos': np.array([curr_state.width])}
 
-    def apply_commands(self, width:float, speed:float=0.1, force:float=0.1):
+    def apply_commands(self, width, speed:float=0.1, force:float=0.1):
+        # width may be a scalar or a length-1 array-like (Robot.hardware_apply_controls
+        # always passes an array positionally matching this device's single actuator).
+        width = float(np.asarray(width).reshape(-1)[0])
         assert width>=0.0 and width<=self.max_width, "Gripper desired width ({}) is out of bound (0,{})".format(width, self.max_width)
         self.robot.goto(width=width, speed=speed, force=force)
         return 0

@@ -15,7 +15,7 @@ import torch
 
 from polymetis import RobotInterface
 import torchcontrol as toco
-from robohive.robot.hardware_base import hardwareBase
+from robohive.robot.hardware_base import hardwareBase, register_hardware
 from robohive.utils.min_jerk import generate_joint_space_min_jerk
 
 import argparse
@@ -56,6 +56,7 @@ class JointPDPolicy(toco.PolicyModule):
 
 
 
+@register_hardware('franka')
 class FrankaArm(hardwareBase):
     def __init__(self, name, ip_address, gain_scale=1.0, reset_gain_scale=1.0, **kwargs):
         self.name = name
@@ -90,7 +91,7 @@ class FrankaArm(hardwareBase):
                 # Create policy instance
                 s_initial = self.get_sensors()
                 policy = JointPDPolicy(
-                    desired_joint_pos=s_initial['joint_pos'],
+                    desired_joint_pos=s_initial['pos'],
                     kp=self.gain_scale * torch.Tensor(self.robot.metadata.default_Kq),
                     kd=self.gain_scale * torch.Tensor(self.robot.metadata.default_Kqd),
                 )
@@ -144,6 +145,12 @@ class FrankaArm(hardwareBase):
         print("Re-connection success")
 
 
+    def recover(self) -> None:
+        """Recover hardware from any error, connection loss, failure, etc"""
+        self.reconnect()
+        self.reset()
+
+
     def reset(self, reset_pos=None, time_to_go=5):
         """Reset hardware"""
 
@@ -157,7 +164,7 @@ class FrankaArm(hardwareBase):
                     reset_pos = torch.Tensor(reset_pos)
 
                 # Use registered controller
-                q_current = self.get_sensors()['joint_pos']
+                q_current = self.get_sensors()['pos']
                 # generate min jerk trajectory
                 dt = 0.1
                 waypoints =  generate_joint_space_min_jerk(start=q_current, goal=reset_pos, time_to_go=time_to_go, dt=dt)
@@ -185,7 +192,7 @@ class FrankaArm(hardwareBase):
             self.reset(reset_pos, time_to_go)
 
 
-    def get_sensors(self):
+    def get_sensors(self) -> dict:
         """Get hardware sensors"""
         try:
             joint_pos = self.robot.get_joint_positions()
@@ -194,7 +201,7 @@ class FrankaArm(hardwareBase):
             print("Failed to get current sensors: ", end="")
             self.reconnect()
             return self.get_sensors()
-        return {'joint_pos': joint_pos, 'joint_vel':joint_vel}
+        return {'time': time.time(), 'pos': joint_pos, 'vel': joint_vel}
 
 
     def apply_commands(self, q_desired=None, kp=None, kd=None):
@@ -252,8 +259,8 @@ if __name__ == "__main__":
     # Update policy to execute a sine trajectory on joint 6 for 5 seconds
     print("Starting sine motion updates...")
     s_initial = franka.get_sensors()
-    q_initial = s_initial['joint_pos'].clone()
-    q_desired = s_initial['joint_pos'].clone()
+    q_initial = s_initial['pos'].clone()
+    q_desired = s_initial['pos'].clone()
 
     for i in range(int(time_to_go * hz)):
         q_desired[5] = q_initial[5] + m * np.sin(np.pi * i / (T * hz))

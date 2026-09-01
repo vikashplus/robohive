@@ -5,8 +5,10 @@ Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
-import numpy as np
 from collections import deque
+
+import numpy as np
+
 
 class ObsVecDict():
     """
@@ -61,10 +63,29 @@ class ObsVecDict():
         t, obsvec = self.obsdict2obsvec(obs_dict, ordered_obs_keys)
         self.obsvec_cache_flush(t, obsvec) # populate the cache with initial obsvec  values
 
-    # Squeeze out singleton dimensions
+    # Squeeze out the (num_traj=1, horizon=1) dims added by expand_dims.
+    # Squeezing all singleton dims (np.squeeze(arr)) would also collapse
+    # single-value obs (e.g. shape (1,)) down to 0-d scalars, which then
+    # fail to concatenate with other obs vectors downstream.
     def squeeze_dims(self, obs_dict):
         for key in obs_dict.keys():
-            obs_dict[key] = np.squeeze(obs_dict[key])
+            val = np.asarray(obs_dict[key])
+
+            # expand_dims() only ever adds two leading dims: (num_traj=1, horizon=1, ...).
+            # Some dict values (e.g. scalar entries in rwd_dict like 'done', 'solved')
+            # never went through expand_dims, so they may have 0 or 1 dims. Only squeeze
+            # axis 0 and/or axis 1 if they actually exist AND are singleton -- this way we
+            # never touch a real data dimension (e.g. a single-value obs of shape (1,)).
+            axes_to_squeeze = []
+            if val.ndim > 0 and val.shape[0] == 1:
+                axes_to_squeeze.append(0)
+            if val.ndim > 1 and val.shape[1] == 1:
+                axes_to_squeeze.append(1)
+
+            if axes_to_squeeze:
+                val = np.squeeze(val, axis=tuple(axes_to_squeeze))
+
+            obs_dict[key] = val
         return obs_dict
 
     # Exapand observation dimensions to (num_traj=1, horizon=1, obs_dim)
@@ -79,7 +100,7 @@ class ObsVecDict():
             self.initialize(obs_dict, ordered_obs_keys)
 
         # recover vec
-        obsvec = np.zeros(0)
+        obsvec = np.zeros(0, dtype=np.float32)
         for key in self.ordered_obs_keys:
             obsvec = np.concatenate([obsvec, obs_dict[key].ravel()]) # ravel helps with images
 

@@ -131,11 +131,9 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
         super()._setup(obs_keys=obs_keys,
                     weighted_reward_keys=weighted_reward_keys,
                     frame_skip=frame_skip,
+                    init_qpos=self.sim.model.key_qpos[0].copy(),
                     **kwargs,
                 )
-
-        # reset position
-        self.init_qpos = self.sim.model.key_qpos[0].copy()
         # self.init_qpos[:-14] *= 0 # Use fully open as init pos
 
         # V0: Centered the action space around key_qpos[0]. Not sure if it matter.
@@ -264,8 +262,7 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
         self.goal = self.create_goal_trajectory(time_period=time_period) if reset_goal is None else reset_goal.copy()
 
         # reset scene
-        obs = super().reset(reset_qpos=reset_pose, reset_qvel=reset_vel, **kwargs)
-        return obs
+        return super().reset(reset_qpos=reset_pose, reset_qvel=reset_vel, **kwargs)
 
     def create_goal_trajectory(self, time_step=.1, time_period=6):
         len_of_goals = 1000 # assumes that its greator than env horizon
@@ -326,5 +323,4 @@ class BaodingFixedEnvV1(env_base.MujocoEnv):
 class BaodingRandomEnvV1(BaodingFixedEnvV1):
 
     def reset(self, **kwargs):
-        obs = super().reset(time_period = self.np_random.uniform(high=5, low=7), **kwargs)
-        return obs
+        return super().reset(time_period = self.np_random.uniform(high=5, low=7), **kwargs)

@@ -69,13 +69,17 @@ class ProprioceptiveEnvV0(BaseV0):
         self.tar_length = np.linalg.norm(self.sim.model.geom_pos[self.tar_t_gid] - self.sim.model.geom_pos[self.tar_b_gid])
 
         self.sim.model.body_mass[self.obj_bid] *= 1.25
+
+        init_qpos = self.sim.data.qpos.ravel().copy()
+        init_qpos[:-6] *= 0 # Use fully open as init pos
+        init_qpos[0] = -1.5 # place palm up
+
         super()._setup(obs_keys=['hand_jnt','obj_pos','obj_vel','obj_rot','obj_des_rot',
                                  'obj_err_pos','obj_err_rot','mlen','mvel','mforce'],
                         weighted_reward_keys=weighted_reward_keys,
+                        init_qpos=init_qpos,
                         **kwargs,
                     )
-        self.init_qpos[:-6] *= 0 # Use fully open as init pos
-        self.init_qpos[0] = -1.5 # place palm up
 
 
     def get_obs_dict(self, sim):

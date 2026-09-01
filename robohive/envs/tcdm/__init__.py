@@ -6,13 +6,16 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= """
 
 from robohive.utils import gym; register=gym.register
+import collections
+import os
 
 import numpy as np
-import os
-import collections
+
+from robohive.utils.prompt_utils import Prompt, prompt
+
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 
-print("RoboHive:> Registering TCDM Envs")
+prompt("RoboHive:> Registering TCDM Envs", Prompt.ONCE)
 
 # Task specification format
 task_spec = collections.namedtuple('task_spec',

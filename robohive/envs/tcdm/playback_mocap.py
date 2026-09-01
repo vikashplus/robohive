@@ -23,9 +23,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.end = args.end if args.end is not None else args.start + args.length
 
-    # envMyoSuit=gym.make('MyoHandAirplanePass-v0')
-    envMyoSuit=gym.make(args.sim_name)
-    physics_myo=envMyoSuit.env.sim
+    # envMyoSuite=gym.make('MyoHandAirplanePass-v0')
+    envMyoSuite=gym.make(args.sim_name)
+    physics_myo=envMyoSuite.unwrapped.sim
     # jx_mocap coordinates
     # for i,b in enumerate(BODIES): #print(b,i, physics_myo.sim.named.data.xipos[b])
     #     print(f"<body mocap=\"true\" name=\"j{i}_mocap\" pos=\"{' '.join(map(str, physics_myo.sim.named.data.xipos[b]))} \" ><site name=\"j{i}\" size=\"0.015\" rgba=\"0 0 1 0.5\" pos=\"0 0 0\"/></body>\" ")
