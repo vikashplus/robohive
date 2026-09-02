@@ -613,16 +613,13 @@ class Robot():
                     out_id = actuator['sim_id'] if out_space == 'sim' else actuator['hdr_id']
 
                     control = controls[in_id]
-                    # Anchor the velocity-limit clip on our OWN last feasible (already-
-                    # clipped) control instead of a hardware sensor read, in hardware mode
-                    # only -- see process_actuator()'s use below and _last_feasible_ctrl's
-                    # comment in __init__. In sim mode, sim.data is exactly what physics
-                    # last did (perfectly synchronized), so the original sensor-based
-                    # anchor is unchanged/still correct there.
+                    sim_obs = getattr(self.sim.data, actuator["data_type"])[actuator["data_id"]]
+                    # Default anchor for act_mode=="vel" (no saturation-aware choice there --
+                    # see below) and as the pre-first-tick fallback for act_mode=="pos".
                     if self.is_hardware and actuator['sim_id'] in self._last_feasible_ctrl:
                         last_obs = self._last_feasible_ctrl[actuator['sim_id']]
                     else:
-                        last_obs = getattr(self.sim.data, actuator["data_type"])[actuator["data_id"]]
+                        last_obs = sim_obs
                     if self._act_mode == "pos":
                         # remap to the limits if normalized
                         if normalized:
@@ -630,6 +627,15 @@ class Robot():
                                         control*(actuator['pos_range'][1]-actuator['pos_range'][0])/2.0
                         # enforce velocity limits
                         if velocity_limits:
+                            if self.is_hardware:
+                                # Anchor on the real position unless doing so would saturate
+                                # this clip -- only then fall back to our own last feasible
+                                # control (avoids fighting the hardware's own tracking loop).
+                                sim_desired_vel = (control - sim_obs) / step_duration
+                                if actuator['vel_range'][0] <= sim_desired_vel <= actuator['vel_range'][1]:
+                                    last_obs = sim_obs
+                            else:
+                                last_obs = sim_obs
                             ctrl_desired_vel = (control - last_obs)/step_duration
                             ctrl_feasible_vel = np.clip(ctrl_desired_vel, actuator['vel_range'][0], actuator['vel_range'][1])
                             control = last_obs + ctrl_feasible_vel*step_duration
