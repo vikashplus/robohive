@@ -59,6 +59,7 @@ class Robot():
                 sensor_cache_maxsize = 5,   # cache size for sensors
                 noise_scale = 0,            # scale for sensor noise
                 random_generator = None,    # random number generator
+                vel_anchor: str = "sensor", # sensor / control: velocity-limit reference (hardware)
                 **kwargs,
             ):
 
@@ -67,6 +68,8 @@ class Robot():
         self.name = robot_name+'(sim)' if is_hardware is None else robot_name+'(hdr)'
         self._act_mode = act_mode
         self.is_hardware = bool(is_hardware)
+        assert vel_anchor in ('sensor', 'control'), "unknown vel_anchor: {}".format(vel_anchor)
+        self._vel_anchor = vel_anchor
         self._sensor_cache_maxsize = sensor_cache_maxsize
         self._noise_scale = noise_scale
         if random_generator == None:
@@ -126,6 +129,9 @@ class Robot():
 
         # refresh the sensor cache
         self._sensor_cache_refresh()
+
+        # sim_id -> last control sent, the reference for vel_anchor=="control"
+        self._last_feasible_ctrl = {}
 
 
     # Check if all hardware components are okay
@@ -216,6 +222,8 @@ class Robot():
                'hdr' (per-actuator vector ordered by hdr_id, as in hardware_apply_controls)
         """
         assert space in ['sim', 'hdr'], "space must be 'sim' or 'hdr'"
+        # a physical reset bypasses process_actuator(), invalidating its reference
+        self._last_feasible_ctrl = {}
         for name, device in self.robot_config.items():
             if name == 'default_robot':
                 continue
@@ -579,12 +587,18 @@ class Robot():
             normalized=True,
             position_limits=True,
             velocity_limits=True,
-            out_space='sim'):
+            out_space='sim',
+            vel_anchor=None):
         """
         Process the actuation demands to
             (1) Remap provided controls to actuation space,
             (2) Enforces hardware position and velocity limits on the controls
+        INPUTS:
+            vel_anchor: 'sensor'/'control' reference for the velocity limit (hardware only,
+                        sim always uses the sensor). None uses the robot's configured default.
         """
+        vel_anchor = self._vel_anchor if vel_anchor is None else vel_anchor
+        assert vel_anchor in ('sensor', 'control'), "unknown vel_anchor: {}".format(vel_anchor)
         # last_obs = self.get_sensor_from_cache(-1)
         processed_controls = controls.copy()
         for name, device in self.robot_config.items():
@@ -602,15 +616,21 @@ class Robot():
                     out_id = actuator['sim_id'] if out_space == 'sim' else actuator['hdr_id']
 
                     control = controls[in_id]
+                    sim_obs = getattr(self.sim.data, actuator["data_type"])[actuator["data_id"]]
+                    # Hardware's sensor read lags the control still being tracked, so it
+                    # understates the room left in vel_range. 'control' measures against
+                    # the last command instead, falling back to the sensor on the 1st tick.
+                    if self.is_hardware and vel_anchor == "control":
+                        last_obs = self._last_feasible_ctrl.get(actuator['sim_id'], sim_obs)
+                    else:
+                        last_obs = sim_obs
                     if self._act_mode == "pos":
                         # remap to the limits if normalized
                         if normalized:
                             control = (actuator['pos_range'][1]+actuator['pos_range'][0])/2.0 + \
                                         control*(actuator['pos_range'][1]-actuator['pos_range'][0])/2.0
                         # enforce velocity limits
-                        # ALERT: This depends on previous sensor. This is not ideal as it breaks MDP addumptions. Be careful
                         if velocity_limits:
-                            last_obs = getattr(self.sim.data, actuator["data_type"])[actuator["data_id"]]
                             ctrl_desired_vel = (control - last_obs)/step_duration
                             ctrl_feasible_vel = np.clip(ctrl_desired_vel, actuator['vel_range'][0], actuator['vel_range'][1])
                             control = last_obs + ctrl_feasible_vel*step_duration
@@ -620,8 +640,6 @@ class Robot():
                             control = (actuator['vel_range'][1]+actuator['vel_range'][0])/2.0 + \
                                         control*(actuator['vel_range'][1]-actuator['vel_range'][0])/2.0
                         # enforce velocity limits
-                        # ALERT: This depends on previous sensor. This is not ideal as it breaks MDP addumptions. Be careful
-                        last_obs = getattr(self.sim.data, actuator["data_type"])[actuator["data_id"]]
                         control = last_obs + control*step_duration
                     else:
                         raise TypeError("Unknown act mode: {}".format(self._act_mode))
@@ -629,6 +647,9 @@ class Robot():
                     # enforce position limits
                     if position_limits:
                         control = np.clip(control, actuator['pos_range'][0], actuator['pos_range'][1])
+
+                    if self.is_hardware:
+                        self._last_feasible_ctrl[actuator['sim_id']] = control
 
                     # remap to desired space
                     processed_controls[out_id] = control
