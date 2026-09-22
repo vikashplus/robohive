@@ -59,6 +59,7 @@ class Robot():
                 sensor_cache_maxsize = 5,   # cache size for sensors
                 noise_scale = 0,            # scale for sensor noise
                 random_generator = None,    # random number generator
+                vel_anchor: str = "sensor", # sensor / control: velocity-limit reference (hardware)
                 **kwargs,
             ):
 
@@ -67,6 +68,8 @@ class Robot():
         self.name = robot_name+'(sim)' if is_hardware is None else robot_name+'(hdr)'
         self._act_mode = act_mode
         self.is_hardware = bool(is_hardware)
+        assert vel_anchor in ('sensor', 'control'), "unknown vel_anchor: {}".format(vel_anchor)
+        self._vel_anchor = vel_anchor
         self._sensor_cache_maxsize = sensor_cache_maxsize
         self._noise_scale = noise_scale
         if random_generator == None:
@@ -127,11 +130,7 @@ class Robot():
         # refresh the sensor cache
         self._sensor_cache_refresh()
 
-        # Hardware mode's last-feasible-control cache -- see process_actuator()'s use of
-        # it below. sim_id -> last feasible (post-clip) control value. Empty until the
-        # first process_actuator() call for a given actuator; cleared by hardware_reset()
-        # since a physical reset bypasses process_actuator() entirely and would otherwise
-        # leave this stale relative to the arm's new pose.
+        # sim_id -> last control sent, the reference for vel_anchor=="control"
         self._last_feasible_ctrl = {}
 
 
@@ -223,9 +222,7 @@ class Robot():
                'hdr' (per-actuator vector ordered by hdr_id, as in hardware_apply_controls)
         """
         assert space in ['sim', 'hdr'], "space must be 'sim' or 'hdr'"
-        # A physical reset bypasses process_actuator() entirely -- clear its
-        # last-feasible-control cache so the next call falls back to a fresh sensor
-        # read (the arm's real new pose) instead of anchoring against a pre-reset value.
+        # a physical reset bypasses process_actuator(), invalidating its reference
         self._last_feasible_ctrl = {}
         for name, device in self.robot_config.items():
             if name == 'default_robot':
@@ -590,12 +587,18 @@ class Robot():
             normalized=True,
             position_limits=True,
             velocity_limits=True,
-            out_space='sim'):
+            out_space='sim',
+            vel_anchor=None):
         """
         Process the actuation demands to
             (1) Remap provided controls to actuation space,
             (2) Enforces hardware position and velocity limits on the controls
+        INPUTS:
+            vel_anchor: 'sensor'/'control' reference for the velocity limit (hardware only,
+                        sim always uses the sensor). None uses the robot's configured default.
         """
+        vel_anchor = self._vel_anchor if vel_anchor is None else vel_anchor
+        assert vel_anchor in ('sensor', 'control'), "unknown vel_anchor: {}".format(vel_anchor)
         # last_obs = self.get_sensor_from_cache(-1)
         processed_controls = controls.copy()
         for name, device in self.robot_config.items():
@@ -614,10 +617,11 @@ class Robot():
 
                     control = controls[in_id]
                     sim_obs = getattr(self.sim.data, actuator["data_type"])[actuator["data_id"]]
-                    # Default anchor for act_mode=="vel" (no saturation-aware choice there --
-                    # see below) and as the pre-first-tick fallback for act_mode=="pos".
-                    if self.is_hardware and actuator['sim_id'] in self._last_feasible_ctrl:
-                        last_obs = self._last_feasible_ctrl[actuator['sim_id']]
+                    # Hardware's sensor read lags the control still being tracked, so it
+                    # understates the room left in vel_range. 'control' measures against
+                    # the last command instead, falling back to the sensor on the 1st tick.
+                    if self.is_hardware and vel_anchor == "control":
+                        last_obs = self._last_feasible_ctrl.get(actuator['sim_id'], sim_obs)
                     else:
                         last_obs = sim_obs
                     if self._act_mode == "pos":
@@ -627,15 +631,6 @@ class Robot():
                                         control*(actuator['pos_range'][1]-actuator['pos_range'][0])/2.0
                         # enforce velocity limits
                         if velocity_limits:
-                            if self.is_hardware:
-                                # Anchor on the real position unless doing so would saturate
-                                # this clip -- only then fall back to our own last feasible
-                                # control (avoids fighting the hardware's own tracking loop).
-                                sim_desired_vel = (control - sim_obs) / step_duration
-                                if actuator['vel_range'][0] <= sim_desired_vel <= actuator['vel_range'][1]:
-                                    last_obs = sim_obs
-                            else:
-                                last_obs = sim_obs
                             ctrl_desired_vel = (control - last_obs)/step_duration
                             ctrl_feasible_vel = np.clip(ctrl_desired_vel, actuator['vel_range'][0], actuator['vel_range'][1])
                             control = last_obs + ctrl_feasible_vel*step_duration
