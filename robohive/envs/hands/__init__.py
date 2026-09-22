@@ -6,12 +6,14 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 ================================================= """
 
 from robohive.utils import gym; register=gym.register
+import os
 
 from robohive.envs.env_variants import register_env_variant
-import os
+from robohive.utils.prompt_utils import Prompt, prompt
+
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 
-print("RoboHive:> Registering Hand Envs")
+prompt("RoboHive:> Registering Hand Envs", Prompt.ONCE)
 
 # ==================================================================================
 # V1 envs:
@@ -64,6 +66,7 @@ register(
 )
 from robohive.envs.hands.relocate_v1 import RelocateEnvV1
 
+
 # Reach to random target using visual inputs
 def register_visual_envs(env_name, encoder_type):
     register_env_variant(
@@ -102,6 +105,7 @@ register(
     }
 )
 from robohive.envs.hands.baoding_v1 import BaodingFixedEnvV1
+
 register(
     id='baoding4th-v1',
     entry_point='robohive.envs.hands:BaodingFixedEnvV1',

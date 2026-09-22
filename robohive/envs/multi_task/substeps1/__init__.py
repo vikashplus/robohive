@@ -7,14 +7,15 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 import os
 from robohive.utils import gym; register=gym.register
-
+from robohive.utils.prompt_utils import Prompt, prompt
 
 CURR_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Appliences ============================================================================
-print("RoboHive:> Registering Appliances Envs")
+prompt("RoboHive:> Registering Appliances Envs", Prompt.ONCE)
 
 from robohive.envs.multi_task.common.franka_appliance_v1 import FrankaAppliance
+
 # MICROWAVE
 register(
     id="franka_micro_open-v3",

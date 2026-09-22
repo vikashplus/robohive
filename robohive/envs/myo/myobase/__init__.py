@@ -4,11 +4,13 @@ Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gma
 ================================================= """
 
 from robohive.utils import gym; register=gym.register
+import os
+
+import numpy as np
 
 from robohive.envs.env_variants import register_env_variant
+from robohive.utils.prompt_utils import Prompt, prompt
 
-import os
-import numpy as np
 
 # utility to register envs with all muscle conditions
 def register_env_with_variants(id, entry_point, max_episode_steps, kwargs):
@@ -46,7 +48,7 @@ def register_env_with_variants(id, entry_point, max_episode_steps, kwargs):
 
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 
-print("RoboHive:> Registering Myo Envs")
+prompt("RoboHive:> Registering Myo Envs", Prompt.ONCE)
 
 # Finger-tip reaching ==============================
 register_env_with_variants(id='motorFingerReachFixed-v0',
@@ -287,6 +289,7 @@ register_env_with_variants(id='myoHandPoseRandom-v0',  #reconsider
 
 # Gait Torso Reaching ==============================
 from robohive.physics.sim_scene import SimBackend
+
 sim_backend = SimBackend.get_sim_backend()
 leg_model='/../../../simhive/myo_sim/leg/myolegs.xml'
 

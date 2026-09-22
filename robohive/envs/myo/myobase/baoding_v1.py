@@ -113,16 +113,18 @@ class BaodingEnvV1(BaseV0):
             # update rewards to be move rewards
             weighted_reward_keys = self.MOVE_TO_LOCATION_RWD_KEYS_AND_WEIGHTS
 
+        # reset position
+        # init_qpos = self.sim.model.key_qpos[0].copy()
+        init_qpos = self.sim.data.qpos.ravel().copy()
+        init_qpos[:-14] *= 0 # Use fully open as init pos
+        init_qpos[0] = -1.57 # Palm up
+
         super()._setup(obs_keys=obs_keys,
                     weighted_reward_keys=weighted_reward_keys,
                     frame_skip=frame_skip,
+                    init_qpos=init_qpos,
                     **kwargs,
                 )
-
-        # reset position
-        # self.init_qpos = self.sim.model.key_qpos[0].copy()
-        self.init_qpos[:-14] *= 0 # Use fully open as init pos
-        self.init_qpos[0] = -1.57 # Palm up
 
         # V0: Centered the action space around key_qpos[0]. Not sure if it matter.
         # self.act_mid = self.init_qpos[:self.n_jnt].copy()

@@ -18,12 +18,16 @@ import click
 import glob
 import pickle
 import numpy as np
-from vive.source.parse_mjl import parse_mjl_logs, viz_parsed_mjl_logs
-from mjrl.utils.gym_env import GymEnv
+
+try:
+    from mjrl.utils.gym_env import GymEnv
+except ImportError:
+    GymEnv = None
 import robohive
 import time as timer
 # import skvideo.io
 from robohive.utils import gym
+from robohive.utils.parse_mjl import parse_mjl_logs, viz_parsed_mjl_logs
 
 from tqdm import tqdm
 
@@ -52,6 +56,7 @@ def viewer(env,
             render_buffer.append(curr_frame)
 
         if mode == 'save':
+            import skvideo
             skvideo.io.vwrite(filename, np.asarray(render_buffer))
             print("\noffscreen buffer saved", filename)
 
@@ -84,7 +89,7 @@ def render_demos(env, data, filename='demo_rendering.mp4', render=None):
 
 # playback demos and get data(physics respected)
 def gather_training_data(env, data, filename='demo_playback.mp4', render=None):
-    env = env.env
+    env = env.unwrapped
     FPS = 30
     render_skip = max(1, round(1. / \
         (FPS * env.sim.model.opt.timestep * env.frame_skip)))
@@ -127,7 +132,7 @@ def gather_training_data(env, data, filename='demo_playback.mp4', render=None):
         # normalization and env stepping
         act = (ctrl - act_mid) / act_rng
         act = np.clip(act, -0.999, 0.999)
-        next_obs, reward, done, env_info = env.step(act)
+        next_obs, reward, done, *_, env_info = env.step(act)
         path_reward += reward
 
         # populate path

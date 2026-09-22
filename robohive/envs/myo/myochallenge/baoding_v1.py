@@ -96,15 +96,17 @@ class BaodingEnvV1(BaseV0):
         self.obj_friction_range = {'low':self.sim.model.geom_friction[self.object1_gid] - obj_friction_change,
                             'high':self.sim.model.geom_friction[self.object1_gid] + obj_friction_change} if obj_friction_change else None
 
+        # reset position
+        init_qpos = self.sim.data.qpos.ravel().copy()
+        init_qpos[:-14] *= 0 # Use fully open as init pos
+        init_qpos[0] = -1.57 # Palm up
+
         super()._setup(obs_keys=obs_keys,
                     weighted_reward_keys=weighted_reward_keys,
                     frame_skip=frame_skip,
+                    init_qpos=init_qpos,
                     **kwargs,
                 )
-
-        # reset position
-        self.init_qpos[:-14] *= 0 # Use fully open as init pos
-        self.init_qpos[0] = -1.57 # Palm up
 
     def step(self, a, **kwargs):
         if self.which_task in [Task.HOLD, Task.BAODING_CW, Task.BAODING_CCW]:

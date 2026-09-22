@@ -135,22 +135,24 @@ class TrackEnv(BaseV0):
         self._lift_z = self.sim.data.xipos[self.object_bid][2] + self.lift_bonus_thresh
 
 
+        # Adjust init as per the specified key
+        init_qpos = self.sim.data.qpos.ravel().copy()
+        robot_init, object_init = self.ref.get_init()
+        if robot_init is not None:
+            init_qpos[:self.ref.robot_dim] = robot_init
+        if object_init is not None:
+            init_qpos[self.ref.robot_dim:self.ref.robot_dim+3] = object_init[:3]
+            init_qpos[-3:] = quat2euler(object_init[3:])
+
         super()._setup(obs_keys=obs_keys,
                        weighted_reward_keys=weighted_reward_keys,
                        frame_skip=10,
+                       init_qpos=init_qpos,
                        **kwargs)
 
         # Adjust horizon if not motion_extrapolation
         if motion_extrapolation == False:
             self.spec.max_episode_steps = self.ref.horizon # doesn't work always. WIP
-
-        # Adjust init as per the specified key
-        robot_init, object_init = self.ref.get_init()
-        if robot_init is not None:
-            self.init_qpos[:self.ref.robot_dim] = robot_init
-        if object_init is not None:
-            self.init_qpos[self.ref.robot_dim:self.ref.robot_dim+3] = object_init[:3]
-            self.init_qpos[-3:] = quat2euler(object_init[3:])
 
         # hack because in the super()._setup the initial posture is set to the average qpos and when a step is called, it ends in a `done` state
         self.initialized_pos = True
@@ -285,7 +287,7 @@ class TrackEnv(BaseV0):
         ref_mot = self.ref.get_reference(self.time+self.motion_start_time)
         self.qpos_from_robot_object(self.sim.data.qpos, ref_mot.robot, ref_mot.object )
         self.sim.forward()
-        self.sim.data.time = self.sim.data.time + 0.02#self.env.env.dt
+        self.sim.data.time = self.sim.data.time + 0.02#self.env.unwrapped.dt
         return idxs[0] < self.ref.horizon-1
 
 

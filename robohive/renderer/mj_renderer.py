@@ -31,7 +31,7 @@ class MJRenderer(Renderer):
         self._window = None
         self._renderer = None
         self._paused = False
-        self._user_exit = False
+        self._closing = False
 
 
     # viewer callback
@@ -41,7 +41,7 @@ class MJRenderer(Renderer):
 
         # Escape
         if keycode == 256:
-            self._user_exit = True
+            self._exit_requested = True
 
 
     def setup_renderer(self, model, height, width):
@@ -57,7 +57,7 @@ class MJRenderer(Renderer):
 
         This function is a no-op if the window was already created.
         """
-        if not self._window and not self._user_exit:
+        if not self._window and not self._exit_requested:
             self._window = viewer.launch_passive(self._sim.model.ptr, self._sim.data.ptr, key_callback=self.key_callback)
             self._update_camera_properties(self._window.cam)
             self._update_viewer_settings(self._window.opt)
@@ -68,16 +68,22 @@ class MJRenderer(Renderer):
 
     def refresh_window(self):
         """Refreshes the rendered window if one is present."""
-        if self._window is None:
+        if self._window is None or self._closing:
             return
+
+        # Native window-close ('X' button) doesn't go through key_callback, so it never
+        # sets _exit_requested on its own; catch it here via is_running() too.
+        if not self._window.is_running():
+            self._exit_requested = True
+
         self._window.sync()
 
         # Keep checking to unpause if paused
-        while self._paused and not self._user_exit:
+        while self._paused and not self._exit_requested:
             # print("paused")
             time.sleep(.2)
 
-        if self._user_exit:
+        if self._exit_requested:
             self.close()
 
 
@@ -152,7 +158,11 @@ class MJRenderer(Renderer):
 
     def close(self):
         """Cleans up any resources being used by the renderer."""
-        if self._window:
-            self._window.close()
+        if self._window and not self._closing:
+            self._closing = True
+            try:
+                if self._window.is_running():
+                    self._window.close()
+            except Exception:
+                pass
             self._window = None
-            quit()

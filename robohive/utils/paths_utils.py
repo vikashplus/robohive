@@ -5,33 +5,160 @@ Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
-import numpy as np
-import os
 import glob
+import json
+import os
 import pickle
+
+import click
 import h5py
+import numpy as np
 import skvideo.io
 from PIL import Image
-import click
-from robohive.utils.dict_utils import flatten_dict, dict_numpify
-import json
+
+from robohive.utils import gym
+from robohive.utils.dict_utils import dict_numpify, flatten_dict
+from robohive.logger.grouped_datasets import Trace
 
 #TODO: Harmonize names, remove rollout_paths, use path for one and paths for multiple
 
+ROLLOUT_EXTENSIONS = ('.h5', '.pickle')
+
+
+# Normalize a loaded paths object (list or dict-like) into a name->path dict
+def _normalize_paths(paths):
+    if isinstance(paths, (list, tuple)):
+        return {'Trial{}'.format(i): path for i, path in enumerate(paths)}
+    if isinstance(paths, Trace):
+        return dict(paths.trace)
+    return paths
+
+
+# Load a single rollout file (.h5 / .pickle) into a normalized path object
+def load_rollout_file(rollout_path:str):
+    """
+    Load a single rollout file (.h5 or .pickle) from disk.
+
+    Args:
+        rollout_path (str): absolute path to a rollout file
+    Returns:
+        dict-like object mapping path/trial name to its data
+    """
+    ext = os.path.splitext(rollout_path)[-1]
+    if ext == '.h5':
+        paths = h5py.File(rollout_path, 'r')
+    elif ext == '.pickle':
+        paths = pickle.load(open(rollout_path, 'rb'))
+    else:
+        raise TypeError("Unknown rollout format:{}. Supported formats: {}".format(ext, ROLLOUT_EXTENSIONS))
+    return _normalize_paths(paths)
+
+
+# Harmonized preprocessor: resolve a path_handle into a loaded path object
+def resolve_path_handle(path_handle, extensions=ROLLOUT_EXTENSIONS, return_sources=False):
+    """
+    Resolve a path_handle into a normalized, loaded path object.
+
+    path_handle can be-
+        - an already loaded path object (dict / list / h5py.File / Trace.trace, ...)
+        - a str path to a single rollout file (.h5 or .pickle)
+        - a str path to a directory containing rollout files (.h5 / .pickle),
+          searched recursively through subdirectories, and all matching files
+          are loaded and merged
+
+    Args:
+        path_handle: handle to resolve (see above)
+        extensions: rollout file extensions to scan for when path_handle is a directory
+        return_sources (bool): if True, also return a dict mapping each path/trial name to a
+            (source_dir, source_file_stem) tuple describing the file it was loaded from
+            ((None, None) if path_handle was already a loaded object with no known file location)
+    Returns:
+        dict-like object mapping path/trial name to its data
+        (dict mapping path/trial name to its (source_dir, source_file_stem), if return_sources)
+    """
+    if isinstance(path_handle, str):
+        if os.path.isdir(path_handle):
+            rollout_files = sorted(
+                f for ext in extensions
+                for f in glob.glob(os.path.join(path_handle, '**', '*'+ext), recursive=True))
+            assert len(rollout_files) > 0, \
+                "No rollout files (formats:{}) found in directory:{} (searched recursively)".format(extensions, path_handle)
+            paths, sources = {}, {}
+            for rollout_file in rollout_files:
+                prefix = os.path.splitext(os.path.relpath(rollout_file, path_handle))[0]
+                file_dir = os.path.dirname(rollout_file)
+                file_stem = os.path.splitext(os.path.basename(rollout_file))[0]
+                for name, data in load_rollout_file(rollout_file).items():
+                    key = '{}/{}'.format(prefix, name)
+                    paths[key] = data
+                    sources[key] = (file_dir, file_stem)
+            return (paths, sources) if return_sources else paths
+        elif os.path.isfile(path_handle):
+            paths = load_rollout_file(path_handle)
+            file_dir = os.path.dirname(os.path.abspath(path_handle))
+            file_stem = os.path.splitext(os.path.basename(path_handle))[0]
+            return (paths, {key: (file_dir, file_stem) for key in paths.keys()}) if return_sources else paths
+        else:
+            raise FileNotFoundError("Path not found:{}".format(path_handle))
+    else:
+        # already a loaded path object; source location is unknown
+        paths = _normalize_paths(path_handle)
+        return (paths, {key: None for key in paths.keys()}) if return_sources else paths
+
+
+# Harmonized preprocessor: resolve an env_handle into a loaded, unwrapped env
+def resolve_env_handle(env_handle, env_args=None):
+    """
+    Resolve an env_handle into a loaded, unwrapped env object.
+
+    env_handle can be-
+        - an already loaded env object (wrapped or unwrapped)
+        - a str env_name to be created via gym.make
+
+    Args:
+        env_handle: handle to resolve (see above)
+        env_args (str, optional): kwargs (as a str-eval'able dict) to pass to gym.make, when env_handle is a str
+    Returns:
+        unwrapped env object, or None if env_handle is None
+    """
+    if env_handle is None:
+        return None
+    elif isinstance(env_handle, str):
+        env = gym.make(env_handle) if env_args is None else gym.make(env_handle, **(eval(env_args)))
+        return env.unwrapped
+    else:
+        # already a loaded env object
+        return env_handle.unwrapped if hasattr(env_handle, 'unwrapped') else env_handle
+
+
 # Check the horizon for teleOp / Hardware experiments
-def plot_horizon(paths, env, fileName_prefix=None):
+def plot_horizon(path_handle, env_handle, output_dir=None, output_name='', env_args=None):
     """
     Check the horizon for teleOp / Hardware experiments
 
     Args:
-        paths: paths to examine
-        env: unwrapped env
-        fileName_prefix (str): prefix to use in the filename
+        path_handle: loaded path object, or path to a rollout file/ directory of rollout files
+        env_handle: loaded (unwrapped) env object, or an env_name to be created via gym.make
+        output_dir (str, optional): Directory to save the outputs. Defaults to path_handle's
+            directory (or cwd if path_handle is not a str path).
+        output_name (str, optional): prefix to use in the output filename
+        env_args (str, optional): kwargs (as a str-eval'able dict) to pass to gym.make, when env_handle is a str
     Saves:
-        fileName_prefix + '_horizon.pdf'
+        output_dir/output_name + '_horizon.pdf'
     """
+    paths = list(resolve_path_handle(path_handle).values())
+    env = resolve_env_handle(env_handle, env_args=env_args)
+
+    if output_dir is None:
+        if isinstance(path_handle, str):
+            output_dir = path_handle if os.path.isdir(path_handle) else (os.path.dirname(os.path.abspath(path_handle)))
+        else:
+            output_dir = '.'
+    os.makedirs(output_dir, exist_ok=True)
+    fileName_prefix = os.path.join(output_dir, output_name or '')
+
     import matplotlib as mpl
-    mpl.use('TkAgg')
+    mpl.use('Agg')
     import matplotlib.pyplot as plt
     plt.rcParams.update({'font.size': 5})
 
@@ -41,26 +168,28 @@ def plot_horizon(paths, env, fileName_prefix=None):
         # plot timesteps
         plt.clf()
 
-        rl_dt_ideal = env.frame_skip * env.model.opt.timestep
+        rl_dt_ideal = env.dt
         for i, path in enumerate(paths):
             dt = path['env_infos']['time'][1:] - path['env_infos']['time'][:-1]
             horizon[i] = path['env_infos']['time'][-1] - path['env_infos'][
                 'time'][0]
-            h1 = plt.plot(
+            plt.plot(
                 path['env_infos']['time'][1:],
                 dt,
                 '-',
-                label=('time=%1.2f' % horizon[i]))
-        h1 = plt.plot(
+                alpha=.8,
+                label=('hor=%1.2f' % horizon[i]))
+        plt.plot(
             np.array([0, max(horizon)]),
             rl_dt_ideal * np.ones(2),
             'g', alpha=.5,
-            linewidth=2.0)
+            linewidth=2.0,
+            label='ideal dt')
 
-        plt.legend([h1[0]], ['ideal'], loc='upper right')
+        plt.legend(loc='upper right')
         plt.ylabel('time step (sec)')
         plt.xlabel('time (sec)')
-        plt.ylim(rl_dt_ideal - 0.005, rl_dt_ideal + .005)
+        plt.ylim(rl_dt_ideal - 2*rl_dt_ideal, rl_dt_ideal + 3*rl_dt_ideal)
         plt.suptitle('Timestep profile for %d rollouts' % len(paths))
 
         file_name = fileName_prefix + '_timesteps.pdf'
@@ -69,7 +198,7 @@ def plot_horizon(paths, env, fileName_prefix=None):
 
         # plot horizon
         plt.clf()
-        h1 = plt.plot(
+        plt.plot(
             np.array([0, len(paths)]),
             env.horizon * rl_dt_ideal * np.ones(2),
             'g',
@@ -87,43 +216,66 @@ def plot_horizon(paths, env, fileName_prefix=None):
 
 
 # 2D-plot of paths detailing obs, act, rwds across time
-def plot(paths, env=None, fileName_prefix=''):
+def plot(path_handle, env_handle=None, output_dir=None, output_name='', env_args=None):
     """
     2D-plot of paths detailing obs, act, rwds across time
 
     Args:
-        paths: paths to examine
-        env: unwrapped env
-        fileName_prefix: prefix to use in the filename
+        path_handle: loaded path object, or path to a rollout file/ directory of rollout files
+        env_handle: loaded (unwrapped) env object, or an env_name to be created via gym.make
+        output_dir (str, optional): Directory to save the outputs. If not provided, each
+            trial's plot is saved next to the rollout file it came from. If provided, the
+            source directory structure (for directory path_handles) is mirrored under it.
+        output_name (str, optional): prefix to use in the output filenames. If not provided,
+            defaults to the name of the rollout file the trial came from (when known).
+        env_args (str, optional): kwargs (as a str-eval'able dict) to pass to gym.make, when env_handle is a str
 
     Saves:
-        fileName_prefix + path_name + '.pdf'
+        one pdf per trial, named <output_name or source file name>_<trial_name> + '.pdf'
     """
     import matplotlib as mpl
     mpl.use('Agg')
     import matplotlib.pyplot as plt
     plt.rcParams.update({'font.size': 5})
 
+    paths, sources = resolve_path_handle(path_handle, return_sources=True)
+    env = resolve_env_handle(env_handle, env_args=env_args)
+    is_dir_handle = isinstance(path_handle, str) and os.path.isdir(path_handle)
     for path_name, path in paths.items():
+        leaf_name = path_name.split('/')[-1]
+        source_dir, source_stem = sources.get(path_name) or (None, None)
+        if output_dir is not None:
+            if is_dir_handle and source_dir is not None:
+                rel_dir = os.path.relpath(source_dir, path_handle)
+                save_dir = os.path.join(output_dir, rel_dir) if rel_dir != '.' else output_dir
+            else:
+                save_dir = output_dir
+        else:
+            save_dir = source_dir or '.'
+        os.makedirs(save_dir, exist_ok=True)
+        name_prefix = output_name or source_stem or ''
+        file_stem = '_'.join(p for p in (name_prefix, leaf_name) if p)
         plt.clf()
 
         # observations
-        nplt1 = len(path['env_infos']['obs_dict'].keys())
-        for iplt1, key in enumerate(
-                sorted(path['env_infos']['obs_dict'].keys())):
+        obs_keys = sorted(
+            key for key in path['env_infos']['obs_dict'].keys()
+            if path['env_infos']['obs_dict'][key].ndim < 3)
+        nplt1 = len(obs_keys)
+        time = np.asarray(path['env_infos']['time'])
+        print(obs_keys)
+        for iplt1, key in enumerate(obs_keys):
             ax = plt.subplot(nplt1, 2, iplt1 * 2 + 1)
+            if iplt1 == 0:
+                plt.ylabel('Observations')
+            ax.yaxis.tick_right()
+            if path['env_infos']['obs_dict'][key].size > 0:
+                plt.plot(time, np.asarray(path['env_infos']['obs_dict'][key]), label=key)
+            ax.set_xlim(time[0], time[-1])
             if iplt1 != (nplt1 - 1):
                 ax.axes.xaxis.set_ticklabels([])
-            if iplt1 == 0:
-                plt.title('Observations')
-            ax.yaxis.tick_right()
-            if path['env_infos']['obs_dict'][key].ndim<3:
-                plt.plot(
-                    path['env_infos']['time'],
-                    path['env_infos']['obs_dict'][key],
-                    label=key)
             # plt.ylabel(key)
-            plt.text(0.01, .01, key, transform=ax.transAxes)
+            plt.text(0.01, .01, f"{key}{path['env_infos']['obs_dict'][key].shape}", transform=ax.transAxes)
         plt.xlabel('time (sec)')
 
         # actions
@@ -132,7 +284,7 @@ def plot(paths, env=None, fileName_prefix=''):
         ax.set_prop_cycle(None)
         # h4 = plt.plot(path['env_infos']['time'], env.act_mid + path['actions']*env.act_rng, '-', label='act') # plot scaled actions
         h4 = plt.plot(
-            path['env_infos']['time'], path['actions'], '-',
+            time, np.asarray(path['actions']), '-',
             label='act')  # plot normalized actions
         plt.ylabel('actions')
         ax.axes.xaxis.set_ticklabels([])
@@ -142,8 +294,8 @@ def plot(paths, env=None, fileName_prefix=''):
         if "score" in path['env_infos']:
             ax = plt.subplot(nplt2, 2, 6)
             plt.plot(
-                path['env_infos']['time'],
-                path['env_infos']['score'],
+                time,
+                np.asarray(path['env_infos']['score']),
                 label='score')
             plt.xlabel('time')
             plt.ylabel('score')
@@ -154,8 +306,8 @@ def plot(paths, env=None, fileName_prefix=''):
             ax.set_prop_cycle(None)
             for key in sorted(path['env_infos']['rwd_dict'].keys()):
                 plt.plot(
-                    path['env_infos']['time'],
-                    path['env_infos']['rwd_dict'][key],
+                    time,
+                    np.asarray(path['env_infos']['rwd_dict'][key]),
                     label=key)
             plt.legend(
                 loc='upper left',
@@ -171,8 +323,8 @@ def plot(paths, env=None, fileName_prefix=''):
             ax.set_prop_cycle(None)
             for key in sorted(env.rwd_keys_wt.keys()):
                 plt.plot(
-                    path['env_infos']['time'],
-                    path['env_infos']['rwd_dict'][key]*env.rwd_keys_wt[key],
+                    time,
+                    np.asarray(path['env_infos']['rwd_dict'][key])*env.rwd_keys_wt[key],
                     label=key)
             plt.legend(
                 loc='upper left',
@@ -183,20 +335,22 @@ def plot(paths, env=None, fileName_prefix=''):
             plt.ylabel('wt*rewards')
             ax.yaxis.tick_right()
 
-        file_name = fileName_prefix + path_name + '.pdf'
+        file_name = os.path.join(save_dir, file_stem + '.pdf')
         plt.savefig(file_name)
         print("saved ", file_name)
 
 
 # Render frames/videos
-def render(rollout_path, render_format:str="mp4", cam_names:list=["left"]):
+def render(path_handle, render_format:str="mp4", cam_names:list=["left"], output_dir=None, output_name=None):
     """
     Render the frames from a given rollout.
 
     Parameters:
-        rollout_path (str): Absolute path of the rollout (h5/pickle).
+        path_handle: loaded path object, or path to a rollout file/ directory of rollout files (h5/pickle).
         render_format (str, optional): Format to save the rendered frames. Default is "mp4".
         cam_names (list, optional): List of cameras to render. Default is ["left"]. Example ['left', 'right', 'top', 'Franka_wrist']
+        output_dir (str, optional): Directory to save the outputs. Defaults to the rollout's directory (or cwd if path_handle is not a file path).
+        output_name (str, optional): Prefix to use for the output filenames. Defaults to the rollout's name (or "rollout" if path_handle is not a file path).
 
     Returns:
         None
@@ -208,34 +362,34 @@ def render(rollout_path, render_format:str="mp4", cam_names:list=["left"]):
         - The frames are saved in the specified render format.
         - The rendered frames can be saved as an mp4 video or as individual RGB images.
         - The frames are rendered for each camera specified in the cam_names list.
-        - The frames are saved in the same directory as the rollout path.
         - The output file names are generated based on the rollout name and the camera names.
 
     Example:
-        render(rollout_path="/path/to/rollout.h5", render_format="mp4", cam_names=["left", "right"])
+        render(path_handle="/path/to/rollout.h5", render_format="mp4", cam_names=["left", "right"])
     """
 
-    output_dir = os.path.dirname(rollout_path)
-    rollout_name = os.path.split(rollout_path)[-1]
-    output_name, output_type = os.path.splitext(rollout_name)
+    if isinstance(path_handle, str) and os.path.isfile(path_handle):
+        output_dir = output_dir or os.path.dirname(path_handle) or '.'
+        output_name = output_name or os.path.splitext(os.path.basename(path_handle))[0]
+    else:
+        output_dir = output_dir or '.'
+        output_name = output_name or 'rollout'
     file_name = os.path.join(output_dir, output_name+"_"+"-".join(cam_names))
 
-    # resolve data format
-    if output_type=='.h5':
-        paths = h5py.File(rollout_path, 'r')
-    elif output_type=='.pickle':
-        paths = pickle.load(open(rollout_path, 'rb'))
-    else:
-        raise TypeError("Unknown path format. Check file")
+    paths = resolve_path_handle(path_handle)
 
     # Run through all trajs in the paths
-    for i_path, path in enumerate(paths):
+    for i_path, (path_name, path) in enumerate(paths.items()):
 
-        if output_type=='.h5':
-            data = paths[path]['data']
+        if 'data' in path.keys():
+            data = path['data']
             path_horizon = data['time'].shape[0]
         else:
-            data = path['env_infos']['obs_dict']
+            obs_dict = path['env_infos']['obs_dict']
+            data = {key: obs_dict[key] for key in obs_dict.keys()}
+            if 'visual_dict' in path['env_infos'].keys():
+                visual_dict = path['env_infos']['visual_dict']
+                data.update({key: visual_dict[key] for key in visual_dict.keys()})
             path_horizon = path['env_infos']['time'].shape[0]
 
         # find full key name
@@ -332,16 +486,17 @@ def path2dataset(path:dict, config_path=None)->dict:
 
 
 # Print h5 schema
-def print_h5_schema(obj):
-    "Recursively find all keys in an h5py.Group."
-    keys = (obj.name,)
-    if isinstance(obj, h5py.Group):
+def print_h5_schema(obj, name="/"):
+    "Recursively find all keys in an h5py.Group or a dict-like path object."
+    keys = (getattr(obj, 'name', name),)
+    if isinstance(obj, h5py.Group) or isinstance(obj, dict):
         for key, value in obj.items():
-            if isinstance(value, h5py.Group):
-                keys = keys + print_h5_schema(value)
+            child_name = getattr(value, 'name', '{}/{}'.format(name, key))
+            if isinstance(value, (h5py.Group, dict)):
+                keys = keys + print_h5_schema(value, name=child_name)
             else:
-                print("\t", "{0:35}".format(value.name), value)
-                keys = keys + (value.name,)
+                print("\t", "{0:35}".format(child_name), value)
+                keys = keys + (child_name,)
     return keys
 
 
@@ -439,8 +594,9 @@ Script to recover images and videos from the saved pickle files
  """
 @click.command(help=DESC)
 @click.option('-u', '--util', type=click.Choice(['plot_horizon', 'plot', 'render', 'pickle2h5', 'h5schema']), help='pick utility', required=True)
-@click.option('-p', '--path', type=click.Path(exists=True), help='absolute path of the rollout (h5/pickle)', default=None)
-@click.option('-e', '--env', type=str, help='Env name', default=None)
+@click.option('-p', '--path', type=click.Path(exists=True), help='path_handle: absolute path of a rollout file (h5/pickle), or a directory containing rollout files', default=None)
+@click.option('-e', '--env', type=str, help='env_handle: Env name to be created via gym.make (used by plot/plot_horizon)', default=None)
+@click.option('-ea', '--env_args', type=str, default=None, help=('env args. E.g. --env_args "{\'is_hardware\':True}"'))
 @click.option('-on', '--output_name', type=str, default=None, help=('Output name'))
 @click.option('-od', '--output_dir', type=str, default=None, help=('Directory to save the outputs'))
 @click.option('-vo', '--verify_output', type=bool, default=False, help=('Verify the saved file'))
@@ -450,22 +606,19 @@ Script to recover images and videos from the saved pickle files
 @click.option('-cn', '--cam_names', multiple=True, help='camera to render. Eg: left, right, top, Franka_wrist', default=["left", "top", "right", "wrist"])
 @click.option('-ac', '--add_config', help='Add extra infos to config using as json', default=None)
 @click.option('-mp', '--max_paths', type=int, help='maximum number of paths to process', default=1e6)
-def util_path_cli(util, path, env, output_name, output_dir, verify_output, render_format, cam_names, h5_format, compress_path, add_config, max_paths):
+def util_path_cli(util, path, env, env_args, output_name, output_dir, verify_output, render_format, cam_names, h5_format, compress_path, add_config, max_paths):
 
     if util=='plot_horizon':
-        fileName_prefix = os.join(output_dir, output_name)
-        plot_horizon(path, env, fileName_prefix)
+        plot_horizon(path, env, output_dir=output_dir, output_name=output_name or '', env_args=env_args)
     elif util=='plot':
-        fileName_prefix = os.join(output_dir, output_name)
-        plot(path, env, fileName_prefix)
+        plot(path, env, output_dir=output_dir, output_name=output_name or '', env_args=env_args)
     elif util=='render':
-        render(rollout_path=path, render_format=render_format, cam_names=cam_names)
+        render(path_handle=path, render_format=render_format, cam_names=cam_names, output_dir=output_dir, output_name=output_name)
     elif util=='pickle2h5':
         pickle2h5(rollout_path=path, output_dir=output_dir, verify_output=verify_output, h5_format=h5_format, compress_path=compress_path, config_path=add_config, max_paths=max_paths)
     elif util=='h5schema':
-        with h5py.File(path, "r") as h5file:
-            print("Printing schema read from output: ", path)
-            keys = print_h5_schema(h5file)
+        print("Printing schema for: ", path)
+        keys = print_h5_schema(resolve_path_handle(path))
     else:
         raise TypeError("Unknown utility requested")
 

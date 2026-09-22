@@ -40,6 +40,15 @@ class Renderer(abc.ABC):
         self._sim = sim
         self._camera_settings = {}
         self._viewer_settings = {}
+        self._exit_requested = False
+
+    @property
+    def exit_requested(self) -> bool:
+        """True once the user has asked to stop rendering (e.g. Escape in an onscreen
+        viewer). Backends without an interactive window (offscreen/none) never set this;
+        callers driving a rollout loop should check it after every render_to_window()/
+        refresh_window() call and break out if it's True."""
+        return self._exit_requested
 
     @abc.abstractmethod
     def render_to_window(self):

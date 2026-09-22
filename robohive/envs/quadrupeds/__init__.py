@@ -1,11 +1,14 @@
 from robohive.utils import gym; register=gym.register
 
-from robohive.envs.env_variants import register_env_variant
-import numpy as np
 import os
-curr_dir = os.path.dirname(os.path.abspath(__file__))
 
-print("RoboHive:> Registering Quadruped Envs")
+import numpy as np
+
+from robohive.envs.env_variants import register_env_variant
+from robohive.utils.prompt_utils import Prompt, prompt
+
+curr_dir = os.path.dirname(os.path.abspath(__file__))
+prompt("RoboHive:> Registering Quadruped Envs", Prompt.ONCE)
 
 WALK_HORIZON = 160
 
@@ -35,6 +38,7 @@ register_env_variant(
 
 # Reach to random target using proprio and visual inputs
 from robohive.envs.quadrupeds.walk_v0 import WalkBaseV0
+
 register_env_variant(
     variant_id='DKittyWalkRandom_v2d-v0',
     env_id='DKittyWalkRandom-v0',
@@ -78,6 +82,7 @@ register_env_variant(
 )
 # Orient to random orientation using proprio and visual inputs
 from robohive.envs.quadrupeds.orient_v0 import OrientBaseV0
+
 register_env_variant(
     variant_id='DKittyOrientRandom_v2d-v0',
     env_id='DKittyOrientRandom-v0',
@@ -117,6 +122,7 @@ register_env_variant(
 )
 # Stand-Up from random pose using proprio and visual inputs
 from robohive.envs.quadrupeds.orient_v0 import OrientBaseV0
+
 register_env_variant(
     variant_id='DKittyStandRandom_v2d-v0',
     env_id='DKittyStandRandom-v0',

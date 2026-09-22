@@ -59,8 +59,8 @@ class DoorEnvV1(env_base.MujocoEnv):
                        weighted_reward_keys=weighted_reward_keys,
                        reward_mode=reward_mode,
                        frame_skip=frame_skip,
+                       init_qpos=np.zeros(sim.data.qpos.shape),
                        **kwargs)
-        self.init_qpos = np.zeros(self.init_qpos.shape)
         self.init_qvel = np.zeros(self.init_qpos.shape)
 
 
@@ -96,17 +96,13 @@ class DoorEnvV1(env_base.MujocoEnv):
         return rwd_dict
 
 
-    def reset(self, reset_qpos=None, reset_qvel=None, **kwargs):
+    def reset(self, **kwargs):
         self.sim.reset()
-        qp = self.init_qpos.copy() if reset_qpos is None else reset_qpos
-        qv = self.init_qvel.copy() if reset_qvel is None else reset_qvel
-        self.robot.reset(reset_pos=qp, reset_vel=qv, **kwargs)
-
         self.sim.model.body_pos[self.door_bid,0] = self.np_random.uniform(low=-0.3, high=-0.2)
         self.sim.model.body_pos[self.door_bid, 1] = self.np_random.uniform(low=0.25, high=0.35)
         self.sim.model.body_pos[self.door_bid,2] = self.np_random.uniform(low=0.252, high=0.35)
         self.sim.forward()
-        return self.get_obs()
+        return super().reset(**kwargs)
 
 
     def get_env_state(self):

@@ -679,7 +679,6 @@ class ChaseTagEnvV0(WalkEnvV0):
                        reset_type=reset_type,
                        **kwargs
                        )
-        self.init_qpos[:] = self.sim.model.key_qpos[0]
         self.init_qvel[:] = 0.0
         self.startFlag = True
         self.assert_settings()

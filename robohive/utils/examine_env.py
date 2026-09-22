@@ -113,14 +113,17 @@ def main(env_name, policy_path, mode, seed, num_episodes, render, camera_name, o
 
     # plot paths
     if plot_paths:
-        file_name = output_dir + '/' + output_name + '{}'.format(time_stamp)
-        plotnsave_paths(paths, env=env, fileName_prefix=file_name)
+        file_name = output_name + '{}'.format(time_stamp)
+        plotnsave_paths(paths, env_handle=env, output_dir=output_dir, output_name=file_name)
 
     # render visuals keys
     if env.visual_keys and render_visuals:
         paths.close()
         render_keys = ['env_infos/visual_dict/'+ key for key in env.visual_keys]
         paths.render(output_dir=output_dir, output_format="mp4", groups=["Trial0",], datasets=render_keys, input_fps=1/env.dt)
+
+    # cleanup
+    env.close()
 
 if __name__ == '__main__':
     main()

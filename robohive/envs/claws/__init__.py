@@ -7,10 +7,13 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 
 from robohive.utils import gym; register=gym.register
 import os
+
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 from robohive.envs.env_variants import register_env_variant
+from robohive.utils.prompt_utils import Prompt, prompt
 
-print("RoboHive:> Registering Claw Envs")
+prompt("RoboHive:> Registering Claw Envs", Prompt.ONCE)
+
 
 # TRIFINGER REORIENT =======================================================================
 from robohive.envs.claws.reorient_v0 import ReorientBaseV0

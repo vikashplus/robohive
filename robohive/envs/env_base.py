@@ -5,21 +5,22 @@ Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
-from robohive.utils import gym
-import numpy as np
 import os
+import re
 import time as timer
-
-from robohive.envs.obs_vec_dict import ObsVecDict
-from robohive.utils import tensor_utils
-from robohive.robot.robot import Robot
-from robohive.utils.implement_for import implement_for
-from robohive.utils.prompt_utils import prompt, Prompt
-import skvideo.io
 from sys import platform
-from robohive.physics.sim_scene import SimScene
+
+import numpy as np
+import skvideo.io
+
 import robohive.utils.import_utils as import_utils
 from robohive.envs.env_variants import gym_registry_specs
+from robohive.envs.obs_vec_dict import ObsVecDict
+from robohive.physics.sim_scene import SimScene
+from robohive.robot.robot import Robot
+from robohive.utils import gym, tensor_utils
+from robohive.utils.implement_for import implement_for
+from robohive.utils.prompt_utils import Prompt, prompt
 
 # TODO
 # remove rwd_mode
@@ -74,6 +75,7 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                obs_range:tuple = (-10, 10), # Permissible range of values in obs vector returned by get_obs()
                rwd_viz:bool = False,        # Visualize rewards (WIP, needs vtils)
                device_id:int = 0,           # Device id for rendering
+               init_qpos = None,            # Explicit reset/home qpos. Auto-computed (mid actuator range) if not provided
                **kwargs,                    # Additional arguments
         ):
 
@@ -87,7 +89,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.viewer_setup()
 
         # resolve robot config
-        self.robot = Robot(mj_sim=self.sim,
+        robot_cls = kwargs.pop('robot_cls', Robot)
+        self.robot = robot_cls(mj_sim=self.sim,
                            random_generator=self.np_random,
                            **kwargs)
 
@@ -100,18 +103,25 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
         # resolve initial state
         self.init_qvel = self.sim.data.qvel.ravel().copy()
-        self.init_qpos = self.sim.data.qpos.ravel().copy() # has issues with initial jump during reset
-        # self.init_qpos = np.mean(self.sim.model.actuator_ctrlrange, axis=1) if self.normalize_act else self.sim.data.qpos.ravel().copy() # has issues when nq!=nu
-        # self.init_qpos[self.sim.model.jnt_dofadr] = np.mean(self.sim.model.jnt_range, axis=1) if self.normalize_act else self.sim.data.qpos.ravel().copy()
-        if self.normalize_act:
-            # find all linear+actuated joints. Use mean(jnt_range) as init position
-            actuated_jnt_ids = self.sim.model.actuator_trnid[self.sim.model.actuator_trntype==self.sim.lib.mjtTrn.mjTRN_JOINT, 0] # dm
-            linear_jnt_ids = np.logical_or(self.sim.model.jnt_type==self.sim.lib.mjtJoint.mjJNT_SLIDE, self.sim.model.jnt_type==self.sim.lib.mjtJoint.mjJNT_HINGE)
-            linear_jnt_ids = np.where(linear_jnt_ids==True)[0]
-            linear_actuated_jnt_ids = np.intersect1d(actuated_jnt_ids, linear_jnt_ids)
-            # assert np.any(actuated_jnt_ids==linear_actuated_jnt_ids), "Wooho: Great evidence that it was important to check for actuated_jnt_ids as well as linear_actuated_jnt_ids"
-            linear_actuated_jnt_qposids = self.sim.model.jnt_qposadr[linear_actuated_jnt_ids]
-            self.init_qpos[linear_actuated_jnt_qposids] = np.mean(self.sim.model.jnt_range[linear_actuated_jnt_ids], axis=1)
+        if init_qpos is not None:
+            # use the provided init_pos
+            self.init_qpos = np.array(init_qpos, dtype=np.float64).ravel().copy()
+        else:
+            # create one if not provided
+            self.init_qpos = self.sim.data.qpos.ravel().copy() # has issues with initial jump during reset
+            if self.normalize_act:
+                # find all linear+actuated joints. Use mean(jnt_range) as init position
+                actuated_jnt_ids = self.sim.model.actuator_trnid[self.sim.model.actuator_trntype==self.sim.lib.mjtTrn.mjTRN_JOINT, 0] # dm
+                linear_jnt_ids = np.logical_or(self.sim.model.jnt_type==self.sim.lib.mjtJoint.mjJNT_SLIDE, self.sim.model.jnt_type==self.sim.lib.mjtJoint.mjJNT_HINGE)
+                linear_jnt_ids = np.where(linear_jnt_ids==True)[0]
+                linear_actuated_jnt_ids = np.intersect1d(actuated_jnt_ids, linear_jnt_ids)
+                linear_actuated_jnt_qposids = self.sim.model.jnt_qposadr[linear_actuated_jnt_ids]
+                self.init_qpos[linear_actuated_jnt_qposids] = np.mean(self.sim.model.jnt_range[linear_actuated_jnt_ids], axis=1)
+            if self.robot.is_hardware:
+                prompt(f"WARNING: {self.robot.name} is hardware-backed but no init_qpos was provided — "
+                       "defaulting to the mid-range actuator pose. Pass init_qpos explicitly "
+                       "to control where the robot homes to on reset.",
+                        type=Prompt.WARN)
 
         # resolve rewards
         self.rwd_dict = {}
@@ -131,10 +141,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.visual_keys = visual_keys if type(visual_keys)==list or visual_keys==None else [visual_keys]
         self._setup_rgb_encoders(self.visual_keys, device=None)
 
-        # reset to get the env ready
-        observation, _reward, done, *_, _info = self.step(np.zeros(self.sim.model.nu))
-        # Question: Should we replace above with following? Its specially helpful for hardware as it forces a env reset before continuing, without which the hardware will make a big jump from its position to the position asked by step.
-        # observation = self.reset()
+        # reset to get the env ready. Using reset() rather than step(zeros) routes hardware
+        # through Robot.reset()'s min-jerk hardware_reset(), instead of jumping straight to
+        # a raw ctrl command from whatever pose the robot is currently in.
+        self.reset()
+        observation, _reward, done, *_, _info = self.forward()
         assert not done, "Check initialization. Simulation starts in a done state."
         self.observation_space = gym.spaces.Box(obs_range[0]*np.ones(observation.size), obs_range[1]*np.ones(observation.size), dtype=np.float32)
 
@@ -183,7 +194,14 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             if "rrl" in id_encoder or "resnet" in id_encoder:
                 import_utils.torchvision_isavailable()
                 import torchvision.transforms as T
-                from torchvision.models import resnet50, ResNet50_Weights, resnet34, ResNet34_Weights, resnet18, ResNet18_Weights
+                from torchvision.models import (
+                    ResNet18_Weights,
+                    ResNet34_Weights,
+                    ResNet50_Weights,
+                    resnet18,
+                    resnet34,
+                    resnet50,
+                )
 
             if "r3m" in id_encoder:
                 import_utils.torchvision_isavailable()
@@ -194,6 +212,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             if "vc1" in id_encoder:
                 import_utils.vc_isavailable()
                 from vc_models.models.vit import model_utils as vc
+
+            resize_crop_match = re.match(r'^(resize|crop)(\d+)x(\d+)$', id_encoder)
+            if resize_crop_match:
+                import_utils.torchvision_isavailable()
+                import torchvision.transforms as T
 
             # Load encoder
             prompt("Using {} visual inputs with {} encoder".format(wxh, id_encoder), type=Prompt.INFO)
@@ -223,6 +246,13 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                     model,embd_size,model_transforms,model_info = vc.load_model(vc.VC1_LARGE_NAME)
                 self.rgb_encoder = model
                 self.rgb_transform = model_transforms
+            elif resize_crop_match:
+                self.rgb_encoder = IdentityEncoder()
+                target_h, target_w = int(resize_crop_match.group(2)), int(resize_crop_match.group(3))
+                if resize_crop_match.group(1) == "resize":
+                    self.rgb_transform = T.Resize((target_h, target_w), antialias=True)
+                else:
+                    self.rgb_transform = T.CenterCrop((target_h, target_w))
             else:
                 raise ValueError("Unsupported visual encoder: {}".format(id_encoder))
             self.rgb_encoder.eval()
@@ -263,32 +293,36 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                                         step_duration=self.dt,
                                         realTimeSim=self.mujoco_render_frames,
                                         render_cbk=self.mj_render if self.mujoco_render_frames else None)
-        return self.forward(**kwargs)
+        # robot.step() above already rendered this tick (render_cbk in hardware mode,
+        # sim.advance(render=True) in sim mode) -- forward()'s own render would
+        # otherwise duplicate it, uncompensated by robot.step()'s pacing sleep.
+        return self.forward(render=False, **kwargs)
 
     @implement_for("gym", None, "0.24")
-    def forward(self, **kwargs):
-        return self._forward(**kwargs)
+    def forward(self, render=True, **kwargs):
+        return self._forward(render=render, **kwargs)
 
     @implement_for("gym", "0.24", None)
-    def forward(self, **kwargs):
-        obs, reward, done, info = self._forward(**kwargs)
+    def forward(self, render=True, **kwargs):
+        obs, reward, done, info = self._forward(render=render, **kwargs)
         terminal = done
         return obs, reward, terminal, False, info
 
     @implement_for("gymnasium")
-    def forward(self, **kwargs):
-        obs, reward, done, info = self._forward(**kwargs)
+    def forward(self, render=True, **kwargs):
+        obs, reward, done, info = self._forward(render=render, **kwargs)
         terminal = done
         return obs, reward, terminal, False, info
 
-    def _forward(self, **kwargs):
+    def _forward(self, render=True, **kwargs):
         """
         Forward propagate env to recover env details
         Returns current obs(t), rwd(t), done(t), info(t)
         """
 
-        # render the scene
-        if self.mujoco_render_frames:
+        # render the scene -- render=False from step(), which already rendered via
+        # robot.step(); standalone callers (e.g. after reset()) keep the default.
+        if self.mujoco_render_frames and render:
             self.mj_render()
 
         # observation
@@ -346,6 +380,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             - 'rgb:cam_name:HxW:r3m18'
             - 'rgb:cam_name:HxW:r3m34'
             - 'rgb:cam_name:HxW:r3m50'
+            - 'rgb:cam_name:HxW:resize<H>x<W>'  (e.g. resize128x128)
+            - 'rgb:cam_name:HxW:crop<H>x<W>'    (e.g. crop224x224)
         """
         # return if no visual configured
         if self.visual_keys == None:
@@ -409,6 +445,11 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                         rgb_encoded = rgb_encoded.to(self.device_encoder)
                         rgb_encoded = self.rgb_encoder(rgb_encoded).cpu().numpy()
                         rgb_encoded = np.squeeze(rgb_encoded)
+                elif re.match(r'^(resize|crop)(\d+)x(\d+)$', rgb_encoder_id):
+                    with torch.no_grad():
+                        img_t = torch.from_numpy(img[0]).permute(2, 0, 1).unsqueeze(0).float()  # 1x3xHxW
+                        img_t = self.rgb_transform(img_t)
+                        rgb_encoded = img_t.squeeze(0).permute(1, 2, 0).clamp(0, 255).byte().numpy()  # HxWx3 uint8
                 else:
                     raise ValueError("Unsupported visual encoder: {}".format(rgb_encoder_id))
 
@@ -495,8 +536,8 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
     def _reset(self, reset_qpos=None, reset_qvel=None, seed=None, **kwargs):
         """
-        Reset the environment
-        Default implemention provided. Override if env needs custom reset
+        Reset the environment (Default implemention provided).
+        Override if env needs custom reset. Carefully handle return type for gym/gymnasium compatibility
         """
         qpos = self.init_qpos.copy() if reset_qpos is None else reset_qpos
         qvel = self.init_qvel.copy() if reset_qvel is None else reset_qvel
@@ -516,6 +557,33 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
     # def _step(self, a):
     #     return self.step(a)
 
+
+    def close(self, close_hardware=True):
+        """
+        Clean up the environment
+        close_hardware: True (default) closes the robot's persistent hardware connection.
+                        False leaves it open so a later env.make(is_hardware=True) can
+                        reuse the same connection instead of reconnecting.
+        """
+        self._explicitly_closed = True
+        if getattr(self, 'robot', None):
+            self.robot.close(close_hardware=close_hardware)
+        if getattr(self, 'sim_obsd', None) and self.sim_obsd is not self.sim:
+            self.sim_obsd.close()
+        if getattr(self, 'sim', None):
+            self.sim.close()
+
+    # Warn (don't auto-cleanup) if a hardware-backed env is garbage collected without
+    # close() ever being called. Mirrors Robot.__del__: cleanup must stay an explicit,
+    # deliberate action (esp. for close_hardware=False reuse), not something GC timing decides.
+    def __del__(self):
+        if getattr(self, 'robot', None) and getattr(self.robot, 'is_hardware', False) \
+                and not getattr(self, '_explicitly_closed', False):
+            raise RuntimeWarning(
+                f"RoboHive:> {type(self).__name__} is being garbage collected without close() ever being called. "
+                "If hardware is still connected, this leaves the persistent connection dangling. "
+                "Call env.close() (or env.close(close_hardware=False) to intentionally keep the "
+                "hardware connection alive) before letting the env go out of scope.")
 
     @property
     def dt(self):
@@ -672,6 +740,16 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
         self.sim.renderer.render_to_window()
 
 
+    @property
+    def viewer_exit_requested(self):
+        """
+        True once the onscreen viewer has been asked to close (Escape / window close).
+        Always False for offscreen/none rendering, which has no interactive window;
+        use a KeyboardInterrupt (Ctrl+C) to break out of those rollouts instead.
+        """
+        return bool(self.sim) and self.sim.renderer.exit_requested
+
+
     def viewer_setup(self, distance=2.5, azimuth=90, elevation=-30, lookat=None, render_actuator=None, render_tendon=None):
         """
         Setup the default camera
@@ -717,8 +795,17 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             self.mujoco_render_frames = False
 
         # start rollouts
+        # stop_requested becomes True either when the onscreen viewer is closed
+        # (Escape / window close, only possible with render=='onscreen') or when the
+        # user hits Ctrl+C (the only way to interrupt offscreen/none rollouts, which
+        # have no interactive window). Either way we stop early but still finalize
+        # and return whatever paths were completed, instead of crashing or looping
+        # invisibly to the end of `horizon`/`num_episodes`.
         paths = []
+        stop_requested = False
         for ep in range(num_episodes):
+            if stop_requested:
+                break
             ep_t0 = timer.time()
             observations=[]
             actions=[]
@@ -731,27 +818,35 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             done = False
             t = 0
             ep_rwd = 0.0
-            while t < horizon and done is False:
-                a = policy.get_action(o)[0] if mode == 'exploration' else policy.get_action(o)[1]['evaluation']
-                next_o, rwd, done, *_, env_info = self.step(a)
-                ep_rwd += rwd
-                # render offscreen visuals
-                if render =='offscreen':
-                    curr_frame = self.sim.renderer.render_offscreen(
-                        width=frame_size[0],
-                        height=frame_size[1],
-                        camera_id=camera_name,
-                        device_id=device_id)
+            try:
+                while t < horizon and done is False and not self.viewer_exit_requested:
+                    a = policy.get_action(o)[0] if mode == 'exploration' else policy.get_action(o)[1]['evaluation']
+                    next_o, rwd, done, *_, env_info = self.step(a)
+                    ep_rwd += rwd
+                    # render offscreen visuals
+                    if render =='offscreen':
+                        curr_frame = self.sim.renderer.render_offscreen(
+                            width=frame_size[0],
+                            height=frame_size[1],
+                            camera_id=camera_name,
+                            device_id=device_id)
 
-                    frames[t,:,:,:] = curr_frame
-                    prompt(t, end=', ', flush=True, type=Prompt.INFO)
-                observations.append(o)
-                actions.append(a)
-                rewards.append(rwd)
-                # agent_infos.append(agent_info)
-                env_infos.append(env_info)
-                o = next_o
-                t = t+1
+                        frames[t,:,:,:] = curr_frame
+                        prompt(t, end=', ', flush=True, type=Prompt.INFO)
+                    observations.append(o)
+                    actions.append(a)
+                    rewards.append(rwd)
+                    # agent_infos.append(agent_info)
+                    env_infos.append(env_info)
+                    o = next_o
+                    t = t+1
+            except KeyboardInterrupt:
+                prompt("\nRollout interrupted by user (Ctrl+C)", type=Prompt.WARN)
+                stop_requested = True
+
+            if self.viewer_exit_requested:
+                prompt("Rollout stopped: viewer was closed", type=Prompt.WARN)
+                stop_requested = True
 
             prompt("Total reward = %3.3f, Total time = %2.3f" % (ep_rwd, timer.time()-ep_t0), type=Prompt.INFO)
             path = dict(
@@ -764,14 +859,14 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             )
             paths.append(path)
 
-            # save offscreen buffers as video
+            # save offscreen buffers as video (only the frames actually rendered so far)
             if render =='offscreen':
                 file_name = output_dir + filename + str(ep) + ".mp4"
                 # check if the platform is OS -- make it compatible with quicktime
                 if platform == "darwin":
-                    skvideo.io.vwrite(file_name, np.asarray(frames),outputdict={"-pix_fmt": "yuv420p"})
+                    skvideo.io.vwrite(file_name, np.asarray(frames[:t]),outputdict={"-pix_fmt": "yuv420p"})
                 else:
-                    skvideo.io.vwrite(file_name, np.asarray(frames))
+                    skvideo.io.vwrite(file_name, np.asarray(frames[:t]))
                 prompt("saved", file_name, type=Prompt.INFO)
 
         self.mujoco_render_frames = False
@@ -813,7 +908,16 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
             self.mujoco_render_frames = False
 
         # start rollouts
+        # stop_requested becomes True either when the onscreen viewer is closed
+        # (Escape / window close, only possible with render=='onscreen') or when the
+        # user hits Ctrl+C (the only way to interrupt offscreen/none rollouts, which
+        # have no interactive window). Either way we stop early but still finalize
+        # and return whatever trace was completed, instead of crashing or looping
+        # invisibly to the end of `horizon`/`num_episodes`.
+        stop_requested = False
         for ep in range(num_episodes):
+            if stop_requested:
+                break
 
             # initialize -----------------------------
             ep_t0 = timer.time()
@@ -826,39 +930,47 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
 
             # Rollout --------------------------------
             obs, rwd, done, *_, env_info = self.forward(update_exteroception=True) # t=0
-            while t < horizon and done is False:
+            try:
+                while t < horizon and done is False and not self.viewer_exit_requested:
 
-                # print(t, t*self.dt, self.time, t*self.dt-self.time)
-                # Get step's actions ----------------------
-                act = policy.get_action(obs)[0] if mode == 'exploration' else policy.get_action(obs)[1]['evaluation']
+                    # print(t, t*self.dt, self.time, t*self.dt-self.time)
+                    # Get step's actions ----------------------
+                    act = policy.get_action(obs)[0] if mode == 'exploration' else policy.get_action(obs)[1]['evaluation']
 
-                # render offscreen visuals ----------------------
-                if render =='offscreen':
-                    curr_frame = self.sim.renderer.render_offscreen(
-                        width=frame_size[0],
-                        height=frame_size[1],
-                        camera_id=camera_name,
-                        device_id=device_id)
+                    # render offscreen visuals ----------------------
+                    if render =='offscreen':
+                        curr_frame = self.sim.renderer.render_offscreen(
+                            width=frame_size[0],
+                            height=frame_size[1],
+                            camera_id=camera_name,
+                            device_id=device_id)
 
-                    frames[t,:,:,:] = curr_frame
-                    prompt(str(t), end=', ', flush=True, type=Prompt.INFO)
+                        frames[t,:,:,:] = curr_frame
+                        prompt(str(t), end=', ', flush=True, type=Prompt.INFO)
 
-                # log values at time=t ----------------------------------
-                datum_dict = dict(
-                        time=self.time,
-                        observations=obs,
-                        actions=act.copy(),
-                        rewards=rwd,
-                        env_infos=env_info,
-                        done=done,
-                    )
-                trace.append_datums(group_key=group_key, dataset_key_val=datum_dict)
+                    # log values at time=t ----------------------------------
+                    datum_dict = dict(
+                            time=self.time,
+                            observations=obs,
+                            actions=act.copy(),
+                            rewards=rwd,
+                            env_infos=env_info,
+                            done=done,
+                        )
+                    trace.append_datums(group_key=group_key, dataset_key_val=datum_dict)
 
 
-                # step env using actions from t=>t+1 ----------------------
-                obs, rwd, done, *_, env_info = self.step(act, update_exteroception=True)
-                t = t+1
-                ep_rwd += rwd
+                    # step env using actions from t=>t+1 ----------------------
+                    obs, rwd, done, *_, env_info = self.step(act, update_exteroception=True)
+                    t = t+1
+                    ep_rwd += rwd
+            except KeyboardInterrupt:
+                prompt("\nRollout interrupted by user (Ctrl+C)", type=Prompt.WARN)
+                stop_requested = True
+
+            if self.viewer_exit_requested:
+                prompt("Rollout stopped: viewer was closed", type=Prompt.WARN)
+                stop_requested = True
 
             # record last step and finalize the rollout --------------------------------
             act = np.nan*np.ones(self.action_space.shape)
@@ -878,9 +990,9 @@ class MujocoEnv(gym.Env, gym.utils.EzPickle, ObsVecDict):
                 file_name = output_dir + filename + str(ep) + ".mp4"
                 # check if the platform is OS -- make it compatible with quicktime
                 if platform == "darwin":
-                    skvideo.io.vwrite(file_name, np.asarray(frames),outputdict={"-pix_fmt": "yuv420p"})
+                    skvideo.io.vwrite(file_name, np.asarray(frames[:t]),outputdict={"-pix_fmt": "yuv420p"})
                 else:
-                    skvideo.io.vwrite(file_name, np.asarray(frames))
+                    skvideo.io.vwrite(file_name, np.asarray(frames[:t]))
                 prompt("saved: "+file_name, type=Prompt.ALWAYS)
 
         self.mujoco_render_frames = False

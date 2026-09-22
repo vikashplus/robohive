@@ -53,9 +53,9 @@ class ReachEnvV0(BaseV0):
         super()._setup(obs_keys=obs_keys,
                 weighted_reward_keys=weighted_reward_keys,
                 sites=self.target_reach_range.keys(),
+                init_qpos=self.sim.model.key_qpos[0].copy(),
                 **kwargs,
                 )
-        self.init_qpos[:] = self.sim.model.key_qpos[0]
         self.init_qvel[:] = self.sim.model.key_qvel[0]
         # find geometries with ID == 1 which indicates the skins
         geom_1_indices = np.where(self.sim.model.geom_group == 1)
@@ -206,9 +206,9 @@ class WalkEnvV0(BaseV0):
         self.steps = 0
         super()._setup(obs_keys=obs_keys,
                        weighted_reward_keys=weighted_reward_keys,
+                       init_qpos=self.sim.model.key_qpos[0].copy(),
                        **kwargs
                        )
-        self.init_qpos[:] = self.sim.model.key_qpos[0]
         self.init_qvel[:] = 0.0
 
         # move heightfield down if not used
@@ -473,9 +473,9 @@ class TerrainEnvV0(WalkEnvV0):
 
         BaseV0._setup(self, obs_keys=obs_keys,
                        weighted_reward_keys=weighted_reward_keys,
+                       init_qpos=self.sim.model.key_qpos[0].copy(),
                        **kwargs
                        )
-        self.init_qpos[:] = self.sim.model.key_qpos[0]
         self.init_qvel[:] = 0.0
 
     def reset(self, **kwargs):

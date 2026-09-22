@@ -1,8 +1,13 @@
 from robohive.utils import gym; register=gym.register
 
-import numpy as np
 import os
+
+import numpy as np
+
 curr_dir = os.path.dirname(os.path.abspath(__file__))
+from robohive.utils.prompt_utils import Prompt, prompt
+
+prompt("RoboHive:> Registering FM Envs", Prompt.ONCE)
 
 # Reach to fixed target
 # register(

@@ -73,7 +73,7 @@ MultiTask Suite
    This suite contains a collection of environments centered around dexterous manipulation. Standard [TCDM benchmarks](https://pregrasps.github.io/) are a part of this suite
 
 ## - ROBEL Suite (Coming soon)
-   This suite contains a collection of environments centered around real-world locomotion and manipulation. Standard [ROBEL benchmarks](http://roboticsbenchmarks.org/) are a part of this suite
+   This suite contains a collection of environments centered around real-world locomotion and manipulation. Standard [ROBEL benchmarks](https://sites.google.com/view/roboticsbenchmarks) are a part of this suite
 
 # Citation
 If you find `RoboHive` useful in your research,

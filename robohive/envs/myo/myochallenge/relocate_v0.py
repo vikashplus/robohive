@@ -4,11 +4,13 @@ Authors  :: Vikash Kumar (vikashplus@gmail.com), Vittorio Caggiano (caggiano@gma
 ================================================= """
 
 import collections
+
 import numpy as np
-from robohive.utils import gym
 
 from robohive.envs.myo.base_v0 import BaseV0
-from robohive.utils.quat_math import mat2euler, euler2quat
+from robohive.utils import gym
+from robohive.utils.quat_math import euler2quat, mat2euler
+
 
 class RelocateEnvV0(BaseV0):
 
@@ -57,12 +59,12 @@ class RelocateEnvV0(BaseV0):
         self.rot_th = rot_th
         self.drop_th = drop_th
 
+        keyFrame_id = 0 if self.obj_xyz_range is None else 1
         super()._setup(obs_keys=obs_keys,
                     weighted_reward_keys=weighted_reward_keys,
+                    init_qpos=self.sim.model.key_qpos[keyFrame_id].copy(),
                     **kwargs,
         )
-        keyFrame_id = 0 if self.obj_xyz_range is None else 1
-        self.init_qpos[:] = self.sim.model.key_qpos[keyFrame_id].copy()
 
 
     def get_obs_dict(self, sim):

@@ -5,14 +5,17 @@ Source  :: https://github.com/vikashplus/robohive
 License :: Under Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 ================================================= """
 
-import unittest
-
-from robohive.utils import gym
-import numpy as np
-import pickle
 import copy
 import os
+import pickle
+import unittest
+
+import numpy as np
 from flatten_dict import flatten
+
+from robohive.utils import gym
+from robohive.utils.implement_for import implement_for
+
 
 def assert_close(prm1, prm2, atol=1e-05, rtol=1e-08):
     if prm1 is None and prm2 is None:
@@ -66,7 +69,8 @@ class TestEnvs(unittest.TestCase):
         rwd_dict1 = env1.get_reward_dict(obs_dict1)
         assert len(rwd_dict1) > 0
         # reset env
-        env1.reset()
+        reset_data = env1.reset()
+        self.check_reset(reset_data)
 
         # serialize / deserialize env ------------
         env2w = pickle.loads(pickle.dumps(env1w))
@@ -99,38 +103,53 @@ class TestEnvs(unittest.TestCase):
         # reset
         env2.reset()
 
-        del(env1)
-        del(env2)
+        env1.close()
+        env2.close()
+
+
+    @implement_for("gym", None, "0.26")
+    def check_reset(self, reset_data):
+        assert isinstance(reset_data, np.ndarray), "Reset should return the observation vector"
+
+    @implement_for("gym", "0.26", None)
+    def check_reset(self, reset_data):
+        assert isinstance(reset_data, tuple) and len(reset_data) == 2, "Reset should return a tuple of length 2"
+        assert isinstance(reset_data[1], dict), "second element returned should be a dict"
+    @implement_for("gymnasium")
+    def check_reset(self, reset_data):
+        assert isinstance(reset_data, tuple) and len(reset_data) == 2, "Reset should return a tuple of length 2"
+        assert isinstance(reset_data[1], dict), "second element returned should be a dict"
 
     def check_old_envs(self, module_name, env_names, lite=False, seed=1234):
         print("\nTesting module:: ", module_name)
         for env_name in env_names:
             print("Testing env: ", env_name)
             # test init
-            env = gym.make(env_name)
+            envw = gym.make(env_name)
+            env = envw.unwrapped
             env.seed(seed)
 
             # test reset
-            env.env.reset()
+            env.reset()
             # test obs vec
-            obs = env.env.get_obs()
+            obs = env.get_obs()
 
             if not lite:
                 # test obs dict
-                obs_dict = env.env.get_obs_dict(env.env.sim)
+                obs_dict = env.get_obs_dict(env.sim)
                 # test rewards
-                rwd = env.env.get_reward_dict(obs_dict)
+                rwd = env.get_reward_dict(obs_dict)
 
                 # test vector => dict upgrade
-                # print(env.env.get_obs() - env.env.get_obs_vec())
-                # assert (env.env.get_obs() == env.env.get_obs_vec()).all(), "check vectorized computations"
+                # print(env.get_obs() - env.get_obs_vec())
+                # assert (env.get_obs() == env.get_obs_vec()).all(), "check vectorized computations"
 
             # test env infos
-            infos = env.env.get_env_infos()
+            infos = env.get_env_infos()
 
             # test step (everything together)
-            observation, _reward, done, _info = env.env.step(np.zeros(env.env.sim.model.nu))
-            del(env)
+            observation, _reward, done, *_, _info = env.step(np.zeros(env.sim.model.nu))
+            env.close()
 
 
 if __name__ == '__main__':

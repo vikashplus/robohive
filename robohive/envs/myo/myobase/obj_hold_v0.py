@@ -47,12 +47,15 @@ class ObjHoldFixedEnvV0(BaseV0):
         self.goal_sid = self.sim.model.site_name2id("goal")
         self.object_init_pos = self.sim.data.site_xpos[self.object_sid].copy()
 
+        init_qpos = self.sim.data.qpos.ravel().copy()
+        init_qpos[:-7] *= 0 # Use fully open as init pos
+        init_qpos[0] = -1.5 # place palm up
+
         super()._setup(obs_keys=obs_keys,
                     weighted_reward_keys=weighted_reward_keys,
+                    init_qpos=init_qpos,
                     **kwargs,
         )
-        self.init_qpos[:-7] *= 0 # Use fully open as init pos
-        self.init_qpos[0] = -1.5 # place palm up
 
 
     def get_obs_vec(self):

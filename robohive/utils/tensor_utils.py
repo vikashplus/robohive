@@ -1,6 +1,4 @@
-# Source: https://github.dev/aravindr93/mjrl/tree/master/mjrl
-import operator
-
+# Adapted from Source: https://github.com/aravindr93/mjrl/tree/master/mjrl
 import numpy as np
 
 

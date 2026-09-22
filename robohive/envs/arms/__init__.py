@@ -8,11 +8,14 @@ License :: Under Apache License, Version 2.0 (the "License"); you may not use th
 # from gym.envs.registration import register
 from robohive.utils import gym; register=gym.register
 
-from robohive.envs.env_variants import register_env_variant
 import os
+
+from robohive.envs.env_variants import register_env_variant
+from robohive.utils.prompt_utils import Prompt, prompt
+
 curr_dir = os.path.dirname(os.path.abspath(__file__))
 
-print("RoboHive:> Registering Arms Envs")
+prompt("RoboHive:> Registering Arms Envs", Prompt.ONCE)
 
 # FRANKA REACH =======================================================================
 from robohive.envs.arms.reach_base_v0 import ReachBaseV0
